@@ -5,7 +5,7 @@ import sys
 import uuid
 import json
 
-from multi_agents_ag2.agents import ChiefEditorAgent
+from multi_agents.ag2.agents import ChiefEditorAgent
 from gpt_researcher.utils.enum import Tone
 
 
@@ -21,7 +21,7 @@ def open_task() -> dict:
 
     if not task:
         raise Exception(
-            "No task found. Please ensure a valid task.json file is present in the multi_agents_ag2 directory."
+            "No task found. Please ensure a valid task.json file is present in the multi_agents/ag2 directory."
         )
 
     strategic_llm = os.environ.get("STRATEGIC_LLM")

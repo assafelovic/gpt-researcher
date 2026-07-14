@@ -1,0 +1,708 @@
+{
+  "run_metadata": {
+    "timestamp": "2026-07-04T09:45:14.206814+00:00",
+    "num_examples": 30,
+    "seed": 42,
+    "model": "openai:gpt-5.4",
+    "grader_model": "gpt-5.4-mini"
+  },
+  "systems": {
+    "baseline_tavily": {
+      "summary": {
+        "total": 30,
+        "correct": 23,
+        "incorrect": 5,
+        "not_attempted": 2,
+        "correct_rate": 0.767,
+        "accuracy_given_attempted": 0.821,
+        "f1": 0.793,
+        "avg_latency_seconds": 12.1,
+        "p50_latency_seconds": 8.0,
+        "agent_input_tokens": 728316,
+        "agent_output_tokens": 7603,
+        "wall_time_seconds": 122.9
+      },
+      "records": [
+        {
+          "question": "At which university did Jurgen Aschoff study medicine?",
+          "target": "University of Bonn.",
+          "prediction": "J\u00fcrgen Aschoff studied medicine at the **University of Bonn**. A biographical memorial notes that he \u201cstudied medicine at the University of Bonn, then moved in turn to G\u00f6ttingen, W\u00fcrzburg, and Freiburg.\u201d\n\nDirect answer: **University of Bonn**.",
+          "grade": "CORRECT",
+          "latency_seconds": 5.4,
+          "agent_tokens": {
+            "input": 11892,
+            "output": 107
+          }
+        },
+        {
+          "question": "In which specific issue did Black Condor II perish?",
+          "target": "Infinite Crisis #1",
+          "prediction": "Black Condor II, Ryan Kendall, was killed in **Infinite Crisis #1 (2005)**. Multiple DC Database entries state that he was killed by a beam apparently fired by **Sinestro** during the Secret Society\u2019s ambush of the Freedom Fighters, and *Blackest Night #1* explicitly summarizes it as \u201cBlack Condor was killed by Sinestro and the Society in **Infinite Crisis #1**.\u201d\n\n**Short answer:** **Infinite Crisis #1**.",
+          "grade": "CORRECT",
+          "latency_seconds": 15.7,
+          "agent_tokens": {
+            "input": 42250,
+            "output": 493
+          }
+        },
+        {
+          "question": "Where is Sagg Eco Village located in Jammu & Kashmir, India?",
+          "target": "Ganderbal",
+          "prediction": "Sagg Eco Village is located at **Watlar Wuder, Lar, Ganderbal, Kashmir 191201, Jammu & Kashmir, India**. Sources: the official Sagg Eco Village site and its listed contact/address pages, plus the venue\u2019s Facebook page listing **Ganderbal**.\n\nShort answer: **Watlar Wuder, Lar, Ganderbal district, Jammu & Kashmir, India.**",
+          "grade": "CORRECT",
+          "latency_seconds": 9.4,
+          "agent_tokens": {
+            "input": 19005,
+            "output": 182
+          }
+        },
+        {
+          "question": "What is the birth name of the Mexican artist Peso Pluma?",
+          "target": "Hassan Emilio Kabande Laija",
+          "prediction": "Peso Pluma\u2019s birth name is **Hassan Emilio Kabande Laija**. Sources from Rolling Stone and artist biography pages identify him by that name.\n\nShort answer: **Hassan Emilio Kabande Laija**",
+          "grade": "CORRECT",
+          "latency_seconds": 4.5,
+          "agent_tokens": {
+            "input": 12240,
+            "output": 91
+          }
+        },
+        {
+          "question": "Can you provide me with the DOI of the paper \"Generating Semantic Maps through Multidimensional Scaling: Linguistic Applications and Theory\"?",
+          "target": "10.1515/cllt-2021-0018",
+          "prediction": "The DOI is **10.1515/cllt-2021-0018**. This is listed on the publisher page for the article in *Corpus Linguistics and Linguistic Theory*.\n\nShort answer: **10.1515/cllt-2021-0018**",
+          "grade": "CORRECT",
+          "latency_seconds": 10.3,
+          "agent_tokens": {
+            "input": 14119,
+            "output": 169
+          }
+        },
+        {
+          "question": "What were the month, day, and year when the construction of the UN headquarters in New York City was completed?",
+          "target": "October 9, 1952",
+          "prediction": "UN sources I found state that construction of the UN Headquarters complex in New York was completed in **1952**, but they do not give a specific day on the pages surfaced. A UN-affiliated source in the search results says the headquarters **opened on October 14, 1952**, which is the most specific completion-related date I found.\n\n**Answer: October 14, 1952.**",
+          "grade": "INCORRECT",
+          "latency_seconds": 16.4,
+          "agent_tokens": {
+            "input": 48135,
+            "output": 331
+          }
+        },
+        {
+          "question": "What's the month, day, and year of the online publication of the paper \"Articulatory constraints on stop insertion and elision in consonant clusters\"?",
+          "target": "5th September, 2011",
+          "prediction": "I found the paper\u2019s DOI record and publisher page references showing it as a 2011 article in *Linguistics* (vol. 49, issue 5), but I could not find a source in the available search results that explicitly states the **online publication date** as a full month-day-year. The metadata I found only confirmed the year 2011, not the exact online publication date.\n\nShort answer: **I could not find the exact month, day, and year of the online publication from the sources available.**",
+          "grade": "NOT_ATTEMPTED",
+          "latency_seconds": 22.4,
+          "agent_tokens": {
+            "input": 58180,
+            "output": 384
+          }
+        },
+        {
+          "question": "What's the secret identity of the third Phantom Lady?",
+          "target": "Stormy Knight",
+          "prediction": "The third Phantom Lady is **Stormy Knight**. Sources: the DC Database identifies **Stormy Knight** as \u201cthe third Phantom Lady,\u201d and its Phantom Lady disambiguation page lists her as the successor after Dee Tyler.\n\nShort answer: **Stormy Knight**.",
+          "grade": "CORRECT",
+          "latency_seconds": 8.0,
+          "agent_tokens": {
+            "input": 19543,
+            "output": 151
+          }
+        },
+        {
+          "question": "At the 2006 census, what was the population of Darrud, Iran?",
+          "target": "4,979",
+          "prediction": "At the 2006 census, Darrud had a population of **4,015**, in **1,094 families**. Source: Wikipedia\u2019s entry for Darrud, which cites the 2006 Iranian census.\n\n**Short answer: 4,015.**",
+          "grade": "INCORRECT",
+          "latency_seconds": 4.0,
+          "agent_tokens": {
+            "input": 12496,
+            "output": 106
+          }
+        },
+        {
+          "question": "What month, day, and year was House Resolution 7004, \"Addressing the Governor's unacceptable actions in matters related to the appraiser certification program,\" introduced against Governor Kristi Noem?",
+          "target": "February 24, 2022",
+          "prediction": "House Resolution 7004 was introduced on **February 24, 2022**. The South Dakota Legislature\u2019s bill page labels HR 7004 as \u201cIntroduced,\u201d and contemporaneous reporting from the *Argus Leader* says the resolution was filed \u201cThursday,\u201d February 24, 2022.\n\n**Answer: February 24, 2022.**",
+          "grade": "CORRECT",
+          "latency_seconds": 6.2,
+          "agent_tokens": {
+            "input": 12664,
+            "output": 204
+          }
+        },
+        {
+          "question": "In TWD Season 11, Episode 10, we learn that Connie got whose uncle kicked out of Congress before the apocalypse?",
+          "target": "Pamela Milton's uncle",
+          "prediction": "It was Pamela Milton\u2019s uncle. Multiple episode recaps and character pages note that in \u201cNew Haunts\u201d Connie is revealed to have gotten Pamela\u2019s uncle kicked out of Congress before the apocalypse.\n\nShort answer: Pamela Milton\u2019s uncle.",
+          "grade": "CORRECT",
+          "latency_seconds": 7.0,
+          "agent_tokens": {
+            "input": 21080,
+            "output": 154
+          }
+        },
+        {
+          "question": "What year did Kinoko Teikoku release their first single \"Taikutsu Shinogi\" (\u9000\u5c48\u3057\u306e\u304e)?",
+          "target": "2012",
+          "prediction": "Kinoko Teikoku\u2019s first single \u201cTaikutsu Shinogi\u201d (\u9000\u5c48\u3057\u306e\u304e) was released in **2012**. Search results from Uta-Net and a Natalie article list the release date as **2012-05-09**.\n\n**Answer: 2012.**",
+          "grade": "CORRECT",
+          "latency_seconds": 5.4,
+          "agent_tokens": {
+            "input": 12909,
+            "output": 179
+          }
+        },
+        {
+          "question": "In which year did Clint Ballard Jr. adopt the alias Buddy Clinton to cut a two-sided single?",
+          "target": "1960",
+          "prediction": "Clint Ballard Jr. adopted the alias Buddy Clinton in **1960** to release the two-sided single **\u201cTake Me To Your Ladder (I\u2019ll See Your Leader Later)\u201d / \u201cJoanie\u2019s Forever.\u201d** Sources: 45cat lists the Madison single as 1960, and Discogs also dates the Buddy Clinton release to 1960.\n\n**Answer: 1960.**",
+          "grade": "CORRECT",
+          "latency_seconds": 11.0,
+          "agent_tokens": {
+            "input": 24692,
+            "output": 297
+          }
+        },
+        {
+          "question": "In which year did Habiba Ghribi win the junior race of the Pan Arab Cross Country Championships?",
+          "target": "2002",
+          "prediction": "Habiba Ghribi won the junior race of the Pan Arab Cross Country Championships in **2002**, according to biographical summaries on Wikiwand and Wikipedia.\n\n**Answer: 2002.**",
+          "grade": "CORRECT",
+          "latency_seconds": 7.0,
+          "agent_tokens": {
+            "input": 14158,
+            "output": 159
+          }
+        },
+        {
+          "question": "What change did Patch 0.7 make to the spell Crusader Strike in the beta of World of Warcraft?",
+          "target": "Damage increased and instant cast spell.",
+          "prediction": "Patch 0.7 increased Crusader Strike\u2019s damage and changed it to an instant-cast spell. Sources: Warcraft Wiki\u2019s Patch 0.7 entry and Crusader Strike (beta) page both list: \u201cDamage increased. Now an instant cast spell.\u201d\n\nShort answer: It made Crusader Strike instant-cast and increased its damage.",
+          "grade": "CORRECT",
+          "latency_seconds": 4.9,
+          "agent_tokens": {
+            "input": 14186,
+            "output": 237
+          }
+        },
+        {
+          "question": "After the War of 1812, Edward William McBride (1791-1834) worked as what for the king's printer, John Cameron, on the York Gazette until April 1815?",
+          "target": "Assistant",
+          "prediction": "He worked as an **office assistant** to King\u2019s Printer John Cameron on the *York Gazette*. The *Dictionary of Canadian Biography* says: \u201cAfter the war McBride worked as an office assistant to king\u2019s printer John Cameron on the *York Gazette* and in late April 1815, with his employer ill, he began conducting the business himself.\u201d\n\nShort answer: **office assistant**.",
+          "grade": "CORRECT",
+          "latency_seconds": 12.6,
+          "agent_tokens": {
+            "input": 26525,
+            "output": 316
+          }
+        },
+        {
+          "question": "What patch changed the required amount of titanium ore to make a titanium bar from 5 to 4 in Terraria?",
+          "target": "Desktop 1.4.1",
+          "prediction": "The change was in **Desktop version 1.2.3**.\n\nBoth the Terraria Wiki history notes for **Titanium Ore** and **Titanium Bar** say that in **Desktop 1.2.3**, a Titanium Bar was changed to require **4 Titanium Ore instead of 5**.\n\nShort answer: **Terraria Desktop 1.2.3**.",
+          "grade": "INCORRECT",
+          "latency_seconds": 5.1,
+          "agent_tokens": {
+            "input": 12364,
+            "output": 195
+          }
+        },
+        {
+          "question": "Who appointed the Chief Justice of India, Kailas Nath Wanchoo, in 1967?",
+          "target": "Sarvepalli Radhakrishnan",
+          "prediction": "Kailas Nath Wanchoo was appointed Chief Justice of India in 1967 by **President Zakir Husain**. Sources surfaced in search results identifying Wanchoo\u2019s appointment as being made by President Zakir Husain, including a biographical summary and Supreme Court Observer material on his elevation after K. Subba Rao\u2019s resignation.\n\n**Direct answer: President Zakir Husain.**",
+          "grade": "INCORRECT",
+          "latency_seconds": 7.3,
+          "agent_tokens": {
+            "input": 16455,
+            "output": 195
+          }
+        },
+        {
+          "question": "What Serbian player played in the quarterfinals of the 2018 Madrid Open men's singles?",
+          "target": "Du\u0161an Lajovi\u0107",
+          "prediction": "The Serbian player was **Du\u0161an Lajovi\u0107**. Sources on the 2018 Mutua Madrid Open men\u2019s singles draw list Lajovi\u0107 as the Serbian quarterfinalist, and match reports note Alexander Zverev beat Du\u0161an Lajovi\u0107 to reach the semifinals.\n\nShort answer: **Du\u0161an Lajovi\u0107**.",
+          "grade": "CORRECT",
+          "latency_seconds": 7.1,
+          "agent_tokens": {
+            "input": 21740,
+            "output": 168
+          }
+        },
+        {
+          "question": "What year did Seiko release their first 300m diver watch?",
+          "target": "1968",
+          "prediction": "Seiko released its first 300m diver watch in **1968**. Seiko\u2019s own history pages describe the **1968 300m water-resistant diver\u2019s watch** as the brand\u2019s first diver with 300m water resistance.\n\nShort answer: **1968**.",
+          "grade": "CORRECT",
+          "latency_seconds": 4.4,
+          "agent_tokens": {
+            "input": 13053,
+            "output": 177
+          }
+        },
+        {
+          "question": "What is the first and last name of the first individual to be inducted into the Gospel Music Hall of Fame by the Gospel Music Association who was not a musician?",
+          "target": "Billy Graham ",
+          "prediction": "The earliest non-musician I could substantiate is **Dwight L. Moody**.\n\nWhy:\n- The Gospel Music Hall of Fame includes people from \u201cnon-performing backgrounds,\u201d per the Tennessee Encyclopedia\u2019s entry on the GMA-operated hall.\n- Dwight L. Moody is identified by Britannica as an **American evangelist**, not a musician.\n- Moody appears as a **1971 inductee**, which is the earliest induction year for the hall.\n\nThere is some uncertainty because the official GMA Hall 1971 roster page was not fully visible in the search snippet, but based on the sources I found, the best-supported answer is:\n\n**Dwight Moody**.",
+          "grade": "INCORRECT",
+          "latency_seconds": 65.7,
+          "agent_tokens": {
+            "input": 39596,
+            "output": 544
+          }
+        },
+        {
+          "question": "How many units of the Infanterikanonvagn 72 (1952) were delivered to the Swedish army from 1953 to 1954?",
+          "target": "36.",
+          "prediction": "36 units. Sources found state that a total of 36 Infanterikanonvagn 72s were delivered to the Swedish Army during 1953\u20131954, with one source breaking that down as 10 in 1953 and 26 in 1954. Short answer: 36 units.",
+          "grade": "CORRECT",
+          "latency_seconds": 6.0,
+          "agent_tokens": {
+            "input": 14225,
+            "output": 189
+          }
+        },
+        {
+          "question": "Who was the rector of Hacettepe University in 2006?",
+          "target": "Prof. Dr. Tun\u00e7alp \u00d6ZGEN",
+          "prediction": "In 2006, the rector of Hacettepe University was **Prof. Dr. Tun\u00e7alp \u00d6zgen**. A Hacettepe University strategic plan document dated 2005\u20132008 identifies him as \u201cHacettepe \u00dcniversitesi Rekt\u00f6r\u00fc,\u201d and a 2007\u20132011 strategic plan dated July 2006 still carries his foreword, indicating he was serving then.\n\n**Short answer:** **Prof. Dr. Tun\u00e7alp \u00d6zgen**.",
+          "grade": "CORRECT",
+          "latency_seconds": 9.5,
+          "agent_tokens": {
+            "input": 26532,
+            "output": 340
+          }
+        },
+        {
+          "question": "On what day, month, and year did Gopalaswami Parthasarathy assume the charge of Vice Chancellor of Jawaharlal Nehru University?",
+          "target": "April 28, 1969",
+          "prediction": "JNU\u2019s official \u201cFormer Vice Chancellors\u201d page lists G. Parthasarathi\u2019s tenure as \u201c28 April 1969\u201327 April 1974,\u201d which indicates he assumed charge on 28 April 1969. Source: Jawaharlal Nehru University, \u201cFormer Vice Chancellors\u201d (https://www.jnu.ac.in/former-vice-chancellor).\n\n28 April 1969.",
+          "grade": "CORRECT",
+          "latency_seconds": 51.5,
+          "agent_tokens": {
+            "input": 61212,
+            "output": 682
+          }
+        },
+        {
+          "question": "Which piece of art by Raphael was sold by Joseph Joel Duveen to Peter Arrell Browne Widener in 1913?",
+          "target": "Small Cowper Madonna",
+          "prediction": "The piece was **Raphael\u2019s _Small Cowper Madonna_**.\n\nSource: the National Gallery of Art provenance for the painting states it was with **Duveen Brothers** and was **sold to Peter A. B. Widener** in the 1910s; this matches the identified Duveen\u2013Widener Raphael sale. A contemporary *New York Times* report on the Duveen Raphael sale to Widener points to the **Cowper Madonna** as the work involved.\n\nShort answer: **_Small Cowper Madonna_ by Raphael.**",
+          "grade": "CORRECT",
+          "latency_seconds": 13.6,
+          "agent_tokens": {
+            "input": 38989,
+            "output": 442
+          }
+        },
+        {
+          "question": "Up to how many meters high does the Pittosporum divaricatum grow?",
+          "target": "3 metres",
+          "prediction": "Pittosporum divaricatum grows up to about 3 meters high, according to sources such as Wikipedia\u2019s species summary. Some horticultural sources list a broader cultivated range up to 3\u20134 meters, but 3 meters is the standard wild/species description.\n\nShort answer: up to 3 meters high.",
+          "grade": "CORRECT",
+          "latency_seconds": 8.8,
+          "agent_tokens": {
+            "input": 20796,
+            "output": 171
+          }
+        },
+        {
+          "question": "In which year was the municipality of Macanal, Boyac\u00e1, Colombia, founded?",
+          "target": "1807",
+          "prediction": "Macanal, Boyac\u00e1, was founded in **1807**. Sources found during research state it was founded on **May 4, 1807**, including FamilySearch and a Boyac\u00e1 government PDF that says \u201cfundado en 1807.\u201d\n\n**Answer: 1807.**",
+          "grade": "CORRECT",
+          "latency_seconds": 8.5,
+          "agent_tokens": {
+            "input": 19243,
+            "output": 156
+          }
+        },
+        {
+          "question": "The Visvim FBT's name is influenced by the name of what music group?",
+          "target": "Fun Boy Three",
+          "prediction": "The Visvim FBT was influenced by **Fun Boy Three**, the English new wave group. Multiple sources say Hiroki Nakamura took inspiration from a Fun Boy Three record/album cover, specifically noticing Terry Hall\u2019s moccasins. Short answer: **Fun Boy Three**.",
+          "grade": "CORRECT",
+          "latency_seconds": 7.4,
+          "agent_tokens": {
+            "input": 40530,
+            "output": 218
+          }
+        },
+        {
+          "question": "From which university did Teresa Czerwi\u0144ska earn her Ph.D.?",
+          "target": "University of Gda\u0144sk",
+          "prediction": "I could confirm that Teresa Czerwi\u0144ska is a graduate of the University of Gda\u0144sk, and a University of Gda\u0144sk page confirms she received her habilitation there in 2010. But in the sources I found, I could not verify which university awarded her Ph.D. specifically.\n\nShort answer: I could not confirm her Ph.D.-granting university from the sources I found.",
+          "grade": "NOT_ATTEMPTED",
+          "latency_seconds": 11.4,
+          "agent_tokens": {
+            "input": 26711,
+            "output": 311
+          }
+        },
+        {
+          "question": "The first brief description of Agrilus planipennis was published by L\u00e9on Fairmaire in which French journal in 1888?",
+          "target": "Revue d'Entomologie ",
+          "prediction": "The first brief description of *Agrilus planipennis* by L\u00e9on Fairmaire was published in **_Revue d\u2019Entomologie_** in 1888. A GBIF taxon reference cites Fairmaire\u2019s paper as \u201c*Notes sur les Col\u00e9opt\u00e8res des environs de P\u00e9kin (2e Partie). Revue d'Entomologie 7:111\u2013160 (1888)*,\u201d and a species summary at The BioFiles independently states the first brief description appeared in *Revue d\u2019Entomologie* in 1888.\n\n**Answer: _Revue d\u2019Entomologie_.**",
+          "grade": "CORRECT",
+          "latency_seconds": 5.6,
+          "agent_tokens": {
+            "input": 12796,
+            "output": 255
+          }
+        }
+      ]
+    },
+    "gptr_deep_agent": {
+      "summary": {
+        "total": 30,
+        "correct": 19,
+        "incorrect": 7,
+        "not_attempted": 4,
+        "correct_rate": 0.633,
+        "accuracy_given_attempted": 0.731,
+        "f1": 0.679,
+        "avg_latency_seconds": 109.2,
+        "p50_latency_seconds": 104.7,
+        "gptr_internal_cost_usd": 3.3245,
+        "agent_input_tokens": 699103,
+        "agent_output_tokens": 9359,
+        "wall_time_seconds": 1192.0
+      },
+      "records": [
+        {
+          "question": "At which university did Jurgen Aschoff study medicine?",
+          "target": "University of Bonn.",
+          "prediction": "He studied medicine at the **University of Bonn**. Sources: Wikipedia\u2019s J\u00fcrgen Aschoff biography and a Max Planck biographical/publication record. Short answer: **University of Bonn**.",
+          "grade": "CORRECT",
+          "latency_seconds": 84.0,
+          "agent_tokens": {
+            "input": 17300,
+            "output": 152
+          }
+        },
+        {
+          "question": "In which specific issue did Black Condor II perish?",
+          "target": "Infinite Crisis #1",
+          "prediction": "I could not verify a specific issue in which Black Condor II (Ryan Kendall) died from the sources I was able to research, so I can\u2019t name one reliably.\n\nShort answer: I couldn\u2019t find a verified issue where Black Condor II perished.",
+          "grade": "NOT_ATTEMPTED",
+          "latency_seconds": 38.5,
+          "agent_tokens": {
+            "input": 23135,
+            "output": 200
+          }
+        },
+        {
+          "question": "Where is Sagg Eco Village located in Jammu & Kashmir, India?",
+          "target": "Ganderbal",
+          "prediction": "Sagg Eco Village is in **Chanthan Gulabpora, Ganderbal district, Jammu & Kashmir, India**. Sources also place it **on or near the Lar\u2013Chunt Waliwar Road**, in the **foothills of Harmukh**, about **40 km from Srinagar**. Primary supporting sources: Moneycontrol\u2019s reported feature on the eco-village and multiple lodging/directory listings that give the address as **Chanthan Gulabpora, J&K 191201**.\n\nShort answer: **Chanthan Gulabpora, Ganderbal district, Jammu & Kashmir, about 40 km from Srinagar.**",
+          "grade": "CORRECT",
+          "latency_seconds": 78.5,
+          "agent_tokens": {
+            "input": 20771,
+            "output": 231
+          }
+        },
+        {
+          "question": "What is the birth name of the Mexican artist Peso Pluma?",
+          "target": "Hassan Emilio Kabande Laija",
+          "prediction": "Hassan Emilio Kabande Laija.\n\nSources:\n- Rolling Stone: https://www.rollingstone.com/t/peso-pluma\n- Billboard: https://www.billboard.com/music/latin/peso-pluma-tito-double-p-dinastia-first-joint-album-1236145589\n- HOLA!: https://www.hola.com/us/celebrities/20230526346200/ten-fascinating-facts-about-peso-pluma\n\nShort answer: Hassan Emilio Kabande Laija.",
+          "grade": "CORRECT",
+          "latency_seconds": 78.3,
+          "agent_tokens": {
+            "input": 17256,
+            "output": 216
+          }
+        },
+        {
+          "question": "Can you provide me with the DOI of the paper \"Generating Semantic Maps through Multidimensional Scaling: Linguistic Applications and Theory\"?",
+          "target": "10.1515/cllt-2021-0018",
+          "prediction": "The DOI is **10.1515/cllt-2021-0018**.\n\nVerified citation:\nvan der Klis, M., & Tellings, J. (2022). *Generating semantic maps through multidimensional scaling: Linguistic applications and theory*. *Corpus Linguistics and Linguistic Theory, 18*(3), 627\u2013665. https://doi.org/10.1515/cllt-2021-0018\n\nShort answer: **10.1515/cllt-2021-0018**",
+          "grade": "CORRECT",
+          "latency_seconds": 70.4,
+          "agent_tokens": {
+            "input": 17381,
+            "output": 251
+          }
+        },
+        {
+          "question": "What were the month, day, and year when the construction of the UN headquarters in New York City was completed?",
+          "target": "October 9, 1952",
+          "prediction": "The best-supported date for completion of the original UN Headquarters complex in New York City is **October 14, 1952**. That\u2019s the date commonly tied to the General Assembly Hall coming into use, which marked completion of the full original headquarters project; the often-cited **January 9, 1951** date was the official opening, not final construction completion. Sources: Encyclopaedia Britannica; National Park Service; UN photo archive showing parts of the complex still under construction in August 1950.\n\n**Answer: October 14, 1952.**",
+          "grade": "INCORRECT",
+          "latency_seconds": 161.1,
+          "agent_tokens": {
+            "input": 26633,
+            "output": 320
+          }
+        },
+        {
+          "question": "What's the month, day, and year of the online publication of the paper \"Articulatory constraints on stop insertion and elision in consonant clusters\"?",
+          "target": "5th September, 2011",
+          "prediction": "I could not verify an exact month-day-year from the sources I was able to retrieve.\n\nThe strongest lead is the publisher/DOI record for the article, but the accessible evidence did not expose the \u201cpublished online\u201d field directly. The paper is:\n\n- **\u201cArticulatory constraints on stop insertion and elision in consonant clusters\u201d**\n- DOI/publisher path found: **10.1515/ling.2011.031**\n\nBased on the available research, I **could not find a verified exact online publication date** without guessing.\n\nShort answer: **I couldn\u2019t verify the exact online publication date from the accessible sources.**",
+          "grade": "NOT_ATTEMPTED",
+          "latency_seconds": 189.4,
+          "agent_tokens": {
+            "input": 26596,
+            "output": 394
+          }
+        },
+        {
+          "question": "What's the secret identity of the third Phantom Lady?",
+          "target": "Stormy Knight",
+          "prediction": "The third Phantom Lady is **Stormy Knight**.\n\nSources I found list the main legacy sequence as **Sandra Knight \u2192 Dee Tyler \u2192 Stormy Knight \u2192 Jennifer Knight**, which makes Stormy Knight the third bearer.  \nReferences: Wikipedia\u2019s *Phantom Lady* entry and the DC Continuity Project\u2019s *Phantom Lady* profile.\n\nShort answer: **Stormy Knight**.",
+          "grade": "CORRECT",
+          "latency_seconds": 104.7,
+          "agent_tokens": {
+            "input": 23940,
+            "output": 281
+          }
+        },
+        {
+          "question": "At the 2006 census, what was the population of Darrud, Iran?",
+          "target": "4,979",
+          "prediction": "The 2006 census population of Darrud, Iran was **188** people, in **56 households**. Source: the encyclopedia entry for **Darrud, Tehran**, identifying it as a village in **Rudbar-e Qasran Rural District, Rudbar-e Qasran District, Shemiranat County, Tehran Province**.\n\n**Short answer: 188.**",
+          "grade": "INCORRECT",
+          "latency_seconds": 118.7,
+          "agent_tokens": {
+            "input": 17496,
+            "output": 237
+          }
+        },
+        {
+          "question": "What month, day, and year was House Resolution 7004, \"Addressing the Governor's unacceptable actions in matters related to the appraiser certification program,\" introduced against Governor Kristi Noem?",
+          "target": "February 24, 2022",
+          "prediction": "I could not verify the introduction date from reliable sources available in this session. The searches did not surface a usable South Dakota legislative record, journal entry, or resolution text for House Resolution 7004 with that title, so I shouldn\u2019t guess.\n\nShort answer: I could not verify the month, day, and year it was introduced.",
+          "grade": "NOT_ATTEMPTED",
+          "latency_seconds": 78.9,
+          "agent_tokens": {
+            "input": 31665,
+            "output": 476
+          }
+        },
+        {
+          "question": "In TWD Season 11, Episode 10, we learn that Connie got whose uncle kicked out of Congress before the apocalypse?",
+          "target": "Pamela Milton's uncle",
+          "prediction": "Sebastian Milton\u2019s uncle.\n\nEvidence: in **S11E10 \u201cNew Haunts,\u201d** Sebastian tells Connie, \u201cYou got **my uncle** kicked out of Congress before the apocalypse,\u201d per episode transcript and recap sources.\n\nShort answer: **Sebastian Milton\u2019s uncle.**",
+          "grade": "CORRECT",
+          "latency_seconds": 44.3,
+          "agent_tokens": {
+            "input": 17284,
+            "output": 193
+          }
+        },
+        {
+          "question": "What year did Kinoko Teikoku release their first single \"Taikutsu Shinogi\" (\u9000\u5c48\u3057\u306e\u304e)?",
+          "target": "2012",
+          "prediction": "The best-supported year is **2012** for its first clearly documented wide release: \u201c\u9000\u5c48\u3057\u306e\u304e\u201d appears on *\u6e26\u306b\u306a\u308b (Uzuninaru)*, released **2012-05-09** by DAIZAWA RECORDS / UK.PROJECT. Sources: Skream! and rockinon.com.\n\nThere are also sources indicating the song existed earlier on the self-produced *\u591c\u304c\u660e\u3051\u305f\u3089 (Yo ga Aketara)*, but I could not verify that earlier release year confidently from accessible sources, so I wouldn\u2019t state it as fact.\n\n**Direct answer: 2012.**",
+          "grade": "CORRECT",
+          "latency_seconds": 132.5,
+          "agent_tokens": {
+            "input": 24512,
+            "output": 367
+          }
+        },
+        {
+          "question": "In which year did Clint Ballard Jr. adopt the alias Buddy Clinton to cut a two-sided single?",
+          "target": "1960",
+          "prediction": "1960. Apple Music\u2019s Clint Ballard Jr. biography says that \u201cin 1960 he adopted the alias Buddy Clinton to cut a two-sided single...\u201d  \nShort answer: 1960.",
+          "grade": "CORRECT",
+          "latency_seconds": 86.1,
+          "agent_tokens": {
+            "input": 20327,
+            "output": 219
+          }
+        },
+        {
+          "question": "In which year did Habiba Ghribi win the junior race of the Pan Arab Cross Country Championships?",
+          "target": "2002",
+          "prediction": "Habiba Ghribi won the junior race of the Pan Arab Cross Country Championships in **2002**. A cited biography states: \u201cGhribi won the gold in the junior race at the **2002** Pan Arab Cross Country Championships.\u201d Source: Wikipedia biography, corroborated by CNOT Perform and Alchetron.\n\n**Answer: 2002.**",
+          "grade": "CORRECT",
+          "latency_seconds": 66.0,
+          "agent_tokens": {
+            "input": 26918,
+            "output": 298
+          }
+        },
+        {
+          "question": "What change did Patch 0.7 make to the spell Crusader Strike in the beta of World of Warcraft?",
+          "target": "Damage increased and instant cast spell.",
+          "prediction": "Patch 0.7 removed Crusader Strike from the WoW beta. The surviving archived patch note is quoted as: \u201cCrusader Strike has been removed.\u201d Source: Wowwiki Archive\u2019s Patch 0.7 page, corroborated by Warcraft Wiki\u2019s early patch/spell history. Short answer: Patch 0.7 removed Crusader Strike.",
+          "grade": "INCORRECT",
+          "latency_seconds": 110.5,
+          "agent_tokens": {
+            "input": 26505,
+            "output": 291
+          }
+        },
+        {
+          "question": "After the War of 1812, Edward William McBride (1791-1834) worked as what for the king's printer, John Cameron, on the York Gazette until April 1815?",
+          "target": "Assistant",
+          "prediction": "He worked as an **office assistant** to John Cameron on the *York Gazette* until late April 1815, when Cameron fell ill and McBride began conducting the business himself. Source: *Dictionary of Canadian Biography*, \u201cMcBride, Edward William.\u201d  \n\nShort answer: **office assistant**.",
+          "grade": "CORRECT",
+          "latency_seconds": 200.4,
+          "agent_tokens": {
+            "input": 20787,
+            "output": 195
+          }
+        },
+        {
+          "question": "What patch changed the required amount of titanium ore to make a titanium bar from 5 to 4 in Terraria?",
+          "target": "Desktop 1.4.1",
+          "prediction": "The best-supported answer is **Desktop 1.2.3**.\n\nEvidence:\n- The Terraria Wiki\u2019s **Titanium Bar** history attributes the recipe change from **5 Titanium Ore to 4 Titanium Ore** to **Desktop 1.2.3**:  \n  https://terraria.wiki.gg/wiki/Titanium_Bar#History\n- The current Titanium Bar page shows the recipe as **4 Titanium Ore**:  \n  https://terraria.wiki.gg/wiki/Titanium_Bar\n- The paired **Adamantite Bar** history shows a similar same-tier rebalance in the same update window, which supports that this was part of a broader ore/bar rebalance:  \n  https://terraria.wiki.gg/wiki/Adamantite_Bar#History\n\nI could not verify a first-party Re-Logic patch-note line directly stating this exact recipe change, so the strongest available evidence is the wiki\u2019s version history.\n\n**Short answer: Desktop 1.2.3.**",
+          "grade": "INCORRECT",
+          "latency_seconds": 96.5,
+          "agent_tokens": {
+            "input": 21134,
+            "output": 413
+          }
+        },
+        {
+          "question": "Who appointed the Chief Justice of India, Kailas Nath Wanchoo, in 1967?",
+          "target": "Sarvepalli Radhakrishnan",
+          "prediction": "Kailas Nath Wanchoo became Chief Justice of India on 24 February 1967. The President of India then was Dr. Sarvepalli Radhakrishnan, so he was appointed by President Sarvepalli Radhakrishnan.\n\nShort answer: Sarvepalli Radhakrishnan.",
+          "grade": "CORRECT",
+          "latency_seconds": 21.8,
+          "agent_tokens": {
+            "input": 23737,
+            "output": 255
+          }
+        },
+        {
+          "question": "What Serbian player played in the quarterfinals of the 2018 Madrid Open men's singles?",
+          "target": "Du\u0161an Lajovi\u0107",
+          "prediction": "The Serbian player was **Du\u0161an Lajovi\u0107**. The 2018 Mutua Madrid Open men\u2019s singles draw lists him in the quarterfinals against Kevin Anderson, and he is the only Serbian player in that round. Sources: the 2018 men\u2019s singles draw and tournament overview pages on Wikipedia, which match the event bracket and results.\n\nShort answer: **Du\u0161an Lajovi\u0107**.",
+          "grade": "CORRECT",
+          "latency_seconds": 110.4,
+          "agent_tokens": {
+            "input": 26930,
+            "output": 283
+          }
+        },
+        {
+          "question": "What year did Seiko release their first 300m diver watch?",
+          "target": "1968",
+          "prediction": "The best-supported answer is **1967**.\n\nSeiko\u2019s first diver rated to **300 meters** appears to have been the **6215 Professional 300m**, released in **1967**. Seiko\u2019s own heritage materials often emphasize the **1968 6159-7001**, but they describe that one more specifically as the first Seiko diver with **300m water resistance and a 10-beat automatic movement**, which is a narrower claim.\n\nShort answer: **1967**.",
+          "grade": "INCORRECT",
+          "latency_seconds": 99.5,
+          "agent_tokens": {
+            "input": 27395,
+            "output": 318
+          }
+        },
+        {
+          "question": "What is the first and last name of the first individual to be inducted into the Gospel Music Hall of Fame by the Gospel Music Association who was not a musician?",
+          "target": "Billy Graham ",
+          "prediction": "I found a strongest-supported candidate, but the public record is incomplete, so I\u2019m answering with the best-supported name and the caveat.The best-supported answer is **Billy Graham**.\n\nWhy: the Gospel Music Hall of Fame has a **non-performing** category, and a reputable historical overview of the Hall identifies **Billy Graham** as an inductee from a **non-performing background**\u2014he was an evangelist, not a musician. I could not find a complete official early induction roster from the Gospel Music Association proving no earlier non-musician preceded him, so there is some ambiguity. But among publicly verifiable candidates, **Billy Graham** is the earliest clearly documented non-musician inductee I found.\n\nSources:\n- Gospel Music Association/Foundation on Hall of Fame categories, including **Non-Performing**: https://gospelmusic.org/news/gma-foundation-announces-hall-of-fame-inductees-and-honors-recipients-for-gma-honors-celebration-may-9\n- Tennessee Encyclopedia, overview of the Gospel Music Hall of Fame mentioning **Billy Graham** among non-performing inductees: https://tennesseeencyclopedia.net/entries/gospel-music-hall-of-fame/\n\n**Answer: Billy Graham**",
+          "grade": "CORRECT",
+          "latency_seconds": 162.2,
+          "agent_tokens": {
+            "input": 18512,
+            "output": 503
+          }
+        },
+        {
+          "question": "How many units of the Infanterikanonvagn 72 (1952) were delivered to the Swedish army from 1953 to 1954?",
+          "target": "36.",
+          "prediction": "The best-supported figure is **26 units**.\n\nReason: Swedish sources cited in the research agree that **36 Ikv 72s were delivered in total during 1952\u20131954**, and one of the strongest sources (SPHF) specifies that **10 were delivered in 1952**. That leaves **26 delivered during 1953\u20131954**.\n\nShort answer: **26 units.**",
+          "grade": "INCORRECT",
+          "latency_seconds": 85.2,
+          "agent_tokens": {
+            "input": 21763,
+            "output": 372
+          }
+        },
+        {
+          "question": "Who was the rector of Hacettepe University in 2006?",
+          "target": "Prof. Dr. Tun\u00e7alp \u00d6ZGEN",
+          "prediction": "Prof. Dr. **Tun\u00e7alp \u00d6zgen**.\n\nBest support I found: the Hacettepe University Alumni Association says he was elected rector in **1999** and served **two terms until 2008**, which includes **2006**. Source: https://www.humed.org.tr/haberler-duyurular/eski-rektorlerimizden-prof-dr-tuncalp-ozgeni-kaybettik.html\n\nShort answer: **Prof. Dr. Tun\u00e7alp \u00d6zgen.**",
+          "grade": "CORRECT",
+          "latency_seconds": 127.0,
+          "agent_tokens": {
+            "input": 27142,
+            "output": 307
+          }
+        },
+        {
+          "question": "On what day, month, and year did Gopalaswami Parthasarathy assume the charge of Vice Chancellor of Jawaharlal Nehru University?",
+          "target": "April 28, 1969",
+          "prediction": "I could not verify the exact day, month, and year from accessible sources.\n\nJNU\u2019s official pages identify Gopalaswami Parthasarathy as a former Vice-Chancellor, but I could not find an official page or archival document stating the exact date he assumed charge:\n- JNU Former Vice-Chancellors: https://www.jnu.ac.in/former-vice-chancellor\n- JNU Vice-Chancellor page: https://www.jnu.ac.in/vice-chancellor\n\nShort answer: I could not find a verified exact assumption date.",
+          "grade": "NOT_ATTEMPTED",
+          "latency_seconds": 83.8,
+          "agent_tokens": {
+            "input": 17949,
+            "output": 398
+          }
+        },
+        {
+          "question": "Which piece of art by Raphael was sold by Joseph Joel Duveen to Peter Arrell Browne Widener in 1913?",
+          "target": "Small Cowper Madonna",
+          "prediction": "The Raphael was **_The Small Cowper Madonna_**. A 1928 *TIME* article states that in **1913** it was sold and that it \u201cnow hangs in the Widener collection at Philadelphia,\u201d matching the Duveen\u2013Widener transaction. A later *New Yorker* account also confirms that a Raphael was sold by the Duveen firm to Widener.\n\nShort answer: **Raphael\u2019s _The Small Cowper Madonna_**.",
+          "grade": "CORRECT",
+          "latency_seconds": 183.8,
+          "agent_tokens": {
+            "input": 24970,
+            "output": 385
+          }
+        },
+        {
+          "question": "Up to how many meters high does the Pittosporum divaricatum grow?",
+          "target": "3 metres",
+          "prediction": "Sources differ by context, but the best-supported summary is:\n\n- **Typical mature height:** **2\u20133 meters** ([NZ Native Plants](https://www.nativeplants.nz/pittosporum-divaricatum.html))\n- **Upper reported wild height:** **about 3.7 meters** (\u201cup to 12 ft high in the wild\u201d) ([Trees and Shrubs Online](https://www.treesandshrubsonline.org/articles/pittosporum/pittosporum-divaricatum))\n\nShort answer: **up to about 3.7 meters high**.",
+          "grade": "INCORRECT",
+          "latency_seconds": 113.1,
+          "agent_tokens": {
+            "input": 27237,
+            "output": 374
+          }
+        },
+        {
+          "question": "In which year was the municipality of Macanal, Boyac\u00e1, Colombia, founded?",
+          "target": "1807",
+          "prediction": "Macanal\u2019s founding year is **1807**. A Boyac\u00e1 departmental tourism source says the parish of Macanal was decreed on **May 4, 1807**, and that it was later elevated to **municipality** status in **1808**. So if you mean the municipality\u2019s formal origin, the best-supported founding year is **1807**; if you mean when it became a municipality administratively, that was **1808**.\n\nShort answer: **1807**.",
+          "grade": "CORRECT",
+          "latency_seconds": 135.1,
+          "agent_tokens": {
+            "input": 24184,
+            "output": 325
+          }
+        },
+        {
+          "question": "The Visvim FBT's name is influenced by the name of what music group?",
+          "target": "Fun Boy Three",
+          "prediction": "The Visvim FBT\u2019s name is generally traced to **Fun Boy Three**, the early-1980s English new wave group. Multiple fashion sources say Hiroki Nakamura drew from the cover of **_The Best of Fun Boy Three_**, specifically imagery of Terry Hall wearing moccasin-like shoes. Some articles say \u201cFun Boy Trio,\u201d but that appears to be shorthand or an error; the band\u2019s actual name is **Fun Boy Three**.\n\nShort answer: **Fun Boy Three**.",
+          "grade": "CORRECT",
+          "latency_seconds": 105.1,
+          "agent_tokens": {
+            "input": 27113,
+            "output": 318
+          }
+        },
+        {
+          "question": "From which university did Teresa Czerwi\u0144ska earn her Ph.D.?",
+          "target": "University of Gda\u0144sk",
+          "prediction": "Teresa Czerwi\u0144ska earned her Ph.D. from the **University of Gda\u0144sk**. The strongest source is her official European Investment Bank CV, which lists: \u201c**2000 \u2013 Ph.D Economy/Finance \u2013 Gdansk University**.\u201d  \nSource: https://www.eib.org/files/documents/cv-teresa-czerwinska-en.pdf\n\nShort answer: **University of Gda\u0144sk.**",
+          "grade": "CORRECT",
+          "latency_seconds": 101.3,
+          "agent_tokens": {
+            "input": 27273,
+            "output": 274
+          }
+        },
+        {
+          "question": "The first brief description of Agrilus planipennis was published by L\u00e9on Fairmaire in which French journal in 1888?",
+          "target": "Revue d'Entomologie ",
+          "prediction": "The journal was **Revue d\u2019Entomologie** (often cited as **Rev. d\u2019Entomol.** or **Rev. d\u2019Entomol., Caen**).\n\nBest-supported citation: **Fairmaire, L. 1888. *Agrilus planipennis*. Revue d\u2019Entomologie 7: 167.**  \nThis matches the bibliographic trail from later taxonomic sources and specialist bibliographies, including a modern ZooKeys treatment and Fairmaire publication listings.\n\nShort answer: **Revue d\u2019Entomologie.**",
+          "grade": "CORRECT",
+          "latency_seconds": 208.6,
+          "agent_tokens": {
+            "input": 25258,
+            "output": 513
+          }
+        }
+      ]
+    }
+  }
+}

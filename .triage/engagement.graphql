@@ -1,0 +1,17 @@
+query($owner:String!,$repo:String!,$cursor:String){
+  repository(owner:$owner,name:$repo){
+    issues(states:OPEN, first:100, after:$cursor, orderBy:{field:CREATED_AT, direction:ASC}){
+      pageInfo{ hasNextPage endCursor }
+      nodes{
+        number
+        createdAt
+        updatedAt
+        author{ login }
+        comments(last:1){
+          totalCount
+          nodes{ createdAt author{ login } authorAssociation }
+        }
+      }
+    }
+  }
+}

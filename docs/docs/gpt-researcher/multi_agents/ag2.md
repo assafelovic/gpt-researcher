@@ -40,7 +40,7 @@ Stages:
 1. Install required packages:
     ```bash
     pip install -r requirements.txt
-    pip install -r multi_agents_ag2/requirements.txt
+    pip install -r multi_agents/ag2/requirements.txt
     ```
 2. Update env variables:
     ```bash
@@ -49,11 +49,11 @@ Stages:
     ```
 3. Run the application:
     ```bash
-    python -m multi_agents_ag2.main
+    python -m multi_agents.ag2.main
     ```
 
 ## Usage
-To change the research query and customize the report, edit `multi_agents_ag2/task.json`.
+To change the research query and customize the report, edit `multi_agents/ag2/task.json`.
 
 ### Task.json contains the following fields:
 - `query` - The research query or task.

@@ -1,0 +1,92 @@
+{
+  "run_metadata": {
+    "timestamp": "2026-07-04T09:43:04.915647+00:00",
+    "num_examples": 2,
+    "seed": 42,
+    "model": "openai:gpt-5.4",
+    "grader_model": "gpt-5.4-mini"
+  },
+  "systems": {
+    "baseline_tavily": {
+      "summary": {
+        "total": 2,
+        "correct": 1,
+        "incorrect": 1,
+        "not_attempted": 0,
+        "correct_rate": 0.5,
+        "accuracy_given_attempted": 0.5,
+        "f1": 0.5,
+        "avg_latency_seconds": 12.8,
+        "p50_latency_seconds": 15.1,
+        "agent_input_tokens": 38198,
+        "agent_output_tokens": 462,
+        "wall_time_seconds": 16.1
+      },
+      "records": [
+        {
+          "question": "At which university did Jurgen Aschoff study medicine?",
+          "target": "University of Bonn.",
+          "prediction": "He studied medicine first at the **University of Bonn**; biographies note he then continued at **G\u00f6ttingen, W\u00fcrzburg, and Freiburg** as part of his medical studies. Source: Oxford Academic memorial for J\u00fcrgen Aschoff.\n\n**Short answer:** The University of Bonn.",
+          "grade": "CORRECT",
+          "latency_seconds": 10.4,
+          "agent_tokens": {
+            "input": 11781,
+            "output": 107
+          }
+        },
+        {
+          "question": "In which specific issue did Black Condor II perish?",
+          "target": "Infinite Crisis #1",
+          "prediction": "Black Condor II refers to Ryan Kendall. Sources I found agree he was killed during the Freedom Fighters\u2019 massacre by the Secret Society, and DC Database places that event in **Freedom Fighters (vol. 2) #5 (2011)**, where the aftermath and his death are tied to that issue. Wikipedia and DC Database also identify Ryan Kendall as the second Black Condor.\n\nShort answer: **Freedom Fighters (vol. 2) #5.**",
+          "grade": "INCORRECT",
+          "latency_seconds": 15.1,
+          "agent_tokens": {
+            "input": 26417,
+            "output": 355
+          }
+        }
+      ]
+    },
+    "gptr_deep_agent": {
+      "summary": {
+        "total": 2,
+        "correct": 2,
+        "incorrect": 0,
+        "not_attempted": 0,
+        "correct_rate": 1.0,
+        "accuracy_given_attempted": 1.0,
+        "f1": 1.0,
+        "avg_latency_seconds": 90.7,
+        "p50_latency_seconds": 96.5,
+        "gptr_internal_cost_usd": 0.2331,
+        "agent_input_tokens": 37543,
+        "agent_output_tokens": 389,
+        "wall_time_seconds": 97.1
+      },
+      "records": [
+        {
+          "question": "At which university did Jurgen Aschoff study medicine?",
+          "target": "University of Bonn.",
+          "prediction": "He studied medicine at the **University of Bonn**; biographical records indicate he later continued in **Freiburg**, where he completed his medical degree. Sources: Deutsche Biographie and the J\u00fcrgen Aschoff biography summary on Wikipedia.\n\nShort answer: **The University of Bonn.**",
+          "grade": "CORRECT",
+          "latency_seconds": 84.9,
+          "agent_tokens": {
+            "input": 17273,
+            "output": 168
+          }
+        },
+        {
+          "question": "In which specific issue did Black Condor II perish?",
+          "target": "Infinite Crisis #1",
+          "prediction": "Black Condor II, Ryan Kendall, dies in **_Infinite Crisis_ #1**. A character reference for Black Condor states that in **_Infinite Crisis_ #1**, Kendall was killed by **Sinestro** during the Secret Society\u2019s ambush on the Freedom Fighters.\n\nShort answer: **_Infinite Crisis_ #1**.",
+          "grade": "CORRECT",
+          "latency_seconds": 96.5,
+          "agent_tokens": {
+            "input": 20270,
+            "output": 221
+          }
+        }
+      ]
+    }
+  }
+}

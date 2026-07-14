@@ -1,0 +1,1041 @@
+{
+  "run_metadata": {
+    "timestamp": "2026-07-04T19:39:24.730577+00:00",
+    "model": "openai:gpt-5.4",
+    "grader_model": "gpt-5.4",
+    "budgets": [
+      25,
+      60
+    ],
+    "ground_truth_verified": "2026-07-04"
+  },
+  "summary": {
+    "baseline@25": {
+      "checkpoints_total": 46,
+      "correct": 0,
+      "partial": 0,
+      "missing": 46,
+      "wrong_stale": 0,
+      "coverage": 0.0,
+      "avg_unique_cited_urls": 0.0,
+      "avg_latency_seconds": 0.0
+    },
+    "baseline@60": {
+      "checkpoints_total": 46,
+      "correct": 27,
+      "partial": 13,
+      "missing": 6,
+      "wrong_stale": 0,
+      "coverage": 0.728,
+      "avg_unique_cited_urls": 31.5,
+      "avg_latency_seconds": 172.8
+    },
+    "gptr@25": {
+      "checkpoints_total": 46,
+      "correct": 26,
+      "partial": 16,
+      "missing": 3,
+      "wrong_stale": 1,
+      "coverage": 0.739,
+      "avg_unique_cited_urls": 36.5,
+      "avg_latency_seconds": 145.6
+    },
+    "gptr@60": {
+      "checkpoints_total": 46,
+      "correct": 20,
+      "partial": 16,
+      "missing": 7,
+      "wrong_stale": 3,
+      "coverage": 0.609,
+      "avg_unique_cited_urls": 36.5,
+      "avg_latency_seconds": 134.8
+    },
+    "gptr_internal_cost_usd": 0.8596
+  },
+  "records": [
+    {
+      "task": "h1_2026_almanac",
+      "prompt": "Write a 'first half of 2026' almanac briefing for a newsroom: a single wide-coverage report on the defining events of January-July 2026 across sports, entertainment and space. Cover: (1) the 2026 FIFA World Cup so far - format, hosts, how the knockout rounds have gone including specific results and upsets, and the upcoming round-of-16 schedule; (2) Super Bowl LX - teams, score, MVP, venue; (3) the 2026 NBA Finals - teams, series result, clinching game, MVP, historical significance; (4) the 98th Academy Awards - date, host, and winners across the major categories including the films that dominated; (5) NASA's Artemis II - dates, crew, records, outcome. Be specific about names, dates, scores and numbers throughout, and cite sources.",
+      "baseline@25": {
+        "report": "",
+        "latency_seconds": 0.0,
+        "grades": [
+          {
+            "checkpoint": 1,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          },
+          {
+            "checkpoint": 2,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          },
+          {
+            "checkpoint": 3,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          },
+          {
+            "checkpoint": 4,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          },
+          {
+            "checkpoint": 5,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          },
+          {
+            "checkpoint": 6,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          },
+          {
+            "checkpoint": 7,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          },
+          {
+            "checkpoint": 8,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          },
+          {
+            "checkpoint": 9,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          },
+          {
+            "checkpoint": 10,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          },
+          {
+            "checkpoint": 11,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          },
+          {
+            "checkpoint": 12,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          },
+          {
+            "checkpoint": 13,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          },
+          {
+            "checkpoint": 14,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          },
+          {
+            "checkpoint": 15,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          },
+          {
+            "checkpoint": 16,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          },
+          {
+            "checkpoint": 17,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          },
+          {
+            "checkpoint": 18,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          },
+          {
+            "checkpoint": 19,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          },
+          {
+            "checkpoint": 20,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          },
+          {
+            "checkpoint": 21,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          },
+          {
+            "checkpoint": 22,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          },
+          {
+            "checkpoint": 23,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          },
+          {
+            "checkpoint": 24,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          },
+          {
+            "checkpoint": 25,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          }
+        ],
+        "unique_cited_urls": 0
+      },
+      "baseline@60": {
+        "report": "# January-July 2026 almanac briefing for a newsroom\n\nThe first half of 2026 delivered a dense run of headline events across sports, entertainment and space: the biggest men\u2019s World Cup ever is now in its knockout phase across North America; the Seahawks won a defense-heavy Super Bowl LX; the Knicks ended a 53-year title drought in the NBA Finals; the Oscars split their biggest honors between *One Battle After Another* and *Sinners*; and NASA\u2019s Artemis II sent humans farther from Earth than any mission since Apollo, then brought them home safely. What follows is a single briefing built for editors and producers, with dates, scores, names and records grounded in published sources.\n\n---\n\n## 1) The 2026 FIFA World Cup so far\n\n### The format, hosts and scale\nThe 2026 men\u2019s World Cup is the first with **48 teams**, up from 32, and the first to use **12 groups of four** followed by a new **Round of 32**, then the Round of 16, quarter-finals, semi-finals and final. The top two teams in each group plus the **eight best third-place teams** advance to the Round of 32. The tournament runs from **11 June to 19 July 2026** and is jointly hosted by **Canada, Mexico and the United States**. FIFA says the expanded format produces **104 matches**, and the champion must now win **eight matches** rather than seven. Sources: FIFA format explainer https://www.fifa.com/en/articles/article-fifa-world-cup-2026-mexico-canada-usa-new-format-tournament-football-soccer ; FIFA tournament guide https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/fifa-world-cup-2026-hosts-cities-dates-usa-mexico-canada\n\nFIFA lists **16 host cities**: **Toronto** and **Vancouver** in Canada; **Guadalajara, Mexico City and Monterrey** in Mexico; and **Atlanta, Boston, Dallas, Houston, Kansas City, Los Angeles, Miami, New York/New Jersey, Philadelphia, San Francisco Bay Area and Seattle** in the U.S. Source: FIFA host-city guide https://www.fifa.com/en/articles/article-fifa-world-cup-2026-mexico-canada-usa-new-format-tournament-football-soccer\n\n### The knockout rounds so far: results, scares and upsets\n\nThe new Round of 32 has already produced several defining storylines.\n\n- **Canada 1-0 South Africa (June 28)**: Canada reached the last 16 on a **92nd-minute Stephen Eustaquio goal**, which Reuters said sent the hosts into the World Cup last 16 for the first time. Source: Reuters https://www.reuters.com/sports/soccer/canada-score-late-winner-advance-last-16-world-cup-2026-06-28\n\n- **Morocco 1-1 Netherlands, Morocco won 3-2 on penalties (June 29)**: Morocco eliminated the Dutch in Monterrey. Source: Reuters https://www.reuters.com/sports/soccer/morocco-advance-world-cup-after-penalty-shootout-win-over-netherlands-2026-06-30\n\n- **Germany 1-1 Paraguay, Paraguay won 4-3 on penalties (June 29)**: one of the tournament\u2019s clearest shocks. Reuters described Germany\u2019s exit as a **major upset** and noted it was the **first time Germany had lost a World Cup penalty shootout**. Sources: Reuters https://www.reuters.com/sports/soccer/paraguay-knock-germany-out-world-cup-penalties-major-upset-2026-06-29 and https://www.reuters.com/sports/soccer/paraguay-pull-off-world-cup-penalty-gamble-last-historic-germany-win-2026-06-30\n\n- **Mexico 2-0 Ecuador (June 30)**: goals from **Julian Qui\u00f1ones** and **Ra\u00fal Jim\u00e9nez** gave co-host Mexico its first World Cup knockout win in **40 years**, according to Reuters. Source: Reuters https://www.reuters.com/sports/soccer/mexico-beat-ecuador-2-0-reach-world-cup-last-16-end-knockout-hoodoo-2026-07-01\n\n- **France 3-0 Sweden (June 30)**: Reuters reported a **Kylian Mbapp\u00e9 double** as France eased through. Source: Reuters https://www.reuters.com/sports/soccer/mbappe-double-france-ease-past-sweden-3-0-reach-last-16-2026-06-30\n\n- **Norway 2-1 Ivory Coast (June 30)**: **Erling Haaland** scored the **86th-minute winner**, delivering Norway\u2019s **first World Cup knockout-round victory**. Source: Reuters https://www.reuters.com/sports/soccer/haaland-hero-again-norway-edge-ivory-coast-advance-world-cup-2026-06-30\n\n- **Belgium 3-2 Senegal after extra time (July 1)**: Belgium trailed **2-0** and survived only through a **125th-minute Youri Tielemans penalty**, one of the wildest escapes of the tournament so far. Source: Reuters https://www.reuters.com/sports/soccer/belgium-through-world-cup-last-16-with-dramatic-3-2-win-over-senegal-2026-07-01\n\n- **United States 2-0 Bosnia and Herzegovina (July 1)**: Reuters said the **10-man U.S.** ended a **24-year wait for a knockout-stage World Cup win**. Source: Reuters https://www.reuters.com/sports/soccer/update1-soccer-us-keep-world-cup-dream-alive-with-gutsy-win-over-bosnia-2026-07-02\n\n- **England 2-1 DR Congo (July 1)**: **Harry Kane** scored twice in the final 15 minutes after DR Congo had threatened \u201cone of the tournament\u2019s biggest upsets,\u201d Reuters wrote. Source: Reuters https://www.reuters.com/sports/soccer/kane-double-rescues-england-comeback-win-over-dr-congo-2026-07-01\n\n- **Spain 3-0 Austria (July 2)**: Spain advanced comfortably. Source: Reuters https://www.reuters.com/sports/soccer/spain-sweep-aside-austria-3-0-reach-world-cup-last-16-2026-07-02\n\n- **Portugal 2-1 Croatia (July 2)**: Reuters reported **Cristiano Ronaldo** equalized from the penalty spot before **Gon\u00e7alo Ramos** headed a stoppage-time winner. Source: Reuters https://www.reuters.com/sports/soccer/portugals-martinez-takes-off-ronaldo-when-push-comes-shove-2026-07-03 ; FIFA match report https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/portugal-croatia-match-report-highlights\n\n- **Switzerland 2-0 Algeria (July 3)**: goals from **Breel Embolo** and **Dan Ndoye**. Source: Reuters https://www.reuters.com/sports/soccer/slick-switzerland-sweep-past-algeria-into-world-cup-last-16-2026-07-03\n\n- **Egypt 1-1 Australia, Egypt won 4-2 on penalties (July 3)**: Reuters said it was **Egypt\u2019s first World Cup knockout win**. Source: Reuters https://www.reuters.com/sports/soccer/egypt-beat-australia-penalties-reach-world-cup-round-16-2026-07-03\n\n- **Argentina 3-2 Cabo Verde after extra time (July 3)**: Reuters reported the defending champions needed an **extra-time own goal** to survive a major scare against World Cup debutants Cabo Verde. Source: Reuters https://www.reuters.com/sports/soccer/argentina-beat-cape-verde-3-2-extra-time-thriller-2026-07-04\n\n- **Colombia 1-0 Ghana (July 3)**: **Jhon Arias** scored the winner to secure the final last-16 spot. Sources: Reuters https://www.reuters.com/sports/soccer/colombia-beat-ghana-1-0-set-up-switzerland-showdown-2026-07-04 ; FIFA roundup https://www.fifa.com/en/articles/matchday-23-round-up-review-highlights\n\n### The upcoming Round-of-16 schedule\nFIFA\u2019s knockout calendar places the Round of 16 across **4-7 July 2026**. As of July 4, the confirmed slate is:\n\n- **Saturday, July 4** \u2014 **Canada vs Morocco**  \n  Sources: Reuters https://www.reuters.com/sports/soccer/captain-davies-bench-canada-last-16-clash-with-morocco-2026-07-04 ; FIFA live updates hub https://www.fifa.com/en/articles/todays-matches-live-updates\n\n- **Saturday, July 4** \u2014 **Paraguay vs France**  \n  Sources: Reuters https://www.reuters.com/sports/soccer/deschamps-warns-extreme-heat-could-test-france-against-paraguay-in-last-16-2026-07-03 ; FIFA knockout bracket https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/knockout-stage-match-schedule-bracket\n\n- **Sunday, July 5** \u2014 **Brazil vs Norway**  \n  Sources: Reuters https://www.reuters.com/sports/soccer/brazil-face-haaland-norway-hoodoo-world-cup-last-16-2026-07-03 ; Reuters schedule graphic https://www.reuters.com/graphics/SOCCER-WORLDCUP/mopaoglqkpa/schedule\n\n- **Sunday, July 5** \u2014 **Mexico vs England**  \n  Sources: Reuters https://www.reuters.com/sports/soccer/mexico-chase-another-slice-world-cup-history-england-return-azteca-2026-07-03 ; https://www.reuters.com/sports/soccer/sundays-mexico-england-game-be-moved-earlier-due-storm-risk-local-media-report-2026-07-03/\n\n- **Monday, July 6** \u2014 **United States vs Belgium**  \n  Sources: Reuters https://www.reuters.com/sports/soccer/belgium-must-improve-against-confident-co-hosts-us-after-senegal-late-show-2026-07-02 ; https://www.reuters.com/sports/soccer/belgium-wary-what-comes-next-against-us-after-senegal-let-off-2026-07-03\n\n- **Monday, July 6** \u2014 **Spain vs Portugal**  \n  Sources: Reuters https://www.reuters.com/sports/soccer/spain-sweep-aside-austria-3-0-reach-world-cup-last-16-2026-07-02 ; https://www.reuters.com/sports/soccer/portugal-relieved-unconvincing-spain-loom-world-cup-last-16-2026-07-03\n\n- **Tuesday, July 7** \u2014 **Argentina vs Egypt**  \n  Sources: Reuters https://www.reuters.com/sports/soccer/argentina-beat-cape-verde-3-2-extra-time-thriller-2026-07-04 ; Reuters schedule graphic https://www.reuters.com/graphics/SOCCER-WORLDCUP/mopaoglqkpa/schedule\n\n- **Tuesday, July 7** \u2014 **Switzerland vs Colombia**  \n  Sources: Reuters https://www.reuters.com/sports/soccer/colombia-beat-ghana-1-0-set-up-switzerland-showdown-2026-07-04 ; Reuters schedule graphic https://www.reuters.com/graphics/SOCCER-WORLDCUP/mopaoglqkpa/schedule\n\nThe biggest editorial takeaways so far: the expansion has created more knockout drama without eliminating heavyweight survival; **Germany are out**, **Mexico broke its knockout curse**, **Egypt made national history**, and **Argentina, Belgium and England all had to escape serious danger**.\n\n---\n\n## 2) Super Bowl LX\n\n**Super Bowl LX** was played on **Sunday, February 8, 2026**, at **Levi\u2019s Stadium in Santa Clara, California**. The **Seattle Seahawks** beat the **New England Patriots**, **29-13**. Sources: NFL Super Bowl page https://www.nfl.com/super-bowl ; NFL photos page confirming venue/date https://www.nfl.com/photos/best-of-super-bowl-lx\n\nThe game\u2019s **MVP** was Seahawks running back **Kenneth Walker III**, who the NFL says rushed for **135 yards on 27 carries** and added **26 receiving yards** for **161 scrimmage yards**. NFL.com notes he became the **first running back to win Super Bowl MVP since Terrell Davis in Super Bowl XXXII**, and that his **135 rushing yards were the most in a Super Bowl since Davis ran for 157**. Source: NFL.com https://www.nfl.com/news/seahawks-rb-kenneth-walker-iii-named-super-bowl-lx-mvp\n\nNFL.com also highlighted a scoring oddity central to the Seahawks\u2019 win: kicker **Jason Myers** made a **Super Bowl-record five field goals**. Source: NFL Super Bowl hub https://www.nfl.com/super-bowl\n\n---\n\n## 3) The 2026 NBA Finals\n\nThe **New York Knicks** beat the **San Antonio Spurs**, **4-1**, in the 2026 NBA Finals. The series began on **June 3, 2026**, and ended in **Game 5 on June 13**, when New York won **94-90 in San Antonio**. Sources: NBA Finals schedule page https://www.nba.com/news/2026-nba-finals-schedule ; Game 5 summary https://www.nba.com/game/nyk-vs-sas-0042500405 ; NBA Finals latest page https://www.nba.com/playoffs/2026/latest\n\nThe clinching game belonged to **Jalen Brunson**, who scored a **Knicks Finals-record 45 points** in Game 5 and was named **2026 NBA Finals MVP**, winning the **Bill Russell Trophy**. Sources: NBA Finals MVP story https://www.nba.com/news/jalen-brunson-wins-bill-russell-trophy-as-2026-nba-finals-mvp ; NBA latest page https://www.nba.com/playoffs/2026/latest\n\nThe historical significance is unusually large:\n- It was the **Knicks\u2019 first NBA title since 1973**, ending a **53-year championship drought**. Sources: NBA.com https://www.nba.com/news/2026-nba-finals-schedule ; https://www.nba.com/playoffs/2026/latest\n- It was the **franchise\u2019s third NBA championship**. Source: NBA history framing on NBA.com latest coverage https://www.nba.com/playoffs/2026/latest\n- Game 4 became a signature moment: New York came back from **29 points down** to beat San Antonio **107-106** on **OG Anunoby\u2019s tip-in with 1.2 seconds left**, which AP called a **record-breaking comeback in an NBA Finals game**. Source: NBA/AP game recap https://www.nba.com/game/sas-vs-nyk-0042500404\n\nSeries scores:\n- **Game 1:** Knicks 105, Spurs 95  \n- **Game 2:** Knicks 105, Spurs 104  \n- **Game 3:** Spurs 115, Knicks 111  \n- **Game 4:** Knicks 107, Spurs 106  \n- **Game 5:** Knicks 94, Spurs 90  \nSource: NBA Finals game summaries https://www.nba.com/game/sas-vs-nyk-0042500404 and https://www.nba.com/news/2026-nba-finals-schedule\n\n---\n\n## 4) The 98th Academy Awards\n\nThe **98th Academy Awards** were held on **Sunday, March 15, 2026**. The ceremony was hosted by **Conan O\u2019Brien**. Sources: Academy key dates https://www.oscars.org/oscars/98th-oscars-and-academy-key-dates ; PBS/AP winners list https://www.pbs.org/newshour/arts/heres-a-full-list-of-2026-academy-awards-winners\n\nThe night\u2019s dominant films were clearly **Paul Thomas Anderson\u2019s *One Battle After Another*** and **Ryan Coogler\u2019s *Sinners***. Reuters reported that *One Battle After Another* won **six Oscars**, *Sinners* won **four**, and *Frankenstein* won **three**. Source: Reuters https://www.reuters.com/lifestyle/oscars-2026-winners-list-sinners-one-battle-after-another-sweep-2026-03-16/\n\n### Major-category winners\n- **Best Picture:** *One Battle After Another*  \n- **Best Director:** **Paul Thomas Anderson**, *One Battle After Another*  \n- **Best Actor:** **Michael B. Jordan**, *Sinners*  \n- **Best Actress:** **Jessie Buckley**, *Hamnet*  \n- **Best Supporting Actor:** **Sean Penn**, *One Battle After Another*  \n- **Best Supporting Actress:** **Amy Madigan**, *Weapons*  \n- **Best Original Screenplay:** **Ryan Coogler**, *Sinners*  \n- **Best Adapted Screenplay:** **Paul Thomas Anderson**, *One Battle After Another*  \nSources: Reuters winners list https://www.reuters.com/lifestyle/oscars-2026-winners-list-sinners-one-battle-after-another-sweep-2026-03-16/ ; PBS/AP list https://www.pbs.org/newshour/arts/heres-a-full-list-of-2026-academy-awards-winners\n\n### Other major wins and films that dominated\n- *One Battle After Another* also won **Best Casting** and **Best Film Editing**. Source: Reuters https://www.reuters.com/lifestyle/oscars-2026-winners-list-sinners-one-battle-after-another-sweep-2026-03-16/\n- *Sinners* also won **Best Original Score** for **Ludwig G\u00f6ransson** and **Best Cinematography** for **Autumn Durald Arkapaw**. Source: Reuters https://www.reuters.com/lifestyle/oscars-2026-winners-list-sinners-one-battle-after-another-sweep-2026-03-16/\n- *Frankenstein* won **Production Design**, **Makeup and Hairstyling**, and **Costume Design**. Source: Reuters https://www.reuters.com/lifestyle/oscars-2026-winners-list-sinners-one-battle-after-another-sweep-2026-03-16/\n- **Best Animated Feature:** *KPop Demon Hunters*  \n- **Best International Feature:** *Sentimental Value* (Norway)  \n- **Best Documentary Feature:** *Mr. Nobody Against Putin*  \nSource: PBS/AP list https://www.pbs.org/newshour/arts/heres-a-full-list-of-2026-academy-awards-winners\n\nOne notable context line for entertainment desks: PBS/AP reported that *Sinners* entered the night with a **record-breaking 16 nominations**. Source: https://www.pbs.org/newshour/arts/heres-a-full-list-of-2026-academy-awards-winners\n\n---\n\n## 5) NASA\u2019s Artemis II\n\nNASA\u2019s **Artemis II** launched on **April 1, 2026, at 6:35 p.m. EDT** from **Launch Pad 39B at Kennedy Space Center** aboard the **Space Launch System**. NASA describes it as the **first crewed Artemis mission** and the first human mission toward the Moon since the Apollo era. Sources: NASA release on farthest-distance record https://www.nasa.gov/news-release/nasas-artemis-ii-crew-eclipses-record-for-farthest-human-spaceflight ; NASA Flight Day 10 blog https://www.nasa.gov/blogs/missions/2026/04/10/artemis-ii-flight-day-10-crew-sets-for-final-burn-splashdown/\n\n### Crew\nThe four-person crew was:\n- **Reid Wiseman** (NASA)\n- **Victor Glover** (NASA)\n- **Christina Koch** (NASA)\n- **Jeremy Hansen** (Canadian Space Agency)\n\nSource: NASA release https://www.nasa.gov/news-release/nasas-artemis-ii-crew-eclipses-record-for-farthest-human-spaceflight\n\n### Record and mission profile\nOn **April 6, 2026**, six days into the mission, Artemis II passed **248,655 miles from Earth**, surpassing the record set by **Apollo 13** in 1970. NASA said Orion would reach a farthest point of about **252,756 miles** from Earth, setting a new record for human spaceflight distance. Source: NASA release https://www.nasa.gov/news-release/nasas-artemis-ii-crew-eclipses-record-for-farthest-human-spaceflight\n\nNASA also said the crew would pass within about **4,067 miles** of the Moon\u2019s surface at closest approach and see parts of the lunar far side \u201cwith human eyes\u201d for the first time in the Artemis era. Source: NASA release https://www.nasa.gov/news-release/nasas-artemis-ii-crew-eclipses-record-for-farthest-human-spaceflight\n\n### Outcome\nArtemis II ended with a planned **splashdown off the coast of San Diego on April 10, 2026, at 8:07 p.m. EDT (5:07 p.m. PDT)**. NASA\u2019s Flight Day 10 blog said Orion completed a **694,481-mile journey** before recovery by NASA and U.S. military teams, who transferred the astronauts by helicopter to the **USS John P. Murtha** for post-mission medical evaluations. Source: NASA blog https://www.nasa.gov/blogs/missions/2026/04/10/artemis-ii-flight-day-10-crew-sets-for-final-burn-splashdown/\n\nThe cleanest summary for space desks: Artemis II was a **successful crewed lunar test flight** that **broke the human-distance record**, validated Orion in deep space, looped four astronauts around the Moon, and **returned them safely to Earth**. Sources: NASA release https://www.nasa.gov/news-release/nasas-artemis-ii-crew-eclipses-record-for-farthest-human-spaceflight ; NASA blog https://www.nasa.gov/blogs/missions/2026/04/10/artemis-ii-flight-day-10-crew-sets-for-final-burn-splashdown/\n\n---\n\n## Bottom line\n\nAcross January-July 2026, the defining cross-desk themes were scale, drought-breaking and return: the **48-team World Cup** delivered immediate knockout volatility, the **Seahawks** won Super Bowl LX **29-13**, the **Knicks** won their first title since **1973**, the Oscars were dominated by **One Battle After Another** and **Sinners**, and **Artemis II** carried humans farther from Earth than any mission since Apollo and brought them home safely.\n\nShort direct answer: the first half of 2026 was defined by an expanded World Cup full of upsets and escapes, Seattle\u2019s Super Bowl win, New York\u2019s long-awaited NBA title, an Oscars split between *One Battle After Another* and *Sinners*, and NASA\u2019s successful record-setting Artemis II lunar mission.",
+        "latency_seconds": 186.5,
+        "grades": [
+          {
+            "checkpoint": 1,
+            "grade": "CORRECT",
+            "evidence": "States 'first with 48 teams' and 'jointly hosted by Canada, Mexico and the United States'; says 'The new Round of 32 has already produced...' and 'The upcoming Round-of-16 schedule... As of July 4'."
+          },
+          {
+            "checkpoint": 2,
+            "grade": "CORRECT",
+            "evidence": "Lists 'Canada 1-0 South Africa', 'Mexico 2-0 Ecuador', and 'United States 2-0 Bosnia and Herzegovina'."
+          },
+          {
+            "checkpoint": 3,
+            "grade": "CORRECT",
+            "evidence": "'Germany 1-1 Paraguay, Paraguay won 4-3 on penalties (June 29)'."
+          },
+          {
+            "checkpoint": 4,
+            "grade": "CORRECT",
+            "evidence": "'Morocco 1-1 Netherlands, Morocco won 3-2 on penalties (June 29)'."
+          },
+          {
+            "checkpoint": 5,
+            "grade": "CORRECT",
+            "evidence": "'Argentina 3-2 Cabo Verde after extra time (July 3)' and identifies Argentina as defending champions."
+          },
+          {
+            "checkpoint": 6,
+            "grade": "CORRECT",
+            "evidence": "'Egypt 1-1 Australia, Egypt won 4-2 on penalties (July 3)' and Round of 16 includes 'Tuesday, July 7 \u2014 Argentina vs Egypt'."
+          },
+          {
+            "checkpoint": 7,
+            "grade": "CORRECT",
+            "evidence": "Includes France 3-0 Sweden, Spain 3-0 Austria, Portugal 2-1 Croatia, England 2-1 DR Congo, Belgium 3-2 Senegal after extra time."
+          },
+          {
+            "checkpoint": 8,
+            "grade": "CORRECT",
+            "evidence": "Lists 'Canada vs Morocco' and 'Paraguay vs France' (July 4), 'Brazil vs Norway' and 'Mexico vs England' (July 5), 'United States vs Belgium' and 'Spain vs Portugal' (July 6)."
+          },
+          {
+            "checkpoint": 9,
+            "grade": "CORRECT",
+            "evidence": "'Super Bowl LX was played on Sunday, February 8, 2026... The Seattle Seahawks beat the New England Patriots, 29-13.'"
+          },
+          {
+            "checkpoint": 10,
+            "grade": "PARTIAL",
+            "evidence": "Confirms 'Levi\u2019s Stadium in Santa Clara, California' but does not state it was Seattle's second Super Bowl title."
+          },
+          {
+            "checkpoint": 11,
+            "grade": "CORRECT",
+            "evidence": "'The game\u2019s MVP was Seahawks running back Kenneth Walker III'."
+          },
+          {
+            "checkpoint": 12,
+            "grade": "MISSING",
+            "evidence": "No mention of Uchenna Nwosu's 45-yard fourth-quarter interception return touchdown."
+          },
+          {
+            "checkpoint": 13,
+            "grade": "CORRECT",
+            "evidence": "'The New York Knicks beat the San Antonio Spurs, 4-1' and 'It was the Knicks\u2019 first NBA title since 1973'."
+          },
+          {
+            "checkpoint": 14,
+            "grade": "CORRECT",
+            "evidence": "'ended in Game 5 on June 13, when New York won 94-90 in San Antonio'."
+          },
+          {
+            "checkpoint": 15,
+            "grade": "CORRECT",
+            "evidence": "'Jalen Brunson... scored a Knicks Finals-record 45 points in Game 5 and was named 2026 NBA Finals MVP'."
+          },
+          {
+            "checkpoint": 16,
+            "grade": "PARTIAL",
+            "evidence": "Mentions comeback from '29 points down' in Game 4, but does not state they came back from double-digit deficits in all four series wins or the 16-point deficit in Game 5."
+          },
+          {
+            "checkpoint": 17,
+            "grade": "PARTIAL",
+            "evidence": "States date and host: 'March 15, 2026... hosted by Conan O\u2019Brien' but does not mention the Dolby Theatre."
+          },
+          {
+            "checkpoint": 18,
+            "grade": "CORRECT",
+            "evidence": "Says '*One Battle After Another* won six Oscars' and 'Best Picture' and 'Best Director: Paul Thomas Anderson'."
+          },
+          {
+            "checkpoint": 19,
+            "grade": "CORRECT",
+            "evidence": "'Best Actor: Michael B. Jordan, Sinners' and 'Best Actress: Jessie Buckley, Hamnet'."
+          },
+          {
+            "checkpoint": 20,
+            "grade": "CORRECT",
+            "evidence": "'Best Supporting Actor: Sean Penn, One Battle After Another' and 'Best Supporting Actress: Amy Madigan, Weapons'."
+          },
+          {
+            "checkpoint": 21,
+            "grade": "PARTIAL",
+            "evidence": "States 'Sinners entered the night with a record-breaking 16 nominations', 'won four', and 'Best Animated Feature: KPop Demon Hunters', but does not mention Best Original Song ('Golden')."
+          },
+          {
+            "checkpoint": 22,
+            "grade": "CORRECT",
+            "evidence": "'Artemis II launched on April 1, 2026' and 'ended with a planned splashdown... on April 10, 2026'; also calls it first crewed Artemis mission since Apollo era."
+          },
+          {
+            "checkpoint": 23,
+            "grade": "PARTIAL",
+            "evidence": "Lists the four crew members but omits roles such as 'Reid Wiseman (commander), Victor Glover (pilot)'."
+          },
+          {
+            "checkpoint": 24,
+            "grade": "CORRECT",
+            "evidence": "States Orion 'would reach a farthest point of about 252,756 miles from Earth' and that it surpassed Apollo 13."
+          },
+          {
+            "checkpoint": 25,
+            "grade": "CORRECT",
+            "evidence": "Describes it as a 'successful crewed lunar test flight' that 'validated Orion in deep space' and 'looped four astronauts around the Moon' with no landing."
+          }
+        ],
+        "unique_cited_urls": 44
+      },
+      "gptr@25": {
+        "report": "# January\u2013July 2026 almanac briefing for a newsroom\n\nThis is a single, wide-coverage briefing on the major sports, entertainment and space storylines that defined the first half of 2026, with emphasis on the specific events requested.\n\n---\n\n## 1) 2026 FIFA World Cup so far\n\n### The big frame: biggest World Cup ever, across three host countries\nThe 2026 FIFA World Cup is the first men\u2019s World Cup with **48 teams**, up from 32, and the first to be **co-hosted by three countries: Canada, Mexico and the United States**. FIFA says the tournament runs from **11 June to 19 July 2026**, includes **104 matches**, and uses a new structure: **12 groups of four**, followed by a **Round of 32**, then the Round of 16, quarter-finals, semi-finals and final. FIFA also notes that **Mexico City Stadium** hosts the opener and **New York New Jersey Stadium** the final.  \nSources: FIFA on hosts/dates/cities: https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/fifa-world-cup-2026-hosts-cities-dates-usa-mexico-canada ; FIFA on the 48-team format: https://www.fifa.com/en/articles/article-fifa-world-cup-2026-mexico-canada-usa-new-format-tournament-football-soccer ; FIFA match schedule: https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/match-schedule-fixtures-results-teams-stadiums\n\n### How the knockout stage has gone\nAs of **4 July 2026**, the **Round of 32 has been completed** and the **Round of 16 is set**. FIFA\u2019s knockout bracket and match round-ups show a tournament already defined by a few clear themes: heavyweights surviving, at least one major shootout upset, and several tight eliminators.  \nSources: FIFA knockout bracket: https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/knockout-stage-match-schedule-bracket ; FIFA matchday round-ups: https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/matchday-20-round-up-review-highlights ; https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/matchday-23-round-up-review-highlights\n\n### Specific Round-of-32 results and notable upsets\nConfirmed Round-of-32 results from FIFA reporting and bracket listings include:\n\n- **Canada 1-0 South Africa** \u2014 co-host Canada advanced, with FIFA framing it as a home-nation push into the last 16.  \n  Source: FIFA home page/bracket summary: https://www.fifa.com/en/home\n\n- **Brazil 2-1 Japan** \u2014 Brazil advanced in a closer-than-expected match.  \n  Source: FIFA home page/bracket summary: https://www.fifa.com/en/home\n\n- **Paraguay def. Germany on penalties, 4-3 after shootout** \u2014 one of the clearest shocks of the knockout stage so far. FIFA\u2019s coverage specifically highlighted **Orlando Gill** celebrating after **Jonathan Tah** missed Germany\u2019s sixth penalty in Foxborough.  \n  Sources: FIFA World Cup page/spotlight: https://www.fifa.com/en/tournaments/mens/worldcup ; FIFA highlights hub: https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/highlights\n\n- **Morocco def. Netherlands on penalties, 3-2 after shootout** \u2014 another major elimination of a European power.  \n  Source: FIFA home page/bracket summary: https://www.fifa.com/en/home\n\n- **Norway 2-1 C\u00f4te d\u2019Ivoire** \u2014 FIFA\u2019s matchday roundup stressed the star turn of **Erling Haaland** as Norway advanced.  \n  Source: https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/matchday-20-round-up-review-highlights\n\n- **France 3-0 Sweden** \u2014 emphatic and straightforward.  \n  Source: https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/matchday-20-round-up-review-highlights\n\n- **Mexico 2-0 Ecuador** \u2014 co-host Mexico advanced and set up a marquee Round-of-16 meeting with England.  \n  Sources: FIFA matchday roundup: https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/matchday-20-round-up-review-highlights ; match preview for Mexico-England: https://www.fifa.com/en/articles/mexico-england-preview-live-stream-team-news-tickets\n\n- **England 2-1 Congo DR** \u2014 England advanced but not without a test.  \n  Source: FIFA home page/bracket summary: https://www.fifa.com/en/home\n\n- **Belgium 3-2 Senegal** \u2014 another tight game; Senegal\u2019s exit means one of the more dangerous African sides is out.  \n  Sources: FIFA bracket/home summary: https://www.fifa.com/en/home ; FIFA World Cup page spotlight: https://www.fifa.com/en/tournaments/mens/worldcup\n\n- **USA 2-0 Bosnia and Herzegovina** \u2014 the U.S. moved on cleanly.  \n  Source: FIFA home page/bracket summary: https://www.fifa.com/en/home\n\n- **Spain 3-0 Austria** \u2014 Spain advanced comfortably.  \n  Source: FIFA home page/bracket summary: https://www.fifa.com/en/home\n\n- **Portugal 2-1 Croatia** \u2014 FIFA\u2019s review emphasized a star-driven win that set up a Portugal-Spain clash.  \n  Source: FIFA review: https://www.fifa.com/en/articles/algeria-spain-switzerland-review-highlights\n\n- **Switzerland 2-0 Algeria** \u2014 Switzerland advanced without much drama.  \n  Source: FIFA review: https://www.fifa.com/en/articles/switzerland-algeria-match-report-highlights\n\n- **Egypt def. Australia on penalties, 4-2 after shootout** \u2014 Egypt advanced after a draw and shootout; FIFA noted **Hossam Abdelmaguid** scored the winning penalty.  \n  Sources: FIFA matchday roundup: https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/matchday-23-round-up-review-highlights ; FIFA home page summary: https://www.fifa.com/en/home\n\n- **Argentina 3-2 Cabo Verde (after extra time)** \u2014 one of the tournament\u2019s best stories so far. FIFA called it Argentina surviving a \u201cvaliant\u201d Cabo Verde after the debutants twice came back from a goal down before a late extra-time own goal sent the defending champions through.  \n  Sources: FIFA match report: https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/argentina-cabo-verde-match-report-highlights ; FIFA matchday roundup: https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/matchday-23-round-up-review-highlights\n\n- **Colombia 1-0 Ghana** \u2014 Colombia completed the Round of 32 and remained unbeaten entering the Round of 16.  \n  Source: FIFA match report: https://www.fifa.com/en/articles/colombia-ghana-match-report-highlights\n\n### What counts as the biggest upset so far?\nBy profile and pedigree, the standout upset is **Paraguay eliminating Germany on penalties**. The other headline upset is **Morocco knocking out the Netherlands on penalties**. The near-upset that will drive a lot of coverage is **Cabo Verde pushing Argentina to extra time before losing 3-2**.  \nSources: FIFA bracket and match reports: https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/knockout-stage-match-schedule-bracket ; https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/argentina-cabo-verde-match-report-highlights\n\n### Upcoming Round-of-16 schedule\nFIFA\u2019s bracket and current live schedule show these Round-of-16 ties:\n\n- **4 July**: **Canada vs Morocco**  \n- **4 July**: **Paraguay vs France**  \n- **5 July**: **Brazil vs Norway**  \n- **5 July**: **Mexico vs England**  \n- **6 July**: **Portugal vs Spain**  \n- **6 July**: **United States vs Belgium**  \n- The remaining two Round-of-16 slots on the other side of the bracket are **Argentina vs Egypt** and **Colombia vs Switzerland**, as implied by FIFA\u2019s completed Round-of-32 bracket progression.  \nSources: FIFA knockout bracket: https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/knockout-stage-match-schedule-bracket ; FIFA live scores/schedule (also reflected by Fox\u2019s scoreboard): https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/match-schedule-fixtures-results-teams-stadiums ; https://www.foxsports.com/soccer/fifa-world-cup/scores\n\n**Newsroom angle:** the defining World Cup storyline through early July is that the expanded 48-team format has not diluted drama. It has produced more knockout football, more cross-regional clashes, and at least two bracket-shaking eliminations of major European teams.\n\n---\n\n## 2) Super Bowl LX\n\n**Super Bowl LX** was played on **8 February 2026** at **Levi\u2019s Stadium in Santa Clara, California**. The **Seattle Seahawks** beat the **New England Patriots, 29-13**. **Kenneth Walker III** was named **Super Bowl MVP** after rushing for **135 yards on 27 carries** and finishing with **161 scrimmage yards**. NFL.com says Walker\u2019s 135 rushing yards were the most in a Super Bowl since Terrell Davis rushed for 157 nearly three decades earlier.  \nSources: NFL MVP story: https://www.nfl.com/news/seahawks-rb-kenneth-walker-iii-named-super-bowl-lx-mvp ; NFL photo package confirming date/venue/opponents: https://www.nfl.com/photos/best-of-super-bowl-lx ; Pro Football Reference box score: https://www.pro-football-reference.com/boxscores/202602080nwe.htm\n\nThe game was defined less by quarterback play than by **Seattle\u2019s defense** and rushing control. NFL coverage described the Seahawks as taking a **19-0 lead**, recording **six sacks** and **three takeaways**, and largely neutralizing Patriots quarterback **Drake Maye**.  \nSource: NFL recap/what we learned: https://www.nfl.com/news/seahawks-patriots-in-super-bowl-lx-what-we-learned-from-seattle-s-29-13-win\n\n**Newsroom angle:** Seattle\u2019s second Lombardi came on a throwback formula \u2014 defense, field position and a power running game \u2014 rather than a shootout.\n\n---\n\n## 3) The 2026 NBA Finals\n\nThe **New York Knicks** beat the **San Antonio Spurs** in **five games, 4-1**, to win the **2026 NBA championship**. The clincher was **Game 5 on 13 June 2026**, when the Knicks won **94-90** in San Antonio.  \nSources: NBA Finals hub: https://www.nba.com/playoffs/2026/nba-finals ; official Game 5 page: https://www.nba.com/game/nyk-vs-sas-0042500405 ; Basketball-Reference series summary: https://www.basketball-reference.com/playoffs/2026-nba-finals-knicks-vs-spurs.html\n\n### Clinching game\nIn the clincher, **Jalen Brunson scored 45 points**, including a dominant fourth quarter, and was named **Finals MVP**. NBA.com says Brunson\u2019s 45 points set a **Knicks Finals record** for a title-clinching performance and secured the **Bill Russell Trophy**.  \nSources: Finals MVP story: https://www.nba.com/news/jalen-brunson-wins-bill-russell-trophy-as-2026-nba-finals-mvp ; Game 5 live recap: https://www.nba.com/news/live-updates-2026-nba-finals-game-5-knicks-seek-first-title-since-1973\n\n### Historical significance\nThis title mattered well beyond the box score:\n\n- It was the **Knicks\u2019 first championship since 1973**, ending a **53-year drought**.  \n- NBA.com described the Knicks as becoming champions \u201cfor the first time in 53 years.\u201d  \n- League game notes say New York became the **first team since 1971 to win the NBA Finals after trailing by 10 or more points in every game of the series**.  \n- NBA.com also highlighted the Knicks\u2019 **largest comeback in NBA Finals history** during the series and a record **ninth consecutive road playoff win** in a single postseason.  \nSources: NBA recap and takeaways: https://www.nba.com/news/4-takeaways-knicks-spurs-game-5 ; NBA Finals game notes: https://pr.nba.com/2026-nba-finals-game-notes ; NBA Finals recap collection: https://www.nba.com/watch/list/collection/2026-nba-finals-game-recap-videos\n\n**Newsroom angle:** in a New York sports year already crowded with big narratives, the Knicks\u2019 title was probably the most emotionally resonant \u2014 a historic franchise finally ending one of the league\u2019s longest active championship droughts.\n\n---\n\n## 4) The 98th Academy Awards\n\nThe **98th Academy Awards** were held on **Sunday, 15 March 2026**, at the **Dolby Theatre at Ovation Hollywood** in Los Angeles. The ceremony was **hosted by Conan O\u2019Brien**, who returned after hosting the previous year.  \nSources: Academy press release on host/airdate: http://press.oscars.org/news/host-conan-obrien-and-executive-producers-raj-kapoor-and-katy-mullan-reunite-98th-oscarsr ; Academy press release on production and date: http://press.oscars.org/news/98th-oscarsr-production-team-announced ; Academy ceremony page: https://www.oscars.org/oscars/ceremonies/2026\n\n### The film that dominated\nThe night belonged to **\u201cOne Battle After Another,\u201d** which won **Best Picture** and finished with **six Oscars**, including **Best Director** for **Paul Thomas Anderson**, **Best Adapted Screenplay**, **Best Supporting Actor** for **Sean Penn**, and the inaugural **Best Casting** award.  \nSources: Academy ceremony page: https://www.oscars.org/oscars/ceremonies/2026 ; ABC News winners summary: https://abcnews.com/GMA/Culture/oscars-2026-full-winners-list/story?id=130769299 ; ABC7 winners summary: https://abc7.com/post/oscars-2026-winners-list-see-won-best-picture-director-actor-actress-more/18711211\n\n### Major-category winners\nAcross the headline categories, the major winners were:\n\n- **Best Picture:** *One Battle After Another*  \n- **Best Director:** **Paul Thomas Anderson**, *One Battle After Another*  \n- **Best Actor:** **Michael B. Jordan**, *Sinners*  \n- **Best Actress:** **Jessie Buckley**, *Hamnet*  \n- **Best Supporting Actor:** **Sean Penn**, *One Battle After Another*  \n- **Best Supporting Actress:** **Amy Madigan**, *Weapons*  \nSources: Academy ceremony page: https://www.oscars.org/oscars/ceremonies/2026 ; ABC News full winners list: https://abcnews.com/GMA/Culture/oscars-2026-full-winners-list/story?id=130769299 ; Los Angeles Times live winners coverage: https://www.latimes.com/entertainment-arts/awards/live/oscars-2026-live-updates-winners-list\n\n### Other notable winners and storylines\nTwo additional storylines stood out:\n\n1. **\u201cSinners\u201d** came in as a giant contender and left with **four Oscars**, including **Original Screenplay** for **Ryan Coogler** and a historic **Cinematography** win for **Autumn Durald Arkapaw**, described in coverage as the **first woman to win that Oscar**.  \n   Sources: ABC News summary: https://abcnews.com/GMA/Culture/oscars-2026-full-winners-list/story?id=130769299 ; ABC7 recap: https://abc7news.com/post/oscars-2026-battle-another-wins-best-picture-98th-academy-awards/18719481\n\n2. **\u201cKPop Demon Hunters\u201d** won **Best Animated Feature**, and its song **\u201cGolden\u201d** won **Best Original Song**, widely noted as the **first K-pop song** to win in that category.  \n   Sources: ABC.com winners list: https://abc.com/news/e964adff-12f7-4a53-b828-3ec9db4be197/category/3590739 ; Hollywood Reporter recap video summary: https://www.youtube.com/watch?v=XK9LGNjPntM&vl=en\n\n**Newsroom angle:** the Oscars crystallized a year in which prestige auteurs, music-driven pop cinema, and Black-led studio filmmaking all landed real awards traction \u2014 but the final coronation went to Paul Thomas Anderson.\n\n---\n\n## 5) NASA\u2019s Artemis II\n\n**Artemis II** was NASA\u2019s first **crewed** Artemis mission and the first human mission to travel to the Moon and back since **Apollo 17 in 1972**. NASA\u2019s published launch-window material shows the mission launched on **1 April 2026**, and NASA announced the crew **splashed down on 10 April 2026** in the Pacific after a roughly **10-day mission**.  \nSources: NASA mission availability schedule: https://www.nasa.gov/wp-content/uploads/2026/01/artemis-ii-mission-availability.pdf ; NASA mission coverage page: https://www.nasa.gov/missions/artemis/artemis-2/nasa-sets-coverage-for-artemis-ii-moon-mission ; NASA splashdown release: https://www.nasa.gov/news-release/nasa-welcomes-record-setting-artemis-ii-moonfarers-back-to-earth\n\n### Crew\nThe four-person crew was:\n\n- **Reid Wiseman** \u2014 commander  \n- **Victor Glover** \u2014 pilot  \n- **Christina Koch** \u2014 mission specialist  \n- **Jeremy Hansen** (Canadian Space Agency) \u2014 mission specialist  \nSources: NASA splashdown release: https://www.nasa.gov/news-release/nasa-welcomes-record-setting-artemis-ii-moonfarers-back-to-earth ; NASA gallery: https://www.nasa.gov/gallery/artemis-ii-splashdown-and-recovery\n\n### Records and milestones\nNASA said Artemis II **surpassed the Apollo 13 record for the farthest crewed spaceflight**, making Wiseman, Glover, Koch and Hansen the humans who traveled **farther from Earth than any people in history**. NASA also described the crew as capturing **never-before-seen views of the far side of the Moon**.  \nSources: NASA splashdown release: https://www.nasa.gov/news-release/nasa-welcomes-record-setting-artemis-ii-moonfarers-back-to-earth ; NASA post-splashdown news conference description: https://www.youtube.com/watch?v=Ir2X1-FjDxg\n\n### Outcome\nThe mission was a **success**. NASA said all four astronauts returned in **good health** after a **record-setting moon flyby**, and the mission demonstrated Orion\u2019s human-rated systems ahead of future lunar-landing Artemis missions. NASA\u2019s flight-day updates show the crew swung around the Moon on **6 April 2026**, exited the lunar sphere of influence on **7 April**, and returned to Earth on **10 April**.  \nSources: NASA splashdown release: https://www.nasa.gov/news-release/nasa-welcomes-record-setting-artemis-ii-moonfarers-back-to-earth ; NASA flight day 9 update: https://www.nasa.gov/blogs/missions/2026/04/09/artemis-ii-flight-day-9-crew-prepares-to-come-home\n\n**Newsroom angle:** Artemis II was the year\u2019s clearest space milestone \u2014 a successful crewed return to deep-space lunar flight, and the strongest sign yet that the post-Apollo moon program is now operational rather than aspirational.\n\n---\n\n## Bottom line for editors\n\nAcross sports, entertainment and space, the first half of 2026 has been defined by **scale, revival and return**: the biggest World Cup ever, the Knicks ending a 53-year title drought, the Seahawks winning behind old-school defense and rushing, the Oscars crowning a long-admired auteur, and NASA sending humans around the Moon again for the first time in more than half a century.\n\nShort answer: the defining Jan\u2013July 2026 stories were the expanded World Cup\u2019s upset-filled knockout stage, Seattle\u2019s 29-13 Super Bowl win, the Knicks\u2019 4-1 Finals title over San Antonio, \u201cOne Battle After Another\u201d dominating the March 15 Oscars, and Artemis II\u2019s successful April 1\u201310 crewed moon flyby.",
+        "latency_seconds": 110.3,
+        "grades": [
+          {
+            "checkpoint": 1,
+            "grade": "CORRECT",
+            "evidence": "States 'first men\u2019s World Cup with 48 teams' and 'co-hosted by three countries: Canada, Mexico and the United States'; also 'As of 4 July 2026, the Round of 32 has been completed' and Round of 16 is set."
+          },
+          {
+            "checkpoint": 2,
+            "grade": "CORRECT",
+            "evidence": "Lists 'USA 2-0 Bosnia and Herzegovina', 'Mexico 2-0 Ecuador', and 'Canada 1-0 South Africa' and notes co-hosts advanced."
+          },
+          {
+            "checkpoint": 3,
+            "grade": "PARTIAL",
+            "evidence": "Says 'Paraguay def. Germany on penalties, 4-3 after shootout' but does not mention Round of 32 or the 1-1 draw."
+          },
+          {
+            "checkpoint": 4,
+            "grade": "PARTIAL",
+            "evidence": "Says 'Morocco def. Netherlands on penalties, 3-2 after shootout' but omits Round of 32 and the 1-1 draw."
+          },
+          {
+            "checkpoint": 5,
+            "grade": "PARTIAL",
+            "evidence": "States 'Argentina 3-2 Cabo Verde (after extra time)' and identifies Argentina as defending champions, but does not mention the July 3 date or Round of 32 explicitly."
+          },
+          {
+            "checkpoint": 6,
+            "grade": "PARTIAL",
+            "evidence": "States 'Egypt def. Australia on penalties, 4-2 after shootout' and later says 'Argentina vs Egypt' is a Round-of-16 tie, but omits the 1-1 score and July 7 date."
+          },
+          {
+            "checkpoint": 7,
+            "grade": "PARTIAL",
+            "evidence": "Includes France 3-0 Sweden, Spain 3-0 Austria, Portugal 2-1 Croatia, England 2-1 Congo DR, Belgium 3-2 Senegal; but does not state Belgium result was after extra time or that these are specifically 'other Round of 32 results.'"
+          },
+          {
+            "checkpoint": 8,
+            "grade": "CORRECT",
+            "evidence": "Lists Canada vs Morocco and Paraguay vs France (July 4), Brazil vs Norway and Mexico vs England (July 5), Portugal vs Spain and United States vs Belgium (July 6)."
+          },
+          {
+            "checkpoint": 9,
+            "grade": "CORRECT",
+            "evidence": "States 'Super Bowl LX was played on 8 February 2026' and 'Seattle Seahawks beat the New England Patriots, 29-13.'"
+          },
+          {
+            "checkpoint": 10,
+            "grade": "PARTIAL",
+            "evidence": "States 'at Levi\u2019s Stadium in Santa Clara, California' and later refers to 'Seattle\u2019s second Lombardi,' but does not explicitly say 'second Super Bowl title.'"
+          },
+          {
+            "checkpoint": 11,
+            "grade": "CORRECT",
+            "evidence": "States 'Kenneth Walker III was named Super Bowl MVP.'"
+          },
+          {
+            "checkpoint": 12,
+            "grade": "MISSING",
+            "evidence": "Mentions Seattle's defense and takeaways, but does not mention the fourth-quarter 45-yard pick-six by Uchenna Nwosu."
+          },
+          {
+            "checkpoint": 13,
+            "grade": "CORRECT",
+            "evidence": "States 'The New York Knicks beat the San Antonio Spurs in five games, 4-1' and 'It was the Knicks\u2019 first championship since 1973.'"
+          },
+          {
+            "checkpoint": 14,
+            "grade": "CORRECT",
+            "evidence": "States 'Game 5 on 13 June 2026, when the Knicks won 94-90 in San Antonio.'"
+          },
+          {
+            "checkpoint": 15,
+            "grade": "CORRECT",
+            "evidence": "States 'Jalen Brunson scored 45 points ... and was named Finals MVP.'"
+          },
+          {
+            "checkpoint": 16,
+            "grade": "WRONG",
+            "evidence": "Says the Knicks were 'the first team since 1971 to win the NBA Finals after trailing by 10 or more points in every game of the series,' which contradicts the checkpoint's broader claim about all four series wins and specifically 16 down in Game 5."
+          },
+          {
+            "checkpoint": 17,
+            "grade": "CORRECT",
+            "evidence": "States '98th Academy Awards were held on Sunday, 15 March 2026, at the Dolby Theatre ... hosted by Conan O\u2019Brien.'"
+          },
+          {
+            "checkpoint": 18,
+            "grade": "CORRECT",
+            "evidence": "States 'One Battle After Another,' won 'Best Picture' and 'finished with six Oscars,' including 'Best Director' for 'Paul Thomas Anderson.'"
+          },
+          {
+            "checkpoint": 19,
+            "grade": "CORRECT",
+            "evidence": "Lists 'Best Actor: Michael B. Jordan, Sinners' and 'Best Actress: Jessie Buckley, Hamnet.'"
+          },
+          {
+            "checkpoint": 20,
+            "grade": "CORRECT",
+            "evidence": "Lists 'Best Supporting Actor: Sean Penn, One Battle After Another' and 'Best Supporting Actress: Amy Madigan, Weapons.'"
+          },
+          {
+            "checkpoint": 21,
+            "grade": "PARTIAL",
+            "evidence": "States 'Sinners came in as a giant contender and left with four Oscars' and 'KPop Demon Hunters won Best Animated Feature' and 'Golden' won Best Original Song, but omits that Sinners led nominations with 16."
+          },
+          {
+            "checkpoint": 22,
+            "grade": "CORRECT",
+            "evidence": "States 'launched on 1 April 2026' and 'splashed down on 10 April 2026'; also calls it 'the first human mission to travel to the Moon and back since Apollo 17 in 1972.'"
+          },
+          {
+            "checkpoint": 23,
+            "grade": "CORRECT",
+            "evidence": "Lists crew as 'Reid Wiseman \u2014 commander; Victor Glover \u2014 pilot; Christina Koch; Jeremy Hansen (Canadian Space Agency).'"
+          },
+          {
+            "checkpoint": 24,
+            "grade": "PARTIAL",
+            "evidence": "States Artemis II surpassed Apollo 13 and made them the humans who traveled farther from Earth than any people in history, but does not include the exact distance of 252,756 miles."
+          },
+          {
+            "checkpoint": 25,
+            "grade": "CORRECT",
+            "evidence": "States it was a 'record-setting moon flyby' and 'demonstrated Orion\u2019s human-rated systems ahead of future lunar-landing Artemis missions.'"
+          }
+        ],
+        "unique_cited_urls": 42
+      },
+      "gptr@60": {
+        "report": "# January\u2013July 2026 Almanac Briefing for a Newsroom  \n## Defining events across sports, entertainment and space\n\nThis briefing covers the major headline events requested, with the tournament- and ceremony-state of play verified against current 2026 reporting and official or near-official records where available.\n\n---\n\n## 1) 2026 FIFA World Cup so far\n\n### The basics: hosts, dates and format\nThe 2026 FIFA World Cup is being staged across **Canada, Mexico and the United States** from **11 June to 19 July 2026**. It is the **first 48-team men\u2019s World Cup**, with teams divided into **12 groups of four**. The top two teams in each group plus the **eight best third-place teams** advanced to a new **Round of 32**, followed by the Round of 16, quarter-finals, semi-finals and final. FIFA\u2019s official schedule and bracket pages confirm both the three-country hosting arrangement and the expanded format.  \nSources: FIFA schedule and tournament pages:  \n- https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/match-schedule-fixtures-results-teams-stadiums  \n- https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/knockout-stage-match-schedule-bracket  \n- ESPN explainer on the 48-team/12-group format: https://www.espn.com/soccer/story/_/id/48939282/2026-fifa-world-cup-fixtures-results-match-schedule-group-stage-knockout-rounds-bracket\n\n### Where the knockout stage stands\nAs of **4 July 2026**, the **Round of 32 has concluded** and the **Round of 16 is beginning**. FIFA\u2019s bracket page and match reports show the knockout stage has already produced several standout results and shocks.  \nSource: https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/knockout-stage-match-schedule-bracket\n\n### Defining knockout results and upsets so far\nAmong the biggest early knockout stories:\n\n- **Paraguay eliminated Germany on penalties** after a **1-1 draw** in Boston on **29 June**. FIFA described it as Paraguay sending the four-time champions out after 120 minutes and a shootout \u2014 one of the clearest upsets of the Round of 32.  \n  Sources:  \n  - https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/germany-paraguay-review-highlights  \n  - https://inside.fifa.com/data-centre/teams/germany\n\n- **Morocco eliminated the Netherlands on penalties**, another major upset, according to FIFA\u2019s roundup of the day\u2019s action.  \n  Source: https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/brazil-paraguay-round-32-review-highlights\n\n- **Brazil beat Japan 2-1** on **29 June**, rallying to advance.  \n  Source: https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/brazil-paraguay-round-32-review-highlights\n\n- **France beat Sweden**, with **Kylian Mbapp\u00e9 scoring twice**, to move on from the Round of 32 on **30 June**.  \n  Source: https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/france-sweden-review-highlights\n\n- **Mexico beat Ecuador** to advance on **30 June** as the knockout bracket narrowed.  \n  Source: https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/matchday-20-round-up-review-highlights\n\n- **Norway beat C\u00f4te d\u2019Ivoire 2-1** on **30 June**, with **Erling Haaland** among the day\u2019s headliners.  \n  Source: https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/matchday-20-round-up-review-highlights\n\n- **Belgium came back from 2-0 down to beat Senegal 3-2 after extra time** on **1 July** in Seattle, with **Youri Tielemans scoring a penalty deep into added time of extra time**. FIFA called it an \u201cincredible comeback.\u201d  \n  Sources:  \n  - https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/belgium-senegal-review-highlights  \n  - https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/bosnia-england-belgium-usa-review-highlights\n\n- **England beat Congo DR** on **1 July**, rallying to reach the last 16.  \n  Source: https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/bosnia-england-belgium-usa-review-highlights\n\n- **USA beat Bosnia and Herzegovina** on **1 July**, surviving a red card according to FIFA\u2019s roundup.  \n  Source: https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/bosnia-england-belgium-usa-review-highlights\n\n- **Portugal beat Croatia** in Toronto on **2 July**, with FIFA billing it as an epic settled by **Gon\u00e7alo Ramos**.  \n  Source: https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/portugal-croatia-match-report-highlights\n\n- **Spain beat Austria**, a more straightforward win that set up an Iberian Round-of-16 meeting.  \n  Source: https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/spain-austria-match-report-highlights\n\n- **Switzerland beat Algeria 2-0** on **2 July**.  \n  Source: https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/switzerland-algeria-match-report-highlights\n\n- **Canada beat South Africa 1-0** on **28 June** in Los Angeles, with **Stephen Eustaquio\u2019s strike** the difference, keeping the co-hosts alive.  \n  Sources:  \n  - https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/south-africa-canada-review-highlights  \n  - https://inside.fifa.com/data-centre/teams/south-africa\n\n- **Argentina beat Cabo Verde 3-2 after extra time** on **3 July**, but only after being pushed to the brink by the tournament debutants. FIFA explicitly framed it as Argentina avoiding one of the greatest upsets in World Cup history; the winner came from a **Diney Borges own goal** after a Messi corner.  \n  Sources:  \n  - https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/argentina-cabo-verde-match-report-highlights  \n  - https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/argentina-dig-deep-cabo-verde\n\n- **Egypt beat Australia on penalties** after a draw on **3 July**, putting **Mohamed Salah\u2019s** side into the Round of 16.  \n  Sources:  \n  - https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/australia-egypt-match-report-highlights  \n  - https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/matchday-23-round-up-review-highlights\n\n- **Colombia beat Ghana 1-0** on **3 July** to seal the final Round-of-16 place.  \n  Sources:  \n  - https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/colombia-ghana-match-report-highlights  \n  - https://www.fifa.com/en/match-centre/match/17/285023/289287/400021517?date=2026-07-04\n\n### Upcoming Round-of-16 schedule\nFIFA\u2019s bracket and current live scheduling pages show these Round-of-16 fixtures:\n\n- **4 July**: **Canada vs Morocco**  \n- **4 July**: **Paraguay vs France**  \n- **5 July**: **Brazil vs Norway**  \n- **5 July**: **Mexico vs England**  \n- **6 July**: **Portugal vs Spain**  \n- **6 July**: **United States vs Belgium**  \n- **7 July**: **Argentina vs Egypt**  \n- **7 July**: **Switzerland vs Colombia**  \n\nSources:  \n- https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/knockout-stage-match-schedule-bracket  \n- https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/argentina-egypt-preview-live-stream-team-news-tickets\n\n### World Cup takeaway\nThe defining themes of the tournament\u2019s first knockout phase are clear: the **expanded 48-team format is producing more volatility**, established powers such as **Germany and the Netherlands are already out**, and several favorites \u2014 especially **Argentina** and **Belgium** \u2014 had to survive genuine scares to stay alive.\n\n---\n\n## 2) Super Bowl LX\n\n**Super Bowl LX** was played on **8 February 2026** at **Levi\u2019s Stadium in Santa Clara, California**. The **Seattle Seahawks** defeated the **New England Patriots, 29-13**, to win the franchise\u2019s **second Super Bowl title**. The game\u2019s **MVP** was **Seahawks running back Kenneth Walker III**. Official NFL coverage says Walker rushed for **135 yards on 27 carries** and added **26 receiving yards**, for **161 scrimmage yards**.  \nSources:  \n- Venue/date: https://levisstadium.com/event/super-bowl-lx  \n- NFL coverage and MVP: https://www.nfl.com/news/seahawks-rb-kenneth-walker-iii-named-super-bowl-lx-mvp  \n- NFL reaction hub: https://www.nfl.com/super-bowl  \n- Score and basic game record: https://www.pro-football-reference.com/boxscores/202602080nwe.htm  \n- Summary table: https://www.pro-football-reference.com/super-bowl\n\nA secondary statistical headline: NFL.com reported that kicker **Jason Myers** hit a **Super Bowl-record five field goals** and scored **17 points** in the win.  \nSource: https://www.nfl.com/news/seahawks-jason-myers-first-200-point-scorer-record-five-field-goals-super-bowl-lx\n\n---\n\n## 3) 2026 NBA Finals\n\nThe **2026 NBA Finals** matched the **New York Knicks** against the **San Antonio Spurs**. New York won the series **4-1**, clinching the title in **Game 5 on 13 June 2026** with a **94-90 road win** in San Antonio.  \nSources:  \n- NBA Finals hub: https://www.nba.com/playoffs/2026/nba-finals  \n- Game 5 recap: https://www.nba.com/news/4-takeaways-knicks-spurs-game-5  \n- Live Game 5 coverage: https://www.nba.com/news/live-updates-2026-nba-finals-game-5-knicks-seek-first-title-since-1973  \n- Game page: https://www.nba.com/game/nyk-vs-sas-0042500405\n\nThe clinching game belonged to **Jalen Brunson**, who scored **45 points**. The NBA identified him as **Finals MVP**, and its stats page notes that his **45 points tied Michael Jordan\u2019s 1998 mark for the most points on the road in an NBA Finals-clinching game**.  \nSources:  \n- https://www.nba.com/news/4-takeaways-knicks-spurs-game-5  \n- https://www.nba.com/stats  \n- https://www.nba.com/watch/list/collection/2026-nba-finals-video\n\n### Historical significance\nThis title was historically important for several reasons:\n\n- It was the **Knicks\u2019 first NBA championship since 1973**, ending a **53-year drought**.  \n- It was the franchise\u2019s **third championship**.  \n- The Finals included one of the series\u2019 signature moments in **Game 4**, when the Knicks came back from **29 points down** to win **107-106**, which NBA coverage described as the **largest comeback in NBA Finals history**.  \n- NBA.com also called the Knicks the first team to win an NBA \u201c**double**\u201d \u2014 the **NBA Cup** and the **NBA title** in the same season.  \n\nSources:  \n- https://www.nba.com/news/how-the-knicks-won-the-2026-nba-championship  \n- https://www.nba.com/news/4-takeaways-knicks-spurs-game-5  \n- https://www.nba.com/watch/list/collection/2026-nba-finals-game-recap-videos\n\n---\n\n## 4) The 98th Academy Awards\n\nThe **98th Academy Awards** were held on **15 March 2026** at the **Dolby Theatre in Hollywood, Los Angeles** and were hosted by **Conan O\u2019Brien**, his second consecutive time as host.  \nSources:  \n- Official Academy ceremony page: https://www.oscars.org/oscars/ceremonies/2026  \n- Academy key dates: https://www.oscars.org/oscars/98th-oscars-and-academy-key-dates  \n- ABC Oscars explainer: https://abcnews.com/GMA/Culture/oscars-2026-what-to-know/story?id=130270230  \n- Disney/ABC FAQ: https://thewaltdisneycompany.com/news/oscars-2026-faq\n\n### Major winners\nOfficial and network winner lists show these headline results:\n\n- **Best Picture**: **One Battle After Another**  \n- **Best Director**: **Paul Thomas Anderson**, *One Battle After Another*  \n- **Best Actor**: **Sean Penn**, *One Battle After Another*  \n- **Best Actress**: **Jessie Buckley**, *Hamnet*  \n- **Best Supporting Actress**: **Amy Madigan**, *Weapons*  \n- **Best Original Screenplay**: **Ryan Coogler**, *Sinners*  \n- **Best Animated Feature**: **KPop Demon Hunters**  \n- **Best Original Song**: **\u201cGolden\u201d** from *KPop Demon Hunters*  \nSources:  \n- Official Academy ceremony page: https://www.oscars.org/oscars/ceremonies/2026  \n- ABC winners list: https://abc.com/news/e964adff-12f7-4a53-b828-3ec9db4be197/category/3590739  \n- LA Times live winners coverage: https://www.latimes.com/entertainment-arts/awards/live/oscars-2026-live-updates-winners-list\n\n### Films that dominated\nTwo films dominated the night\u2019s storyline:\n\n- **One Battle After Another** won **six Oscars**, including **Best Picture**, **Best Director**, and **Adapted Screenplay** for Paul Thomas Anderson.  \n- **Sinners**, after a record **16 nominations**, won **four Oscars**, including **Best Actor for Michael B. Jordan** and **Original Screenplay for Ryan Coogler**.  \n\nThose two results create a sourcing tension: ABC\u2019s posted winners list identifies **Sean Penn** as Best Actor, while some press coverage summarized *Sinners* as taking **Best Actor** for **Michael B. Jordan**. Because the Academy and ABC winner pages are the stronger primary-style sources surfaced here, the safer newsroom line is that **official published winners lists available via ABC/Academy materials show Sean Penn as Best Actor**, while broader press coverage agreed that *One Battle After Another* and *Sinners* were the two most dominant films of the ceremony.  \nSources:  \n- https://abc.com/news/e964adff-12f7-4a53-b828-3ec9db4be197/category/3590739  \n- https://www.oscars.org/oscars/ceremonies/2026  \n- https://www.latimes.com/entertainment-arts/awards/live/oscars-2026-live-updates-winners-list\n\n### Oscars takeaway\nThe ceremony\u2019s biggest macro-story was the split between an eventual **Best Picture sweep for *One Battle After Another*** and a strong but slightly less all-conquering night for **Ryan Coogler\u2019s *Sinners***, which entered the night with exceptional nomination momentum.\n\n---\n\n## 5) NASA\u2019s Artemis II\n\nNASA\u2019s **Artemis II** mission launched on **1 April 2026** from **Kennedy Space Center** and returned with a **splashdown on 10 April 2026** off the coast of **San Diego**, completing what NASA described as a **nearly 10-day** crewed lunar test flight. It was the **first crewed mission of the Artemis program** and the **first human voyage around the Moon in more than half a century**.  \nSources:  \n- Artemis II mission page: https://www.nasa.gov/mission/artemis-ii  \n- NASA launch/mission coverage: https://www.nasa.gov/news-release/nasas-artemis-ii-mission-leaves-earth-orbit-for-flight-around-moon  \n- NASA return news release: https://www.nasa.gov/news-release/nasa-welcomes-record-setting-artemis-ii-moonfarers-back-to-earth  \n- NASA Q&A: https://www.nasa.gov/missions/nasa-answers-your-most-pressing-artemis-ii-questions\n\n### Crew\nThe crew consisted of:\n- **Reid Wiseman**  \n- **Victor Glover**  \n- **Christina Koch**  \n- **Jeremy Hansen** (Canadian Space Agency)  \n\nSource: https://www.nasa.gov/feature/our-artemis-crew/\n\n### Records and milestones\nNASA said Artemis II set a record by taking humans **farther from Earth than any previous crewed mission**, surpassing **Apollo 13\u2019s** record during the lunar flyby phase. NASA also described the mission as successfully completing its primary objectives, including:\n- testing Orion\u2019s **life-support systems**,  \n- having the crew **manually pilot** Orion,  \n- performing maneuvers to send Orion to the Moon and adjust course,  \n- conducting a **lunar flyby**, and  \n- completing a **safe re-entry and recovery**.  \n\nSources:  \n- NASA return release: https://www.nasa.gov/news-release/nasa-welcomes-record-setting-artemis-ii-moonfarers-back-to-earth  \n- NASA crew news conference summary: https://www.youtube.com/watch?v=hG44qIy31ec  \n- NASA science gallery note on mission distance/farthest point: https://www.nasa.gov/gallery/artemis-ii-mission-science\n\nNASA\u2019s own public materials also emphasize the huge audience impact: the agency later said Artemis II generated **149.4 million views** across NASA-owned mission coverage platforms.  \nSource: https://www.nasa.gov/general/nasas-artemis-ii-breaks-agency-streaming-record\n\n### Outcome\nThe mission outcome was a **success**: Artemis II completed its lunar free-return-style test flight, brought the crew home safely, and cleared a major operational step toward later Artemis missions, including eventual lunar landing missions.  \nSources:  \n- https://www.nasa.gov/news-release/nasa-welcomes-record-setting-artemis-ii-moonfarers-back-to-earth  \n- https://www.nasa.gov/mission/artemis-ii\n\n---\n\n## Bottom line for editors\n\nFrom January through early July 2026, the clearest cross-desk storylines are these:\n\n- The **expanded 48-team World Cup** is already delivering volatility, with **Germany and the Netherlands out early** and co-hosts still in the fight.  \n- **Seattle\u2019s 29-13 Super Bowl LX win** gave the Seahawks a second Lombardi Trophy and made **Kenneth Walker III** the game\u2019s MVP.  \n- The **Knicks\u2019 2026 NBA title** ended one of American sports\u2019 longest major-city droughts: **53 years without a championship**.  \n- The **98th Oscars** centered on **One Battle After Another** and **Sinners**, the year\u2019s two defining awards films.  \n- **Artemis II** succeeded as NASA\u2019s first crewed moon mission in decades and set a **new human-distance record from Earth**.\n\nShort direct answer: the first half of 2026 was defined by an upset-heavy World Cup, Seattle\u2019s Super Bowl title, the Knicks\u2019 first championship since 1973, an Oscars night led by *One Battle After Another* and *Sinners*, and NASA\u2019s successful, record-setting Artemis II moon flight.",
+        "latency_seconds": 120.6,
+        "grades": [
+          {
+            "checkpoint": 1,
+            "grade": "CORRECT",
+            "evidence": "\u201cstaged across Canada, Mexico and the United States\u2026 first 48-team men\u2019s World Cup\u201d and \u201cAs of 4 July 2026, the Round of 32 has concluded and the Round of 16 is beginning.\u201d"
+          },
+          {
+            "checkpoint": 2,
+            "grade": "PARTIAL",
+            "evidence": "States all three co-hosts advanced: \u201cMexico beat Ecuador,\u201d \u201cUSA beat Bosnia and Herzegovina,\u201d \u201cCanada beat South Africa 1-0,\u201d but omits the 2-0 scores for USA and Mexico."
+          },
+          {
+            "checkpoint": 3,
+            "grade": "PARTIAL",
+            "evidence": "Says \u201cParaguay eliminated Germany on penalties after a 1-1 draw,\u201d but does not include the 4-3 shootout score."
+          },
+          {
+            "checkpoint": 4,
+            "grade": "PARTIAL",
+            "evidence": "Says \u201cMorocco eliminated the Netherlands on penalties,\u201d but omits \u201c3-2 after a 1-1 draw.\u201d"
+          },
+          {
+            "checkpoint": 5,
+            "grade": "CORRECT",
+            "evidence": "\u201cArgentina beat Cabo Verde 3-2 after extra time on 3 July.\u201d"
+          },
+          {
+            "checkpoint": 6,
+            "grade": "PARTIAL",
+            "evidence": "States \u201cEgypt beat Australia on penalties after a draw\u201d and lists \u201c7 July: Argentina vs Egypt,\u201d but omits the exact 4-2 shootout and 1-1 draw details."
+          },
+          {
+            "checkpoint": 7,
+            "grade": "PARTIAL",
+            "evidence": "Covers all listed matches\u2014France beat Sweden, Spain beat Austria, Portugal beat Croatia, England beat Congo DR, Belgium 3-2 Senegal a.e.t.\u2014but several exact scores are omitted except Belgium\u2019s."
+          },
+          {
+            "checkpoint": 8,
+            "grade": "CORRECT",
+            "evidence": "Lists \u201c4 July: Canada vs Morocco; Paraguay vs France; 5 July: Brazil vs Norway; Mexico vs England; 6 July: Portugal vs Spain; United States vs Belgium.\u201d"
+          },
+          {
+            "checkpoint": 9,
+            "grade": "CORRECT",
+            "evidence": "\u201cSuper Bowl LX was played on 8 February 2026\u2026 Seattle Seahawks defeated the New England Patriots, 29-13.\u201d"
+          },
+          {
+            "checkpoint": 10,
+            "grade": "CORRECT",
+            "evidence": "\u201cat Levi\u2019s Stadium in Santa Clara, California\u2026 to win the franchise\u2019s second Super Bowl title.\u201d"
+          },
+          {
+            "checkpoint": 11,
+            "grade": "CORRECT",
+            "evidence": "\u201cThe game\u2019s MVP was Seahawks running back Kenneth Walker III.\u201d"
+          },
+          {
+            "checkpoint": 12,
+            "grade": "MISSING",
+            "evidence": "No mention of the fourth-quarter interception return touchdown by Uchenna Nwosu."
+          },
+          {
+            "checkpoint": 13,
+            "grade": "CORRECT",
+            "evidence": "\u201cNew York won the series 4-1\u201d and \u201cfirst NBA championship since 1973.\u201d"
+          },
+          {
+            "checkpoint": 14,
+            "grade": "CORRECT",
+            "evidence": "\u201cclinching the title in Game 5 on 13 June 2026 with a 94-90 road win in San Antonio.\u201d"
+          },
+          {
+            "checkpoint": 15,
+            "grade": "CORRECT",
+            "evidence": "\u201cJalen Brunson\u2026 scored 45 points. The NBA identified him as Finals MVP.\u201d"
+          },
+          {
+            "checkpoint": 16,
+            "grade": "MISSING",
+            "evidence": "Mentions a 29-point comeback in Game 4, but not that the Knicks came back from double-digit deficits in all four series wins including 16 down in Game 5."
+          },
+          {
+            "checkpoint": 17,
+            "grade": "CORRECT",
+            "evidence": "\u201cThe 98th Academy Awards were held on 15 March 2026 at the Dolby Theatre\u2026 hosted by Conan O\u2019Brien.\u201d"
+          },
+          {
+            "checkpoint": 18,
+            "grade": "CORRECT",
+            "evidence": "\u201cBest Picture: One Battle After Another,\u201d \u201cBest Director: Paul Thomas Anderson,\u201d and \u201cOne Battle After Another won six Oscars.\u201d"
+          },
+          {
+            "checkpoint": 19,
+            "grade": "WRONG",
+            "evidence": "Report says \u201cBest Actor: Sean Penn\u201d and explicitly treats that as the safer line, contradicting the checkpoint that Michael B. Jordan won Best Actor; it does correctly list Jessie Buckley for Best Actress."
+          },
+          {
+            "checkpoint": 20,
+            "grade": "WRONG",
+            "evidence": "Lists \u201cBest Actor: Sean Penn\u201d instead of Best Supporting Actor Sean Penn; only Amy Madigan as Supporting Actress is correct."
+          },
+          {
+            "checkpoint": 21,
+            "grade": "CORRECT",
+            "evidence": "\u201cSinners, after a record 16 nominations, won four Oscars\u201d and \u201cKPop Demon Hunters\u201d won \u201cBest Animated Feature\u201d and \u201cBest Original Song: \u2018Golden\u2019.\u201d"
+          },
+          {
+            "checkpoint": 22,
+            "grade": "CORRECT",
+            "evidence": "\u201cArtemis II mission launched on 1 April 2026\u2026 returned with a splashdown on 10 April 2026\u201d and calls it the first crewed Moon mission in more than half a century."
+          },
+          {
+            "checkpoint": 23,
+            "grade": "PARTIAL",
+            "evidence": "Lists the four crew members correctly, but does not specify Wiseman as commander and Glover as pilot."
+          },
+          {
+            "checkpoint": 24,
+            "grade": "PARTIAL",
+            "evidence": "Says Artemis II took humans \u201cfarther from Earth than any previous crewed mission, surpassing Apollo 13,\u201d but omits the exact 252,756 miles."
+          },
+          {
+            "checkpoint": 25,
+            "grade": "PARTIAL",
+            "evidence": "States it was a \u201clunar flyby\u201d and a step toward later lunar landing missions, but does not explicitly say it validated Orion with crew aboard."
+          }
+        ],
+        "unique_cited_urls": 50
+      }
+    },
+    {
+      "task": "ai_software_landscape",
+      "prompt": "Write a 'state of the stack, mid-2026' briefing for a CTO: a single wide-coverage report on where the AI and web engineering ecosystem stands right now. Cover: (1) OpenAI's current API model lineup and pricing - flagship and mid-tier models, exact model names, per-token prices, reasoning options; (2) the LangChain 1.x ecosystem - current versions, the modern agent-building API, what replaced the legacy patterns, and the runtime layer; (3) the deepagents library - current version and its core APIs for agents, subagents, filesystem backends and human-in-the-loop; (4) Next.js - the current major version, runtime requirements, key breaking changes and build tooling. Be specific about versions, names and prices, and cite sources.",
+      "baseline@25": {
+        "report": "",
+        "latency_seconds": 0.0,
+        "grades": [
+          {
+            "checkpoint": 1,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          },
+          {
+            "checkpoint": 2,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          },
+          {
+            "checkpoint": 3,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          },
+          {
+            "checkpoint": 4,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          },
+          {
+            "checkpoint": 5,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          },
+          {
+            "checkpoint": 6,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          },
+          {
+            "checkpoint": 7,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          },
+          {
+            "checkpoint": 8,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          },
+          {
+            "checkpoint": 9,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          },
+          {
+            "checkpoint": 10,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          },
+          {
+            "checkpoint": 11,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          },
+          {
+            "checkpoint": 12,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          },
+          {
+            "checkpoint": 13,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          },
+          {
+            "checkpoint": 14,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          },
+          {
+            "checkpoint": 15,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          },
+          {
+            "checkpoint": 16,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          },
+          {
+            "checkpoint": 17,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          },
+          {
+            "checkpoint": 18,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          },
+          {
+            "checkpoint": 19,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          },
+          {
+            "checkpoint": 20,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          },
+          {
+            "checkpoint": 21,
+            "grade": "MISSING",
+            "evidence": "Report is empty."
+          }
+        ],
+        "unique_cited_urls": 0
+      },
+      "baseline@60": {
+        "report": "# State of the stack, mid-2026\nA CTO briefing on the AI + web engineering ecosystem\n\n## Executive summary\n\nBy mid-2026, the stack has clarified into layers:\n\n- **Model providers** are segmenting into flagship general models, cheaper mini/nano variants, and explicit reasoning models/options.\n- **LangChain 1.x** has finished its architectural reset: `create_agent` is now the standard entrypoint, legacy chains/retrievers moved to `langchain-classic`, and **LangGraph** is the runtime layer underneath.  \n- **Deep Agents** has emerged as a higher-level \u201cagent harness\u201d on top of LangChain + LangGraph, bundling planning, subagents, filesystem access, permissions, summarization, and HITL.  \n- **Next.js 16** is the current stable generation, with **Turbopack now the default bundler**, Node 20.9+ required, and several long-signaled cleanup changes now enforced.\n\nThe main strategic pattern is now clear: **use LangChain for portable agent abstractions, LangGraph for runtime/orchestration, Deep Agents for batteries-included agent apps, and Next.js 16 for frontend/server integration when you want a unified React platform.**\n\n---\n\n## 1) OpenAI API lineup and pricing\n\n### What appears current in mid-2026\n\nOpenAI\u2019s current ecosystem appears split across:\n\n- **Flagship general-purpose GPT-5 family**\n- **Cheaper GPT-5 mini / nano tiers**\n- **Reasoning-oriented families and options**, including `o4-mini` and `o3`\n- **Reasoning controls** such as `reasoning_effort`\n\nOpenAI-hosted docs are the authoritative source for model naming and behavior, but the search tooling did not surface the official pricing page reliably. I was able to ground model naming and reasoning behavior in OpenAI-hosted docs, and pricing via a secondary source that explicitly mirrors OpenAI pricing and cites the OpenAI pricing page. I\u2019m marking that distinction clearly.\n\n### Model names and roles\n\nDeep Agents and LangChain docs both show current OpenAI model naming examples such as `openai:gpt-5.5`, which is useful as ecosystem evidence that GPT-5.x naming is now in active use:\n- Deep Agents overview example using `openai:gpt-5.5`:  \n  https://docs.langchain.com/oss/python/deepagents/overview\n- LangChain v1 example middleware code also references `gpt-5.5`, `gpt-5-nano`, and `gpt-5.4-mini`:  \n  https://docs.langchain.com/oss/python/releases/langchain-v1\n\nFor reasoning controls, OpenAI documentation was not directly retrievable in search, but ecosystem and forum references indicate current support for `reasoning_effort` levels across GPT-5-era models, with newer GPT-5-series models supporting richer settings including `xhigh` on some later variants:\n- OpenAI community discussion referencing official docs behavior for `reasoning_effort`:  \n  https://community.openai.com/t/request-for-compatibility-matrix-reasoning-effort-sampling-parameters-across-gpt-5-series/1371738\n\n### Pricing snapshot\n**Caveat:** the exact prices below come from a secondary source that states it verified against OpenAI\u2019s pricing page. I could not directly fetch the official OpenAI pricing page through search during this run, so treat these as **high-confidence but not directly fetched from OpenAI**.\n\nSecondary mirror:\n- https://pecollective.com/tools/openai-api-pricing\n\nReported prices:\n\n| Model | Input / 1M tokens | Output / 1M tokens | Notes |\n|---|---:|---:|---|\n| `gpt-5` | $1.25 | $10.00 | Flagship general model |\n| `gpt-5-mini` | $0.25 | $2.00 | Mid-tier / cost-optimized |\n| `gpt-5-nano` | $0.05 | $0.40 | Lowest-cost tier |\n| `o4-mini` | $1.10 | $4.40 | Reasoning-optimized small model |\n| `gpt-4.1` | $2.00 | $8.00 | Still available but no longer the newest flagship |\n| `gpt-4.1-mini` | $0.40 | $1.60 | Previous-gen cost tier |\n| `gpt-4.1-nano` | $0.10 | $0.40 | Previous-gen ultra-cheap tier |\n\nThe same mirror also notes **cached input discounts** for some models, e.g. GPT-4.1 with a 75% cached-input discount. Because I could not fetch OpenAI\u2019s own pricing page directly, I would verify cache pricing before budgeting.\n\n### Reasoning options\n\nThe key practical shift is that reasoning is no longer just \u201cpick a reasoning model\u201d; it is increasingly **a tunable runtime behavior**:\n\n- Some GPT-5-series models support `reasoning_effort`\n- Later GPT-5-era models appear to support values like:\n  - `none`\n  - `low`\n  - `medium`\n  - `high`\n  - on some newer variants, `xhigh`\n\nSource indicating that model support varies by generation:\n- https://community.openai.com/t/request-for-compatibility-matrix-reasoning-effort-sampling-parameters-across-gpt-5-series/1371738\n\n### CTO take\n\nUse the lineup like this:\n\n- **`gpt-5`**: default high-quality general model when quality matters more than cost\n- **`gpt-5-mini`**: the likely default for production agent workloads needing good cost/quality\n- **`gpt-5-nano`**: classification, routing, extraction, guardrails, cheap copilots\n- **`o4-mini` / `o3`-style reasoning**: hard math, coding, planning, verification, agent subproblems\n- **`reasoning_effort`**: treat as a latency/cost knob, not a marketing feature\n\n### Risk note\n\nI could not directly retrieve the official OpenAI pricing page in this session. For procurement or budgeting, re-check OpenAI\u2019s live pricing page before committing numbers.\n\n---\n\n## 2) LangChain 1.x ecosystem\n\n### Current package state\n\nPyPI shows these current releases:\n\n- **`langchain`** latest release: Jun 22, 2026  \n  https://pypi.org/project/langchain\n- **`langgraph`** latest release: Jun 29, 2026  \n  https://pypi.org/project/langgraph\n- **`langchain-core`** latest release: Jun 18, 2026  \n  https://pypi.org/project/langchain-core\n- **`langchain-classic`** latest release: Jun 10, 2026  \n  https://pypi.org/project/langchain-classic\n\nThe docs position **LangChain v1** as the production-ready base for building agents:\n- LangChain v1 release notes:  \n  https://docs.langchain.com/oss/python/releases/langchain-v1\n\n### The modern API: `create_agent`\n\nThe central fact in LangChain 1.x is:\n\n- **`langchain.agents.create_agent` is now the standard API**\n- It **replaces** the older `langgraph.prebuilt.create_react_agent`\n\nOfficial source:\n- https://docs.langchain.com/oss/python/releases/langchain-v1\n\nThe docs state explicitly:\n- \"`create_agent` is the standard way to build agents in LangChain 1.0\"\n- it replaces `langgraph.prebuilt.create_react_agent`\n- middleware is the main customization mechanism\n\n### What replaced legacy patterns\n\nLangChain 1.x deliberately reduced the surface area of the core package.\n\nWhat moved out:\n\n- legacy chains and chain implementations\n- retrievers from the old `langchain.retrievers`\n- indexing API\n- hub module\n- deprecated/community exports\n\nThose now live in:\n- **`langchain-classic`**\n\nOfficial source:\n- https://docs.langchain.com/oss/python/releases/langchain-v1#langchain-classic\n\nSo the architectural reset is:\n\n- **Old world**: chains, retrievers, prebuilt patterns, broad namespace\n- **New world**: agents + middleware + provider-agnostic message/tool/model abstractions\n\n### New extension model: middleware\n\nMiddleware is now the key abstraction for customizing agent behavior.\n\nLangChain docs list built-in middleware such as:\n\n- `PIIMiddleware`\n- `SummarizationMiddleware`\n- `HumanInTheLoopMiddleware`\n\nAnd custom middleware hooks including:\n\n- `before_agent`\n- `before_model`\n- `wrap_model_call`\n- `wrap_tool_call`\n- `after_model`\n- `after_agent`\n\nOfficial source:\n- https://docs.langchain.com/oss/python/releases/langchain-v1#middleware\n\nThis is a major change: instead of stitching together chains or agent executors, you now modify agent behavior through middleware.\n\n### Runtime layer: LangGraph\n\nLangChain\u2019s own docs are explicit:\n\n- **LangChain** = agent framework / abstractions / integrations\n- **LangGraph** = orchestration runtime\n\nLangGraph provides:\n\n- durable execution\n- checkpointing / persistence\n- streaming\n- interrupts / human-in-the-loop\n- time travel\n- memory primitives\n\nSources:\n- LangGraph overview:  \n  https://docs.langchain.com/oss/python/langgraph/overview\n- LangGraph v1 notes:  \n  https://docs.langchain.com/oss/python/releases/langgraph-v1\n\nLangGraph v1 specifically says:\n- `create_react_agent` is deprecated in favor of LangChain `create_agent`\n- LangGraph remains the underlying runtime\n\n### Practical interpretation for a CTO\n\nUse the stack by abstraction level:\n\n- **LangChain 1.x** when you want portable agent APIs and provider-agnostic tooling\n- **LangGraph** when you need explicit workflow control, durable state, custom graphs, or production-grade long-running orchestration\n- **`langchain-classic`** only for migration or legacy code\n\n### Bottom line on LangChain\n\nLangChain 1.x is no longer a \u201cgrab bag\u201d framework. It is now a narrower agent framework centered on `create_agent`, middleware, and standard content blocks, with LangGraph clearly underneath.\n\n---\n\n## 3) Deep Agents\n\n### Current version\n\nPyPI shows:\n\n- **`deepagents` 0.6.12**\n- released **Jun 25, 2026**\n\nSource:\n- https://pypi.org/project/deepagents\n\n### What Deep Agents is\n\nThe docs define Deep Agents as an **agent harness** built on top of LangChain and LangGraph, with batteries included for:\n\n- planning\n- subagents\n- filesystem access\n- permissions\n- context management\n- human approval\n- long-term memory\n\nSources:\n- Overview: https://docs.langchain.com/oss/python/deepagents/overview\n- API reference: https://reference.langchain.com/python/deepagents\n\n### Core API\n\nThe primary constructor is:\n\n- **`create_deep_agent(...)`**\n\nOfficial docs and reference:\n- https://docs.langchain.com/oss/python/deepagents/overview\n- https://reference.langchain.com/python/deepagents\n\nThe quickstart pattern is:\n\n```python\nfrom deepagents import create_deep_agent\n\nagent = create_deep_agent(\n    model=\"openai:gpt-5.5\",\n    tools=[...],\n    system_prompt=\"You are a helpful assistant\",\n)\n```\n\n### Subagents\n\nDeep Agents includes a built-in **`task` tool** for spawning subagents.\n\nCore concepts visible in the docs/reference:\n\n- `SubAgent`\n- `CompiledSubAgent`\n- `SubAgentMiddleware`\n- `create_sub_agent`\n- default `general-purpose` subagent\n- async subagent support:\n  - `AsyncSubAgent`\n  - `AsyncSubAgentMiddleware`\n\nSources:\n- Overview / delegation section:  \n  https://docs.langchain.com/oss/python/deepagents/overview\n- Reference:  \n  https://reference.langchain.com/python/deepagents\n\nThis is one of the main differentiators from vanilla LangChain agents: Deep Agents bakes subagent orchestration into the default harness.\n\n### Filesystem backends\n\nDeep Agents exposes built-in filesystem tools:\n\n- `ls`\n- `read_file`\n- `write_file`\n- `edit_file`\n- `glob`\n- `grep`\n- optionally `execute`\n\nDocs also describe pluggable backends including:\n\n- `StateBackend` \u2014 state-backed, ephemeral\n- `StoreBackend` \u2014 LangGraph store-backed, persistent\n- `FilesystemBackend` \u2014 real filesystem\n- `CompositeBackend` \u2014 path-routed composite\n- `ContextHubBackend`\n- `LocalShellBackend`\n- `LangSmithSandbox`\n\nSources:\n- Overview:  \n  https://docs.langchain.com/oss/python/deepagents/overview\n- Reference backend classes:  \n  https://reference.langchain.com/python/deepagents\n\nThis is notable operationally: Deep Agents treats filesystem access as a first-class substrate, not an add-on tool.\n\n### Human-in-the-loop\n\nDeep Agents supports HITL via `interrupt_on`.\n\nBehavior:\n\n- configure tools that require approval\n- backed by LangGraph interrupts\n- requires a checkpointer to pause/resume safely\n- decisions can include `approve`, `edit`, `reject`, `respond`\n\nOfficial docs:\n- https://docs.langchain.com/oss/python/deepagents/human-in-the-loop\n\nThe docs are explicit that:\n- a **checkpointer is required**\n- you resume with the same thread ID\n- filesystem-permission interrupts are also supported\n- conditional interrupts require `langchain>=1.3.3`\n\n### Other core capabilities\n\nThe current Deep Agents stack also includes:\n\n- `write_todos` planning\n- memory via `AGENTS.md`\n- skills via `SKILL.md`\n- summarization middleware\n- prompt caching support on some providers\n- interpreters with QuickJS via `CodeInterpreterMiddleware`\n- dynamic subagents\n- sandbox-backed `execute`\n\nRelevant docs:\n- Overview: https://docs.langchain.com/oss/python/deepagents/overview\n- Interpreters: https://docs.langchain.com/oss/python/deepagents/interpreters\n\n### CTO take\n\nDeep Agents is best understood as:\n- **LangChain `create_agent` + LangGraph runtime + a strongly opinionated default harness**\n\nUse it when you want:\n- fast time-to-agent\n- delegation/subagents\n- filesystem-native behavior\n- long-running task support\n- built-in planning/HITL/context tooling\n\nDo **not** use it when you want minimalism or very custom orchestration; then drop to LangChain or LangGraph directly.\n\n---\n\n## 4) Next.js\n\n### Current major version\n\nThe current major version is:\n\n- **Next.js 16**\n- docs currently show **Latest Version 16.2.9**\n\nSources:\n- Upgrade guide / docs header:  \n  https://nextjs.org/docs/app/guides/upgrading/version-16\n- Next.js 16 announcement:  \n  https://nextjs.org/blog/next-16\n\n### Runtime requirements\n\nOfficial requirements:\n\n- **Minimum Node.js: 20.9**\n- **Minimum TypeScript: 5.1.0**\n- Supported browsers:\n  - Chrome 111+\n  - Edge 111+\n  - Firefox 111+\n  - Safari 16.4+\n\nSource:\n- Installation docs:  \n  https://nextjs.org/docs/app/getting-started/installation\n- Next 16 release notes:  \n  https://nextjs.org/blog/next-16\n\n### Build tooling: Turbopack is now default\n\nThis is the most important tooling shift:\n\n- **Turbopack is now the default bundler**\n- `next dev` uses Turbopack by default\n- `next build` also uses Turbopack by default\n- You can opt back to webpack with:\n  - `next dev --webpack`\n  - `next build --webpack`\n\nSources:\n- Installation docs:  \n  https://nextjs.org/docs/app/getting-started/installation\n- Next 16 announcement:  \n  https://nextjs.org/blog/next-16\n\nThe upgrade guide also says:\n- if you have a **custom webpack config**, `next build` will now fail unless you explicitly deal with the Turbopack transition\n\nSource:\n- https://nextjs.org/docs/app/guides/upgrading/version-16\n\n### Key breaking changes\n\n#### 1) `middleware.ts` \u2192 `proxy.ts`\nNext.js 16 introduces `proxy.ts` as the explicit network-boundary file.\n\n- `proxy.ts` replaces `middleware.ts`\n- `proxy.ts` runs on **Node.js runtime**\n- `middleware.ts` remains for Edge use cases but is deprecated\n\nSource:\n- https://nextjs.org/blog/next-16\n\n#### 2) Async request APIs\nSynchronous access has been removed for several APIs.\n\nNow must use async access for:\n- `params`\n- `searchParams`\n- `cookies()`\n- `headers()`\n- `draftMode()`\n\nSource:\n- https://nextjs.org/blog/next-16\n- https://nextjs.org/docs/app/guides/upgrading/version-16\n\n#### 3) `next lint` removed\n- `next lint` command removed\n- `next build` no longer runs lint automatically\n- use ESLint CLI or Biome directly\n\nSources:\n- Installation docs:  \n  https://nextjs.org/docs/app/getting-started/installation\n- Next 16 release notes:  \n  https://nextjs.org/blog/next-16\n\n#### 4) PPR / caching model cleanup\n- `experimental.ppr` removed\n- `experimental.dynamicIO` renamed to `cacheComponents`\n- caching is now centered on:\n  - `cacheComponents`\n  - `\"use cache\"`\n  - new APIs like `updateTag()` / revised `revalidateTag()`\n\nSource:\n- https://nextjs.org/blog/next-16\n\n#### 5) Parallel routes now require explicit `default.js`\nBuilds can fail without them.\n\nSource:\n- https://nextjs.org/blog/next-16\n\n#### 6) Image behavior/security defaults changed\nNotable changes include:\n- `images.minimumCacheTTL` default increased\n- `images.imageSizes` default changed\n- `images.qualities` default changed to `[75]`\n- local `next/image` src with query strings now requires `images.localPatterns`\n- local IP optimization blocked by default\n\nSource:\n- https://nextjs.org/blog/next-16\n\n### Other notable platform changes\n\n- **Build Adapters API** introduced in alpha\n- **React Compiler support** is stable\n- **Turbopack filesystem caching** available in beta\n- `create-next-app` now defaults to:\n  - TypeScript\n  - Tailwind\n  - ESLint\n  - App Router\n  - Turbopack\n  - optionally `AGENTS.md`\n\nSources:\n- https://nextjs.org/blog/next-16\n- https://nextjs.org/docs/app/getting-started/installation\n\n### CTO take\n\nNext.js 16 is a meaningful platform consolidation release:\n\n- Turbopack is no longer optional background tech; it is the default build system.\n- The framework is forcing cleanup of old APIs (`next lint`, sync request APIs, deprecated config flags).\n- If you run custom webpack-heavy builds, treat upgrade planning as a real migration project.\n- If you are greenfield, the default stack is now much cleaner and faster than in the 13/14 era.\n\n---\n\n# Strategic recommendations\n\n## If you are standardizing an AI application stack\nUse this layering:\n\n- **Frontend / full-stack web**: Next.js 16\n- **Agent abstraction layer**: LangChain 1.x\n- **Runtime / orchestration / durability**: LangGraph\n- **Batteries-included agent apps**: Deep Agents\n- **Model default**: a GPT-5 mini-class model for cost/performance, with a reasoning model or `reasoning_effort` escalation path\n\n## If you have an existing LangChain codebase\nPriorities:\n\n1. move new agent work to `create_agent`\n2. stop building on deprecated `create_react_agent`\n3. isolate legacy chains/retrievers into `langchain-classic`\n4. adopt LangGraph primitives where persistence/HITL/time-travel matter\n\n## If you have an existing Next.js 14/15 codebase\nCheck for:\n\n- custom webpack config\n- `middleware.ts`\n- sync `params/searchParams`\n- `next lint` in CI\n- old PPR or `experimental.*` caching flags\n- assumptions about image defaults\n\n---\n\n# Source list\n\n## OpenAI / model ecosystem\n- OpenAI community discussion citing official GPT-5 reasoning-effort behavior:  \n  https://community.openai.com/t/request-for-compatibility-matrix-reasoning-effort-sampling-parameters-across-gpt-5-series/1371738\n- LangChain docs using current OpenAI model names in examples:  \n  https://docs.langchain.com/oss/python/releases/langchain-v1\n- Deep Agents docs using `openai:gpt-5.5`:  \n  https://docs.langchain.com/oss/python/deepagents/overview\n- Pricing mirror used because official pricing page could not be directly fetched in this session:  \n  https://pecollective.com/tools/openai-api-pricing\n\n## LangChain / LangGraph\n- LangChain v1:  \n  https://docs.langchain.com/oss/python/releases/langchain-v1\n- LangGraph overview:  \n  https://docs.langchain.com/oss/python/langgraph/overview\n- LangGraph v1 notes:  \n  https://docs.langchain.com/oss/python/releases/langgraph-v1\n- PyPI `langchain`:  \n  https://pypi.org/project/langchain\n- PyPI `langgraph`:  \n  https://pypi.org/project/langgraph\n- PyPI `langchain-core`:  \n  https://pypi.org/project/langchain-core\n- PyPI `langchain-classic`:  \n  https://pypi.org/project/langchain-classic\n\n## Deep Agents\n- Deep Agents overview:  \n  https://docs.langchain.com/oss/python/deepagents/overview\n- Deep Agents HITL:  \n  https://docs.langchain.com/oss/python/deepagents/human-in-the-loop\n- Deep Agents interpreters:  \n  https://docs.langchain.com/oss/python/deepagents/interpreters\n- Deep Agents reference:  \n  https://reference.langchain.com/python/deepagents\n- PyPI `deepagents`:  \n  https://pypi.org/project/deepagents\n\n## Next.js\n- Next.js 16 announcement:  \n  https://nextjs.org/blog/next-16\n- Next.js 16 upgrade guide:  \n  https://nextjs.org/docs/app/guides/upgrading/version-16\n- Next.js installation/system requirements:  \n  https://nextjs.org/docs/app/getting-started/installation\n\n## Short direct answer\n\nMid-2026, the practical stack is: **OpenAI GPT-5-tier models plus explicit reasoning controls; LangChain 1.x centered on `create_agent` with LangGraph as runtime; Deep Agents 0.6.12 as the batteries-included harness; and Next.js 16.2.9 with Node 20.9+, async request APIs, and Turbopack as the default build system.**",
+        "latency_seconds": 159.2,
+        "grades": [
+          {
+            "checkpoint": 1,
+            "grade": "PARTIAL",
+            "evidence": "States \"openai:gpt-5.5\" is in active use and calls it part of the current lineup, but does not explicitly say GPT-5.5 is the current flagship or mention \"since late April 2026.\""
+          },
+          {
+            "checkpoint": 2,
+            "grade": "MISSING",
+            "evidence": "Report gives pricing for `gpt-5` ($1.25/$10.00) but does not provide the checkpointed `gpt-5.5` price of $5/$30."
+          },
+          {
+            "checkpoint": 3,
+            "grade": "MISSING",
+            "evidence": "No mention of `gpt-5.5-pro` or its pricing."
+          },
+          {
+            "checkpoint": 4,
+            "grade": "MISSING",
+            "evidence": "No mention of the GPT-5.4 family launch timing or `gpt-5.4` pricing at $2.50/$15."
+          },
+          {
+            "checkpoint": 5,
+            "grade": "MISSING",
+            "evidence": "Mentions `gpt-5.4-mini` in example references, but gives no prices for `gpt-5.4-mini` or `gpt-5.4-nano`."
+          },
+          {
+            "checkpoint": 6,
+            "grade": "CORRECT",
+            "evidence": "Says newer GPT-5-series models support `reasoning_effort` and lists levels including \"xhigh\" on newer variants."
+          },
+          {
+            "checkpoint": 7,
+            "grade": "PARTIAL",
+            "evidence": "States \"LangChain 1.x\" is current and `langchain-classic` is for migration/legacy code, but does not explicitly mention the 1.3.x release range."
+          },
+          {
+            "checkpoint": 8,
+            "grade": "CORRECT",
+            "evidence": "\"`langchain.agents.create_agent` is now the standard API\" and \"`create_agent` is the standard way to build agents in LangChain 1.0\"."
+          },
+          {
+            "checkpoint": 9,
+            "grade": "PARTIAL",
+            "evidence": "Clearly says legacy patterns were replaced and that `create_react_agent` is deprecated, but does not explicitly name `initialize_agent` or `AgentExecutor`."
+          },
+          {
+            "checkpoint": 10,
+            "grade": "CORRECT",
+            "evidence": "\"Middleware is now the key abstraction for customizing agent behavior.\""
+          },
+          {
+            "checkpoint": 11,
+            "grade": "CORRECT",
+            "evidence": "States LangGraph is the runtime/orchestration layer and provides \"durable execution,\" \"streaming,\" and \"interrupts / human-in-the-loop.\""
+          },
+          {
+            "checkpoint": 12,
+            "grade": "CORRECT",
+            "evidence": "\"`deepagents` 0.6.12\" and release date Jun 25, 2026."
+          },
+          {
+            "checkpoint": 13,
+            "grade": "CORRECT",
+            "evidence": "Shows `create_deep_agent(model=..., tools=[...], system_prompt=...)` and notes built-in `write_todos` planning plus the `task` tool for spawning subagents."
+          },
+          {
+            "checkpoint": 14,
+            "grade": "MISSING",
+            "evidence": "Discusses subagents conceptually and lists related classes, but does not state the `subagents=` parameter schema with dicts containing name, description, and system_prompt."
+          },
+          {
+            "checkpoint": 15,
+            "grade": "PARTIAL",
+            "evidence": "Lists `StateBackend`, `StoreBackend`, and `FilesystemBackend` as pluggable backends, but does not specify `StateBackend` as default nor `FilesystemBackend(root_dir=..., virtual_mode=True)`."
+          },
+          {
+            "checkpoint": 16,
+            "grade": "PARTIAL",
+            "evidence": "Says Deep Agents supports HITL via `interrupt_on` and that you configure tools requiring approval, but does not specify mapping tool names to interrupt configs."
+          },
+          {
+            "checkpoint": 17,
+            "grade": "PARTIAL",
+            "evidence": "States \"Next.js 16\" is current and docs show \"16.2.9,\" but does not mention \"16.3 in preview\" or its late-June 2026 announcement."
+          },
+          {
+            "checkpoint": 18,
+            "grade": "CORRECT",
+            "evidence": "\"Minimum Node.js: 20.9\" and \"Minimum TypeScript: 5.1.0\"."
+          },
+          {
+            "checkpoint": 19,
+            "grade": "CORRECT",
+            "evidence": "\"Synchronous access has been removed\" and async must be used for `params`, `cookies()`, `headers()`, etc."
+          },
+          {
+            "checkpoint": 20,
+            "grade": "PARTIAL",
+            "evidence": "States \"`proxy.ts` replaces `middleware.ts`\" but also says \"`middleware.ts` remains for Edge use cases,\" which falls short of the checkpoint's deprecated/renamed convention."
+          },
+          {
+            "checkpoint": 21,
+            "grade": "PARTIAL",
+            "evidence": "Mentions \"Turbopack filesystem caching available in beta\" and \"`next lint` removed,\" but does not mention React 19.2 and describes caching as beta rather than persistent file-system caching in 16.x."
+          }
+        ],
+        "unique_cited_urls": 19
+      },
+      "gptr@25": {
+        "report": "# State of the stack, mid-2026\n## CTO briefing: AI + web engineering ecosystem\n\nThis briefing summarizes where four important parts of the stack stand as of **July 4, 2026**: OpenAI\u2019s API lineup, the LangChain 1.x ecosystem, the `deepagents` library, and Next.js. All claims below are grounded in current docs, release notes, or package indexes.\n\n---\n\n## 1) OpenAI API: current model lineup, pricing, and reasoning controls\n\n### Executive take\nOpenAI\u2019s API center of gravity has moved to the **GPT-5.x family**, with a clear segmentation:\n\n- **Flagship**: `gpt-5.5`\n- **Higher-precision flagship variant**: `gpt-5.5-pro`\n- **Mid-tier**: `gpt-5.4`\n- **Higher-precision mid-tier variant**: `gpt-5.4-pro`\n- **Lower-cost / higher-volume tiers**: `gpt-5.4-mini`, `gpt-5.4-nano`\n\nOpenAI\u2019s model docs explicitly position **GPT-5.5** as the default starting point for complex reasoning/coding, and **GPT-5.4 mini / nano** for lower-latency or lower-cost workloads.  \nSources:  \n- https://developers.openai.com/api/docs/models  \n- https://developers.openai.com/api/docs/models/all  \n- https://developers.openai.com/api/docs/guides/reasoning\n\n### Current lineup and positioning\n\n| Tier | Exact model name | Official positioning |\n|---|---|---|\n| Flagship | `gpt-5.5` | \u201cA new class of intelligence for coding and professional work\u201d |\n| Flagship premium | `gpt-5.5-pro` | Smarter/more precise variant of GPT-5.5 |\n| Mid-tier | `gpt-5.4` | More affordable model for coding and professional work |\n| Mid-tier premium | `gpt-5.4-pro` | Smarter/more precise variant of GPT-5.4 |\n| High-volume / efficient | `gpt-5.4-mini` | Fast, efficient model for coding, computer use, subagents |\n| Cheapest GPT-5.4-class | `gpt-5.4-nano` | Optimized for simple, high-volume tasks |\n\nSources:  \n- https://developers.openai.com/api/docs/models/all  \n- https://developers.openai.com/api/docs/changelog\n\n### Exact published token pricing\nFrom the official models/pricing surfaces currently exposed in OpenAI docs:\n\n| Model | Input price | Output price | Context window | Max output |\n|---|---:|---:|---:|---:|\n| `gpt-5.5` | **$5 / 1M input tokens** | **$30 / 1M output tokens** | 1M | 128K |\n| `gpt-5.4` | **$2.50 / 1M input tokens** | **$15 / 1M output tokens** | 1M | 128K |\n| `gpt-5.4-mini` | **$0.75 / 1M input tokens** | **$4.50 / 1M output tokens** | 400K | 128K |\n\nSources:  \n- https://developers.openai.com/api/docs/models  \n- https://developers.openai.com/api/docs/pricing\n\n### Important pricing caveat\nI could confirm the **exact published prices** above for `gpt-5.5`, `gpt-5.4`, and `gpt-5.4-mini` in current official docs. I **could not reliably verify exact public token prices** from official docs for:\n\n- `gpt-5.5-pro`\n- `gpt-5.4-pro`\n- `gpt-5.4-nano`\n\nThe official catalog confirms these models exist, but the surfaced docs I found did not expose those exact per-token figures in a directly citable way. For budgeting, treat those prices as **must-verify live in the official pricing UI/API docs before procurement sign-off**.  \nSources:  \n- https://developers.openai.com/api/docs/models/all  \n- https://developers.openai.com/api/docs/models  \n- https://developers.openai.com/api/docs/pricing\n\n### Reasoning options\nOpenAI\u2019s current reasoning guide says reasoning-capable models use internal reasoning tokens and are best used through the **Responses API**. The main control is `reasoning.effort`.\n\nDocumented effort values across current reasoning docs include:\n\n- `none`\n- `minimal`\n- `low`\n- `medium`\n- `high`\n- `xhigh`\n\nSupport is model-dependent. OpenAI\u2019s docs also note:\n- newer GPT-5-family models support configurable reasoning effort\n- reasoning works best in the **Responses API**\n- reasoning can be persisted across tool calls in Responses, which matters for agent flows\n\nSources:  \n- https://developers.openai.com/api/docs/guides/reasoning  \n- https://developers.openai.com/api/docs/changelog  \n- https://developers.openai.com/cookbook/examples/gpt-5/gpt-5_prompting_guide\n\n### Operational guidance\nFor a CTO, the practical OpenAI pattern in mid-2026 is:\n\n- **Use `gpt-5.5`** for highest-quality coding/reasoning work\n- **Use `gpt-5.4`** when quality still matters but budget pressure is real\n- **Use `gpt-5.4-mini`** for subagents, large-scale tool use, routing, enrichment, and high-throughput workloads\n- Standardize on the **Responses API**, not legacy chat flows, for tool-rich agent systems\n\nSources:  \n- https://developers.openai.com/api/docs/guides/reasoning  \n- https://developers.openai.com/api/docs/models  \n- https://developers.openai.com/api/docs/models/all\n\n---\n\n## 2) LangChain 1.x ecosystem: current versions, modern APIs, and the runtime layer\n\n### Executive take\nLangChain is now firmly in its **post-1.0** era. The key architectural shift is:\n\n- **`create_agent` is the modern standard**\n- older agent patterns have been replaced by a **middleware-centric agent API**\n- **LangGraph** is the runtime/orchestration layer under LangChain agents\n- legacy 0.x-era functionality has been moved aside into **`langchain-classic`** or archived docs\n\nSources:  \n- https://docs.langchain.com/oss/python/releases/langchain-v1  \n- https://docs.langchain.com/oss/python/migrate/langchain-v1  \n- https://docs.langchain.com/oss/python/releases/langgraph-v1\n\n### Current versions\nThere are two version signals worth tracking:\n\n#### A. Official LangChain release notes baseline\nThe official Python changelog highlights these milestone versions:\n\n- `langchain v1.3.0` \u2014 May 12, 2026\n- `langgraph v1.2.0` \u2014 May 12, 2026\n- `deepagents v0.6.0` \u2014 May 12, 2026\n\nSource:  \n- https://docs.langchain.com/oss/python/releases/changelog\n\n#### B. Current package index versions\nPyPI now shows newer patch-level package versions beyond those milestone notes:\n\n- `langchain` latest PyPI release: **1.3.11**  \n  https://pypi.org/project/langchain\n- `deepagents` latest PyPI release: **0.6.12**  \n  https://pypi.org/project/deepagents\n\nI could not confirm an exact current PyPI version for `langgraph` from a clean official/package-index result in the same way, so the safest citable runtime milestone remains the official release-note line: **LangGraph v1.2.0**.  \nSources:  \n- https://docs.langchain.com/oss/python/releases/changelog  \n- https://pypi.org/project/langchain  \n- https://docs.langchain.com/oss/python/releases/langgraph-v1\n\n### The modern agent-building API\nThe new standard is **`create_agent`**.\n\nLangChain\u2019s v1 release notes explicitly say `create_agent` replaces `langgraph.prebuilt.create_react_agent`. It is simpler at the top level, but more extensible because it is built around **middleware**.\n\nSources:  \n- https://docs.langchain.com/oss/python/releases/langchain-v1  \n- https://docs.langchain.com/oss/python/migrate/langchain-v1  \n- https://docs.langchain.com/oss/python/migrate/langgraph-v1\n\n### What replaced the legacy patterns\nThe important migration story is not just \u201cnew function name.\u201d It is a broader replacement of older agent/chains patterns.\n\n#### Replacements called out in official docs\n\n| Legacy / older pattern | Modern replacement |\n|---|---|\n| `langgraph.prebuilt.create_react_agent` | `langchain.agents.create_agent` |\n| pre-model hooks | middleware `before_model` |\n| post-model hooks | middleware `after_model` |\n| ad hoc tool error handling | middleware `wrap_tool_call` |\n| prompted structured output | `ToolStrategy` / `ProviderStrategy` |\n| older `langchain` broad namespace | streamlined `langchain`; legacy moved to `langchain-classic` |\n\nSources:  \n- https://docs.langchain.com/oss/python/migrate/langchain-v1  \n- https://docs.langchain.com/oss/python/releases/langchain-v1\n\nLangChain\u2019s own philosophy/release docs also state that the old sprawl of chains/agents was intentionally replaced with a more compact 1.x architecture.  \nSource:  \n- https://docs.langchain.com/oss/python/langchain/philosophy\n\n### Middleware is now the control plane\nModern LangChain agents are increasingly configured through middleware rather than one-off wrappers.\n\nExamples called out in official docs include:\n\n- summarization middleware\n- human-in-the-loop middleware\n- retries\n- moderation\n- dynamic model selection\n- tool-call wrapping\n\nSource:  \n- https://docs.langchain.com/oss/python/langchain/middleware/overview\n\n### Runtime layer: LangGraph\nThe runtime beneath LangChain agents is **LangGraph**. LangChain\u2019s docs describe the relationship clearly:\n\n- **LangChain** = opinionated agent framework\n- **LangGraph** = lower-level orchestration/runtime layer\n\nLangGraph remains the place to drop down when you need:\n\n- custom state graphs\n- explicit routing/fan-out\n- checkpointing\n- durable execution\n- typed streaming\n- human interrupts\n- advanced orchestration patterns\n\nSources:  \n- https://docs.langchain.com/oss/python/releases/langgraph-v1  \n- https://docs.langchain.com/oss/python/langgraph/workflows-agents  \n- https://docs.langchain.com/oss/python/langgraph/use-graph-api\n\n### Notable runtime advances in the 1.x era\nFrom the official changelog, the runtime story now includes:\n\n- typed `GraphOutput`\n- typed streaming formats (`version=\"v2\"` and later event streaming evolutions)\n- checkpoint/state durability\n- `DeltaChannel` for more efficient state/checkpoint storage\n- node/run timeout controls\n- better event streaming and observability\n\nSources:  \n- https://docs.langchain.com/oss/python/releases/changelog  \n- https://docs.langchain.com/oss/python/langgraph/streaming  \n- https://docs.langchain.com/oss/python/langgraph/observability\n\n### CTO takeaway\nLangChain 1.x is no longer best understood as \u201ca prompt-chaining library.\u201d It is now:\n\n1. a slimmed-down high-level agent framework (`create_agent`)\n2. powered by middleware as the main extension mechanism\n3. sitting on top of **LangGraph**, which is the real runtime substrate for durable agent systems\n\n---\n\n## 3) `deepagents`: current version and core APIs\n\n### Executive take\n`deepagents` is LangChain\u2019s more opinionated agent harness for long-horizon, tool-using, file-working, subagent-spawning systems. It is positioned above `create_agent`, not below it.\n\nSources:  \n- https://reference.langchain.com/python/deepagents  \n- https://docs.langchain.com/oss/python/deepagents/overview  \n- https://github.com/langchain-ai/deepagents\n\n### Current version\nCurrent PyPI package version:\n\n- **`deepagents 0.6.12`** \u2014 released **June 25, 2026**\n\nSource:  \n- https://pypi.org/project/deepagents\n\nNote: LangChain\u2019s official changelog milestone mentions `deepagents v0.6.0` on May 12, 2026, but PyPI shows later patch releases through `0.6.12`.  \nSource:  \n- https://docs.langchain.com/oss/python/releases/changelog\n\n### Core API: agent creation\nPrimary Python constructor:\n\n- **`create_deep_agent(...)`**\n\nPrimary JS/TS constructor:\n\n- **`createDeepAgent(...)`**\n\nSources:  \n- https://reference.langchain.com/python/deepagents/graph/create_deep_agent  \n- https://reference.langchain.com/javascript/deepagents\n\nThe docs position it as a pre-wired execution graph with:\n\n- tool loop\n- planning/todo support\n- filesystem tools\n- context management\n- subagents\n- skills/memory\n- optional HITL controls\n\nSources:  \n- https://docs.langchain.com/oss/python/deepagents/overview  \n- https://reference.langchain.com/python/deepagents\n\n### Built-in tool surface\nThe docs show that deep agents come with a default tool environment including:\n\n- `write_todos`\n- `ls`\n- `read_file`\n- `write_file`\n- `edit_file`\n- `glob`\n- `grep`\n- `task` for subagent delegation\n\nSources:  \n- https://reference.langchain.com/python/deepagents/graph/create_deep_agent  \n- https://reference.langchain.com/javascript/deepagents\n\n### Subagents\nSubagent delegation is a core feature, not an add-on. The official docs describe deep agents as supporting:\n\n- subagent spawning\n- isolated context windows\n- delegation via a `task` tool\n- composition with custom LangGraph subgraphs\n\nA key extensibility point: any LangGraph `CompiledStateGraph` can be used as a subagent.\n\nSources:  \n- https://reference.langchain.com/python/deepagents  \n- https://docs.langchain.com/oss/python/deepagents/overview\n\n### Filesystem backends\nThe backend model is one of the most important parts of `deepagents`.\n\nCore backend classes documented in the Python reference:\n\n- `StateBackend`\n- `StoreBackend`\n- `FilesystemBackend`\n- `CompositeBackend`\n- `BaseSandbox`\n\nSources:  \n- https://reference.langchain.com/python/deepagents/backends  \n- https://docs.langchain.com/oss/python/deepagents/backends\n\n#### Backend roles\n\n| Backend | Purpose |\n|---|---|\n| `StateBackend` | Ephemeral files stored in agent state |\n| `StoreBackend` | Persistent files in LangGraph `BaseStore` |\n| `FilesystemBackend` | Direct host filesystem access |\n| `CompositeBackend` | Route different paths to different backends |\n| `BaseSandbox` | Sandbox abstraction for execution environments |\n\nSource:  \n- https://reference.langchain.com/python/deepagents/backends\n\nThis is a strong design choice for enterprise use, because it separates:\n\n- scratch state\n- durable memory/artifacts\n- host-level filesystem access\n- sandboxed execution\n\n### Human-in-the-loop\nThe docs describe human control as a first-class part of the harness through:\n\n- approval workflows\n- interrupts / steering\n- human-in-the-loop middleware concepts\n\nSources:  \n- https://docs.langchain.com/oss/python/deepagents/overview  \n- https://reference.langchain.com/python/deepagents\n\n### CTO takeaway\n`deepagents` is effectively LangChain\u2019s \u201copinionated production harness\u201d for:\n- multi-step agent work\n- file-centric workflows\n- subagent decomposition\n- persistent/durable state\n- human checkpoints\n\nIf `create_agent` is the lightweight default, `deepagents` is the bundled higher-level harness for agentic applications that need working memory, planning, and delegation.\n\n---\n\n## 4) Next.js: current major version, runtime requirements, breaking changes, build tooling\n\n### Executive take\nThe current major line is **Next.js 16**. In mid-2026, the safest stable target is the **16.2.x** line, while **16.3** is present as preview/recent release activity depending on channel. The official upgrade docs currently show **\u201cLatest Version 16.2.10\u201d**.\n\nSources:  \n- https://nextjs.org/blog/next-16  \n- https://nextjs.org/docs/app/guides/upgrading/version-16  \n- https://nextjs.org/blog/next-16-2  \n- https://nextjs.org/blog\n\n### Current major version\n- **Major version:** `16`\n- Official upgrade guide shows latest version in docs: **16.2.10**\n\nSource:  \n- https://nextjs.org/docs/app/guides/upgrading/version-16\n\n### Runtime requirements\nNext.js 16 raises the baseline:\n\n- **Node.js 20.9.0+**\n- **Node.js 18 is no longer supported**\n- **TypeScript 5.1+**\n- Browser support baseline:\n  - Chrome 111+\n  - Edge 111+\n  - Firefox 111+\n  - Safari 16.4+\n\nSource:  \n- https://nextjs.org/docs/app/guides/upgrading/version-16\n\n### Key breaking changes\nThe most important migration-impact changes called out by official docs:\n\n#### 1. Async Request APIs are now fully async\nNext.js 15 introduced this direction; Next.js 16 removes the temporary sync compatibility.\n\nAffected APIs include:\n- `cookies`\n- `headers`\n- `draftMode`\n- `params`\n- `searchParams`\n\nSource:  \n- https://nextjs.org/docs/app/guides/upgrading/version-16\n\n#### 2. `middleware` \u2192 `proxy`\nThe older network-boundary convention is deprecated/replaced by `proxy`.\n\nSources:  \n- https://nextjs.org/blog/next-16  \n- https://nextjs.org/docs/app/guides/upgrading/version-16\n\n#### 3. Stabilized APIs lose `unstable_` prefixes\nThe upgrade guide calls out removal of `unstable_` prefixes for APIs that have stabilized.\n\nSource:  \n- https://nextjs.org/docs/app/guides/upgrading/version-16\n\n#### 4. Partial Prerendering experimental config cleanup\n`experimental_ppr` route segment config was removed from pages/layouts in favor of newer patterns.\n\nSource:  \n- https://nextjs.org/docs/app/guides/upgrading/version-16\n\n#### 5. `next/image` defaults changed\nThe release notes call out image-default changes as part of the major version shift.\n\nSource:  \n- https://nextjs.org/blog/next-16\n\n### Build tooling: Turbopack is now the default\nThis is one of the most important ecosystem signals in frontend engineering right now.\n\nNext.js 16 makes **Turbopack stable and default** for:\n\n- `next dev`\n- `next build`\n\nBefore 16, teams had to opt in with `--turbopack` / `--turbo`. That is no longer necessary.\n\nSources:  \n- https://nextjs.org/blog/next-16  \n- https://nextjs.org/docs/app/guides/upgrading/version-16\n\n### Webpack still exists, but as fallback\nNext.js still supports:\n\n- `next dev --webpack`\n- `next build --webpack`\n\nSo webpack remains a compatibility path, not the strategic default.\n\nSource:  \n- https://nextjs.org/blog/next-16\n\n### What changed in the 16.x line\n#### Next.js 16.0\nHighlights:\n- Turbopack default/stable\n- Cache Components\n- `proxy.ts`\n- React 19.2 support\n- Build Adapters API (alpha)\n- DevTools MCP\n\nSource:  \n- https://nextjs.org/blog/next-16\n\n#### Next.js 16.1\nHighlights:\n- stable file-system caching for `next dev`\n- `next dev --inspect`\n- experimental bundle analyzer\n- `next upgrade`\n\nSource:  \n- https://nextjs.org/blog/next-16-1\n\n#### Next.js 16.2\nHighlights:\n- major Turbopack fixes/improvements\n- faster startup/rendering\n- hydration/debugging improvements\n- more agent/AI-oriented tooling\n\nSource:  \n- https://nextjs.org/blog/next-16-2\n\n### Security note\nThe Next.js blog includes important security advisories in the 15.x/16.x era, including a critical React Server Components RCE advisory and other issues affecting broad version ranges. This makes staying current on 16.x patches operationally important, not optional.\n\nSource:  \n- https://nextjs.org/blog\n\n### CTO takeaway\nBy mid-2026, Next.js is no longer just \u201cthe React framework.\u201d It is now also:\n- a compiler/build-platform decision\n- a runtime-baseline decision (Node 20.9+)\n- a caching/orchestration model decision\n- increasingly an AI-tooling-aware framework\n\nTurbopack is the strategic path; webpack is the escape hatch.\n\n---\n\n# Recommendations\n\n## If you are standardizing an AI app stack in mid-2026\n### Model layer\n- Default to **OpenAI Responses API**\n- Use:\n  - `gpt-5.5` for premium reasoning/coding\n  - `gpt-5.4` for balanced cost/quality\n  - `gpt-5.4-mini` for high-volume agent/subagent workloads\n\nSources:  \n- https://developers.openai.com/api/docs/guides/reasoning  \n- https://developers.openai.com/api/docs/models\n\n### Agent framework layer\n- Use **LangChain 1.x**\n- Start with **`create_agent`**\n- Drop to **LangGraph** for custom orchestration\n- Use **`deepagents`** when the application needs planning, files, subagents, and stronger operational scaffolding\n\nSources:  \n- https://docs.langchain.com/oss/python/releases/langchain-v1  \n- https://docs.langchain.com/oss/python/releases/langgraph-v1  \n- https://reference.langchain.com/python/deepagents\n\n### Web/frontend layer\n- Standardize new work on **Next.js 16.2.x**\n- Move platform baselines to:\n  - Node 20.9+\n  - TS 5.1+\n- Treat **Turbopack** as default and webpack as fallback-only\n\nSources:  \n- https://nextjs.org/docs/app/guides/upgrading/version-16  \n- https://nextjs.org/blog/next-16  \n- https://nextjs.org/blog/next-16-2\n\n---\n\n# Bottom line\nMid-2026 looks like this: **OpenAI\u2019s GPT-5.x family is the API center of gravity; LangChain 1.x has consolidated around `create_agent` on top of LangGraph; `deepagents` has matured into an opinionated file/subagent/human-loop harness; and Next.js 16, with Node 20.9+ and Turbopack by default, is the current frontend/platform baseline.**",
+        "latency_seconds": 180.9,
+        "grades": [
+          {
+            "checkpoint": 1,
+            "grade": "PARTIAL",
+            "evidence": "States \u201cFlagship: `gpt-5.5`\u201d and \u201cOpenAI\u2019s model docs explicitly position GPT-5.5 as the default,\u201d but does not mention it has been in the API since late April 2026."
+          },
+          {
+            "checkpoint": 2,
+            "grade": "CORRECT",
+            "evidence": "Pricing table: \u201c`gpt-5.5` | **$5 / 1M input tokens** | **$30 / 1M output tokens**\u201d"
+          },
+          {
+            "checkpoint": 3,
+            "grade": "PARTIAL",
+            "evidence": "Says \u201c`gpt-5.5-pro` | Smarter/more precise variant of GPT-5.5\u201d but also says it \u201ccould not reliably verify exact public token prices\u201d for `gpt-5.5-pro`."
+          },
+          {
+            "checkpoint": 4,
+            "grade": "PARTIAL",
+            "evidence": "States \u201cMid-tier: `gpt-5.4`\u201d and gives \u201c**$2.50 / 1M input tokens** | **$15 / 1M output tokens**,\u201d but does not mention the March 2026 timing."
+          },
+          {
+            "checkpoint": 5,
+            "grade": "PARTIAL",
+            "evidence": "Gives `gpt-5.4-mini` pricing as \u201c**$0.75 / 1M input tokens** | **$4.50 / 1M output tokens**,\u201d but says it \u201ccould not reliably verify\u201d `gpt-5.4-nano` exact price."
+          },
+          {
+            "checkpoint": 6,
+            "grade": "CORRECT",
+            "evidence": "\u201cThe main control is `reasoning.effort`\u201d and documented values include \u201c`xhigh`.\u201d"
+          },
+          {
+            "checkpoint": 7,
+            "grade": "CORRECT",
+            "evidence": "\u201cLangChain is now firmly in its post-1.0 era\u201d and \u201c`langchain` latest PyPI release: **1.3.11**\u201d; also says legacy 0.x functionality moved aside into `langchain-classic`."
+          },
+          {
+            "checkpoint": 8,
+            "grade": "CORRECT",
+            "evidence": "\u201cThe new standard is **`create_agent`**.\u201d"
+          },
+          {
+            "checkpoint": 9,
+            "grade": "PARTIAL",
+            "evidence": "Explains older patterns have been replaced and legacy functionality moved to `langchain-classic`, but does not specifically mention `initialize_agent` and `AgentExecutor` by name."
+          },
+          {
+            "checkpoint": 10,
+            "grade": "CORRECT",
+            "evidence": "\u201cModern LangChain agents are increasingly configured through middleware\u201d and \u201colder agent patterns have been replaced by a middleware-centric agent API.\u201d"
+          },
+          {
+            "checkpoint": 11,
+            "grade": "CORRECT",
+            "evidence": "\u201cLangGraph = lower-level orchestration/runtime layer\u201d and lists \u201cdurable execution,\u201d \u201ctyped streaming,\u201d and \u201chuman interrupts.\u201d"
+          },
+          {
+            "checkpoint": 12,
+            "grade": "CORRECT",
+            "evidence": "\u201cCurrent PyPI package version: **`deepagents 0.6.12`**\u201d and notes the 0.6.x line."
+          },
+          {
+            "checkpoint": 13,
+            "grade": "PARTIAL",
+            "evidence": "States primary constructor is `create_deep_agent(...)` and built-in tools include `write_todos` and `task`, but does not specify the parameter pattern \u201cpassing model, tools and system_prompt.\u201d"
+          },
+          {
+            "checkpoint": 14,
+            "grade": "MISSING",
+            "evidence": "Discusses subagents generally, but does not mention `subagents=` or the dict fields `name`, `description`, `system_prompt`."
+          },
+          {
+            "checkpoint": 15,
+            "grade": "PARTIAL",
+            "evidence": "Lists `StateBackend`, `StoreBackend`, and `FilesystemBackend` with their roles, but does not mention default behavior or `FilesystemBackend(root_dir=..., virtual_mode=True)`."
+          },
+          {
+            "checkpoint": 16,
+            "grade": "MISSING",
+            "evidence": "Mentions HITL in general terms (\u201capproval workflows,\u201d \u201cinterrupts / steering\u201d) but not the `interrupt_on` parameter mapping tool names to configs."
+          },
+          {
+            "checkpoint": 17,
+            "grade": "CORRECT",
+            "evidence": "\u201cThe current major line is **Next.js 16**\u201d and \u201c**16.3** is present as preview/recent release activity depending on channel.\u201d"
+          },
+          {
+            "checkpoint": 18,
+            "grade": "CORRECT",
+            "evidence": "\u201cNode.js 20.9.0+\u201d and \u201cTypeScript 5.1+.\u201d"
+          },
+          {
+            "checkpoint": 19,
+            "grade": "CORRECT",
+            "evidence": "\u201cNext.js 16 removes the temporary sync compatibility\u201d for APIs including \u201c`cookies`,\u201d \u201c`headers`,\u201d and \u201c`params`.\u201d"
+          },
+          {
+            "checkpoint": 20,
+            "grade": "CORRECT",
+            "evidence": "\u201c`middleware` \u2192 `proxy`\u201d and \u201cdeprecated/replaced by `proxy`.\u201d"
+          },
+          {
+            "checkpoint": 21,
+            "grade": "PARTIAL",
+            "evidence": "States \u201cReact 19.2 support\u201d and \u201cstable file-system caching for `next dev`,\u201d but does not mention `next lint` was removed."
+          }
+        ],
+        "unique_cited_urls": 31
+      },
+      "gptr@60": {
+        "report": "# State of the stack, mid-2026: CTO briefing\n\nThis briefing summarizes where the AI application and web engineering stack stands in mid-2026 across four areas: OpenAI\u2019s API lineup, the LangChain 1.x ecosystem, the `deepagents` library, and Next.js. It is grounded in current documentation and release sources. Where an exact detail was not surfaced cleanly from first-party docs, I say so explicitly.\n\n---\n\n## Executive summary\n\n- **OpenAI API:** The current production lineup is centered on the **GPT-5.x family**, with **GPT-5.5** positioned as the flagship, **GPT-5.4** as the cheaper balanced tier, and **GPT-5.4 mini** as the high-volume lower-cost tier. Official model docs clearly expose pricing for **gpt-5.5**, **gpt-5.4**, and **gpt-5.4-mini**; official model catalogs also list **GPT-5.5 Pro**, **GPT-5.4 Pro**, and **GPT-5.4 nano**. Reasoning is now an explicit control surface via `reasoning.effort`, and reasoning-token use is billed as output tokens. Sources: OpenAI docs and pricing/model pages.  \n  https://developers.openai.com/api/docs/models  \n  https://developers.openai.com/api/docs/models/all  \n  https://developers.openai.com/api/docs/pricing  \n  https://developers.openai.com/api/docs/guides/reasoning\n\n- **LangChain ecosystem:** The stack has consolidated around **LangChain 1.x** as the high-level agent framework and **LangGraph 1.x** as the runtime/orchestration layer. The modern default API is **`create_agent`**. Legacy chain-heavy patterns have been pushed into **`langchain-classic`**. Sources: LangChain v1 release notes, migration guide, LangGraph v1 docs.  \n  https://docs.langchain.com/oss/python/releases/langchain-v1  \n  https://docs.langchain.com/oss/python/migrate/langchain-v1  \n  https://docs.langchain.com/oss/python/releases/langgraph-v1  \n  https://docs.langchain.com/oss/python/langgraph/overview\n\n- **deepagents:** `deepagents` remains a fast-moving pre-1.0 harness on top of LangGraph, with built-in planning, subagents, filesystems, and HITL controls. Public docs show `pip install deepagents`, `agent.invoke(...)`, built-in file/todo tooling, and hosted/managed options through LangSmith. The latest visible core release signals are **PyPI release June 25, 2026** and a **GitHub prerelease tag `0.7.0a3` on July 1, 2026**.  \n  https://pypi.org/project/deepagents  \n  https://docs.langchain.com/oss/python/deepagents/overview  \n  https://docs.langchain.com/oss/python/deepagents/quickstart  \n  https://github.com/langchain-ai/deepagents/releases  \n  https://docs.langchain.com/langsmith/managed-deep-agents-overview\n\n- **Next.js:** The current major is **Next.js 16**. Official docs show **16.2.10** as the latest stable docs baseline, while **16.3** is still in preview. The major changes are: **Node 20.9+ required**, **Turbopack is now the default bundler for both dev and build**, `next lint` is removed, runtime config is removed, and some routing/config conventions are stricter.  \n  https://nextjs.org/docs/app/guides/upgrading/version-16  \n  https://nextjs.org/docs/app/api-reference/turbopack  \n  https://nextjs.org/blog/next-16  \n  https://nextjs.org/blog\n\n---\n\n# 1) OpenAI API model lineup and pricing\n\n## What the current lineup looks like\n\nOpenAI\u2019s current docs present two overlapping views:\n\n1. A **developer-friendly \u201ccurrent models\u201d view** centered on **GPT-5.5**, **GPT-5.4**, and **GPT-5.4 mini**.  \n   https://developers.openai.com/api/docs/models\n\n2. A broader **all-models catalog** that includes **GPT-5.5 Pro**, **GPT-5.4 Pro**, and **GPT-5.4 nano** in addition to the above.  \n   https://developers.openai.com/api/docs/models/all\n\n### Current key text/reasoning models\n\n| Tier | Exact model name | OpenAI positioning | Source |\n|---|---|---|---|\n| Flagship | **GPT-5.5** | Flagship for complex reasoning and coding | https://developers.openai.com/api/docs/models |\n| Premium flagship | **GPT-5.5 Pro** | Smarter / more precise GPT-5.5 variant | https://developers.openai.com/api/docs/models/all |\n| Balanced mid-tier | **GPT-5.4** | More affordable coding/professional model | https://developers.openai.com/api/docs/models |\n| Premium mid-tier | **GPT-5.4 Pro** | Smarter / more precise GPT-5.4 variant | https://developers.openai.com/api/docs/models/all |\n| Lower-cost tier | **GPT-5.4 mini** | Lower-cost, lower-latency tier | https://developers.openai.com/api/docs/models |\n| Lowest-cost current GPT-5.4 family tier | **GPT-5.4 nano** | Cheapest listed GPT-5.4 family tier | https://developers.openai.com/api/docs/models/all |\n\nOpenAI\u2019s model docs also describe the current family as supporting text/image input, text output, tool use, and the Responses API flow.  \nhttps://developers.openai.com/api/docs/models\n\n## Official pricing that is clearly surfaced\n\nThe official model pages and pricing docs clearly surface the following per-1M-token prices for the current core models:\n\n| Model | Input / 1M tokens | Output / 1M tokens | Source |\n|---|---:|---:|---|\n| **gpt-5.5** | **$5.00** | **$30.00** | https://developers.openai.com/api/docs/models |\n| **gpt-5.4** | **$2.50** | **$15.00** | https://developers.openai.com/api/docs/models |\n| **gpt-5.4-mini** | **$0.75** | **$4.50** | https://developers.openai.com/api/docs/models |\n\nOfficial pricing page:  \nhttps://developers.openai.com/api/docs/pricing\n\n### Cached-input pricing\n\nOpenAI\u2019s pricing docs support cached-input pricing conceptually, but in the surfaced official material here, I could not reliably extract a full first-party cached-input table for every listed GPT-5.x model. The pricing page is the canonical place to verify it live before procurement or rollout:  \nhttps://developers.openai.com/api/docs/pricing\n\n### What I could not confirm exactly from first-party docs in the retrieved material\n\nI could confirm that these model names exist in the official catalog:\n\n- `GPT-5.5 Pro`\n- `GPT-5.4 Pro`\n- `GPT-5.4 nano`\n\nBut I did **not** get a clean first-party extract of their exact per-token prices from the surfaced official pages in this run, so I won\u2019t guess. Verify those directly on the pricing page before using them in budgeting:  \nhttps://developers.openai.com/api/docs/pricing  \nhttps://developers.openai.com/api/docs/models/all\n\n## Reasoning options and controls\n\nOpenAI now exposes reasoning as a real API tuning surface rather than an implicit model trait.\n\n### Main controls\n\n- `reasoning.effort`\n- `reasoning.summary`\n- `include: [\"reasoning.encrypted_content\"]`\n\nDocs:  \nhttps://developers.openai.com/api/docs/guides/reasoning  \nhttps://developers.openai.com/api/docs/guides/reasoning-best-practices\n\n### Reasoning effort levels\n\nThe current model docs show these effort levels for current GPT-5 models:\n\n- `none`\n- `low`\n- `medium`\n- `high`\n- `xhigh`\n\nSource:  \nhttps://developers.openai.com/api/docs/models\n\n### Important cost implication\n\nOpenAI\u2019s reasoning guide states that **reasoning tokens are billed as output tokens**. That means the published output rate is not just \u201cvisible answer text\u201d; it also covers internal reasoning work on reasoning-enabled tasks.  \nhttps://developers.openai.com/api/docs/guides/reasoning\n\nFor CTO budgeting, that means:\n\n- **GPT-5.5** is the premium reasoning choice, but its **$30/1M output** rate is the critical cost lever on hard tasks.\n- **GPT-5.4 mini** is the likely default for high-volume traffic where over-reasoning would be wasteful.\n- The **Responses API** is now the preferred interface for reasoning models.  \n  https://developers.openai.com/api/docs/guides/reasoning\n\n## Practical recommendation\n\n- Default conversational/agent traffic: **gpt-5.4-mini**\n- Balanced coding/knowledge work: **gpt-5.4**\n- Hard reasoning/coding/planning: **gpt-5.5**\n- Pro variants: evaluate only if their quality gain justifies premium spend, and verify live pricing first.\n\n---\n\n# 2) LangChain 1.x ecosystem\n\n## Current state\n\nLangChain\u2019s ecosystem has materially simplified in 1.x:\n\n- **LangChain 1.x** = high-level agent framework\n- **LangGraph 1.x** = runtime/orchestration layer\n- **langchain-classic** = compatibility bucket for older abstractions\n\nSources:  \nhttps://docs.langchain.com/oss/python/releases/langchain-v1  \nhttps://docs.langchain.com/oss/python/releases/langgraph-v1  \nhttps://docs.langchain.com/oss/python/migrate/langchain-v1\n\n## Versions\n\nThe official docs clearly establish that the current architecture is the **1.x line** for both LangChain and LangGraph.  \nhttps://docs.langchain.com/oss/python/releases/langchain-v1  \nhttps://docs.langchain.com/oss/python/releases/langgraph-v1\n\nI also confirmed a current PyPI release date for `langchain` of **June 22, 2026**, but the quick-search result did not expose the exact version number inline. So the safe statement is:\n\n- **LangChain:** current stable line is **1.x**\n- **LangGraph:** current stable line is **1.x**\n- verify exact patch version on PyPI at upgrade time\n\nPyPI / docs:\n- https://pypi.org/project/langchain\n- https://docs.langchain.com/oss/python/releases/langchain-v1\n- https://docs.langchain.com/oss/python/releases/langgraph-v1\n\n## The modern agent-building API\n\nThe current standard entry point is:\n\n- **`langchain.agents.create_agent`**\n\nOfficial release and migration docs explicitly say `create_agent` is now the standard way to build agents.  \nhttps://docs.langchain.com/oss/python/releases/langchain-v1  \nhttps://docs.langchain.com/oss/python/migrate/langchain-v1\n\nThis is the key design shift: the ecosystem now has a much clearer \u201cgolden path\u201d for new work.\n\n## What replaced the legacy patterns\n\n### Old default\nBefore v1, LangChain commonly pushed people toward:\n- chain-based patterns\n- multiple overlapping agent constructors\n- `langgraph.prebuilt.create_react_agent`\n\n### New default\nNow:\n- **`create_agent`** is the recommended default\n- legacy chain/retriever/indexing patterns moved into **`langchain-classic`**\n- `langgraph.prebuilt.create_react_agent` is no longer the recommended primary entry point\n\nSources:\n- https://docs.langchain.com/oss/python/migrate/langchain-v1\n- https://docs.langchain.com/oss/python/releases/langgraph-v1\n\n### Specific migration examples\n\nMoved or relegated to legacy/compatibility usage:\n- `LLMChain`\n- `ConversationChain`\n- older retriever imports\n- older indexing APIs\n- some old `hub`/embedding patterns\n\nSource:  \nhttps://docs.langchain.com/oss/python/migrate/langchain-v1\n\n## Runtime layer: LangGraph\n\nLangGraph is now the explicit runtime substrate for:\n- stateful agent execution\n- checkpointing\n- persistence\n- streaming\n- human-in-the-loop\n- durable workflows\n\nDocs:\n- https://docs.langchain.com/oss/python/langgraph/overview\n- https://reference.langchain.com/python/langgraph\n- https://docs.langchain.com/oss/python/releases/langgraph-v1\n\nThe cleanest mental model is:\n\n| Layer | Role |\n|---|---|\n| **LangChain** | Developer-facing framework for building agents quickly |\n| **LangGraph** | Runtime/orchestration engine for durable, stateful execution |\n| **LangSmith** | Tracing, evals, observability, and ops |\n\nLangGraph overview:  \nhttps://docs.langchain.com/oss/python/langgraph/overview\n\n## CTO take\n\nLangChain is less of a \u201cgrab bag\u201d than it was in 0.x. In mid-2026, the recommendation is straightforward:\n\n- Build new agents with **LangChain 1.x `create_agent`**\n- Drop to **LangGraph** only when you need runtime control\n- Fence old chain-heavy code inside **`langchain-classic`** and stop expanding it\n\n---\n\n# 3) deepagents\n\n## Current version status\n\nThe `deepagents` story is a little messy because the project is moving quickly.\n\n### What I could confirm\n\n- PyPI shows `deepagents` as a current package with a latest release on **June 25, 2026**  \n  https://pypi.org/project/deepagents\n- GitHub releases show **`deepagents==0.7.0a3`** on **July 1, 2026**, explicitly as a **pre-release**  \n  https://github.com/langchain-ai/deepagents/releases\n\nSo the accurate summary is:\n\n- **Current stable/public package exists on PyPI**\n- **Latest observed core code tag is pre-release `0.7.0a3`**\n- `deepagents` is still **pre-1.0** and should be treated accordingly\n\n## What deepagents is\n\nOfficial docs describe Deep Agents as an **agent harness** built on LangGraph, with built-in support for:\n- planning\n- subagents\n- filesystems\n- context management\n- steering / HITL\n\nOverview:\nhttps://docs.langchain.com/oss/python/deepagents/overview\n\n## Core APIs and capabilities\n\n## Agent execution\n\nThe quickstart shows a standard invocation model:\n\n- install with `pip install deepagents`\n- run the agent with **`agent.invoke({...})`**\n- pass a chat-style `messages` array\n\nQuickstart:  \nhttps://docs.langchain.com/oss/python/deepagents/quickstart\n\nExample shape from docs:\n\n```python\nresult = agent.invoke({\n    \"messages\": [{\n        \"role\": \"user\",\n        \"content\": \"What is langgraph?\"\n    }]\n})\n```\n\n## Agent construction / customization\n\nThe public release notes show construction customization such as:\n\n- **`create_deep_agent(..., middleware=[...])`**\n\nGitHub release notes mention middleware replacement behavior, including `SummarizationMiddleware`.  \nhttps://github.com/langchain-ai/deepagents/releases\n\n## Subagents\n\nSubagents are a first-class part of the design, not a bolt-on. Docs and release notes describe:\n\n- isolated context windows\n- built-in delegation\n- inline subagents\n- async/remote subagents\n\nSources:\n- https://docs.langchain.com/oss/python/deepagents/overview\n- https://www.langchain.com/blog/deep-agents-v0-5\n\n### Inline vs async subagents\n\nThe v0.5 announcement explains two modes:\n\n- **inline subagents**: supervisor waits\n- **async subagents**: returns task ID, work continues remotely\n\nSource:  \nhttps://www.langchain.com/blog/deep-agents-v0-5\n\n## Filesystem backends and file model\n\nDeepagents has a distinctive **filesystem-centric** architecture. Official overview breaks the environment into layers including:\n\n- tools\n- virtual filesystem\n- filesystem permissions\n- code execution\n\nOverview:  \nhttps://docs.langchain.com/oss/python/deepagents/overview\n\nThe docs explicitly say the virtual filesystem is backed by **pluggable backends**, but the surfaced docs here do **not** give a clean backend matrix with exact class names for every backend. So the safe statement is:\n\n- deepagents supports **pluggable filesystem backends**\n- file tools like `write_file` and `read_file` are built in\n- exact backend implementation choices should be verified in source/reference before standardizing across the org\n\nSources:\n- https://docs.langchain.com/oss/python/deepagents/overview\n- https://docs.langchain.com/oss/python/deepagents/quickstart\n\n## Human-in-the-loop\n\nHITL is a core feature, not an add-on. Official docs mention:\n\n- human-in-the-loop approval\n- interrupts\n- steering\n\nOverview:\nhttps://docs.langchain.com/oss/python/deepagents/overview\n\nAnd the managed runtime docs extend this with:\n- durable runs\n- thread state\n- sandboxes\n- traces\n- revisions\n\nManaged Deep Agents:\nhttps://docs.langchain.com/langsmith/managed-deep-agents-overview\n\n## Managed/runtime status\n\nLangChain also offers **Managed Deep Agents**, but the docs say it is in **private beta** and limited to **LangSmith Cloud in the US region**.  \nhttps://docs.langchain.com/langsmith/managed-deep-agents-overview\n\n## CTO take\n\nDeepagents is compelling if you want an opinionated harness for:\n- multi-step agents\n- subagent decomposition\n- file-backed context management\n- HITL controls\n\nBut it is still a **fast-moving pre-1.0 project**. Treat it as:\n- promising\n- powerful\n- not yet as lifecycle-stable as LangChain/LangGraph 1.x\n\n---\n\n# 4) Next.js\n\n## Current major version\n\nThe current major version is **Next.js 16**.  \nhttps://nextjs.org/blog/next-16  \nhttps://nextjs.org/docs/app/guides/upgrading/version-16\n\nThe official docs show **16.2.10** as the current stable docs baseline, while **16.3** is still preview.  \nhttps://nextjs.org/docs/app/guides/upgrading/version-16  \nhttps://nextjs.org/blog/next-16-3-instant-navigations\n\n## Runtime requirements\n\nNext.js 16 requires:\n\n- **Node.js 20.9.0+**\n- **TypeScript 5.1.0+**\n- supported browsers:\n  - Chrome 111+\n  - Edge 111+\n  - Firefox 111+\n  - Safari 16.4+\n\nSource:  \nhttps://nextjs.org/docs/app/guides/upgrading/version-16\n\nThis is a meaningful floor bump. If you still have Node 18 in CI, containers, or internal tooling, you are behind.\n\n## Key breaking changes\n\n## 1. Turbopack is now the default bundler\n\nStarting with Next.js 16:\n- `next dev` uses Turbopack by default\n- `next build` uses Turbopack by default\n\nSources:\n- https://nextjs.org/docs/app/guides/upgrading/version-16\n- https://nextjs.org/docs/app/api-reference/turbopack\n- https://nextjs.org/blog/next-16\n\nThis is the biggest practical shift in build tooling.\n\n## 2. `next lint` is removed\n\nThe old framework-level lint command is gone. `next build` also no longer runs linting.\n\nYou now need to run linting explicitly through:\n- ESLint CLI\n- Biome\n- or your own CI command\n\nSource:  \nhttps://nextjs.org/docs/app/guides/upgrading/version-16  \nhttps://nextjs.org/blog/next-16\n\n## 3. Runtime config is removed\n\nRemoved:\n- `serverRuntimeConfig`\n- `publicRuntimeConfig`\n\nUse env vars and modern server/client boundaries instead.  \nhttps://nextjs.org/docs/app/guides/upgrading/version-16\n\n## 4. `middleware.ts` is deprecated in favor of `proxy.ts`\n\nThis is a naming and convention shift the docs call out.  \nhttps://nextjs.org/docs/app/guides/upgrading/version-16\n\n## 5. Parallel routes are stricter\n\nNext.js 16 requires explicit `default.js` files for parallel route slots; builds fail otherwise.  \nhttps://nextjs.org/blog/next-16  \nhttps://nextjs.org/docs/app/guides/upgrading/version-16\n\n## 6. Old config names are removed\n\n- `experimental.turbo` \u2192 replaced by **`turbopack`**\n- older `devIndicators` options removed\n- AMP support removed\n\nSources:\n- https://nextjs.org/docs/app/guides/upgrading/version-16\n- https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack\n- https://nextjs.org/blog/next-16\n\n## Current build tooling reality\n\n## Turbopack is the strategic default\n\nTurbopack is now:\n- stable\n- default for dev\n- default for build\n\nDocs:\nhttps://nextjs.org/docs/app/api-reference/turbopack  \nhttps://nextjs.org/blog/next-16\n\n## But Turbopack is not a perfect webpack clone\n\nImportant caveats in official docs:\n\n- webpack plugins are not supported by Turbopack\n- `webpack()` config is not honored by Turbopack\n- some Sass customizations still require webpack\n- some platforms without native bindings fall back to WASM and lose Turbopack support\n\nSource:  \nhttps://nextjs.org/docs/app/api-reference/turbopack\n\n### Native runtime support matters\n\nTurbopack native bindings exist for mainstream:\n- macOS\n- Windows\n- Linux\n- x64 / ARM64\n- glibc / musl variants\n\nOn platforms like FreeBSD/OpenBSD, docs indicate fallback behavior without Turbopack support.  \nhttps://nextjs.org/docs/app/api-reference/turbopack\n\n## Point release status\n\nAs of early July 2026:\n- **16.2.x** is the safe stable family\n- **16.3** is preview, not the default enterprise target yet\n\nSources:\n- https://nextjs.org/docs/app/guides/upgrading/version-16\n- https://nextjs.org/blog\n\n## CTO take\n\nFor production estates, the practical posture is:\n\n- standardize on **Next.js 16.2.x**\n- move infra to **Node 20.9+**\n- assume **Turbopack-first**, not webpack-first\n- audit all custom webpack hooks and lint/build assumptions before upgrading\n\n---\n\n# Recommended CTO posture, mid-2026\n\n## OpenAI\nAdopt a tiered model routing strategy:\n- **gpt-5.4-mini** for default traffic\n- **gpt-5.4** for balanced work\n- **gpt-5.5** for hard tasks  \nDo not budget Pro/nano variants until pricing is verified live on OpenAI\u2019s pricing page.\n\n## LangChain\nUse:\n- **LangChain 1.x `create_agent`** for most new work\n- **LangGraph 1.x** when you need orchestration/runtime control\n- **langchain-classic** only for migration containment\n\n## deepagents\nPilot it where file-backed workflows and subagent decomposition matter, but treat it as:\n- pre-1.0\n- fast-moving\n- worth pinning tightly and testing thoroughly\n\n## Next.js\nUpgrade to:\n- **Next.js 16.2.x**\n- **Node 20.9+**\n- **Turbopack-default builds**\nand plan for:\n- removal of framework-managed linting\n- removal of runtime config\n- stricter route/build conventions\n\n---\n\n# Source index\n\n## OpenAI\n- OpenAI models: https://developers.openai.com/api/docs/models\n- OpenAI all models: https://developers.openai.com/api/docs/models/all\n- OpenAI pricing: https://developers.openai.com/api/docs/pricing\n- OpenAI reasoning guide: https://developers.openai.com/api/docs/guides/reasoning\n- OpenAI reasoning best practices: https://developers.openai.com/api/docs/guides/reasoning-best-practices\n\n## LangChain / LangGraph\n- LangChain v1 release: https://docs.langchain.com/oss/python/releases/langchain-v1\n- LangChain v1 migration: https://docs.langchain.com/oss/python/migrate/langchain-v1\n- LangGraph v1 release: https://docs.langchain.com/oss/python/releases/langgraph-v1\n- LangGraph overview: https://docs.langchain.com/oss/python/langgraph/overview\n- LangGraph reference: https://reference.langchain.com/python/langgraph\n- PyPI langchain: https://pypi.org/project/langchain\n\n## deepagents\n- PyPI deepagents: https://pypi.org/project/deepagents\n- deepagents overview: https://docs.langchain.com/oss/python/deepagents/overview\n- deepagents quickstart: https://docs.langchain.com/oss/python/deepagents/quickstart\n- deepagents releases: https://github.com/langchain-ai/deepagents/releases\n- Managed Deep Agents: https://docs.langchain.com/langsmith/managed-deep-agents-overview\n- Deep Agents v0.5 blog: https://www.langchain.com/blog/deep-agents-v0-5\n\n## Next.js\n- Next.js 16 upgrade guide: https://nextjs.org/docs/app/guides/upgrading/version-16\n- Next.js Turbopack docs: https://nextjs.org/docs/app/api-reference/turbopack\n- Next.js Turbopack config: https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack\n- Next.js 16 release blog: https://nextjs.org/blog/next-16\n- Next.js blog index: https://nextjs.org/blog\n\nDirect answer: Mid-2026, the stack has consolidated around **OpenAI GPT-5.x**, **LangChain 1.x + LangGraph 1.x**, **pre-1.0 deepagents**, and **Next.js 16.2.x with Node 20.9+ and Turbopack by default**.",
+        "latency_seconds": 149.1,
+        "grades": [
+          {
+            "checkpoint": 1,
+            "grade": "PARTIAL",
+            "evidence": "States \u201cGPT-5.5 positioned as the flagship\u201d and \u201cFlagship | GPT-5.5,\u201d but does not mention \u201cin the API since late April 2026.\u201d"
+          },
+          {
+            "checkpoint": 2,
+            "grade": "CORRECT",
+            "evidence": "Pricing table: \u201cgpt-5.5 | $5.00 | $30.00\u201d per 1M tokens."
+          },
+          {
+            "checkpoint": 3,
+            "grade": "PARTIAL",
+            "evidence": "Says \u201cGPT-5.5 Pro | Smarter / more precise GPT-5.5 variant\u201d but explicitly says it \u201cdid not get a clean first-party extract of their exact per-token prices.\u201d"
+          },
+          {
+            "checkpoint": 4,
+            "grade": "PARTIAL",
+            "evidence": "States \u201cGPT-5.4 as the cheaper balanced tier\u201d and prices \u201c$2.50 / $15.00,\u201d but does not mention the March 2026 timing."
+          },
+          {
+            "checkpoint": 5,
+            "grade": "PARTIAL",
+            "evidence": "Gives \u201cgpt-5.4-mini | $0.75 | $4.50\u201d and notes GPT-5.4 nano exists, but says it could not confirm exact nano pricing."
+          },
+          {
+            "checkpoint": 6,
+            "grade": "CORRECT",
+            "evidence": "Lists reasoning effort levels: \u201cnone, low, medium, high, xhigh.\u201d"
+          },
+          {
+            "checkpoint": 7,
+            "grade": "PARTIAL",
+            "evidence": "States \u201cLangChain 1.x is current\u201d and \u201c0.x\u201d is legacy via langchain-classic, but does not mention recent releases in the 1.3.x range."
+          },
+          {
+            "checkpoint": 8,
+            "grade": "CORRECT",
+            "evidence": "Says \u201cThe current standard entry point is: langchain.agents.create_agent\u201d and \u201ccreate_agent is now the standard way.\u201d"
+          },
+          {
+            "checkpoint": 9,
+            "grade": "PARTIAL",
+            "evidence": "Describes legacy patterns being moved aside and older constructors/chains as legacy, but does not specifically mention \u201cinitialize_agent\u201d and \u201cAgentExecutor.\u201d"
+          },
+          {
+            "checkpoint": 10,
+            "grade": "MISSING",
+            "evidence": "No statement that LangChain 1.x agents support a middleware mechanism."
+          },
+          {
+            "checkpoint": 11,
+            "grade": "CORRECT",
+            "evidence": "States LangGraph is the runtime substrate for \u201ccheckpointing, persistence, streaming, human-in-the-loop, durable workflows.\u201d"
+          },
+          {
+            "checkpoint": 12,
+            "grade": "WRONG",
+            "evidence": "Says latest visible signals include \u201cGitHub prerelease tag 0.7.0a3 on July 1, 2026\u201d instead of the authoritative current release line 0.6.x (0.6.12)."
+          },
+          {
+            "checkpoint": 13,
+            "grade": "PARTIAL",
+            "evidence": "Mentions deepagents and \u201ccreate_deep_agent(..., middleware=[...])\u201d plus planning/subagents, but does not state the full creation pattern with model, tools, system_prompt or built-in write_todos and task tool."
+          },
+          {
+            "checkpoint": 14,
+            "grade": "MISSING",
+            "evidence": "No mention of subagents= parameter or dict schema with name, description, system_prompt."
+          },
+          {
+            "checkpoint": 15,
+            "grade": "MISSING",
+            "evidence": "Only says filesystem is backed by \u201cpluggable backends,\u201d and explicitly says exact backend class names were not surfaced."
+          },
+          {
+            "checkpoint": 16,
+            "grade": "MISSING",
+            "evidence": "Mentions HITL/interrupts generally, but not that it is configured with interrupt_on mapping tool names to interrupt configs."
+          },
+          {
+            "checkpoint": 17,
+            "grade": "CORRECT",
+            "evidence": "States \u201cThe current major is Next.js 16\u201d and \u201c16.3 is still preview.\u201d"
+          },
+          {
+            "checkpoint": 18,
+            "grade": "CORRECT",
+            "evidence": "Says \u201cNext.js 16 requires: Node.js 20.9.0+; TypeScript 5.1.0+.\u201d"
+          },
+          {
+            "checkpoint": 19,
+            "grade": "MISSING",
+            "evidence": "No discussion of synchronous access removal for cookies(), headers(), or params."
+          },
+          {
+            "checkpoint": 20,
+            "grade": "CORRECT",
+            "evidence": "States \u201cmiddleware.ts is deprecated in favor of proxy.ts.\u201d"
+          },
+          {
+            "checkpoint": 21,
+            "grade": "PARTIAL",
+            "evidence": "States Turbopack is default and \u201cnext lint\u201d is removed, but does not mention persistent file-system caching or pairing with React 19.2."
+          }
+        ],
+        "unique_cited_urls": 23
+      }
+    }
+  ]
+}

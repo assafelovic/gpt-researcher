@@ -1,0 +1,251 @@
+{
+  "run_metadata": {
+    "timestamp": "2026-07-04T11:34:10.368400+00:00",
+    "dataset": "frames",
+    "num_examples": 20,
+    "seed": 42,
+    "model": "openai:gpt-5.4",
+    "grader_model": "gpt-5.4-mini"
+  },
+  "systems": {
+    "gptr_deep_agent": {
+      "summary": {
+        "total": 20,
+        "correct": 16,
+        "incorrect": 3,
+        "not_attempted": 1,
+        "correct_rate": 0.8,
+        "accuracy_given_attempted": 0.842,
+        "f1": 0.821,
+        "avg_latency_seconds": 36.0,
+        "p50_latency_seconds": 27.0,
+        "gptr_internal_cost_usd": 0.1099,
+        "agent_input_tokens": 1112516,
+        "agent_output_tokens": 6692,
+        "wall_time_seconds": 249.0
+      },
+      "records": [
+        {
+          "question": "Please consider the following clues and answer the question that follows:  1. This mosque is located in the city dubbed the \"Jerusalem of the Balkans.\" 2, The mosque was commissioned by an authoritarian dictator born in a small village 10 km west of Yogyakarta.  Question: What is the height difference between the twin towers of the mosque and its dome? ",
+          "target": "21 meters",
+          "prediction": "The mosque is the **Istiklal Mosque in Sarajevo**. Sarajevo is commonly called the **\u201cJerusalem of the Balkans\u201d**, and the project is tied to **Suharto**, the Indonesian authoritarian ruler born in **Kemusuk**, west of Yogyakarta. Sources on the mosque list its **twin minarets/towers at 48 m** and its **dome at 27 m**.\n\nSo the height difference is:\n\n**48 m \u2212 27 m = 21 m**\n\n**Answer: 21 meters.**",
+          "grade": "CORRECT",
+          "latency_seconds": 146.3,
+          "agent_tokens": {
+            "input": 89548,
+            "output": 518
+          }
+        },
+        {
+          "question": "What painting was stolen from The Louvre exactly 56 years before the birth of activist and songwriter Serj Tankian?",
+          "target": "The Mona Lisa",
+          "prediction": "Serj Tankian was born on **August 21, 1967**. The painting stolen from the Louvre **56 years earlier**, on **August 21, 1911**, was **Leonardo da Vinci\u2019s *Mona Lisa***.\n\n**Short answer: the *Mona Lisa*.**",
+          "grade": "CORRECT",
+          "latency_seconds": 14.6,
+          "agent_tokens": {
+            "input": 16056,
+            "output": 134
+          }
+        },
+        {
+          "question": "What was the age difference between Mike Tyson and Tyson Fury on the respective days on which they lost their first ever fights? Represent the figure in years only.",
+          "target": "12 years.",
+          "prediction": "Mike Tyson was born on **June 30, 1966** (Britannica), and his first professional loss was to Buster Douglas on **February 11, 1990**. That made Tyson **23** years old on the day of his first loss.  \n\nTyson Fury was born on **August 12, 1988** (Britannica), and his first professional loss was to Oleksandr Usyk on **May 18, 2024** (Reuters/ESPN). That made Fury **35** years old on the day of his first loss.  \n\nThe age difference was **12 years**.  \n\n**Answer: 12 years**",
+          "grade": "CORRECT",
+          "latency_seconds": 31.6,
+          "agent_tokens": {
+            "input": 33759,
+            "output": 332
+          }
+        },
+        {
+          "question": "I can't recall who I'm trying to think of. This person was the partner of someone in the 1984 Olympic keelboat competition. Their partner's sister was the only American who placed in the 2003 Pan American Games for sailing in the men's or women's competition (not including the open events).",
+          "target": "Richard Coxon.",
+          "prediction": "The 2003 clue points to **Sally Barkow**. In the non-open sailing events at the 2003 Pan American Games, the only U.S. sailor who placed without winning gold was Barkow, who finished **5th in the women\u2019s Laser Radial**; the other U.S. medal/placing in gender-specific events was **Lanee Butler**, who won women\u2019s Mistral gold. Sources: Pan Am sailing results and Team USA\u2019s Sally Barkow profile. The 1984 Olympic \u201ckeelboat\u201d partner clue then fits Barkow\u2019s brother being **Bill Buchan**: in the **1984 Olympic Star class** (the two-person keelboat), **William Earl \u201cBill\u201d Buchan** sailed with **Steven Erickson**. So the person you\u2019re trying to think of is **Bill Buchan\u2019s partner, Steven Erickson**.\n\nShort answer: **Steven Erickson**.**Steven Erickson**.\n\nWhy: the sister clue points to **Sally Barkow**, who was the only American to place (without winning) in the 2003 Pan American Games\u2019 men\u2019s/women\u2019s sailing events, finishing **5th in the women\u2019s Laser Radial**. Her brother was **Bill Buchan**, who competed in the **1984 Olympic Star class** (the two-person keelboat) with **Steven Erickson**.\n\nShort answer: **Steven Erickson**.",
+          "grade": "INCORRECT",
+          "latency_seconds": 73.7,
+          "agent_tokens": {
+            "input": 106287,
+            "output": 846
+          }
+        },
+        {
+          "question": "I am the narrator character in the final novel written by the recipient of the 1963 Hugo Award for Best Novel. Who am I?",
+          "target": "Angel Archer.",
+          "prediction": "The 1963 Hugo Award for Best Novel went to **Philip K. Dick** for **The Man in the High Castle** (official Hugo Awards site). Dick\u2019s final published novel was **The Transmigration of Timothy Archer**. Multiple sources identify that novel\u2019s first-person narrator as **Angel Archer**.\n\nYou are **Angel Archer**.",
+          "grade": "CORRECT",
+          "latency_seconds": 39.3,
+          "agent_tokens": {
+            "input": 71114,
+            "output": 342
+          }
+        },
+        {
+          "question": "The Sikh empire's capital at the time of the Battle of Sobraon came under the rule of the British Crown in what year?",
+          "target": "1858",
+          "prediction": "The Sikh Empire\u2019s capital at the time of the Battle of Sobraon was **Lahore**. Lahore was annexed by the British in **1849** after the Second Anglo-Sikh War, but it came under the rule of the **British Crown** in **1858**, when Crown rule replaced East India Company rule in India. Sources: World History Encyclopedia on the Battle of Sobraon (1846), Wallace Collection on Lahore as the Sikh capital, and the Punjab Province history noting Crown rule began in 1858.\n\n**Answer: 1858.**",
+          "grade": "CORRECT",
+          "latency_seconds": 9.9,
+          "agent_tokens": {
+            "input": 15790,
+            "output": 207
+          }
+        },
+        {
+          "question": "The US Naval ship that sunk in Havana Harbor on February 15, 1898, is named for a state that was admitted to the Union while what woman was serving as First Lady?",
+          "target": "Elizabeth Monroe",
+          "prediction": "The ship was the **USS Maine**, named for the state of **Maine**. Maine was admitted to the Union on **March 15, 1820**, during the presidency of **James Monroe**; the First Lady then was **Elizabeth Kortright Monroe**. Sources: Library of Congress on the sinking of the USS *Maine*; History.com and Maine State Archives on Maine\u2019s admission date; White House/White House Historical Association on Elizabeth Monroe\u2019s tenure as First Lady.\n\n**Answer: Elizabeth Kortright Monroe.**",
+          "grade": "CORRECT",
+          "latency_seconds": 11.4,
+          "agent_tokens": {
+            "input": 19676,
+            "output": 233
+          }
+        },
+        {
+          "question": "As of August 5, 2024, what is the name of the federal law that was found to be violated by the company that Brian Bergstein is employed by?",
+          "target": "The Sherman Antitrust Act",
+          "prediction": "As of August 5, 2024, the company was found to have violated **U.S. antitrust law**. Reuters reported that on that date a federal judge ruled Google had \u201cviolated antitrust law\u201d by maintaining an illegal monopoly in search. Source: Reuters, Aug. 5, 2024.\n\n**Short answer: U.S. antitrust law.**",
+          "grade": "CORRECT",
+          "latency_seconds": 86.7,
+          "agent_tokens": {
+            "input": 219068,
+            "output": 555
+          }
+        },
+        {
+          "question": "How many times larger was the population of the city of Paris, 19 years after the year designated as The International Year for the Culture of Peace by the United Nations, than the population of Brown County, Kansas according to its 2020 census? Round the answer to the nearest whole number.",
+          "target": "228 times larger",
+          "prediction": "The UN designated **2000** as the International Year for the Culture of Peace. Nineteen years later is **2019**.  \nParis\u2019s population in 2019 was about **2,165,423** (city proper), and Brown County, Kansas had a **2020 census** population of **9,508**.\n\nCalculation:  \n**2,165,423 \u00f7 9,508 \u2248 227.75**\n\nRounded to the nearest whole number: **228**\n\nShort answer: **228 times**.",
+          "grade": "CORRECT",
+          "latency_seconds": 12.9,
+          "agent_tokens": {
+            "input": 19272,
+            "output": 201
+          }
+        },
+        {
+          "question": " \"The Terminator\" was released on October 26th exactly how many years after the famous gunfight at the O.K. Corral occurred?",
+          "target": "103",
+          "prediction": "The gunfight at the O.K. Corral occurred on October 26, 1881, and *The Terminator* was released on October 26, 1984. That is exactly **103 years** later. Sources: History.com and Arizona Memory for the gunfight date; The Hollywood Reporter and other film references for *The Terminator*\u2019s U.S. release date.\n\n**103 years**",
+          "grade": "CORRECT",
+          "latency_seconds": 8.9,
+          "agent_tokens": {
+            "input": 15564,
+            "output": 167
+          }
+        },
+        {
+          "question": "Little River Canyon National Preserve has three waterfalls, one of which is the tallest in Alabama. How much shorter is Alabama's tallest waterfall than the tallest waterfall in the continental US?",
+          "target": "2,452 ft",
+          "prediction": "Grace\u2019s High Falls in Little River Canyon National Preserve is 133 feet tall, according to the National Park Service. The tallest waterfall in the continental U.S. is generally listed as Colonial Creek Falls in Washington at 2,568 feet.\n\n2,568 \u2212 133 = 2,435 feet.\n\nAlabama\u2019s tallest waterfall is 2,435 feet shorter.",
+          "grade": "INCORRECT",
+          "latency_seconds": 12.9,
+          "agent_tokens": {
+            "input": 32026,
+            "output": 218
+          }
+        },
+        {
+          "question": "Who was the Mayor of Quincy, Massachusetts when the Quincy Medical Center opened and who was the Mayor when it closed?",
+          "target": "Henry O. Fairbanks and Thomas P. Koch",
+          "prediction": "Quincy Medical Center first opened as Quincy Hospital in **1890**, when **William H. Fairbanks** was Mayor of Quincy, according to hospital histories and lists of Quincy mayors. It closed in **December 2014**, when **Thomas P. Koch** was Mayor.\n\nShort answer: **William H. Fairbanks when it opened; Thomas P. Koch when it closed.**",
+          "grade": "INCORRECT",
+          "latency_seconds": 19.7,
+          "agent_tokens": {
+            "input": 40370,
+            "output": 305
+          }
+        },
+        {
+          "question": "Use this information: -The Dragonfly Sea is a novel by Yvonne Adhiambo Owuor. -It has a publisher. -The publisher has two co-founders.  What was the original name of the university where the male co-founder of this publisher studied?",
+          "target": "King's College",
+          "prediction": "I could not verify the premise that the publisher of *The Dragonfly Sea* had two co-founders.\n\nWhat I found:\n- *The Dragonfly Sea* was published by **September Publishing** in the UK and **Alfred A. Knopf** in the US.\n- September Publishing\u2019s own \u201cOur Story\u201d page says it was **\u201cfounded in 2014 by Hannah MacDonald\u201d**, naming a single founder.\n- Knopf was founded by **Alfred A. Knopf and Blanche Knopf**, but the male co-founder, Alfred A. Knopf, studied at **Columbia University**; I did not find a sourced indication that the university had a different original name relevant to your question.\n\nSo, based on the sources I could find, I could not confirm a publisher with \u201ctwo co-founders\u201d that fits your clue. Short answer: **I could not verify the premise, so I can\u2019t answer reliably.**",
+          "grade": "NOT_ATTEMPTED",
+          "latency_seconds": 55.6,
+          "agent_tokens": {
+            "input": 139883,
+            "output": 645
+          }
+        },
+        {
+          "question": "What was the birthday of the man who was mayor of New York City the year Snoopy debuted in the Macy's Thanksgiving Day Parade?",
+          "target": "November 24, 1921",
+          "prediction": "Snoopy\u2019s giant-balloon debut in the Macy\u2019s Thanksgiving Day Parade was in **1968**. New York City\u2019s mayor that year was **John V. Lindsay**, whose birth date is listed by the U.S. House History office as **November 24, 1921**.\n\n**Answer: November 24, 1921.**",
+          "grade": "CORRECT",
+          "latency_seconds": 28.2,
+          "agent_tokens": {
+            "input": 29755,
+            "output": 225
+          }
+        },
+        {
+          "question": "During which year did the actor who played George Falconer in the film A Single Man receive his first Academy Award? Include the name of the film for which he won.",
+          "target": "Colin Firth won his first Academy Award in 2011 for The King's Speech.",
+          "prediction": "George Falconer in *A Single Man* was played by Colin Firth. His first Academy Award came in **2011**, when he won **Best Actor** for ***The King\u2019s Speech***.  \n\nShort answer: **2011 \u2014 *The King\u2019s Speech*.**",
+          "grade": "CORRECT",
+          "latency_seconds": 16.3,
+          "agent_tokens": {
+            "input": 24689,
+            "output": 176
+          }
+        },
+        {
+          "question": "In 2024's version of the world, which country was the birthplace of the Emperor who reigned from the year 363 to 364 over the Empire that the Goths played a major part in collapsing?",
+          "target": "Serbia",
+          "prediction": "The empire is the **Roman Empire**\u2014specifically the western half whose collapse the Goths helped bring about. The emperor who reigned **363\u2013364** was **Jovian**. Britannica identifies Jovian as born at **Singidunum**, \u201cnow **Belgrade, Serbia**.\u201d Since Singidunum corresponds to modern Belgrade, the country in today\u2019s world is **Serbia**.\n\n**Answer: Serbia.**",
+          "grade": "CORRECT",
+          "latency_seconds": 27.0,
+          "agent_tokens": {
+            "input": 38522,
+            "output": 286
+          }
+        },
+        {
+          "question": "As of 2010, if you added the number of times Brazil had won the World Cup to the amount of times the Chicago Bulls had won the NBA Championship and multiplied this number by the amount of times the Dallas Cowboys had won the Super Bowl, what number are you left with?",
+          "target": "55",
+          "prediction": "Brazil had won **5** World Cups by 2010, the Chicago Bulls had won **6** NBA championships, and the Dallas Cowboys had won **5** Super Bowls. Sources: FIFA/World Cup history shows Brazil\u2019s titles in 1958, 1962, 1970, 1994, and 2002; Britannica and NBA sources list the Bulls with 6 titles; NFL/stat sources list the Cowboys with 5 Super Bowl wins.\n\nSo:\n\n\\[\n(5 + 6) \\times 5 = 11 \\times 5 = 55\n\\]\n\n**55**",
+          "grade": "CORRECT",
+          "latency_seconds": 22.5,
+          "agent_tokens": {
+            "input": 20660,
+            "output": 218
+          }
+        },
+        {
+          "question": "As of August 1, 2024, what is the population of the writer of the \"Culdcept Saga\"'s birthplace? Write the answer to the nearest million, in characters.",
+          "target": "Two million.",
+          "prediction": "The writer credited for *Culdcept Saga* is **Tow Ubukata** (\u201cStory and Scenario by\u201d on MobyGames). Sources on Tow Ubukata list his birthplace as **Gifu Prefecture, Japan** (Wikipedia/IMDb; one source gives the more specific **Kakamigahara, Gifu Prefecture**). Official/statistical sources put **Gifu Prefecture** at about **1.93 million** people in 2023\u20132024, which rounds to the nearest million as:\n\n**2,000,000**\n\nShort answer: **2,000,000**",
+          "grade": "CORRECT",
+          "latency_seconds": 46.5,
+          "agent_tokens": {
+            "input": 126698,
+            "output": 568
+          }
+        },
+        {
+          "question": "As of August 2024, the Atlanta Braves beat the Houston Astros the last time they won the World Series. How many years before this did Jackie Robinson join the Brooklyn Dodgers?",
+          "target": "74 years",
+          "prediction": "The Braves last won the World Series in **2021**, when they beat the Astros, and Jackie Robinson joined the Brooklyn Dodgers in **1947** (he debuted with them on April 15, 1947). The difference is **74 years**.\n\n**Answer: 74 years.**",
+          "grade": "CORRECT",
+          "latency_seconds": 29.1,
+          "agent_tokens": {
+            "input": 18454,
+            "output": 163
+          }
+        },
+        {
+          "question": "After Meat Loaf legally changed his name due to a commercial, what was the first new brand launched by the company to whom the commercial belonged?",
+          "target": "Dockers",
+          "prediction": "The commercial was for **Levi\u2019s / Levi Strauss & Co.** Multiple sources note that Meat Loaf changed his legal first name from Marvin to Michael after a Levi\u2019s ad used the line **\u201cPoor fat Marvin can\u2019t wear Levi\u2019s\u201d** (e.g. Newsweek summarizing his CNN interview).\n\nLevi Strauss & Co.\u2019s first major new brand launch after Levi\u2019s was **Dockers**, introduced in **1986**; sources describing Dockers call it a brand Levi Strauss & Co. introduced/launched in 1986.\n\n**Answer: Dockers.**",
+          "grade": "CORRECT",
+          "latency_seconds": 26.0,
+          "agent_tokens": {
+            "input": 35325,
+            "output": 353
+          }
+        }
+      ]
+    }
+  }
+}
