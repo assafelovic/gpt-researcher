@@ -1,6 +1,23 @@
-from bs4 import BeautifulSoup
+import asyncio
 import os
+
+from bs4 import BeautifulSoup
+
 from ..utils import get_relevant_images
+
+# Module-level semaphore shared across all FireCrawl instances.
+# Limits concurrent API calls to avoid exceeding FireCrawl rate limits.
+# FireCrawl Free Tier allows 2 concurrent browsers; configurable via FIRECRAWL_CONCURRENCY.
+_semaphore: asyncio.Semaphore | None = None
+
+
+def _get_semaphore() -> asyncio.Semaphore:
+    global _semaphore
+    if _semaphore is None:
+        max_concurrent = int(os.environ.get("FIRECRAWL_CONCURRENCY", "2"))
+        _semaphore = asyncio.Semaphore(max_concurrent)
+    return _semaphore
+
 
 class FireCrawl:
 
@@ -80,3 +97,19 @@ class FireCrawl:
         except Exception as e:
             print("Error! : " + str(e))
             return "", [], ""
+
+    async def scrape_async(self) -> tuple:
+        """
+        Async version of scrape() with concurrency limiting to avoid FireCrawl API rate limits.
+
+        FireCrawl Free Tier limits concurrent browsers to 2. When deep research mode launches
+        many parallel requests, most fail silently with empty content. This method uses a shared
+        module-level semaphore so that at most FIRECRAWL_CONCURRENCY requests run simultaneously
+        across all FireCrawl instances (default: 2).
+
+        Returns:
+            Tuple of (content, image_urls, title) — same as scrape().
+        """
+        async with _get_semaphore():
+            loop = asyncio.get_running_loop()
+            return await loop.run_in_executor(None, self.scrape)
