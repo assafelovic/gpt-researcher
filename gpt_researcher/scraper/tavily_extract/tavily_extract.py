@@ -37,23 +37,37 @@ class TavilyExtract:
 
         try:
             response = self.tavily_client.extract(urls=self.link)
-            if response['failed_results']:
+            if not isinstance(response, dict):
                 return "", [], ""
 
-            # Parse the HTML content of the response to create a BeautifulSoup object for the utility functions
-            response_bs = self.session.get(self.link, timeout=4)
-            soup = BeautifulSoup(
-                response_bs.content, "lxml", from_encoding=response_bs.encoding
-            )
+            # failed_results may be missing, null, or a non-empty list.
+            failed = response.get("failed_results") or []
+            if failed:
+                return "", [], ""
 
-            # Since only a single link is provided to tavily_client, the results will contain only one entry.
-            content = response['results'][0]['raw_content']
+            results = response.get("results") or []
+            if not isinstance(results, list) or not results:
+                return "", [], ""
+            first = results[0]
+            if not isinstance(first, dict):
+                return "", [], ""
+            # Prefer raw_content; never KeyError if the extract payload is partial.
+            content = first.get("raw_content") or ""
+            if not content:
+                return "", [], ""
 
-            # Get relevant images using the utility function
-            image_urls = get_relevant_images(soup, self.link)
-
-            # Extract the title using the utility function
-            title = extract_title(soup)
+            # Optional HTML side-path for images/title. session may be unset
+            # (constructor default session=None) — brick that off rather than
+            # AttributeError inside the broad except.
+            image_urls = []
+            title = ""
+            if self.session is not None:
+                response_bs = self.session.get(self.link, timeout=4)
+                soup = BeautifulSoup(
+                    response_bs.content, "lxml", from_encoding=response_bs.encoding
+                )
+                image_urls = get_relevant_images(soup, self.link)
+                title = extract_title(soup) or ""
 
             return content, image_urls, title
 
