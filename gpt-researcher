@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+set -e
+
+PROJECT_DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
+VENV_DIR="$PROJECT_DIR/.venv"
+
+cd "$PROJECT_DIR"
+
+# Create venv if missing
+if [ ! -d "$VENV_DIR" ]; then
+    echo "[gpt-researcher] Creating Python virtual environment..."
+    python3 -m venv "$VENV_DIR"
+fi
+
+# Activate
+source "$VENV_DIR/bin/activate"
+
+# Install deps if missing
+if [ ! -f "$VENV_DIR/.deps_installed" ]; then
+    echo "[gpt-researcher] Installing dependencies..."
+    pip install --no-cache-dir -r requirements.txt 2>&1
+    touch "$VENV_DIR/.deps_installed"
+fi
+
+# Load .env if present
+if [ -f "$PROJECT_DIR/.env" ]; then
+    set -a
+    source "$PROJECT_DIR/.env"
+    set +a
+fi
+
+# Check required keys
+if [ -z "${OPENAI_API_KEY:-}" ]; then
+    echo "[gpt-researcher] WARNING: OPENAI_API_KEY is not set. Create a .env file or export it."
+fi
+if [ -z "${TAVILY_API_KEY:-}" ]; then
+    echo "[gpt-researcher] WARNING: TAVILY_API_KEY is not set. Create a .env file or export it."
+fi
+
+echo "[gpt-researcher] Starting GPT Researcher on http://localhost:8000"
+exec python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
