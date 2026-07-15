@@ -151,7 +151,7 @@ async def main(num_queries: int = 5, output_dir: str = DEFAULT_OUTPUT_DIR):
         num_queries: Number of queries to evaluate
         output_dir: Directory to save results
     """
-    evaluator = ResearchEvaluator()
+    evaluator = ResearchEvaluator()     # get evaluation
     
     # Load and sample queries
     queries = evaluator.load_queries(num_queries)
