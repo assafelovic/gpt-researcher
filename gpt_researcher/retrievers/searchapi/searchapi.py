@@ -61,22 +61,33 @@ class SearchApiSearch():
             response = requests.get(encoded_url, headers=headers, timeout=20)
             if response.status_code == 200:
                 search_results = response.json()
-                if search_results:
-                    results = search_results["organic_results"]
-                    results_processed = 0
-                    for result in results:
-                        # skip youtube results
-                        if "youtube.com" in result["link"]:
-                            continue
-                        if results_processed >= max_results:
-                            break
-                        search_result = {
-                            "title": result["title"],
-                            "href": result["link"],
-                            "body": result["snippet"],
-                        }
-                        search_response.append(search_result)
-                        results_processed += 1
+                if not isinstance(search_results, dict):
+                    return []
+                # Missing or null organic_results must not KeyError the whole call.
+                results = search_results.get("organic_results") or []
+                if not isinstance(results, list):
+                    return []
+                results_processed = 0
+                for result in results:
+                    if not isinstance(result, dict):
+                        continue
+                    if results_processed >= max_results:
+                        break
+                    link = result.get("link") or result.get("url") or ""
+                    # A result without a link is unusable; skip rather than
+                    # KeyError on result["link"] and drop the rest of the page.
+                    if not link:
+                        continue
+                    # skip youtube results
+                    if "youtube.com" in link:
+                        continue
+                    search_result = {
+                        "title": result.get("title") or "",
+                        "href": link,
+                        "body": result.get("snippet") or result.get("body") or "",
+                    }
+                    search_response.append(search_result)
+                    results_processed += 1
         except Exception as e:
             print(f"Error: {e}. Failed fetching sources. Resulting in empty response.")
             search_response = []
