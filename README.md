@@ -298,6 +298,24 @@ To enable tracing:
    ```
 2. Run your research tasks as usual. All LangGraph-based agent interactions will be automatically traced and visualized in your LangSmith dashboard.
 
+#### Monocle Tracing
+
+GPT Researcher also supports [Monocle](https://github.com/monocle2ai/monocle), an OpenTelemetry-based tracer for agentic applications. It records each run end-to-end: LLM calls, agent steps, and tool invocations, with their inputs, outputs, timings, and token counts.
+
+Monocle is an opt-in extra and is off by default. Install it, then add the following to your `.env` file:
+
+```bash
+pip install "gpt-researcher[monocle]"
+```
+
+```bash
+MONOCLE_TRACING=true
+MONOCLE_EXPORTERS=file          # file, console, okahu, s3, blob, gcs (default: file)
+OKAHU_API_KEY=okh_xxxxxxxx      # required only for the `okahu` exporter
+```
+
+Each run writes one trace file to `.monocle/`; open it in the [Monocle VS Code extension](https://marketplace.visualstudio.com/items?itemName=OkahuAI.monocle-apptrace). Connect to [Okahu](https://www.okahu.ai) to analyze traces across runs (via the `okahu` exporter).
+
 ## 🖥️ Frontend Applications
 
 GPT-Researcher now features an enhanced frontend to improve the user experience and streamline the research process. The frontend offers:

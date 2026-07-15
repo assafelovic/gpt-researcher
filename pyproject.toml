@@ -237,6 +237,12 @@ requirements-txt = [
     "scrapy",
     "selenium",
 ]
+# Optional agent observability via Monocle. Install with:
+#   pip install "gpt-researcher[monocle]"
+# then enable at runtime with MONOCLE_TRACING=true. Not pulled by a plain install.
+monocle = [
+    "monocle_apptrace",
+]
 
 [dependency-groups]
 dev = [
