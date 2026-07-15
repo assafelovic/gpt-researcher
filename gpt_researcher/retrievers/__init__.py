@@ -13,6 +13,7 @@ from .serper.serper import SerperSearch
 from .tavily.tavily_search import TavilySearch
 from .groundroute.groundroute import GroundRouteSearch
 from .exa.exa import ExaSearch
+from .nimble.nimble_search import NimbleSearch
 from .crw.crw import CRWRetriever
 from .getxapi.getxapi import GetXAPISearch
 from .mcp import MCPRetriever
@@ -36,6 +37,7 @@ __all__ = [
     "SemanticScholarSearch",
     "PubMedCentralSearch",
     "ExaSearch",
+    "NimbleSearch",
     "CRWRetriever",
     "GetXAPISearch",
     "MCPRetriever",
