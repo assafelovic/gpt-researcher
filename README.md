@@ -18,6 +18,10 @@
 
 [English](README.md) | [中文](README-zh_CN.md) | [日本語](README-ja_JP.md) | [한국어](README-ko_KR.md)
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/assafelovic/gpt-researcher)
+
+<sub>Deploys on Render's native Python runtime (no bundled browser), so it uses the Tavily/BeautifulSoup scraper — set `TAVILY_API_KEY`. The default `starter` plan (512 MB) is fine for light use. Consider bumping to `standard` (2 GB) or higher in `render.yaml` for memory-heavy workloads like Deep Research, which recursively explores a topic across many concurrent agents and their scraped context.</sub>
+
 </div>
 
 # 🔎 GPT Researcher
