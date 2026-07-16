@@ -62,7 +62,14 @@ class BraveSearch:
             response = requests.get(url, headers=headers, params=params, timeout=20)
             response.raise_for_status()
             search_results = response.json()
-            results = search_results.get("web", {}).get("results", [])
+            if not isinstance(search_results, dict):
+                return []
+            web = search_results.get("web") or {}
+            if not isinstance(web, dict):
+                return []
+            results = web.get("results") or []
+            if not isinstance(results, list):
+                return []
         except Exception as e:
             self.logger.error(
                 f"Error fetching Brave search results: {e}. Resulting in empty response."
@@ -73,13 +80,15 @@ class BraveSearch:
 
         # Normalize the results to match the format of the other search APIs
         for result in results:
+            if not isinstance(result, dict):
+                continue
             url = result.get("url")
             if not url:
                 continue
             search_result = {
-                "title": result.get("title", ""),
+                "title": result.get("title") or "",
                 "href": url,
-                "body": result.get("description", ""),
+                "body": result.get("description") or "",
             }
             search_results.append(search_result)
 
