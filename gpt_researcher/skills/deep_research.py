@@ -283,7 +283,8 @@ class DeepResearchSkill:
             llm_provider=self.researcher.cfg.strategic_llm_provider,
             model=self.researcher.cfg.strategic_llm_model,
             reasoning_effort=self.researcher.cfg.reasoning_effort,
-            temperature=0.4
+            temperature=0.4,
+            llm_kwargs=self.researcher.cfg.llm_kwargs
         )
 
         return parse_search_queries_response(response, num_queries)
@@ -336,7 +337,8 @@ Return ONLY a JSON object using this exact schema:
             llm_provider=self.researcher.cfg.strategic_llm_provider,
             model=self.researcher.cfg.strategic_llm_model,
             reasoning_effort=ReasoningEfforts.High.value,
-            temperature=0.4
+            temperature=0.4,
+            llm_kwargs=self.researcher.cfg.llm_kwargs
         )
 
         return parse_follow_up_questions_response(response, num_questions)
@@ -369,7 +371,8 @@ Return ONLY a JSON object using this exact schema:
             temperature=0.4,
             reasoning_effort=ReasoningEfforts.High.value,
             # Needs headroom for reasoning tokens on reasoning models
-            max_tokens=4000
+            max_tokens=4000,
+            llm_kwargs=self.researcher.cfg.llm_kwargs
         )
 
         return parse_research_results_response(response, num_learnings)
