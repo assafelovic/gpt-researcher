@@ -1,0 +1,22 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+# One-click deploy: https://render.com/deploy?repo=https://github.com/assafelovic/gpt-researcher
+services:
+  - type: web
+    name: gpt-researcher
+    runtime: python
+    plan: starter
+    region: oregon
+    # Render detects [tool.poetry] in pyproject.toml, activates a .venv during build, and boots the
+    # app from it at runtime. Plain pip uses that activated .venv (pip == .venv/bin/pip), so deps land
+    # in the same env the app runs from. (uv is avoided here: Render injects --system/UV_SYSTEM_PYTHON,
+    # which forces `uv pip install` into the BASE interpreter instead of .venv -> "No module named ...".)
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12"  # LangChain v1 requires Python 3.12+
+      - key: OPENAI_API_KEY
+        sync: false  # set in the Render Dashboard
+      - key: TAVILY_API_KEY
+        sync: false  # set in the Render Dashboard
