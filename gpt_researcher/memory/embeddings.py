@@ -25,6 +25,8 @@ Supported providers:
 import os
 from typing import Any
 
+from gpt_researcher.llm_provider.minimax import get_minimax_base_url
+
 OPENAI_EMBEDDING_MODEL = os.environ.get(
     "OPENAI_EMBEDDING_MODEL", "text-embedding-3-small"
 )
@@ -209,7 +211,7 @@ class Memory:
                 _embeddings = OpenAIEmbeddings(
                     model=model,
                     openai_api_key=os.getenv("MINIMAX_API_KEY"),
-                    openai_api_base="https://api.minimax.io/v1",
+                    openai_api_base=get_minimax_base_url("openai"),
                     **embedding_kwargs,
                 )
             case "nebius":

@@ -22,6 +22,7 @@ langchain = "^1.0.0"
 langchain-classic = "^1.0.0"
 langchain_community = "^0.4.0"
 langchain-core = "^1.0.0"
+langchain-anthropic = "^1.0.0"
 langchain-openai = "^1.0.0"
 langchain-text-splitters = "^1.0.0"
 langgraph = ">=0.2.73,<0.3"
@@ -127,6 +128,7 @@ dependencies = [
     "langchain-classic>=1.0.0",
     "langchain-community>=0.4.0",
     "langchain-core>=1.0.0",
+    "langchain-anthropic>=1.0.0",
     "langchain-ollama>=1.0.0",
     "langchain-openai>=1.0.0",
     "langchain-text-splitters>=1.0.0",

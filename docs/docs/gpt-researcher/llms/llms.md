@@ -387,23 +387,39 @@ EMBEDDING="aimlapi:text-embedding-3-small"
 
 ## MiniMax
 
-[MiniMax](https://www.minimaxi.com) offers powerful large language models with an OpenAI-compatible API. The latest MiniMax-M3 features a 512K context window, up to 128K output, and image input support.
+MiniMax provides OpenAI-compatible and Anthropic-compatible endpoints for the supported models.
 
-Sign up at [minimaxi.com](https://www.minimaxi.com) to get an API key, then set the following environment variables:
+Set the API key and choose the regional endpoint:
 
 ```env
 MINIMAX_API_KEY=[Your Key]
+MINIMAX_REGION=global_en
 FAST_LLM=minimax:MiniMax-M3
 SMART_LLM=minimax:MiniMax-M3
 STRATEGIC_LLM=minimax:MiniMax-M3
-
 EMBEDDING=minimax:embo-01
 ```
 
+MINIMAX_REGION supports these endpoint pairs:
+
+- global_en: OpenAI https://api.minimax.io/v1 and Anthropic https://api.minimax.io/anthropic
+- cn_zh: OpenAI https://api.minimaxi.com/v1 and Anthropic https://api.minimaxi.com/anthropic
+
+To use the Anthropic-compatible endpoint, set the provider to minimax_anthropic:
+
+```env
+MINIMAX_REGION=global_en
+FAST_LLM=minimax_anthropic:MiniMax-M3
+SMART_LLM=minimax_anthropic:MiniMax-M3
+STRATEGIC_LLM=minimax_anthropic:MiniMax-M3
+```
+
 Available models:
-- `MiniMax-M3` — flagship model with 512K context, 128K max output, image input support (default)
-- `MiniMax-M2.7` — previous-generation model
-- `MiniMax-M2.7-highspeed` — previous-generation low-latency variant
+- MiniMax-M3: 1,000,000-token context; text, image, and video input; adaptive or disabled thinking.
+- MiniMax-M2.7: 204,800-token context; text input; always-on thinking.
+- MiniMax-M2.7-highspeed: existing low-latency variant.
+
+Pricing per million tokens follows the configured model tiers. MiniMax-M3 standard pricing is $0.30 input / $1.20 output up to 512,000 input tokens, $0.60 / $2.40 above 512,000, with priority pricing of $0.45 / $1.80 and $0.90 / $3.60. MiniMax-M2.7 is $0.30 input / $1.20 output, with $0.06 cache reads and $0.375 cache writes.
 
 ## Avian
 
