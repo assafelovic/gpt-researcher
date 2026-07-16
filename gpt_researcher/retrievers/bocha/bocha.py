@@ -56,15 +56,23 @@ class BoChaSearch():
         results = (
             ((json_response or {}).get("data") or {}).get("webPages") or {}
         ).get("value") or []
+        if not isinstance(results, list):
+            return []
+
         search_results = []
 
         # Normalize the results to match the format of the other search APIs
         for result in results:
+            if not isinstance(result, dict):
+                continue
+            href = result.get("url") or ""
+            if not href:
+                continue
             search_results.append(
                 {
-                    "title": result.get("name", ""),
-                    "href": result.get("url", ""),
-                    "body": result.get("snippet", ""),
+                    "title": result.get("name") or "",
+                    "href": href,
+                    "body": result.get("snippet") or "",
                 }
             )
 
