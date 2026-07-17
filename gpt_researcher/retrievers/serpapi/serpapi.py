@@ -64,11 +64,15 @@ class SerpApiSearch():
                     # or a query that matched nothing) has no "organic_results"
                     # key; default to [] instead of raising KeyError.
                     results = search_results.get("organic_results") or []
+                    if not isinstance(results, list):
+                        results = []
                     results_processed = 0
                     for result in results:
                         if results_processed >= max_results:
                             break
-                        link = result.get("link")
+                        if not isinstance(result, dict):
+                            continue
+                        link = result.get("link") or ""
                         # A result without a link is unusable; skip it rather
                         # than emitting an entry with href=None.
                         if not link:
@@ -77,9 +81,9 @@ class SerpApiSearch():
                         if "youtube.com" in link:
                             continue
                         search_result = {
-                            "title": result.get("title", ""),
+                            "title": result.get("title") or "",
                             "href": link,
-                            "body": result.get("snippet", ""),
+                            "body": result.get("snippet") or "",
                         }
                         search_response.append(search_result)
                         results_processed += 1
