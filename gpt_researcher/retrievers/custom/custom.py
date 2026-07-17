@@ -68,4 +68,21 @@ class CustomRetriever:
                 f"{type(payload).__name__}"
             )
             return []
-        return payload
+
+        # Contract is list[{url, raw_content}]. Downstream reads .get on
+        # each item; filter non-dicts and rows without a usable URL so a
+        # single malformed edge cannot crash the research pipeline.
+        cleaned: List[Dict[str, Any]] = []
+        for item in payload:
+            if not isinstance(item, dict):
+                continue
+            url = item.get("url") or item.get("href") or ""
+            if not url:
+                continue
+            cleaned.append(
+                {
+                    "url": url,
+                    "raw_content": item.get("raw_content") or item.get("body") or "",
+                }
+            )
+        return cleaned
