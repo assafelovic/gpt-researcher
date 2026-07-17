@@ -41,7 +41,7 @@ class ChiefEditorAgent:
     def _create_output_directory(self):
         output_dir = "./outputs/" + \
             sanitize_filename(
-                f"run_{self.task_id}_{self.task.get('query')[0:40]}")
+                f"run_{self.task_id}_{self.task.get('query')[0:40].strip()}")
 
         os.makedirs(output_dir, exist_ok=True)
         return output_dir
