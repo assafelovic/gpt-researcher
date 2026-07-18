@@ -51,6 +51,34 @@ class LooksLikeBlockPageTests(unittest.TestCase):
         text = "MAKING SURE YOU'RE NOT A BOT! " * 5
         self.assertTrue(_looks_like_block_page(text))
 
+    def test_generic_phrases_do_not_false_positive_on_ordinary_news(self):
+        # Regression: markers must be anchored to their actual source wording,
+        # not bare generic phrases a real article can plausibly contain.
+        text = (
+            "Regional water utility says services will be temporarily "
+            'unavailable in the downtown area starting Monday for scheduled '
+            'maintenance. "Just a moment, please," the utility spokesperson '
+            "said, noting repairs should finish by evening."
+        ) * 5
+        self.assertFalse(_looks_like_block_page(text))
+
+    def test_marker_beyond_prefix_window_not_detected(self):
+        # Block pages are checked via a size-bounded prefix (they're always
+        # short); a marker string appearing far into a large legitimate
+        # document (e.g. quoting or discussing an anti-bot system) must not
+        # retroactively flag the whole thing.
+        padding = "Ordinary article content discussing web scraping history. " * 200
+        self.assertGreater(len(padding), 5_000)
+        text = padding + "This page happens to mention: anubis uses a proof-of-work scheme."
+        self.assertFalse(_looks_like_block_page(text))
+
+    def test_marker_within_prefix_window_still_detected(self):
+        # Same marker as above, but within the checked prefix -- must still
+        # be caught (confirms the prefix limit didn't disable detection
+        # entirely).
+        text = "anubis uses a proof-of-work scheme. " + ("Padding. " * 10)
+        self.assertTrue(_looks_like_block_page(text))
+
 
 class LooksLikeWordListTests(unittest.TestCase):
     def test_synthetic_word_list_detected(self):
@@ -74,6 +102,16 @@ class LooksLikeWordListTests(unittest.TestCase):
         # Even a short string with zero punctuation must not be flagged --
         # the size threshold guards against false positives on short pages.
         self.assertFalse(_looks_like_word_list("soa tenses kea ashdown 890 autographs"))
+
+    def test_legitimate_cjk_prose_not_detected(self):
+        # Regression: CJK prose uses fullwidth sentence terminators (。！？),
+        # never ASCII ".", "!", "?" -- counting only ASCII punctuation would
+        # misclassify any long-form Chinese/Japanese/Korean article as a
+        # word list purely for lacking Latin punctuation.
+        sentence = "GPT研究员通过将查询分解为子问题、检索来源并综合成引用报告来进行自主网络研究。"
+        text = sentence * 6000
+        self.assertGreater(len(text), 200_000)
+        self.assertFalse(_looks_like_word_list(text))
 
 
 class ExtractDataFromUrlContentQualityTests(unittest.IsolatedAsyncioTestCase):
