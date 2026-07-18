@@ -69,7 +69,14 @@ class Scraper:
             *(self.extract_data_from_url(url, self.session) for url in self.urls)
         )
 
-        res = [content for content in contents if content["raw_content"] is not None]
+        # extract_data_from_url is expected to return a dict, but a buggy backend
+        # or cancelled worker can still yield None / non-dict. Indexing those with
+        # content["raw_content"] crashes the whole gather result and drops good rows.
+        res = [
+            content
+            for content in contents
+            if isinstance(content, dict) and content.get("raw_content") is not None
+        ]
         return res
 
     def _check_pkg(self, scrapper_name: str) -> None:
