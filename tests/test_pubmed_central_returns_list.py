@@ -29,3 +29,37 @@ def test_search_returns_list_when_empty_article_ids():
     with patch.object(PubMedCentralSearch, "_search_articles", return_value=[]):
         out = s.search()
     assert out == []
+
+
+def test_search_articles_malformed_esearchresult_returns_empty_list():
+    s = PubMedCentralSearch("cancer")
+    class Resp:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"esearchresult": None}
+
+    with patch(
+        "gpt_researcher.retrievers.pubmed_central.pubmed_central.requests.get",
+        return_value=Resp(),
+    ):
+        out = s._search_articles(max_results=5)
+    assert out == []
+
+
+def test_search_articles_non_list_idlist_returns_empty_list():
+    s = PubMedCentralSearch("cancer")
+    class Resp:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"esearchresult": {"idlist": "1,2,3"}}
+
+    with patch(
+        "gpt_researcher.retrievers.pubmed_central.pubmed_central.requests.get",
+        return_value=Resp(),
+    ):
+        out = s._search_articles(max_results=5)
+    assert out == []

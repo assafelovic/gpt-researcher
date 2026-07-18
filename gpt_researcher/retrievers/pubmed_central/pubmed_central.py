@@ -61,8 +61,17 @@ class PubMedCentralSearch:
             response = requests.get(self.base_search_url, params=search_params)
             response.raise_for_status()
             data = response.json()
-            
-            id_list = data.get('esearchresult', {}).get('idlist', [])
+            if not isinstance(data, dict):
+                return []
+
+            # Error / unexpected envelopes may set esearchresult to null,
+            # a list, or omit idlist. Only treat a real list as success.
+            esearch = data.get("esearchresult")
+            if not isinstance(esearch, dict):
+                return []
+            id_list = esearch.get("idlist") or []
+            if not isinstance(id_list, list):
+                return []
             print(f"Found {len(id_list)} articles with full text available")
             return id_list
             
