@@ -27,6 +27,59 @@ from . import (
     WebBaseLoaderScraper,
 )
 
+# Known anti-bot/challenge-page markers, case-insensitive substring match.
+# These pages return HTTP 200 with real (often large) HTML bodies, so
+# neither an exception nor the short-content check below catches them --
+# without this, a block/challenge page is ingested as if it were the
+# article's real content. Each marker is anchored specifically enough to
+# avoid colliding with ordinary prose (e.g. "researchgate - temporarily
+# unavailable", not the bare phrase "temporarily unavailable", which a
+# legitimate article about an unrelated outage could plausibly contain).
+# Not exhaustive; add more as new blockers are observed in practice.
+_BLOCK_PAGE_MARKERS = (
+    "anubis uses a proof-of-work scheme",  # HAL and other Anubis-fronted sites
+    "making sure you're not a bot",
+    "checking your browser before accessing",
+    "enable javascript and cookies to continue",
+    "researchgate - temporarily unavailable",  # ResearchGate's specific wording
+    "please verify you are a human",
+    "attention required! | cloudflare",
+    "sorry, you have been blocked",
+)
+
+# Block pages are the entire response body -- a "please wait" message, not
+# a real article -- so they're always short and always appear at the very
+# start of the content. Checking only a prefix avoids lower-casing and
+# scanning multi-megabyte legitimate documents on every scrape.
+_BLOCK_PAGE_CHECK_PREFIX_LEN = 5_000
+
+# Word-list/vocab dumps (plain lists of unrelated words, no prose) scrape
+# cleanly and can dominate a report's context, since they lexically match
+# almost any query. They have essentially zero sentence-ending punctuation
+# relative to their size, unlike any real prose (even dense technical
+# writing has a period every ~100-200 characters). Size alone isn't used as
+# a signal -- long legitimate documents exist -- only the near-total absence
+# of sentence structure combined with real size is checked, to keep the
+# false-positive rate on real content low. Includes CJK fullwidth sentence
+# terminators (。！？) alongside the Latin ones, so long-form Chinese/
+# Japanese/Korean prose -- which never uses "." "!" "?" -- isn't
+# misclassified as a word list purely for lacking ASCII punctuation.
+_MIN_LENGTH_FOR_WORDLIST_CHECK = 200_000
+_MAX_SENTENCE_DENSITY = 1 / 5000  # at most 1 sentence-ending mark per 5000 chars
+_SENTENCE_ENDING_CHARS = frozenset(".!?。！？")
+
+
+def _looks_like_block_page(text: str) -> bool:
+    prefix = text[:_BLOCK_PAGE_CHECK_PREFIX_LEN].lower()
+    return any(marker in prefix for marker in _BLOCK_PAGE_MARKERS)
+
+
+def _looks_like_word_list(text: str) -> bool:
+    if len(text) < _MIN_LENGTH_FOR_WORDLIST_CHECK:
+        return False
+    sentence_endings = sum(1 for ch in text if ch in _SENTENCE_ENDING_CHARS)
+    return (sentence_endings / len(text)) < _MAX_SENTENCE_DENSITY
+
 
 class Scraper:
     """
@@ -131,32 +184,21 @@ class Scraper:
                         self.worker_pool.executor, scraper.scrape
                     )
 
-                if len(content) < 100:
-                    self.logger.warning(f"Content too short or empty for {link}")
-                    return {
-                        "url": link,
-                        "raw_content": None,
-                        "image_urls": [],
-                        "title": title,
-                    }
+                if not content or len(content) < 100:
+                    return self._reject(link, title, "Content too short or empty")
 
                 # Log results
                 self.logger.info(f"\nTitle: {title}")
-                self.logger.info(
-                    f"Content length: {len(content) if content else 0} characters"
-                )
+                self.logger.info(f"Content length: {len(content)} characters")
                 self.logger.info(f"Number of images: {len(image_urls)}")
                 self.logger.info(f"URL: {link}")
                 self.logger.info("=" * 50)
 
-                if not content or len(content) < 100:
-                    self.logger.warning(f"Content too short or empty for {link}")
-                    return {
-                        "url": link,
-                        "raw_content": None,
-                        "image_urls": [],
-                        "title": title,
-                    }
+                if _looks_like_block_page(content):
+                    return self._reject(link, title, "Anti-bot/challenge page detected")
+
+                if _looks_like_word_list(content):
+                    return self._reject(link, title, "Word-list-like content detected")
 
                 return {
                     "url": link,
@@ -168,6 +210,13 @@ class Scraper:
             except Exception as e:
                 self.logger.error(f"Error processing {link}: {str(e)}")
                 return {"url": link, "raw_content": None, "image_urls": [], "title": ""}
+
+    def _reject(self, link, title, reason):
+        """Treat a fetched-but-unusable page as a scrape failure, in the same
+        shape a raised exception or too-short content already returns --
+        downstream code (Scraper.run) drops any raw_content: None entry."""
+        self.logger.warning(f"{reason} for {link}, treating as fetch failure")
+        return {"url": link, "raw_content": None, "image_urls": [], "title": title}
 
     def get_scraper(self, link):
         """
