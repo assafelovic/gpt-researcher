@@ -7,6 +7,13 @@
         "Authorization": "Bearer ${KATAILYST_MCP_TOKEN}"
       }
     },
+    "katailyst-v1": {
+      "type": "http",
+      "url": "https://www.katailyst.com/mcp",
+      "headers": {
+        "Authorization": "Bearer ${KATAILYST_MCP_TOKEN}"
+      }
+    },
     "multimediaMastery": {
       "type": "http",
       "url": "https://multimediamastery.vercel.app/api/media/v1/mcp",

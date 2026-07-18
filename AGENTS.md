@@ -90,6 +90,8 @@ stays off unless `LANGFUSE_RECORD_IO=true`.
 - **Cron status:** `~/hlt/katailyst/.github/workflows/repo-hygiene-nightly.yml`
 - **Registry health:** call `registry_health` MCP tool, or hit
   `https://www.katailyst.com/mcp` (needs Bearer auth)
+  Katailyst2 is also available at `https://katailyst2.vercel.app/api/mcp`; repo-local agents can
+  choose either because `.mcp.json` exposes both endpoints explicitly.
 - **Drift report:** `bash ~/.openclaw/workspace/system/check-llms-drift.sh`
 
 ## Honest scope of this stub
