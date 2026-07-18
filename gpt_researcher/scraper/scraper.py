@@ -27,6 +27,47 @@ from . import (
     WebBaseLoaderScraper,
 )
 
+# Known anti-bot/challenge-page markers, case-insensitive substring match.
+# These pages return HTTP 200 with real (often large) HTML bodies, so
+# neither an exception nor the short-content check below catches them --
+# without this, a block/challenge page is ingested as if it were the
+# article's real content. Not exhaustive; add more as new blockers are
+# observed in practice.
+_BLOCK_PAGE_MARKERS = (
+    "anubis uses a proof-of-work scheme",  # HAL and other Anubis-fronted sites
+    "making sure you're not a bot",
+    "checking your browser before accessing",
+    "enable javascript and cookies to continue",
+    "temporarily unavailable",  # ResearchGate's specific wording
+    "please verify you are a human",
+    "attention required! | cloudflare",
+    "sorry, you have been blocked",
+    "just a moment...",
+)
+
+# Word-list/vocab dumps (plain lists of unrelated words, no prose) scrape
+# cleanly and can dominate a report's context, since they lexically match
+# almost any query. They have essentially zero sentence-ending punctuation
+# relative to their size, unlike any real prose (even dense technical
+# writing has a period every ~100-200 characters). Size alone isn't used as
+# a signal -- long legitimate documents exist -- only the near-total absence
+# of sentence structure combined with real size is checked, to keep the
+# false-positive rate on real content low.
+_MIN_LENGTH_FOR_WORDLIST_CHECK = 200_000
+_MAX_SENTENCE_DENSITY = 1 / 5000  # at most 1 sentence-ending mark per 5000 chars
+
+
+def _looks_like_block_page(text: str) -> bool:
+    lowered = text.lower()
+    return any(marker in lowered for marker in _BLOCK_PAGE_MARKERS)
+
+
+def _looks_like_word_list(text: str) -> bool:
+    if len(text) < _MIN_LENGTH_FOR_WORDLIST_CHECK:
+        return False
+    sentence_endings = text.count(".") + text.count("!") + text.count("?")
+    return (sentence_endings / len(text)) < _MAX_SENTENCE_DENSITY
+
 
 class Scraper:
     """
@@ -151,6 +192,28 @@ class Scraper:
 
                 if not content or len(content) < 100:
                     self.logger.warning(f"Content too short or empty for {link}")
+                    return {
+                        "url": link,
+                        "raw_content": None,
+                        "image_urls": [],
+                        "title": title,
+                    }
+
+                if _looks_like_block_page(content):
+                    self.logger.warning(
+                        f"Anti-bot/challenge page detected for {link}, treating as fetch failure"
+                    )
+                    return {
+                        "url": link,
+                        "raw_content": None,
+                        "image_urls": [],
+                        "title": title,
+                    }
+
+                if _looks_like_word_list(content):
+                    self.logger.warning(
+                        f"Word-list-like content detected for {link}, treating as fetch failure"
+                    )
                     return {
                         "url": link,
                         "raw_content": None,
