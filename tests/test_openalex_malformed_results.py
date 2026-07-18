@@ -71,3 +71,25 @@ class OpenAlexMalformedTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+    def test_list_best_oa_location_falls_back_to_id(self):
+        """OpenAlex can return a non-dict location envelope; never AttributeError."""
+        mod, requests_mod = _load()
+        resp = MagicMock()
+        resp.raise_for_status = MagicMock()
+        resp.json.return_value = {
+            "results": [
+                {
+                    "title": "Odd OA",
+                    "id": "https://openalex.org/W3",
+                    "abstract_inverted_index": None,
+                    "best_oa_location": [{"pdf_url": "https://example.com/x.pdf"}],
+                    "primary_location": "not-a-dict",
+                },
+            ]
+        }
+        requests_mod.get.return_value = resp
+        out = mod.OpenAlexSearch("q").search()
+        self.assertEqual(len(out), 1)
+        self.assertEqual(out[0]["href"], "https://openalex.org/W3")
