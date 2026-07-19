@@ -6,12 +6,8 @@ import sys
 import types
 from unittest.mock import MagicMock, patch
 
-# Optional deps not required for this unit test.
 sys.modules.setdefault("bs4", types.ModuleType("bs4"))
 sys.modules["bs4"].BeautifulSoup = MagicMock
-_fc = types.ModuleType("firecrawl")
-_fc.FirecrawlApp = MagicMock
-sys.modules.setdefault("firecrawl", _fc)
 
 root = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(root))
@@ -58,11 +54,22 @@ class _Resp:
 def test_scrape_with_session_none_returns_content():
     app = MagicMock()
     app.scrape.return_value = _Resp()
-    with patch.object(_mod, "FirecrawlApp", return_value=app), patch.dict(
-        "os.environ", {"FIRECRAWL_API_KEY": "k"}
+
+    class _AppFactory:
+        def __init__(self, *a, **k):
+            pass
+
+        def scrape(self, **kwargs):
+            return app.scrape(**kwargs)
+
+    with patch.dict("os.environ", {"FIRECRAWL_API_KEY": "k"}), patch.dict(
+        sys.modules, {"firecrawl": types.SimpleNamespace(FirecrawlApp=_AppFactory)}
     ):
+        # Re-bind constructor path used inside scrape init
         scraper = FireCrawl("https://example.com/page", session=None)
+        scraper.firecrawl = app
         content, images, title = scraper.scrape()
     assert content == "x" * 150
     assert images == []
     assert title == "Hello"
+    app.scrape.assert_called_once()
