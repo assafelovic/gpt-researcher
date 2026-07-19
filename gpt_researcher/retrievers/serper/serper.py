@@ -112,7 +112,7 @@ class SerperSearch():
             search_results = json.loads(resp.text)
         except Exception:
             return []
-        if search_results is None:
+        if search_results is None or not isinstance(search_results, dict):
             return []
 
         results = search_results.get("organic") or []
