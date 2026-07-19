@@ -66,14 +66,20 @@ class FireCrawl:
             content = response.markdown if response.markdown else ""
             title = response.metadata.title if response.metadata and response.metadata.title else ""
 
-            # Parse the HTML content of the response to create a BeautifulSoup object for the utility functions
-            response_bs = self.session.get(self.link, timeout=4)
-            soup = BeautifulSoup(
-                response_bs.content, "lxml", from_encoding=response_bs.encoding
-            )
-
-            # Get relevant images using the utility function
-            image_urls = get_relevant_images(soup, self.link)
+            # Optional image pass. Session may be None when FireCrawl is used
+            # outside Scraper; never attribute-error on session.get.
+            image_urls = []
+            if self.session is not None:
+                try:
+                    response_bs = self.session.get(self.link, timeout=4)
+                    soup = BeautifulSoup(
+                        response_bs.content,
+                        "lxml",
+                        from_encoding=response_bs.encoding,
+                    )
+                    image_urls = get_relevant_images(soup, self.link)
+                except Exception as img_err:
+                    print(f"FireCrawl image extraction skipped: {img_err}")
 
             return content, image_urls, title
 
