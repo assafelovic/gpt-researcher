@@ -6,6 +6,7 @@ retrievers, and various operational parameters.
 """
 
 import json
+import json_repair
 import os
 import warnings
 from typing import Any, Dict, List, Type, Union, get_args, get_origin
@@ -283,10 +284,24 @@ class Config:
             return float(env_value)
         elif type_hint in (str, Any):
             return env_value
-        elif origin is list or origin is List:
-            return json.loads(env_value)
+        elif type_hint is list or origin is list or origin is List:
+            # Env values are often hand-edited (trailing commas, single quotes).
+            # Bare `list` has get_origin(None); typing.List[...] has origin list.
+            try:
+                value = json_repair.loads(env_value)
+            except Exception as exc:
+                raise ValueError(f"Cannot convert {env_value} to list") from exc
+            if not isinstance(value, list):
+                raise ValueError(f"Cannot convert {env_value} to list")
+            return value
         elif type_hint is dict:
-            return json.loads(env_value)
+            try:
+                value = json_repair.loads(env_value)
+            except Exception as exc:
+                raise ValueError(f"Cannot convert {env_value} to dict") from exc
+            if not isinstance(value, dict):
+                raise ValueError(f"Cannot convert {env_value} to dict")
+            return value
         else:
             raise ValueError(f"Unsupported type {type_hint} for key {key}")
 
