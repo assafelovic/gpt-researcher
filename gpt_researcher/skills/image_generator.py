@@ -8,6 +8,8 @@ import asyncio
 import json
 import logging
 import re
+
+import json_repair
 from typing import Any, Dict, List, Optional, Tuple
 
 from ..actions.utils import stream_output
@@ -243,15 +245,12 @@ Return 2-3 visualization concepts as a JSON array:"""
                 cost_callback=self.researcher.add_costs,
             )
             
-            # Parse JSON response
-            response = response.strip()
-            # Remove markdown code blocks if present
-            if response.startswith("```"):
-                response = re.sub(r'^```(?:json)?\n?', '', response)
-                response = re.sub(r'\n?```$', '', response)
-            
-            concepts = json.loads(response)
-            
+            # Parse JSON response (models often fence/preamble JSON; match deep_research)
+            concepts = json_repair.loads(response)
+            if not isinstance(concepts, list):
+                logger.error("Image planning response was not a JSON array")
+                return []
+
             # Validate and limit to max_images
             valid_concepts = []
             for concept in concepts[:self.max_images]:
@@ -435,18 +434,20 @@ Return ONLY the JSON, no additional text."""
             List of image suggestion dictionaries.
         """
         try:
-            # Try to extract JSON from the response
-            json_match = re.search(r'\{[\s\S]*\}', response)
-            if not json_match:
-                logger.warning("No JSON found in analysis response")
+            data = json_repair.loads(response)
+            if not isinstance(data, dict):
+                logger.warning("No JSON object found in analysis response")
                 return []
-            
-            data = json.loads(json_match.group())
-            suggestions = data.get("suggestions", [])
-            
+
+            suggestions = data.get("suggestions", []) or []
+            if not isinstance(suggestions, list):
+                return []
+
             # Enrich with section data
             enriched = []
             for s in suggestions:
+                if not isinstance(s, dict):
+                    continue
                 section_num = s.get("section_number", 0) - 1  # Convert to 0-indexed
                 if 0 <= section_num < len(sections):
                     section = sections[section_num]
@@ -457,10 +458,10 @@ Return ONLY the JSON, no additional text."""
                         "reason": s.get("reason", ""),
                         "insert_after_line": section["start_line"],
                     })
-            
+
             return enriched
-            
-        except json.JSONDecodeError as e:
+
+        except Exception as e:
             logger.error(f"Failed to parse analysis JSON: {e}")
             return []
     
