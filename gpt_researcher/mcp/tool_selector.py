@@ -6,6 +6,8 @@ Handles intelligent tool selection using LLM analysis.
 import asyncio
 import json
 import logging
+
+import json_repair
 from typing import List, Dict, Any, Optional
 
 logger = logging.getLogger(__name__)
@@ -80,32 +82,28 @@ class MCPToolSelector:
             response_preview = response[:500] + "..." if len(response) > 500 else response
             logger.debug(f"LLM tool selection response: {response_preview}")
             
-            # Parse LLM response
+            # Parse LLM response — json_repair handles fences/preambles (same as deep_research)
             try:
-                selection_result = json.loads(response)
-            except json.JSONDecodeError:
-                # Try to extract JSON from response
-                import re
-                json_match = re.search(r"\{.*\}", response, re.DOTALL)
-                if json_match:
-                    try:
-                        selection_result = json.loads(json_match.group(0))
-                    except json.JSONDecodeError:
-                        logger.warning("Could not parse extracted JSON, using fallback")
-                        return self._fallback_tool_selection(all_tools, max_tools)
-                else:
-                    logger.warning("No JSON found in LLM response, using fallback")
-                    return self._fallback_tool_selection(all_tools, max_tools)
-            
+                selection_result = json_repair.loads(response)
+            except Exception:
+                logger.warning("Could not parse LLM tool selection JSON, using fallback")
+                return self._fallback_tool_selection(all_tools, max_tools)
+
+            if not isinstance(selection_result, dict):
+                logger.warning("Tool selection response was not a JSON object, using fallback")
+                return self._fallback_tool_selection(all_tools, max_tools)
+
             selected_tools = []
-            
+
             # Process selected tools
-            for tool_selection in selection_result.get("selected_tools", []):
+            for tool_selection in selection_result.get("selected_tools", []) or []:
+                if not isinstance(tool_selection, dict):
+                    continue
                 tool_index = tool_selection.get("index")
                 tool_name = tool_selection.get("name", "")
                 reason = tool_selection.get("reason", "")
                 relevance_score = tool_selection.get("relevance_score", 0)
-                
+
                 if tool_index is not None and 0 <= tool_index < len(all_tools):
                     selected_tools.append(all_tools[tool_index])
                     logger.info(f"Selected tool '{tool_name}' (score: {relevance_score}): {reason}")
