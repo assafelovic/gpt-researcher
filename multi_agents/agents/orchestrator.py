@@ -84,16 +84,12 @@ class ChiefEditorAgent:
         workflow.set_entry_point("browser")
         workflow.add_edge('publisher', END)
 
-        # Add human in the loop
-        MAX_REVISIONS = 5
+        # Human loop: exact "no" approval (human agent) + bounded plan revisions
+        # via plan_review.route_human_feedback (task.max_plan_revisions).
         workflow.add_conditional_edges(
             'human',
-            lambda state: (
-                "accept" if state['human_feedback'] is None
-                else "force_accept" if state.get('revisions_count', 0) >= MAX_REVISIONS
-                else "revise"
-            ),
-            {"accept": "researcher", "force_accept": "researcher", "revise": "planner"}
+            self._route_human_feedback,
+            {"accept": "researcher", "revise": "planner"},
         )
 
         # Fact-checker loop — bounded via task.max_fact_check_revisions
@@ -104,9 +100,20 @@ class ChiefEditorAgent:
         )
 
     def _route_human_feedback(self, review):
+        """Route human plan feedback; force-accept after max_plan_revisions.
+
+        ``route_human_feedback`` raises when the configured ceiling is exceeded.
+        For the graph edge we treat that as accept so the run proceeds to
+        research instead of dying at LangGraph's default recursion_limit.
+        """
+        from .plan_review import MaxPlanRevisionsExceededError
+
         max_plan_revisions = self.task.get(
             "max_plan_revisions", DEFAULT_MAX_PLAN_REVISIONS)
-        return route_human_feedback(review, max_plan_revisions)
+        try:
+            return route_human_feedback(review, max_plan_revisions)
+        except MaxPlanRevisionsExceededError:
+            return "accept"
 
     def init_research_team(self):
         """Initialize and create a workflow for the research team."""
