@@ -27,6 +27,82 @@ from . import (
     WebBaseLoaderScraper,
 )
 
+# PDFs served from institutional repository download endpoints (DSpace/
+# EPrints-style, e.g. "scholarspace.manoa.hawaii.edu/bitstreams/<uuid>/
+# download") have no ".pdf" suffix, so get_scraper() routes them to a
+# text/HTML backend, which has no way to decode the PDF body and returns
+# its raw bytes (FlateDecode streams, xref tables, /Annot objects) as if
+# it were the page's real text -- silently: no exception, a normal-looking
+# content_length, just unusable content.
+#
+# These tokens are PDF's own internal structural syntax; they essentially
+# never occur, even coincidentally, in real prose. Two independent hits is
+# enough to be confident this is raw PDF, not text that happens to contain
+# one of these words in isolation (e.g. an article mentioning a movie
+# "trailer").
+_PDF_STRUCTURE_MARKERS = ("endobj", "endstream", "/FlateDecode", "xref", "trailer")
+_MIN_PDF_MARKER_HITS = 2
+
+# Known anti-bot/challenge-page markers, case-insensitive substring match.
+# These pages return HTTP 200 with real (often large) HTML bodies, so
+# neither an exception nor the short-content check below catches them --
+# without this, a block/challenge page is ingested as if it were the
+# article's real content. Each marker is anchored specifically enough to
+# avoid colliding with ordinary prose (e.g. "researchgate - temporarily
+# unavailable", not the bare phrase "temporarily unavailable", which a
+# legitimate article about an unrelated outage could plausibly contain).
+# Not exhaustive; add more as new blockers are observed in practice.
+_BLOCK_PAGE_MARKERS = (
+    "anubis uses a proof-of-work scheme",  # HAL and other Anubis-fronted sites
+    "making sure you're not a bot",
+    "checking your browser before accessing",
+    "enable javascript and cookies to continue",
+    "researchgate - temporarily unavailable",  # ResearchGate's specific wording
+    "please verify you are a human",
+    "attention required! | cloudflare",
+    "sorry, you have been blocked",
+)
+
+# Block pages are the entire response body -- a "please wait" message, not
+# a real article -- so they're always short and always appear at the very
+# start of the content. Checking only a prefix avoids lower-casing and
+# scanning multi-megabyte legitimate documents on every scrape.
+_BLOCK_PAGE_CHECK_PREFIX_LEN = 5_000
+
+# Word-list/vocab dumps (plain lists of unrelated words, no prose) scrape
+# cleanly and can dominate a report's context, since they lexically match
+# almost any query. They have essentially zero sentence-ending punctuation
+# relative to their size, unlike any real prose (even dense technical
+# writing has a period every ~100-200 characters). Size alone isn't used as
+# a signal -- long legitimate documents exist -- only the near-total absence
+# of sentence structure combined with real size is checked, to keep the
+# false-positive rate on real content low. Includes CJK fullwidth sentence
+# terminators (。！？) alongside the Latin ones, so long-form Chinese/
+# Japanese/Korean prose -- which never uses "." "!" "?" -- isn't
+# misclassified as a word list purely for lacking ASCII punctuation.
+_MIN_LENGTH_FOR_WORDLIST_CHECK = 200_000
+_MAX_SENTENCE_DENSITY = 1 / 5000  # at most 1 sentence-ending mark per 5000 chars
+_SENTENCE_ENDING_CHARS = frozenset(".!?。！？")
+
+
+def _looks_like_unextracted_pdf(text: str) -> bool:
+    if text.startswith("%PDF-"):
+        return True
+    hits = sum(1 for marker in _PDF_STRUCTURE_MARKERS if marker in text)
+    return hits >= _MIN_PDF_MARKER_HITS
+
+
+def _looks_like_block_page(text: str) -> bool:
+    prefix = text[:_BLOCK_PAGE_CHECK_PREFIX_LEN].lower()
+    return any(marker in prefix for marker in _BLOCK_PAGE_MARKERS)
+
+
+def _looks_like_word_list(text: str) -> bool:
+    if len(text) < _MIN_LENGTH_FOR_WORDLIST_CHECK:
+        return False
+    sentence_endings = sum(1 for ch in text if ch in _SENTENCE_ENDING_CHARS)
+    return (sentence_endings / len(text)) < _MAX_SENTENCE_DENSITY
+
 
 class Scraper:
     """
@@ -131,32 +207,33 @@ class Scraper:
                         self.worker_pool.executor, scraper.scrape
                     )
 
-                if len(content) < 100:
-                    self.logger.warning(f"Content too short or empty for {link}")
-                    return {
-                        "url": link,
-                        "raw_content": None,
-                        "image_urls": [],
-                        "title": title,
-                    }
+                if not content or len(content) < 100:
+                    return self._reject(link, title, "Content too short or empty")
 
                 # Log results
                 self.logger.info(f"\nTitle: {title}")
-                self.logger.info(
-                    f"Content length: {len(content) if content else 0} characters"
-                )
+                self.logger.info(f"Content length: {len(content)} characters")
                 self.logger.info(f"Number of images: {len(image_urls)}")
                 self.logger.info(f"URL: {link}")
                 self.logger.info("=" * 50)
 
-                if not content or len(content) < 100:
-                    self.logger.warning(f"Content too short or empty for {link}")
-                    return {
-                        "url": link,
-                        "raw_content": None,
-                        "image_urls": [],
-                        "title": title,
-                    }
+                if _looks_like_unextracted_pdf(content) and Scraper is not PyMuPDFScraper:
+                    self.logger.warning(
+                        f"{link} looks like unextracted PDF binary via {scraper_name} "
+                        f"(no .pdf suffix, so get_scraper() didn't route it to "
+                        f"PyMuPDFScraper) -- retrying with PyMuPDFScraper"
+                    )
+                    retried = await self._retry_as_pdf(link, session)
+                    if retried is not None:
+                        return retried
+                    self.logger.warning(f"PyMuPDFScraper retry also failed for {link}")
+                    return self._reject(link, title, "Unextracted PDF, retry also failed")
+
+                if _looks_like_block_page(content):
+                    return self._reject(link, title, "Anti-bot/challenge page detected")
+
+                if _looks_like_word_list(content):
+                    return self._reject(link, title, "Word-list-like content detected")
 
                 return {
                     "url": link,
@@ -168,6 +245,36 @@ class Scraper:
             except Exception as e:
                 self.logger.error(f"Error processing {link}: {str(e)}")
                 return {"url": link, "raw_content": None, "image_urls": [], "title": ""}
+
+    async def _retry_as_pdf(self, link, session):
+        """Re-fetch link with PyMuPDFScraper after the scraper get_scraper()
+        originally picked returned unextracted PDF binary.
+
+        Returns the normal extract_data_from_url result dict on success, or
+        None if the retry also failed to produce usable content (so the
+        caller falls back to treating this as an ordinary fetch failure
+        instead of passing binary through).
+        """
+        scraper = PyMuPDFScraper(link, session)
+        content, image_urls, title = await asyncio.get_running_loop().run_in_executor(
+            self.worker_pool.executor, scraper.scrape
+        )
+        if not content or len(content) < 100:
+            return None
+        self.logger.info(f"PyMuPDFScraper retry recovered {len(content)} characters for {link}")
+        return {
+            "url": link,
+            "raw_content": content,
+            "image_urls": image_urls,
+            "title": title,
+        }
+
+    def _reject(self, link, title, reason):
+        """Treat a fetched-but-unusable page as a scrape failure, in the same
+        shape a raised exception or too-short content already returns --
+        downstream code (Scraper.run) drops any raw_content: None entry."""
+        self.logger.warning(f"{reason} for {link}, treating as fetch failure")
+        return {"url": link, "raw_content": None, "image_urls": [], "title": title}
 
     def get_scraper(self, link):
         """
