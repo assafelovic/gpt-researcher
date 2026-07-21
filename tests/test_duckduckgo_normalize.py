@@ -68,6 +68,24 @@ class DuckduckgoNormalizeTests(unittest.TestCase):
         retriever.ddg.text.return_value = None
         self.assertEqual(Duckduckgo.search(retriever), [])
 
+    def test_long_snippet_capped_to_100_chars(self):
+        # gpt_researcher.skills.researcher._search_relevant_source_urls()
+        # treats any body over 100 chars as already-fetched full text, which
+        # skips the real scrape -- see issue #17. ddgs's ordinary result
+        # snippets routinely exceed 100 chars, so this must be capped at the
+        # source or every result is wrongly treated as pre-fetched.
+        mod = _load_duckduckgo_module()
+        Duckduckgo = mod.Duckduckgo
+        retriever = Duckduckgo.__new__(Duckduckgo)
+        retriever.query = "python"
+        retriever.query_domains = None
+        retriever.ddg = MagicMock()
+        long_snippet = "y" * 250
+        retriever.ddg.text.return_value = [{"href": "https://example.com/a", "body": long_snippet}]
+        results = Duckduckgo.search(retriever, max_results=5)
+        self.assertEqual(len(results[0]["body"]), 100)
+        self.assertEqual(results[0]["body"], long_snippet[:100])
+
 
 if __name__ == "__main__":
     unittest.main()

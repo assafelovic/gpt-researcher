@@ -1,6 +1,23 @@
 from itertools import islice
 from ..utils import check_pkg
 
+# gpt_researcher.skills.researcher._search_relevant_source_urls() treats
+# any search result whose raw_content/body exceeds 100 characters as
+# already-fetched full text -- a heuristic meant for retrievers (e.g.
+# PubMed Central) that genuinely return full article text inline. ddgs
+# populates "body" with an ordinary search-result snippet, which routinely
+# exceeds 100 characters, so without this cap every result is wrongly
+# treated as already-fetched and the real page is never actually scraped
+# (get_source_urls() then returns [] and reports ship with zero verifiable
+# citations). Capped here, at the source, rather than patched in
+# _search_relevant_source_urls() itself, so any future upstream change to
+# that function's classification logic (bug fixes, new bookkeeping) is
+# inherited automatically. The truncated snippet is only ever used for
+# that classification decision and early-stage sub-query planning -- once
+# a URL takes the real scrape path, gpt-researcher fetches and uses the
+# actual page content, not this snippet.
+_MAX_PREFETCHED_LEN = 100
+
 
 class Duckduckgo:
     """
@@ -51,7 +68,7 @@ class Duckduckgo:
                 or result.get("description")
                 or ""
             )
-            item = {"href": href, "body": body}
+            item = {"href": href, "body": body[:_MAX_PREFETCHED_LEN]}
             title = result.get("title")
             if title:
                 item["title"] = title
