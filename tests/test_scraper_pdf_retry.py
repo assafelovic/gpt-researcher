@@ -169,6 +169,82 @@ class ExtractDataFromUrlPdfRetryTests(unittest.IsolatedAsyncioTestCase):
         result = await scraper.extract_data_from_url("https://example.com/article", scraper.session)
         self.assertIn("normal article", result["raw_content"])
 
+    async def test_retry_recovering_still_unextracted_pdf_is_rejected(self):
+        # PyMuPDFScraper "recovers" >100 chars, but it's still raw PDF
+        # structure (e.g. an encrypted or malformed PDF) -- must not be
+        # accepted just because it cleared the length check.
+        scraper = self._scraper()
+        scraper.logger = _NullLogger()
+
+        wrong_backend = type(
+            "WrongBackend",
+            (),
+            {
+                "__init__": lambda self, link, session: None,
+                "scrape": lambda self: (ExtractDataFromUrlPdfRetryTests.PDF_GARBAGE, [], ""),
+            },
+        )
+        pymupdf_stub_still_garbage = type(
+            "PyMuPDFStubStillGarbage",
+            (),
+            {
+                "__init__": lambda self, link, session: None,
+                "scrape": lambda self: (ExtractDataFromUrlPdfRetryTests.PDF_GARBAGE, [], "Untitled"),
+            },
+        )
+        scraper.get_scraper = lambda link: wrong_backend
+
+        import gpt_researcher.scraper.scraper as scraper_module
+
+        original_pymupdf = scraper_module.PyMuPDFScraper
+        scraper_module.PyMuPDFScraper = pymupdf_stub_still_garbage
+        try:
+            result = await scraper.extract_data_from_url(
+                "https://repo.example.edu/bitstream/x/download", scraper.session
+            )
+        finally:
+            scraper_module.PyMuPDFScraper = original_pymupdf
+
+        self.assertIsNone(result["raw_content"])
+
+    async def test_retry_recovering_block_page_is_rejected(self):
+        # The retry can land on an anti-bot page just as easily as the
+        # original request did -- must be checked, not just length.
+        scraper = self._scraper()
+        scraper.logger = _NullLogger()
+
+        wrong_backend = type(
+            "WrongBackend",
+            (),
+            {
+                "__init__": lambda self, link, session: None,
+                "scrape": lambda self: (ExtractDataFromUrlPdfRetryTests.PDF_GARBAGE, [], ""),
+            },
+        )
+        block_page_text = "Please verify you are a human. " * 20
+        pymupdf_stub_block_page = type(
+            "PyMuPDFStubBlockPage",
+            (),
+            {
+                "__init__": lambda self, link, session: None,
+                "scrape": lambda self: (block_page_text, [], "Untitled"),
+            },
+        )
+        scraper.get_scraper = lambda link: wrong_backend
+
+        import gpt_researcher.scraper.scraper as scraper_module
+
+        original_pymupdf = scraper_module.PyMuPDFScraper
+        scraper_module.PyMuPDFScraper = pymupdf_stub_block_page
+        try:
+            result = await scraper.extract_data_from_url(
+                "https://repo.example.edu/bitstream/x/download", scraper.session
+            )
+        finally:
+            scraper_module.PyMuPDFScraper = original_pymupdf
+
+        self.assertIsNone(result["raw_content"])
+
 
 if __name__ == "__main__":
     unittest.main()
