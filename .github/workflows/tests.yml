@@ -1,0 +1,41 @@
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches: [master, main]
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install minimal test deps
+        run: |
+          python -m pip install --upgrade pip
+          # Prefer declared project deps when resolvable; fall back to a lean set
+          # so the suite can surface import/regression failures without full LLM stack.
+          pip install -e ".[test]" 2>/dev/null || true
+          pip install pytest pytest-asyncio json_repair requests beautifulsoup4 lxml || true
+      - name: Run offline unit tests
+        env:
+          # Skip tests that require live network/API keys via markers when present.
+          PYTEST_ADDOPTS: "-q --tb=line -x"
+        run: |
+          # Prefer light unittest-style modules first; don't fail the job on known
+          # integration/live tests that need secrets.
+          python -m pytest \
+            tests/test_sub_query_normalization.py \
+            tests/test_scraper_get_scraper.py \
+            tests/test_scraper_extract_title.py \
+            tests/test_arxiv_scraper.py \
+            tests/test_browser_pdf_detection.py \
+            tests/test_extract_json_with_regex.py \
+            tests/test_searchapi_organic_guards.py \
+            tests/test_searx_malformed_results.py \
+            -q --tb=short
