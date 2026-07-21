@@ -50,9 +50,14 @@ class DocumentLoader:
         for pages in await asyncio.gather(*tasks):
             for page in pages:
                 if page.page_content:
+                    # Loaders occasionally omit metadata["source"] (custom loaders,
+                    # some HTML partitions). Prefer source, then fall back to path.
+                    meta = getattr(page, "metadata", None) or {}
+                    source = meta.get("source") or meta.get("file_path") or ""
+                    url = os.path.basename(source) if source else ""
                     docs.append({
                         "raw_content": page.page_content,
-                        "url": os.path.basename(page.metadata['source'])
+                        "url": url,
                     })
                     
         if not docs:
