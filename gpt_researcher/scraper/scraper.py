@@ -261,6 +261,16 @@ class Scraper:
         )
         if not content or len(content) < 100:
             return None
+        if (
+            _looks_like_unextracted_pdf(content)
+            or _looks_like_block_page(content)
+            or _looks_like_word_list(content)
+        ):
+            self.logger.warning(
+                f"PyMuPDFScraper retry for {link} recovered content that still "
+                f"fails quality checks -- treating as failed recovery"
+            )
+            return None
         self.logger.info(f"PyMuPDFScraper retry recovered {len(content)} characters for {link}")
         return {
             "url": link,
