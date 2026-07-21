@@ -61,6 +61,10 @@ class BeautifulSoupScraper:
         Returns the response on success, or None when the page is
         unreachable, an error status, or too large to be worth parsing.
         """
+        if self.session is None:
+            logger.warning(f"No session provided for {self.link}; cannot fetch")
+            return None
+
         for attempt in (1, 2):
             try:
                 response = self.session.get(self.link, timeout=10)
