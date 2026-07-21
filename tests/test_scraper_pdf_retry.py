@@ -77,7 +77,7 @@ class ExtractDataFromUrlPdfRetryTests(unittest.IsolatedAsyncioTestCase):
         "\xff\xd8V Kg-\xcd\xa5 ... endstream\nendobj\n"
         "38 0 obj\n<< /Type /Annot /BS 3782 0 R /AP 3783 0 R >>\nendobj\n"
         "xref\n0001355793 00000 n trailer\n"
-    ) * 5
+    ) * 9  # must clear _MIN_CONTENT_LENGTH so retry-triggering tests reach the PDF-structure check
 
     def _scraper(self):
         return Scraper(urls=["https://example.com"], user_agent="ua", scraper="bs", worker_pool=_FakeWorkerPool())
@@ -94,7 +94,7 @@ class ExtractDataFromUrlPdfRetryTests(unittest.IsolatedAsyncioTestCase):
                 "scrape": lambda self: (ExtractDataFromUrlPdfRetryTests.PDF_GARBAGE, [], ""),
             },
         )
-        clean_pdf_text = "This is the real, cleanly-extracted PDF text. " * 10
+        clean_pdf_text = "This is the real, cleanly-extracted PDF text. " * 25
         pymupdf_stub = type(
             "PyMuPDFStub",
             (),
@@ -161,7 +161,7 @@ class ExtractDataFromUrlPdfRetryTests(unittest.IsolatedAsyncioTestCase):
             (),
             {
                 "__init__": lambda self, link, session: None,
-                "scrape": lambda self: ("A normal article with real prose content. " * 10, [], "Title"),
+                "scrape": lambda self: ("A normal article with real prose content. " * 25, [], "Title"),
             },
         )
         scraper.get_scraper = lambda link: good_backend
@@ -170,7 +170,7 @@ class ExtractDataFromUrlPdfRetryTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("normal article", result["raw_content"])
 
     async def test_retry_recovering_still_unextracted_pdf_is_rejected(self):
-        # PyMuPDFScraper "recovers" >100 chars, but it's still raw PDF
+        # PyMuPDFScraper "recovers" enough chars to clear the length check, but it's still raw PDF
         # structure (e.g. an encrypted or malformed PDF) -- must not be
         # accepted just because it cleared the length check.
         scraper = self._scraper()
@@ -236,6 +236,50 @@ class ExtractDataFromUrlPdfRetryTests(unittest.IsolatedAsyncioTestCase):
 
         original_pymupdf = scraper_module.PyMuPDFScraper
         scraper_module.PyMuPDFScraper = pymupdf_stub_block_page
+        try:
+            result = await scraper.extract_data_from_url(
+                "https://repo.example.edu/bitstream/x/download", scraper.session
+            )
+        finally:
+            scraper_module.PyMuPDFScraper = original_pymupdf
+
+        self.assertIsNone(result["raw_content"])
+
+    async def test_retry_recovering_error_titled_content_is_rejected(self):
+        # A PyMuPDF retry can land on a CDN error page just as easily as
+        # the original request did -- the title-based check applied in
+        # extract_data_from_url's primary path must also apply here, not
+        # just length/block-page/word-list.
+        scraper = self._scraper()
+        scraper.logger = _NullLogger()
+
+        wrong_backend = type(
+            "WrongBackend",
+            (),
+            {
+                "__init__": lambda self, link, session: None,
+                "scrape": lambda self: (ExtractDataFromUrlPdfRetryTests.PDF_GARBAGE, [], ""),
+            },
+        )
+        padded_error_body = "Cloudflare Ray ID and performance/security branding footer text. " * 30
+        pymupdf_stub_error_title = type(
+            "PyMuPDFStubErrorTitle",
+            (),
+            {
+                "__init__": lambda self, link, session: None,
+                "scrape": lambda self: (
+                    padded_error_body,
+                    [],
+                    "ieu-monitoring.com | 520: Web server is returning an unknown error",
+                ),
+            },
+        )
+        scraper.get_scraper = lambda link: wrong_backend
+
+        import gpt_researcher.scraper.scraper as scraper_module
+
+        original_pymupdf = scraper_module.PyMuPDFScraper
+        scraper_module.PyMuPDFScraper = pymupdf_stub_error_title
         try:
             result = await scraper.extract_data_from_url(
                 "https://repo.example.edu/bitstream/x/download", scraper.session

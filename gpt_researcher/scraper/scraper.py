@@ -61,7 +61,26 @@ _BLOCK_PAGE_MARKERS = (
     "please verify you are a human",
     "attention required! | cloudflare",
     "sorry, you have been blocked",
+    "verifying your browser",  # OpenReview's bot-check wording
 )
+
+# Content this short is essentially never a real document, whatever HTTP
+# status/exception it did or didn't raise on the way in -- observed
+# real-world junk at this size: a 218-byte "Documents download module" UI
+# stub, an 815-byte truncated arXiv page, a 924-byte Cloudflare error page,
+# a 205-byte OpenReview bot-check page. Previously 100; raised to clear
+# these while still well under the length of any real short article.
+_MIN_CONTENT_LENGTH = 1_000
+
+# CDN/HTTP error pages sometimes carry a large padded body (footer,
+# branding, retry scripts) that clears _MIN_CONTENT_LENGTH even though the
+# page isn't an article -- but the <title> reliably states the failure
+# (e.g. "520: Web server is returning an unknown error"), so it's checked
+# independently of body length. Deliberately a specific phrase rather than
+# a generic "starts with 3 digits + colon" pattern: this tool retrieves
+# EU/regulatory documents, where "Article 404: ..." is a plausible real
+# title, and a bare digit-colon regex would misfire on it.
+_ERROR_TITLE_MARKERS = ("web server is returning",)
 
 # Block pages are the entire response body -- a "please wait" message, not
 # a real article -- so they're always short and always appear at the very
@@ -95,6 +114,13 @@ def _looks_like_unextracted_pdf(text: str) -> bool:
 def _looks_like_block_page(text: str) -> bool:
     prefix = text[:_BLOCK_PAGE_CHECK_PREFIX_LEN].lower()
     return any(marker in prefix for marker in _BLOCK_PAGE_MARKERS)
+
+
+def _looks_like_error_title(title: str) -> bool:
+    if not title:
+        return False
+    lowered = title.lower()
+    return any(marker in lowered for marker in _ERROR_TITLE_MARKERS)
 
 
 def _looks_like_word_list(text: str) -> bool:
@@ -207,7 +233,7 @@ class Scraper:
                         self.worker_pool.executor, scraper.scrape
                     )
 
-                if not content or len(content) < 100:
+                if not content or len(content) < _MIN_CONTENT_LENGTH:
                     return self._reject(link, title, "Content too short or empty")
 
                 # Log results
@@ -216,6 +242,9 @@ class Scraper:
                 self.logger.info(f"Number of images: {len(image_urls)}")
                 self.logger.info(f"URL: {link}")
                 self.logger.info("=" * 50)
+
+                if _looks_like_error_title(title):
+                    return self._reject(link, title, "Error-page title detected")
 
                 if _looks_like_unextracted_pdf(content) and Scraper is not PyMuPDFScraper:
                     self.logger.warning(
@@ -259,12 +288,13 @@ class Scraper:
         content, image_urls, title = await asyncio.get_running_loop().run_in_executor(
             self.worker_pool.executor, scraper.scrape
         )
-        if not content or len(content) < 100:
+        if not content or len(content) < _MIN_CONTENT_LENGTH:
             return None
         if (
             _looks_like_unextracted_pdf(content)
             or _looks_like_block_page(content)
             or _looks_like_word_list(content)
+            or _looks_like_error_title(title)
         ):
             self.logger.warning(
                 f"PyMuPDFScraper retry for {link} recovered content that still "
