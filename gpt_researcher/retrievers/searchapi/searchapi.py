@@ -61,22 +61,30 @@ class SearchApiSearch():
             response = requests.get(encoded_url, headers=headers, timeout=20)
             if response.status_code == 200:
                 search_results = response.json()
-                if search_results:
-                    results = search_results["organic_results"]
-                    results_processed = 0
-                    for result in results:
-                        # skip youtube results
-                        if "youtube.com" in result["link"]:
-                            continue
-                        if results_processed >= max_results:
-                            break
-                        search_result = {
-                            "title": result["title"],
-                            "href": result["link"],
-                            "body": result["snippet"],
-                        }
-                        search_response.append(search_result)
-                        results_processed += 1
+                if not isinstance(search_results, dict):
+                    return []
+                results = search_results.get("organic_results") or []
+                if not isinstance(results, list):
+                    return []
+                results_processed = 0
+                for result in results:
+                    if not isinstance(result, dict):
+                        continue
+                    # Prefer KeyError-safe getters so partial API rows (rate-
+                    # limit stubs, A/B experiment payloads) cannot abort the
+                    # entire result list.
+                    link = result.get("link") or ""
+                    if not link or "youtube.com" in link:
+                        continue
+                    if results_processed >= max_results:
+                        break
+                    search_result = {
+                        "title": result.get("title") or "",
+                        "href": link,
+                        "body": result.get("snippet") or "",
+                    }
+                    search_response.append(search_result)
+                    results_processed += 1
         except Exception as e:
             print(f"Error: {e}. Failed fetching sources. Resulting in empty response.")
             search_response = []
