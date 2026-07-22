@@ -259,11 +259,28 @@ async def generate_report(
     
     # Add available images instruction if images were pre-generated
     if available_images:
-        images_info = "\n".join([
-            f"- Image {i+1}: ![{img.get('title', img.get('alt_text', 'Illustration'))}]({img['url']}) - {img.get('section_hint', 'General')}"
-            for i, img in enumerate(available_images)
-        ])
-        content += f"""
+        # Only embed image dicts that carry a usable URL. Callers (and
+        # partial LLM metadata) may pass None rows, non-dicts, or dicts
+        # missing ``url``; a bare ``img['url']`` KeyError/TypeError would
+        # abort the whole report write path.
+        image_lines = []
+        for i, img in enumerate(available_images):
+            if not isinstance(img, dict):
+                continue
+            url = img.get("url") or ""
+            if not url:
+                continue
+            alt = img.get("title") or img.get("alt_text") or "Illustration"
+            hint = img.get("section_hint") or "General"
+            image_lines.append(
+                f"- Image {len(image_lines)+1}: ![{alt}]({url}) - {hint}"
+            )
+        if not image_lines:
+            images_info = ""
+        else:
+            images_info = "\n".join(image_lines)
+        if images_info:
+            content += f"""
 
 AVAILABLE IMAGES:
 You have the following pre-generated images available. Embed them in relevant sections of your report using the exact markdown syntax provided:
