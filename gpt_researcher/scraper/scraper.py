@@ -131,25 +131,25 @@ class Scraper:
                         self.worker_pool.executor, scraper.scrape
                     )
 
-                if len(content) < 100:
-                    self.logger.warning(f"Content too short or empty for {link}")
-                    return {
-                        "url": link,
-                        "raw_content": None,
-                        "image_urls": [],
-                        "title": title,
-                    }
+                # Scrapers may return None content on hard failures. Guard
+                # before len() so one bad URL does not fail the whole gather.
+                if content is None:
+                    content = ""
+                if image_urls is None:
+                    image_urls = []
+                if title is None:
+                    title = ""
 
                 # Log results
                 self.logger.info(f"\nTitle: {title}")
                 self.logger.info(
-                    f"Content length: {len(content) if content else 0} characters"
+                    f"Content length: {len(content)} characters"
                 )
                 self.logger.info(f"Number of images: {len(image_urls)}")
                 self.logger.info(f"URL: {link}")
                 self.logger.info("=" * 50)
 
-                if not content or len(content) < 100:
+                if len(content) < 100:
                     self.logger.warning(f"Content too short or empty for {link}")
                     return {
                         "url": link,
