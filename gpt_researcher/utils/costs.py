@@ -103,32 +103,52 @@ def _resolve_anthropic_model_name(
     ).lower()
 
 
+def _coerce_token_count(value: Any) -> int:
+    if value is None:
+        return 0
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return 0
+
+
 def _extract_anthropic_usage(
     response_metadata: Mapping[str, Any] | None = None,
     usage_metadata: Mapping[str, Any] | Any | None = None,
 ) -> dict[str, int] | None:
+    """Extract Anthropic usage including prompt-cache token fields.
+
+    Anthropic Messages usage may include:
+    - input_tokens / output_tokens
+    - cache_creation_input_tokens (billed ~1.25x input)
+    - cache_read_input_tokens (billed ~0.1x input)
+    """
     metadata = _mapping_to_dict(response_metadata)
     usage = _mapping_to_dict(metadata.get("usage"))
 
+    def _from_usage(usage_dict: dict[str, Any]) -> dict[str, int] | None:
+        input_tokens = usage_dict.get("input_tokens")
+        output_tokens = usage_dict.get("output_tokens")
+        if input_tokens is None or output_tokens is None:
+            return None
+        return {
+            "input_tokens": int(input_tokens),
+            "output_tokens": int(output_tokens),
+            "cache_creation_input_tokens": _coerce_token_count(
+                usage_dict.get("cache_creation_input_tokens")
+            ),
+            "cache_read_input_tokens": _coerce_token_count(
+                usage_dict.get("cache_read_input_tokens")
+            ),
+        }
+
     if usage:
-        input_tokens = usage.get("input_tokens")
-        output_tokens = usage.get("output_tokens")
-        if input_tokens is not None and output_tokens is not None:
-            return {
-                "input_tokens": int(input_tokens),
-                "output_tokens": int(output_tokens),
-            }
+        parsed = _from_usage(usage)
+        if parsed is not None:
+            return parsed
 
     usage = _mapping_to_dict(usage_metadata)
-    input_tokens = usage.get("input_tokens")
-    output_tokens = usage.get("output_tokens")
-    if input_tokens is None or output_tokens is None:
-        return None
-
-    return {
-        "input_tokens": int(input_tokens),
-        "output_tokens": int(output_tokens),
-    }
+    return _from_usage(usage)
 
 
 def _get_anthropic_pricing(model_name: str) -> tuple[float, float] | None:
@@ -177,9 +197,19 @@ def calculate_anthropic_cost(
 
     input_price_per_mtok, output_price_per_mtok = pricing
     multiplier = _get_anthropic_pricing_multiplier(model_name, request_options=request_options)
+    # Anthropic prompt caching: cache writes ~1.25x input, cache reads ~0.1x input.
+    # input_tokens is non-cache input only; cache fields are billed separately.
+    cache_write_price_per_mtok = input_price_per_mtok * 1.25
+    cache_read_price_per_mtok = input_price_per_mtok * 0.1
     input_cost = usage["input_tokens"] * input_price_per_mtok / 1_000_000
+    cache_write_cost = (
+        usage.get("cache_creation_input_tokens", 0) * cache_write_price_per_mtok / 1_000_000
+    )
+    cache_read_cost = (
+        usage.get("cache_read_input_tokens", 0) * cache_read_price_per_mtok / 1_000_000
+    )
     output_cost = usage["output_tokens"] * output_price_per_mtok / 1_000_000
-    return (input_cost + output_cost) * multiplier
+    return (input_cost + cache_write_cost + cache_read_cost + output_cost) * multiplier
 
 
 def _extract_usage_tokens(
