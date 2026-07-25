@@ -57,6 +57,16 @@ def get_relevant_images(soup: BeautifulSoup, url: str) -> list:
 
 def parse_dimension(value: str) -> int:
     """Parse dimension value, handling px units"""
+    # HTML width/height attrs are often missing or non-string; callers pass
+    # img.get('width') which may be None.
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        try:
+            return int(float(value))
+        except (ValueError, TypeError) as e:
+            logging.debug("Could not parse dimension value %r: %s", value, e)
+            return None
     if value.lower().endswith('px'):
         value = value[:-2]  # Remove 'px' suffix
     try:
