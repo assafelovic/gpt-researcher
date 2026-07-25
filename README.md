@@ -4,6 +4,8 @@
 
 ####
 
+[![MCP Toplist](https://mcptoplist.com/badge/mcp.so%2Fgpt-researcher%2Fassafelovic.svg)](https://mcptoplist.com/server/mcp.so%2Fgpt-researcher%2Fassafelovic)
+
 [![Website](https://img.shields.io/badge/Official%20Website-gptr.dev-teal?style=for-the-badge&logo=world&logoColor=white&color=0891b2)](https://gptr.dev)
 [![Documentation](https://img.shields.io/badge/Documentation-DOCS-f472b6?logo=googledocs&logoColor=white&style=for-the-badge)](https://docs.gptr.dev)
 [![Discord](https://img.shields.io/discord/1127851779011391548?logo=discord&logoColor=white&label=Discord&color=34b76a&style=for-the-badge)](https://discord.gg/QgZXvJAccX)
