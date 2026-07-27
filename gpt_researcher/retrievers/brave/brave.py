@@ -69,10 +69,18 @@ class BraveSearch:
             )
             return []
 
+        if not isinstance(results, list):
+            self.logger.warning(
+                f"Unexpected Brave web.results type for query: {self.query}"
+            )
+            return []
+
         search_results = []
 
         # Normalize the results to match the format of the other search APIs
         for result in results:
+            if not isinstance(result, dict):
+                continue
             url = result.get("url")
             if not url:
                 continue
