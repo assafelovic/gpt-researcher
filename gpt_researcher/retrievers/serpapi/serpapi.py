@@ -64,10 +64,14 @@ class SerpApiSearch():
                     # or a query that matched nothing) has no "organic_results"
                     # key; default to [] instead of raising KeyError.
                     results = search_results.get("organic_results") or []
+                    if not isinstance(results, list):
+                        results = []
                     results_processed = 0
                     for result in results:
                         if results_processed >= max_results:
                             break
+                        if not isinstance(result, dict):
+                            continue
                         link = result.get("link")
                         # A result without a link is unusable; skip it rather
                         # than emitting an entry with href=None.
