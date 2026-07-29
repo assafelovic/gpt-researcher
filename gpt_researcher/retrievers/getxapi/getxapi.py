@@ -59,12 +59,20 @@ class GetXAPISearch:
 
         with urllib.request.urlopen(req, timeout=15) as resp:
             data = json.loads(resp.read().decode("utf-8"))
+        if not isinstance(data, dict):
+            return []
 
         tweets = data.get("tweets") or data.get("data") or []
+        if not isinstance(tweets, list):
+            tweets = []
         search_results = []
 
         for tweet in tweets[:max_results]:
-            author = tweet.get("author") or {}
+            if not isinstance(tweet, dict):
+                continue
+            author = tweet.get("author")
+            if not isinstance(author, dict):
+                author = {}
             username = (
                 author.get("userName")
                 or author.get("username")
