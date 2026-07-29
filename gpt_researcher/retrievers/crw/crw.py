@@ -112,14 +112,22 @@ class CRWRetriever:
                 raise Exception("No results found with fastCRW API search.")
             # Return the results. A source missing "url" is unusable, so skip it
             # rather than raising a KeyError that discards the whole result set.
-            search_response = [
-                {
-                    "href": obj["url"],
-                    "body": obj.get("markdown") or obj.get("description", ""),
-                }
-                for obj in sources
-                if obj.get("url")
-            ]
+            # Non-dict rows (API envelope drift) must not crash the listcomp.
+            if not isinstance(sources, list):
+                sources = []
+            search_response = []
+            for obj in sources:
+                if not isinstance(obj, dict):
+                    continue
+                href = obj.get("url")
+                if not href:
+                    continue
+                search_response.append(
+                    {
+                        "href": href,
+                        "body": obj.get("markdown") or obj.get("description", ""),
+                    }
+                )
         except Exception as e:
             print(f"Error: {e}. Failed fetching sources. Resulting in empty response.")
             search_response = []
