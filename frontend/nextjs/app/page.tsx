@@ -21,6 +21,8 @@ import CopilotResearchContent from "@/components/research/CopilotResearchContent
 import HumanFeedback from "@/components/HumanFeedback";
 import ResearchSidebar from "@/components/ResearchSidebar";
 import { getAppropriateLayout } from "@/utils/getLayout";
+import BrainShell from "@/components/brain/BrainShell";
+import { BrainTabId } from "@/lib/brainTabs";
 
 // Import the mobile components
 import MobileHomeScreen from "@/components/mobile/MobileHomeScreen";
@@ -30,6 +32,7 @@ export default function Home() {
   const router = useRouter();
   const [promptValue, setPromptValue] = useState("");
   const [chatPromptValue, setChatPromptValue] = useState("");
+  const [brainTab, setBrainTab] = useState<BrainTabId>("ask");
   const [showResult, setShowResult] = useState(false);
   const [answer, setAnswer] = useState("");
   const [loading, setLoading] = useState(false);
@@ -318,6 +321,21 @@ export default function Home() {
       setLoading(false);
       setIsProcessingChat(false);
     }
+  };
+
+  const handleCodebaseAsk = (question: string) => {
+    setChatBoxSettings((prev) => ({
+      ...prev,
+      hlt_research_scope: {
+        ...defaultHLTResearchScope,
+        ...(prev.hlt_research_scope || {}),
+        codebase: true,
+        depth: "deep",
+      },
+    }));
+    setBrainTab("ask");
+    setPromptValue(question);
+    void handleDisplayResult(question);
   };
 
   const handleDisplayResult = async (newQuestion: string) => {
@@ -740,12 +758,19 @@ export default function Home() {
                 toggleSidebar={toggleSidebar}
               />
               
-              <Hero
-                promptValue={promptValue}
-                setPromptValue={setPromptValue}
-                handleDisplayResult={handleDisplayResult}
-                chatBoxSettings={chatBoxSettings}
-                setChatBoxSettings={setChatBoxSettings}
+              <BrainShell
+                activeTab={brainTab}
+                onTabChange={setBrainTab}
+                onCodebaseAsk={handleCodebaseAsk}
+                askChildren={
+                  <Hero
+                    promptValue={promptValue}
+                    setPromptValue={setPromptValue}
+                    handleDisplayResult={handleDisplayResult}
+                    chatBoxSettings={chatBoxSettings}
+                    setChatBoxSettings={setChatBoxSettings}
+                  />
+                }
               />
             </>
           )

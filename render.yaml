@@ -1,0 +1,73 @@
+# Mastery Brain sidecars on Render (codegraph + Hermes).
+# Apply via Render Dashboard → Blueprints after this lands on the default branch,
+# or: https://dashboard.render.com/blueprints/new?repo=https://github.com/Awhitter/hlt-gpt-researcher
+# GPT Researcher API/MCP stay on Railway; UI on Vercel.
+
+services:
+  - type: web
+    name: hlt-codegraph
+    runtime: docker
+    plan: starter
+    region: oregon
+    rootDir: services/codegraph
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    disk:
+      name: codegraph-data
+      mountPath: /data
+      sizeGB: 10
+    envVars:
+      - key: PORT
+        value: "8080"
+      - key: GITNEXUS_HOME
+        value: /data/gitnexus
+      - key: REPOS_DIR
+        value: /data/repos
+      - key: GITNEXUS_MCP_READ_ONLY
+        value: "1"
+      - key: CODEGRAPH_REINDEX_HOURS
+        value: "24"
+      - key: GITHUB_TOKEN
+        sync: false
+      - key: CODEGRAPH_MCP_TOKEN
+        sync: false
+
+  - type: web
+    name: hlt-hermes
+    runtime: docker
+    plan: starter
+    region: oregon
+    rootDir: services/hermes
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    disk:
+      name: hermes-data
+      mountPath: /data
+      sizeGB: 5
+    envVars:
+      - key: PORT
+        value: "8080"
+      - key: HERMES_HOME
+        value: /data/hermes
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: GPTR_MCP_URL
+        sync: false
+      - key: GPTR_MCP_TOKEN
+        sync: false
+      - key: CODEGRAPH_MCP_URL
+        sync: false
+      - key: CODEGRAPH_MCP_TOKEN
+        sync: false
+      - key: KATAILYST2_MCP_URL
+        sync: false
+      - key: KATAILYST2_MCP_TOKEN
+        sync: false
+      - key: LINEAR_MCP_URL
+        sync: false
+      - key: LINEAR_MCP_TOKEN
+        sync: false
+      - key: SLACK_BOT_TOKEN
+        sync: false
+      - key: SLACK_APP_TOKEN
+        sync: false

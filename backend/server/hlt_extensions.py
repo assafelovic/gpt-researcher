@@ -57,6 +57,7 @@ _DEFAULT_CODEBASE_REPOS = (
     "Awhitter/ScraperVault (nurse-recruiting backend — jobs, employers, people, applications)",
     "Awhitter/katailyst2 (AI primitives, registry, and creation engine)",
     "Awhitter/MMM2 (multimedia engine)",
+    "Awhitter/evidence-based-business (EBB — metrics and analytics layer)",
 )
 
 # Katailyst2 is the current generation; www.katailyst.com is v1/legacy.
@@ -98,7 +99,7 @@ _DEPTH_INSTRUCTIONS = {
 }
 
 _SCOPE_KEYS = ("codebase", "cms", "qbank", "metrics", "firecrawl", "media")
-_MCP_PRESETS = ("katailyst", "github", "metabase")
+_MCP_PRESETS = ("katailyst", "codegraph", "github", "metabase")
 _CLOUDINARY_RESOURCE_TYPES = ("image", "video", "raw")
 _CLOUDINARY_MAX_ASSETS = 8
 _CLOUDINARY_STOPWORDS = {
@@ -219,7 +220,9 @@ def _scope_instruction(key: str) -> str:
     if key == "codebase":
         repos = "; ".join(_codebase_repos())
         return (
-            "Use available codebase/repository context. The canonical HLT "
+            "Use available codebase/repository context (prefer codegraph MCP "
+            "tools: list_repos, query, context, impact, trace when available). "
+            "The canonical HLT "
             f"repositories are: {repos}. Prefer these repositories' implementation "
             "files, repo maps, pull requests, and architecture notes over generic "
             "web sources, ignore legacy/archived repositories unless explicitly "
@@ -249,6 +252,14 @@ def _preset_readiness(preset: str) -> dict[str, Any]:
             "url_configured": bool(
                 os.getenv("KATAILYST2_MCP_URL") or os.getenv("KATAILYST_MCP_URL")
             ),
+        }
+    if preset == "codegraph":
+        url = os.getenv("CODEGRAPH_MCP_URL")
+        return {
+            "status": "ready" if url else "unavailable",
+            "configured": bool(url),
+            "missing": [] if url else ["CODEGRAPH_MCP_URL"],
+            "token_configured": bool(os.getenv("CODEGRAPH_MCP_TOKEN")),
         }
     if preset == "github":
         url = os.getenv("GITHUB_MCP_URL")
@@ -482,6 +493,209 @@ def _status_from_components(statuses: list[str]) -> str:
     return "unavailable"
 
 
+_BRAIN_REPO_CARDS: tuple[dict[str, Any], ...] = (
+    {
+        "slug": "nursing-mastery",
+        "github": "Awhitter/nursing-mastery",
+        "name": "Nursing Mastery",
+        "tagline": "Nurse-facing career home and product surface",
+        "capabilities": [
+            "Nurse career experience and content surfaces",
+            "Apply / recruiting UX that sits on ScraperVault data",
+            "Brand-facing product home for Nursing Mastery",
+        ],
+        "ask_examples": [
+            "Where does the nurse apply flow live?",
+            "What pages are public vs authenticated?",
+        ],
+    },
+    {
+        "slug": "scrapervault",
+        "github": "Awhitter/ScraperVault",
+        "name": "ScraperVault",
+        "tagline": "Nurse-recruiting backend — jobs, employers, people, applications",
+        "capabilities": [
+            "Jobs, employers, people, and applications data",
+            "Recruiting pipelines and semantic layers",
+            "Source-of-truth for hiring operations",
+        ],
+        "ask_examples": [
+            "Can we filter employers by specialty?",
+            "Where are applications stored?",
+        ],
+    },
+    {
+        "slug": "katailyst2",
+        "github": "Awhitter/katailyst2",
+        "name": "Katailyst2",
+        "tagline": "AI primitives, registry, and creation / command hub",
+        "capabilities": [
+            "Entity registry (skills, prompts, playbooks, KBs)",
+            "MCP tool surface for agents",
+            "Orchestration and discovery for the estate",
+        ],
+        "ask_examples": [
+            "Is there already a skill for competitor research?",
+            "How do agents discover tools?",
+        ],
+    },
+    {
+        "slug": "mmm2",
+        "github": "Awhitter/MMM2",
+        "name": "MMM2",
+        "tagline": "Multimedia Maker — images, video, TTS (Cloudinary-primary)",
+        "capabilities": [
+            "Image / video / TTS generation pipelines",
+            "Cloudinary upload and media library integration",
+            "Media APIs consumed by other HLT surfaces",
+        ],
+        "ask_examples": [
+            "Can MMM2 generate short recruiter explainers?",
+            "Which image models are wired?",
+        ],
+    },
+    {
+        "slug": "ebb",
+        "github": "Awhitter/evidence-based-business",
+        "name": "EBB",
+        "tagline": "Metrics and analytics layer",
+        "capabilities": [
+            "Business metrics and dashboards",
+            "Evidence-backed reporting for product decisions",
+            "Analytics primitives for Nursing Mastery / recruiting",
+        ],
+        "ask_examples": [
+            "What conversion metrics do we track?",
+            "Where do Metabase questions live?",
+        ],
+    },
+)
+
+
+def get_brain_repos() -> list[dict[str, Any]]:
+    """Estate repo cards for the Codebase explorer tab."""
+    codegraph = _preset_readiness("codegraph")
+    return [
+        {
+            **card,
+            "codegraph_ready": codegraph["status"] == "ready",
+        }
+        for card in _BRAIN_REPO_CARDS
+    ]
+
+
+def get_brain_vision_documents() -> list[dict[str, Any]]:
+    """Load vision markdown for the Vision tab + hybrid research.
+
+    Looks in DOC_PATH/vision first, then repo docs/vision as a tracked fallback.
+    """
+    candidates = [
+        os.path.join(os.getenv("DOC_PATH", "./my-docs"), "vision"),
+        os.path.join("docs", "vision"),
+        os.path.join(os.path.dirname(__file__), "..", "..", "docs", "vision"),
+    ]
+    documents: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for vision_dir in candidates:
+        vision_dir = os.path.abspath(vision_dir)
+        if not os.path.isdir(vision_dir):
+            continue
+        for name in sorted(os.listdir(vision_dir)):
+            if not name.endswith(".md") or name in seen:
+                continue
+            path = os.path.join(vision_dir, name)
+            try:
+                with open(path, encoding="utf-8") as handle:
+                    content = handle.read()
+            except OSError as exc:
+                logger.warning("Failed to read vision doc %s: %s", path, exc)
+                continue
+            seen.add(name)
+            documents.append(
+                {
+                    "id": name.removesuffix(".md"),
+                    "filename": name,
+                    "title": name.removesuffix(".md").replace("-", " ").title(),
+                    "content": content,
+                    "path": f"vision/{name}",
+                }
+            )
+    return documents
+
+
+def get_brain_changelog() -> list[dict[str, Any]]:
+    """Seed changelog entries; Hermes / Linear can enrich later."""
+    return [
+        {
+            "id": "upstream-sync-2026-07",
+            "date": "2026-07-30",
+            "title": "Synced GPT Researcher to upstream (June 2026)",
+            "summary": (
+                "Merged upstream retrievers, MiniMax provider, and deep-research "
+                "fixes while keeping Mastery Research HLT overlays intact."
+            ),
+            "repos": ["hlt-gpt-researcher"],
+            "kind": "platform",
+        },
+        {
+            "id": "mastery-brain-surfaces",
+            "date": "2026-07-30",
+            "title": "Mastery Brain tabs: Codebase, Vision, Changelog, Roadmap",
+            "summary": (
+                "Team-facing brain surfaces landed so marketing and ops can ask "
+                "capability questions, store vision, and see what shipped."
+            ),
+            "repos": ["hlt-gpt-researcher"],
+            "kind": "product",
+        },
+        {
+            "id": "codegraph-estate",
+            "date": "2026-07-30",
+            "title": "Code-graph MCP for the five estate repos",
+            "summary": (
+                "GitNexus-backed structural search for mmm2, katailyst2, ebb, "
+                "scrapervault, and nursing-mastery — preferred for Code scope."
+            ),
+            "repos": ["mmm2", "katailyst2", "ebb", "scrapervault", "nursing-mastery"],
+            "kind": "infrastructure",
+        },
+    ]
+
+
+def get_brain_roadmap() -> dict[str, Any]:
+    """Roadmap payload. Linear wiring when LINEAR_API_KEY / MCP is present."""
+    linear_ready = bool(os.getenv("LINEAR_API_KEY") or os.getenv("LINEAR_MCP_URL"))
+    milestones = [
+        {
+            "id": "brain-v1",
+            "title": "Mastery Brain v1 live for the team",
+            "status": "in_progress",
+            "summary": "Ask + Codebase + Vision + Changelog + Roadmap tabs; codegraph + Hermes sidecars.",
+        },
+        {
+            "id": "deep-code-qa",
+            "title": "Sub-2-minute ‘can we do X?’ answers",
+            "status": "planned",
+            "summary": "Codegraph + researcher path tuned for nontechnical teammates with visuals.",
+        },
+        {
+            "id": "productboard",
+            "title": "Productboard connector",
+            "status": "planned",
+            "summary": "Wire when API credentials exist; Linear is the primary roadmap source until then.",
+        },
+    ]
+    return {
+        "provider": "linear" if linear_ready else "seed",
+        "linear_configured": linear_ready,
+        "milestones": milestones,
+        "note": (
+            "Connect LINEAR_API_KEY or LINEAR_MCP_URL for live Linear milestones. "
+            "Productboard stays stubbed until credentials exist."
+        ),
+    }
+
+
 def get_hlt_readiness() -> dict[str, Any]:
     """Return browser-safe readiness for HLT scope-backed integrations."""
 
@@ -491,17 +705,39 @@ def get_hlt_readiness() -> dict[str, Any]:
 
     integrations = {
         "codebase": {
-            "status": _status_from_components([
-                preset_statuses["katailyst"]["status"],
-                preset_statuses["github"]["status"],
-            ]),
+            # Ready when Katailyst is up and at least one code backend
+            # (preferred codegraph, else GitHub) is configured.
+            "status": (
+                "ready"
+                if preset_statuses["katailyst"]["status"] == "ready"
+                and (
+                    preset_statuses["codegraph"]["status"] == "ready"
+                    or preset_statuses["github"]["status"] == "ready"
+                )
+                else _status_from_components([
+                    preset_statuses["katailyst"]["status"],
+                    (
+                        "ready"
+                        if preset_statuses["codegraph"]["status"] == "ready"
+                        or preset_statuses["github"]["status"] == "ready"
+                        else "unavailable"
+                    ),
+                ])
+            ),
             "components": {
                 "katailyst": preset_statuses["katailyst"]["status"],
+                "codegraph": preset_statuses["codegraph"]["status"],
                 "github": preset_statuses["github"]["status"],
             },
             "missing": sorted(set(
                 preset_statuses["katailyst"]["missing"]
-                + preset_statuses["github"]["missing"]
+                + (
+                    []
+                    if preset_statuses["codegraph"]["status"] == "ready"
+                    or preset_statuses["github"]["status"] == "ready"
+                    else preset_statuses["codegraph"]["missing"]
+                    + preset_statuses["github"]["missing"]
+                )
             )),
         },
         "cms": {
@@ -577,6 +813,13 @@ def _mcp_config_for_preset(preset: str, name: str | None = None) -> dict[str, An
             return None
         url = _katailyst_mcp_url()
         token = _katailyst_mcp_token()
+    elif preset == "codegraph":
+        readiness = _preset_readiness("codegraph")
+        if readiness["status"] != "ready":
+            logger.warning("Skipping code-graph MCP preset: CODEGRAPH_MCP_URL is unset")
+            return None
+        url = os.getenv("CODEGRAPH_MCP_URL")
+        token = os.getenv("CODEGRAPH_MCP_TOKEN")
     elif preset == "github":
         readiness = _preset_readiness("github")
         if readiness["status"] != "ready":
@@ -660,7 +903,12 @@ def resolve_research_scope(
     if requested["codebase"] or requested["cms"] or requested["qbank"]:
         _append_unique_mcp_config(configs, {"name": "katailyst", "preset": "katailyst"})
     if requested["codebase"]:
-        _append_unique_mcp_config(configs, {"name": "github", "preset": "github"})
+        # Prefer structural code-graph MCP; keep GitHub MCP as fallback.
+        codegraph_ready = readiness["preset_statuses"]["codegraph"]["status"] == "ready"
+        if codegraph_ready:
+            _append_unique_mcp_config(configs, {"name": "codegraph", "preset": "codegraph"})
+        else:
+            _append_unique_mcp_config(configs, {"name": "github", "preset": "github"})
     if requested["metrics"]:
         _append_unique_mcp_config(configs, {"name": "metabase", "preset": "metabase"})
 
@@ -939,6 +1187,26 @@ def install(
                     )
 
         return {"findings": findings[:max_findings], "cost_usd": 0.01, "external_scan_id": None}
+
+    @app.get("/api/brain/repos", tags=["hlt", "brain"])
+    def brain_repos():  # noqa: D401
+        """Team-facing estate repo concept cards for the Codebase tab."""
+        return {"repos": get_brain_repos()}
+
+    @app.get("/api/brain/vision", tags=["hlt", "brain"])
+    def brain_vision():  # noqa: D401
+        """Markdown vision docs from DOC_PATH/vision (hybrid research corpus)."""
+        return {"documents": get_brain_vision_documents()}
+
+    @app.get("/api/brain/changelog", tags=["hlt", "brain"])
+    def brain_changelog():  # noqa: D401
+        """Interactive changelog feed (static seed + optional Linear later)."""
+        return {"entries": get_brain_changelog()}
+
+    @app.get("/api/brain/roadmap", tags=["hlt", "brain"])
+    def brain_roadmap():  # noqa: D401
+        """Roadmap milestones (Linear when configured; otherwise seed)."""
+        return get_brain_roadmap()
 
     # 2. API-key auth (opt-in via env).
     api_key = os.getenv("API_AUTH_KEY") or None
