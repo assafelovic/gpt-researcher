@@ -35,6 +35,7 @@ _SUPPORTED_PROVIDERS = {
     "netmind",
     "forge",
     "avian",
+    "minimax",
 }
 
 NO_SUPPORT_TEMPERATURE_MODELS = [
@@ -53,6 +54,15 @@ NO_SUPPORT_TEMPERATURE_MODELS = [
     # GPT-5 family: OpenAI enforces default temperature only
     "gpt-5",
     "gpt-5-mini",
+    # Claude 4.x family: Anthropic deprecates temperature on these models
+    "claude-sonnet-4-5",
+    "claude-sonnet-4-5-20250929",
+    "claude-sonnet-4-6",
+    "claude-opus-4-5",
+    "claude-opus-4-6",
+    "claude-opus-4-7",
+    "claude-haiku-4-5",
+    "claude-haiku-4-5-20251001",
 ]
 
 SUPPORT_REASONING_EFFORT_MODELS = [
@@ -259,6 +269,14 @@ class GenericLLMProvider:
                      openai_api_key=os.environ["AVIAN_API_KEY"],
                      **kwargs
                 )
+        elif provider == "minimax":
+            _check_pkg("langchain_openai")
+            from langchain_openai import ChatOpenAI
+
+            llm = ChatOpenAI(openai_api_base='https://api.minimax.io/v1',
+                     openai_api_key=os.environ["MINIMAX_API_KEY"],
+                     **kwargs
+                )
         elif provider == 'netmind':
             check_pkg("langchain_netmind")
             from langchain_netmind import ChatNetmind
@@ -294,12 +312,13 @@ class GenericLLMProvider:
         # Streaming the response using the chain astream method from langchain
         async for chunk in self.llm.astream(messages, **kwargs):
             content = chunk.content
-            if content is not None:
-                response += content
-                paragraph += content
-                if "\n" in paragraph:
-                    await self._send_output(paragraph, websocket)
-                    paragraph = ""
+            if not content:
+                continue
+            response += content
+            paragraph += content
+            if "\n" in paragraph:
+                await self._send_output(paragraph, websocket)
+                paragraph = ""
 
         if paragraph:
             await self._send_output(paragraph, websocket)
@@ -310,5 +329,5 @@ class GenericLLMProvider:
         if websocket is not None:
             await websocket.send_json({"type": "report", "output": content})
         elif self.verbose:
-            print(f"{Fore.GREEN}{content}{Style.RESET_ALL}")
+            print(f"{Fore.GREEN}{content}{Style.RESET_ALL}", flush=True)
 

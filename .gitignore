@@ -27,6 +27,8 @@ gpt_researcher.egg-info/
 
 #Ignore my local docs
 my-docs/
+!my-docs/vision/
+!my-docs/vision/**
 
 #Ignore pycache
 **/__pycache__/

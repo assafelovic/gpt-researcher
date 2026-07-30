@@ -22,8 +22,12 @@ HLT_ENV_KEYS = [
     "HLT_CODEBASE_REPOS",
     "GITHUB_MCP_URL",
     "GITHUB_MCP_TOKEN",
+    "CODEGRAPH_MCP_URL",
+    "CODEGRAPH_MCP_TOKEN",
     "METABASE_MCP_URL",
     "METABASE_MCP_TOKEN",
+    "LINEAR_API_KEY",
+    "LINEAR_MCP_URL",
     "FIRECRAWL_API_KEY",
     "FIRECRAWL_SERVER_URL",
     "CLOUDINARY_CLOUD_NAME",
@@ -193,8 +197,53 @@ def test_codebase_instruction_names_estate_repos(monkeypatch):
         "Awhitter/ScraperVault",
         "Awhitter/katailyst2",
         "Awhitter/MMM2",
+        "Awhitter/evidence-based-business",
     ):
         assert repo in task
+
+
+def test_codebase_prefers_codegraph_over_github(monkeypatch):
+    clear_hlt_env(monkeypatch)
+    set_firecrawl_import(monkeypatch, False)
+    monkeypatch.setenv("KATAILYST2_MCP_TOKEN", "kata_k2-token")
+    monkeypatch.setenv("CODEGRAPH_MCP_URL", "https://codegraph.example/mcp")
+    monkeypatch.setenv("CODEGRAPH_MCP_TOKEN", "cg-secret")
+    monkeypatch.setenv("GITHUB_MCP_URL", "https://github.example/mcp")
+
+    _, mcp_enabled, _, configs, metadata, _ = hlt_extensions.prepare_research_request(
+        task="Can MMM2 generate video?",
+        mcp_enabled=False,
+        mcp_strategy="fast",
+        mcp_configs=[],
+        research_scope={"codebase": True, "depth": "deep"},
+    )
+
+    assert mcp_enabled is True
+    names = {c.get("name") for c in configs}
+    assert "codegraph" in names
+    assert "github" not in names
+    assert metadata["preset_statuses"]["codegraph"]["status"] == "ready"
+
+
+def test_brain_endpoints_return_estate_payload(monkeypatch):
+    clear_hlt_env(monkeypatch)
+    set_firecrawl_import(monkeypatch, False)
+    app = FastAPI()
+    hlt_extensions.install(app)
+    client = TestClient(app)
+
+    repos = client.get("/api/brain/repos")
+    assert repos.status_code == 200
+    slugs = {r["slug"] for r in repos.json()["repos"]}
+    assert {"mmm2", "katailyst2", "ebb", "scrapervault", "nursing-mastery"} <= slugs
+
+    changelog = client.get("/api/brain/changelog")
+    assert changelog.status_code == 200
+    assert len(changelog.json()["entries"]) >= 1
+
+    roadmap = client.get("/api/brain/roadmap")
+    assert roadmap.status_code == 200
+    assert "milestones" in roadmap.json()
 
 
 def test_codebase_repos_env_override(monkeypatch):

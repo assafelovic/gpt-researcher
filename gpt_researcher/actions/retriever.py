@@ -29,6 +29,8 @@ def get_retriever(retriever: str):
         - pubmed_central: PubMed Central medical literature
         - custom: Custom user-defined retriever
         - mcp: Model Context Protocol retriever
+        - xquik: Xquik X/Twitter search
+        - getxapi: GetXAPI X/Twitter search
     """
     match retriever:
         case "google":
@@ -91,6 +93,14 @@ def get_retriever(retriever: str):
             from gpt_researcher.retrievers import MCPRetriever
 
             return MCPRetriever
+        case "xquik":
+            from gpt_researcher.retrievers import XquikSearch
+
+            return XquikSearch
+        case "getxapi":
+            from gpt_researcher.retrievers import GetXAPISearch
+
+            return GetXAPISearch
 
         case _:
             return None

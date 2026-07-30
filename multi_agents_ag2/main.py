@@ -9,7 +9,7 @@ from multi_agents_ag2.agents import ChiefEditorAgent
 from gpt_researcher.utils.enum import Tone
 
 
-load_dotenv()
+load_dotenv(override=True)
 
 
 def open_task() -> dict:

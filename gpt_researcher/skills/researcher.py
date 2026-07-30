@@ -198,7 +198,21 @@ class ResearchConductor:
         self.researcher.context = research_data
         if self.researcher.cfg.curate_sources:
             self.logger.info("Curating sources")
-            self.researcher.context = await self.researcher.source_curator.curate_sources(research_data)
+            curated = await self.researcher.source_curator.curate_sources(research_data)
+            # curate_sources() returns List[dict] with Title/Content/Source keys.
+            # Normalize to str so downstream code that expects researcher.context
+            # to be a string (e.g. "\n".join, .split(), len()) doesn't crash.
+            if isinstance(curated, list):
+                self.researcher.context = "\n\n".join(
+                    "Title: {title}\nContent: {content}\nSource: {source}".format(
+                        title=s.get("Title", ""),
+                        content=s.get("Content", ""),
+                        source=s.get("Source", ""),
+                    ) if isinstance(s, dict) else str(s)
+                    for s in curated
+                )
+            else:
+                self.researcher.context = curated
 
         if self.researcher.verbose:
             await stream_output(
@@ -754,6 +768,7 @@ class ResearchConductor:
 
     async def _search_relevant_source_urls(self, query, query_domains: list | None = None):
         new_search_urls = []
+        prefetched_content = []
         if query_domains is None:
             query_domains = []
 
@@ -763,7 +778,7 @@ class ResearchConductor:
             # Skip MCP retrievers as they don't provide URLs for scraping
             if "mcpretriever" in retriever_class.__name__.lower():
                 continue
-                
+
             try:
                 # Instantiate the retriever with the sub-query
                 retriever = retriever_class(query, query_domains=query_domains)
@@ -773,9 +788,22 @@ class ResearchConductor:
                     retriever.search, max_results=self.researcher.cfg.max_search_results_per_query
                 )
 
-                # Collect new URLs from search results
-                search_urls = [url.get("href") for url in search_results if url.get("href")]
-                new_search_urls.extend(search_urls)
+                if not search_results:
+                    continue
+
+                # Separate results that already have content from those needing scraping
+                for result in search_results:
+                    url = result.get("href") or result.get("url")
+                    raw_content = result.get("raw_content") or result.get("body")
+                    if url and raw_content and len(raw_content) > 100:
+                        # Retriever already fetched full content (e.g. PubMed Central)
+                        prefetched_content.append({
+                            "url": url,
+                            "raw_content": raw_content,
+                        })
+                        self.researcher.add_research_sources([{"url": url}])
+                    elif url:
+                        new_search_urls.append(url)
             except Exception as e:
                 self.logger.error(f"Error searching with {retriever_class.__name__}: {e}")
 
@@ -783,11 +811,13 @@ class ResearchConductor:
         new_search_urls = await self._get_new_urls(new_search_urls)
         random.shuffle(new_search_urls)
 
-        return new_search_urls
+        return new_search_urls, prefetched_content
 
     async def _scrape_data_by_urls(self, sub_query, query_domains: list | None = None):
         """
         Runs a sub-query across multiple retrievers and scrapes the resulting URLs.
+        Retrievers that already provide full content (e.g. PubMed Central) have their
+        content passed through directly without re-scraping.
 
         Args:
             sub_query (str): The sub-query to search for.
@@ -798,7 +828,7 @@ class ResearchConductor:
         if query_domains is None:
             query_domains = []
 
-        new_search_urls = await self._search_relevant_source_urls(sub_query, query_domains)
+        new_search_urls, prefetched_content = await self._search_relevant_source_urls(sub_query, query_domains)
 
         # Log the research process if verbose mode is on
         if self.researcher.verbose:
@@ -809,8 +839,11 @@ class ResearchConductor:
                 self.researcher.websocket,
             )
 
-        # Scrape the new URLs
+        # Scrape URLs that need fetching (skip those already provided by retrievers)
         scraped_content = await self.researcher.scraper_manager.browse_urls(new_search_urls)
+
+        # Merge pre-fetched content from retrievers that already provide full text
+        scraped_content.extend(prefetched_content)
 
         if self.researcher.vector_store:
             self.researcher.vector_store.load(scraped_content)

@@ -1,0 +1,34 @@
+# Copy to /data/hermes/config.yaml on the Render disk (or set via env).
+# Hermes CLI keys vary by release — this file documents the HLT mount intent.
+
+model:
+  provider: openrouter
+  # Override with OPENROUTER_MODEL / HERMES_MODEL
+  default: openrouter/anthropic/claude-sonnet-4
+
+gateway:
+  slack: true
+  telegram: false
+
+mcp_servers:
+  gpt-researcher:
+    url: ${GPTR_MCP_URL}
+    headers:
+      Authorization: Bearer ${GPTR_MCP_TOKEN}
+  codegraph:
+    url: ${CODEGRAPH_MCP_URL}
+    headers:
+      Authorization: Bearer ${CODEGRAPH_MCP_TOKEN}
+  katailyst2:
+    url: ${KATAILYST2_MCP_URL}
+    headers:
+      Authorization: Bearer ${KATAILYST2_MCP_TOKEN}
+  linear:
+    url: ${LINEAR_MCP_URL}
+    headers:
+      Authorization: Bearer ${LINEAR_MCP_TOKEN}
+
+memory:
+  seed_paths:
+    - /app/seed/estate-canon.md
+    - /app/seed/vision.md

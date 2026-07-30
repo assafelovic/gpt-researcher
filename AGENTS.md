@@ -6,10 +6,16 @@
 
 ## What this repo is
 
-Research orchestration lane. As of 2026-04-22, this fork is 24 commits behind
-upstream `main` and carries HLT-specific commits on top; run
-`git rev-list --left-right --count upstream/main...HEAD` before sync-sensitive
-work. Used for deep customer/competitive research that feeds article writing.
+Research orchestration lane + **Mastery Brain** team surface. Synced with
+upstream `assafelovic/gpt-researcher` (check with
+`git rev-list --left-right --count upstream/master...HEAD`). Used for deep
+customer/competitive research and for nontechnical teammates to ask
+capability questions across the estate.
+
+PRD: `docs/prd/mastery-brain.md`. UI tabs: Ask / Codebase / Vision /
+Changelog / Roadmap. Code scope prefers `CODEGRAPH_MCP_*` (GitNexus on Render)
+with GitHub MCP as fallback. Sidecars: `services/codegraph/`, `services/hermes/`
+(`render.yaml`). Vision corpus: `my-docs/vision/`.
 
 ## Where it sits in the HLT ecosystem
 
@@ -46,10 +52,11 @@ following servers auto-mount from `.mcp.json`:
    `docs/usage/owners-manual.md`.
 
 Human UI: `https://gpt-researcher-ui.vercel.app` is branded as **Mastery
-Research**. The launch screen includes compact HLT scope toggles for Deep web,
-QBank, Media, Code, Registry, and Metrics. Those toggles are browser-safe
-metadata; server-side preset expansion and Cloudinary media lookup live in
-`backend/server/hlt_extensions.py`.
+Research**. Sliding Brain tabs: Ask, Codebase, Vision, Changelog, Roadmap.
+Launch Ask includes compact HLT scope toggles for Deep web, QBank, Media,
+Code, Registry, and Metrics. Those toggles are browser-safe metadata;
+server-side preset expansion, codegraph/GitHub/Katailyst MCP, Cloudinary, and
+`/api/brain/*` live in `backend/server/hlt_extensions.py`.
 
 AI observability: HLT-hosted GPT Researcher emits Langfuse observations when
 `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` are configured. `/health`
