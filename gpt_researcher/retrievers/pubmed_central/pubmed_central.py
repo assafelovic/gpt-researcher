@@ -90,9 +90,11 @@ class PubMedCentralSearch:
             try:
                 root = ET.fromstring(response.text)
                 
-                # Extract title
+                # Extract title (itertext so nested formatting tags are included)
                 title = root.find('.//article-title')
-                title_text = title.text if title is not None else ""
+                title_text = (
+                    " ".join(title.itertext()).strip() if title is not None else ""
+                )
                 
                 # Extract abstract
                 abstract = root.find('.//abstract')
