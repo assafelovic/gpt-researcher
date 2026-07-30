@@ -2,7 +2,7 @@ from gpt_researcher.config.config import Config
 from gpt_researcher.utils.llm import create_chat_completion
 import asyncio
 from dotenv import load_dotenv
-load_dotenv()
+load_dotenv(override=True)
 
 async def main():
     cfg = Config()

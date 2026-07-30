@@ -12,7 +12,7 @@ from gpt_researcher.utils.enum import Tone
 # Run with LangSmith if API key is set
 if os.environ.get("LANGCHAIN_API_KEY"):
     os.environ["LANGCHAIN_TRACING_V2"] = "true"
-load_dotenv()
+load_dotenv(override=True)
 
 def open_task():
     # Get the directory of the current script

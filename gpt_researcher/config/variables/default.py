@@ -51,4 +51,5 @@ DEFAULT_CONFIG: BaseConfig = {
     "IMAGE_GENERATION_MAX_IMAGES": 3,  # Maximum number of images to generate per report
     "IMAGE_GENERATION_ENABLED": False,  # Master switch for inline image generation
     "IMAGE_GENERATION_STYLE": "dark",  # Image style: "dark" (matches app theme), "light", or "auto"
+    "IMAGE_GENERATION_PROVIDER": "google",  # Image provider: "google" or "modelslab"
 }

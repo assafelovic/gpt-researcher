@@ -57,8 +57,8 @@ async def write_md_to_pdf(text: str, path: str) -> str:
         # Moved imports to inner function to avoid known import errors with gobject-2.0
         from md2pdf.core import md2pdf
         md2pdf(file_path,
-               md_content=text,
-               css_file_path=css_path,
+               raw=text,
+               css=css_path,
                base_url=None)
         print(f"Report written to {file_path}")
     except Exception as e:

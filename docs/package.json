@@ -36,8 +36,8 @@
     "minimatch": "3.0.5",
     "react": "^18.0.1",
     "react-dom": "^18.0.1",
-    "rehype-katex": "^7.0.1",
-    "remark-math": "3",
+    "rehype-katex": "7",
+    "remark-math": "6",
     "trim": "^0.0.3",
     "url-loader": "^4.1.1"
   },

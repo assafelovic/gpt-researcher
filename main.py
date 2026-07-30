@@ -26,7 +26,7 @@ logging.getLogger('fontTools.ttLib').setLevel(logging.WARNING)
 # Create logger instance
 logger = logging.getLogger(__name__)
 
-load_dotenv()
+load_dotenv(override=True)
 
 from backend.server.app import app
 

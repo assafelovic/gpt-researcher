@@ -112,9 +112,11 @@ class PubMedCentralSearch:
                     url = f"https://www.ncbi.nlm.nih.gov/pmc/articles/PMC{article_id}/"
                 
                 return {
+                    "href": url,
                     "url": url,
+                    "body": full_content,
                     "raw_content": full_content,
-                    "title": title_text  # Extra field for convenience
+                    "title": title_text
                 }
                 
             except ET.ParseError as e:
