@@ -17,6 +17,9 @@ HLT_ENV_KEYS = [
     "KATAILYST_MCP_URL",
     "KATAILYST_MCP_TOKEN",
     "KATAILYST_AUTH_TOKEN",
+    "KATAILYST2_MCP_URL",
+    "KATAILYST2_MCP_TOKEN",
+    "HLT_CODEBASE_REPOS",
     "GITHUB_MCP_URL",
     "GITHUB_MCP_TOKEN",
     "METABASE_MCP_URL",
@@ -134,6 +137,82 @@ def test_codebase_scope_partial_with_only_katailyst(monkeypatch):
     assert metadata["scope_statuses"]["codebase"]["status"] == "partial"
     assert metadata["active_sources"] == ["codebase"]
     assert metadata["degraded_sources"] == ["codebase"]
+
+
+def test_katailyst_preset_defaults_to_katailyst2_url(monkeypatch):
+    clear_hlt_env(monkeypatch)
+    set_firecrawl_import(monkeypatch, False)
+    monkeypatch.setenv("KATAILYST_MCP_TOKEN", "kata-secret")
+
+    _, _, _, configs, _, _ = hlt_extensions.prepare_research_request(
+        task="Research implementation",
+        mcp_enabled=False,
+        mcp_strategy="fast",
+        mcp_configs=[],
+        research_scope={"codebase": True, "depth": "balanced"},
+    )
+
+    assert configs[0]["connection_url"] == "https://katailyst2.vercel.app/mcp"
+
+
+def test_katailyst2_env_preferred_over_legacy(monkeypatch):
+    clear_hlt_env(monkeypatch)
+    set_firecrawl_import(monkeypatch, False)
+    monkeypatch.setenv("KATAILYST_MCP_URL", "https://legacy.example/mcp")
+    monkeypatch.setenv("KATAILYST_MCP_TOKEN", "legacy-token")
+    monkeypatch.setenv("KATAILYST2_MCP_URL", "https://k2.example/mcp")
+    monkeypatch.setenv("KATAILYST2_MCP_TOKEN", "kata_k2-token")
+
+    _, _, _, configs, _, _ = hlt_extensions.prepare_research_request(
+        task="Research implementation",
+        mcp_enabled=False,
+        mcp_strategy="fast",
+        mcp_configs=[],
+        research_scope={"codebase": True, "depth": "balanced"},
+    )
+
+    assert configs[0]["connection_url"] == "https://k2.example/mcp"
+    assert configs[0]["connection_headers"] == {"Authorization": "Bearer kata_k2-token"}
+
+
+def test_codebase_instruction_names_estate_repos(monkeypatch):
+    clear_hlt_env(monkeypatch)
+    set_firecrawl_import(monkeypatch, False)
+    monkeypatch.setenv("KATAILYST2_MCP_TOKEN", "kata_k2-token")
+
+    task, _, _, _, _, _ = hlt_extensions.prepare_research_request(
+        task="How does the apply funnel work?",
+        mcp_enabled=False,
+        mcp_strategy="fast",
+        mcp_configs=[],
+        research_scope={"codebase": True, "depth": "deep"},
+    )
+
+    for repo in (
+        "Awhitter/nursing-mastery",
+        "Awhitter/ScraperVault",
+        "Awhitter/katailyst2",
+        "Awhitter/MMM2",
+    ):
+        assert repo in task
+
+
+def test_codebase_repos_env_override(monkeypatch):
+    clear_hlt_env(monkeypatch)
+    set_firecrawl_import(monkeypatch, False)
+    monkeypatch.setenv("KATAILYST2_MCP_TOKEN", "kata_k2-token")
+    monkeypatch.setenv("HLT_CODEBASE_REPOS", "Awhitter/custom-repo (only repo)")
+
+    task, _, _, _, _, _ = hlt_extensions.prepare_research_request(
+        task="How does the apply funnel work?",
+        mcp_enabled=False,
+        mcp_strategy="fast",
+        mcp_configs=[],
+        research_scope={"codebase": True, "depth": "deep"},
+    )
+
+    assert "Awhitter/custom-repo (only repo)" in task
+    assert "Awhitter/MMM2" not in task
 
 
 def test_metrics_scope_uses_katailyst_fallback_without_metabase(monkeypatch):

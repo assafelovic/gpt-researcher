@@ -18,7 +18,7 @@ unless there is a clear reason that cannot live outside the fork.
 | Browser UI | `https://gpt-researcher-ui.vercel.app` | Human research sessions and visual report flow | Public page load; research calls use server token flow |
 | API | `https://gpt-researcher-api-production.up.railway.app` | Scripts, Sidecar server routes, one-off REST clients | `X-API-Key: $API_AUTH_KEY` |
 | MCP | `https://gpt-researcher-mcp-production.up.railway.app/mcp` | Agents, Claude Code, Claude Desktop, Cursor, Katailyst-discovered tool use | `Authorization: Bearer $GPTR_MCP_TOKEN` |
-| Katailyst Registry | `https://www.katailyst.com/mcp` | Discovery, routing, tool metadata, capability graph | Katailyst bearer token |
+| Katailyst2 Registry | `https://katailyst2.vercel.app/mcp` | Discovery, routing, tool metadata, capability graph | Katailyst2 `kata_…` bearer token |
 
 Health checks:
 

@@ -66,23 +66,28 @@ backend expands that metadata in `backend/server/hlt_extensions.py`.
 
 | Checkbox | What it does now | Required env for full power |
 | --- | --- | --- |
-| Code files | Adds codebase instructions and requests Katailyst + GitHub MCP presets | `KATAILYST_MCP_TOKEN`, optional `GITHUB_MCP_URL` / `GITHUB_MCP_TOKEN` |
-| CMS + Registry | Adds Katailyst registry/CMS instructions and requests the Katailyst MCP preset | `KATAILYST_MCP_TOKEN` |
-| Metrics | Adds metrics instructions and requests Metabase; falls back to Katailyst metrics tools when direct Metabase MCP is unset | `KATAILYST_MCP_TOKEN`; optional `METABASE_MCP_URL` / `METABASE_MCP_TOKEN` |
+| Code files | Adds codebase instructions naming the canonical estate repos (nursing-mastery, ScraperVault, katailyst2, MMM2 — override with `HLT_CODEBASE_REPOS`) and requests Katailyst2 + GitHub MCP presets | `KATAILYST2_MCP_TOKEN`, optional `GITHUB_MCP_URL` / `GITHUB_MCP_TOKEN` |
+| CMS + Registry | Adds Katailyst2 registry/CMS instructions and requests the Katailyst2 MCP preset | `KATAILYST2_MCP_TOKEN` |
+| Metrics | Adds metrics instructions and requests Metabase; falls back to Katailyst2 metrics tools when direct Metabase MCP is unset | `KATAILYST2_MCP_TOKEN`; optional `METABASE_MCP_URL` / `METABASE_MCP_TOKEN` |
 | High-quality crawl | Adds extraction-quality instructions | `SCRAPER=firecrawl`, `FIRECRAWL_API_KEY` |
 
 Server-side preset env:
 
 ```bash
-KATAILYST_MCP_URL=https://www.katailyst.com/mcp
-KATAILYST_MCP_TOKEN=...
+KATAILYST2_MCP_URL=https://katailyst2.vercel.app/mcp   # default when unset
+KATAILYST2_MCP_TOKEN=kata_...                          # from Katailyst2 /connections
 GITHUB_MCP_URL=...
 GITHUB_MCP_TOKEN=...
 METABASE_MCP_URL=...
 METABASE_MCP_TOKEN=...
+HLT_CODEBASE_REPOS=...   # optional comma-separated repo list override
 ```
 
-If direct Metabase env is missing, Metrics uses the Katailyst MCP fallback.
+Legacy `KATAILYST_MCP_URL` / `KATAILYST_MCP_TOKEN` (Katailyst v1) are still read
+as fallbacks, but a v1 token will not authenticate against the Katailyst2
+endpoint — set the `KATAILYST2_*` pair.
+
+If direct Metabase env is missing, Metrics uses the Katailyst2 MCP fallback.
 If another preset env var is missing, the backend skips that MCP server and logs a
 warning; the research run still proceeds with the remaining available sources.
 

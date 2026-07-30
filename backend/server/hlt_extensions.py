@@ -50,13 +50,25 @@ _PUBLIC_PREFIXES: tuple[str, ...] = (
     "/static/",    # Any static mounts
 )
 
+# The canonical HLT estate repositories for codebase-scoped research. Override
+# with a comma-separated HLT_CODEBASE_REPOS env when the estate map changes.
+_DEFAULT_CODEBASE_REPOS = (
+    "Awhitter/nursing-mastery (nurse-facing frontend — the career home)",
+    "Awhitter/ScraperVault (nurse-recruiting backend — jobs, employers, people, applications)",
+    "Awhitter/katailyst2 (AI primitives, registry, and creation engine)",
+    "Awhitter/MMM2 (multimedia engine)",
+)
+
+# Katailyst2 is the current generation; www.katailyst.com is v1/legacy.
+_DEFAULT_KATAILYST_MCP_URL = "https://katailyst2.vercel.app/mcp"
+
 _SCOPE_INSTRUCTIONS = {
     "codebase": (
         "Use available codebase/repository context. Prefer implementation files, "
         "repo maps, pull requests, and architecture notes over generic web sources."
     ),
     "cms": (
-        "Use available Katailyst registry, knowledge-base, playbook, skill, and "
+        "Use available Katailyst2 registry, knowledge-base, playbook, skill, and "
         "ecosystem-map context when it is relevant to the question. Do not treat "
         "this as corporate CMS or question-bank access."
     ),
@@ -172,6 +184,50 @@ def _bearer_headers(token: str | None) -> dict[str, str]:
     return {"Authorization": f"Bearer {token}"} if token else {}
 
 
+def _katailyst_mcp_url() -> str:
+    """Katailyst MCP endpoint, preferring the Katailyst2 generation."""
+
+    return (
+        os.getenv("KATAILYST2_MCP_URL")
+        or os.getenv("KATAILYST_MCP_URL")
+        or _DEFAULT_KATAILYST_MCP_URL
+    )
+
+
+def _katailyst_mcp_token() -> str | None:
+    """Katailyst MCP bearer token, preferring the Katailyst2 (`kata_…`) token."""
+
+    return (
+        os.getenv("KATAILYST2_MCP_TOKEN")
+        or os.getenv("KATAILYST_MCP_TOKEN")
+        or os.getenv("KATAILYST_AUTH_TOKEN")
+    )
+
+
+def _codebase_repos() -> tuple[str, ...]:
+    raw = os.getenv("HLT_CODEBASE_REPOS")
+    if raw:
+        repos = tuple(part.strip() for part in raw.split(",") if part.strip())
+        if repos:
+            return repos
+    return _DEFAULT_CODEBASE_REPOS
+
+
+def _scope_instruction(key: str) -> str:
+    """Scope instruction text; codebase names the canonical estate repos."""
+
+    if key == "codebase":
+        repos = "; ".join(_codebase_repos())
+        return (
+            "Use available codebase/repository context. The canonical HLT "
+            f"repositories are: {repos}. Prefer these repositories' implementation "
+            "files, repo maps, pull requests, and architecture notes over generic "
+            "web sources, ignore legacy/archived repositories unless explicitly "
+            "asked, and say which repository each finding came from."
+        )
+    return _SCOPE_INSTRUCTIONS[key]
+
+
 def _append_unique_mcp_config(configs: list[dict[str, Any]], config: dict[str, Any]) -> None:
     name = config.get("name")
     if name and any(existing.get("name") == name for existing in configs):
@@ -185,12 +241,14 @@ def _firecrawl_import_available() -> bool:
 
 def _preset_readiness(preset: str) -> dict[str, Any]:
     if preset == "katailyst":
-        token = os.getenv("KATAILYST_MCP_TOKEN") or os.getenv("KATAILYST_AUTH_TOKEN")
+        token = _katailyst_mcp_token()
         return {
             "status": "ready" if token else "unavailable",
             "configured": bool(token),
-            "missing": [] if token else ["KATAILYST_MCP_TOKEN"],
-            "url_configured": bool(os.getenv("KATAILYST_MCP_URL")),
+            "missing": [] if token else ["KATAILYST2_MCP_TOKEN"],
+            "url_configured": bool(
+                os.getenv("KATAILYST2_MCP_URL") or os.getenv("KATAILYST_MCP_URL")
+            ),
         }
     if preset == "github":
         url = os.getenv("GITHUB_MCP_URL")
@@ -202,13 +260,13 @@ def _preset_readiness(preset: str) -> dict[str, Any]:
         }
     if preset == "metabase":
         url = os.getenv("METABASE_MCP_URL")
-        fallback_token = os.getenv("KATAILYST_MCP_TOKEN") or os.getenv("KATAILYST_AUTH_TOKEN")
+        fallback_token = _katailyst_mcp_token()
         fallback_ready = bool(fallback_token)
         direct_ready = bool(url)
         return {
             "status": "ready" if direct_ready or fallback_ready else "unavailable",
             "configured": direct_ready or fallback_ready,
-            "missing": [] if direct_ready or fallback_ready else ["METABASE_MCP_URL", "KATAILYST_MCP_TOKEN"],
+            "missing": [] if direct_ready or fallback_ready else ["METABASE_MCP_URL", "KATAILYST2_MCP_TOKEN"],
             "token_configured": bool(os.getenv("METABASE_MCP_TOKEN")),
             "provider": "metabase" if direct_ready else "katailyst_metrics_fallback",
         }
@@ -515,10 +573,10 @@ def _mcp_config_for_preset(preset: str, name: str | None = None) -> dict[str, An
     if preset == "katailyst":
         readiness = _preset_readiness("katailyst")
         if readiness["status"] != "ready":
-            logger.warning("Skipping Katailyst MCP preset: KATAILYST_MCP_TOKEN is unset")
+            logger.warning("Skipping Katailyst MCP preset: KATAILYST2_MCP_TOKEN is unset")
             return None
-        url = os.getenv("KATAILYST_MCP_URL", "https://www.katailyst.com/mcp")
-        token = os.getenv("KATAILYST_MCP_TOKEN") or os.getenv("KATAILYST_AUTH_TOKEN")
+        url = _katailyst_mcp_url()
+        token = _katailyst_mcp_token()
     elif preset == "github":
         readiness = _preset_readiness("github")
         if readiness["status"] != "ready":
@@ -532,8 +590,8 @@ def _mcp_config_for_preset(preset: str, name: str | None = None) -> dict[str, An
             logger.warning("Skipping metrics MCP preset: METABASE_MCP_URL and Katailyst fallback are unavailable")
             return None
         if readiness.get("provider") == "katailyst_metrics_fallback":
-            url = os.getenv("KATAILYST_MCP_URL", "https://www.katailyst.com/mcp")
-            token = os.getenv("KATAILYST_MCP_TOKEN") or os.getenv("KATAILYST_AUTH_TOKEN")
+            url = _katailyst_mcp_url()
+            token = _katailyst_mcp_token()
         else:
             url = os.getenv("METABASE_MCP_URL")
             token = os.getenv("METABASE_MCP_TOKEN")
@@ -689,7 +747,7 @@ def prepare_research_request(
 
     instruction_lines = [_DEPTH_INSTRUCTIONS[depth]]
     instruction_lines.extend(
-        _SCOPE_INSTRUCTIONS[key]
+        _scope_instruction(key)
         for key in hlt_scope_metadata["active_sources"]
         if key in _SCOPE_INSTRUCTIONS
     )
