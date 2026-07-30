@@ -60,10 +60,15 @@ async def filter_urls(urls: list[str], config: Config) -> list[str]:
         list[str]: Filtered list of URLs.
     """
     filtered_urls = []
-    for url in urls:
-        # Add your filtering logic here
-        # For example, you might want to exclude certain domains or URL patterns
-        if not any(excluded in url for excluded in config.excluded_domains):
+    excluded = getattr(config, "excluded_domains", None) or []
+    if not isinstance(excluded, (list, tuple, set)):
+        excluded = []
+    for url in urls or []:
+        # URLs must be non-empty strings; null/int noise TypeErrors the
+        # substring check on excluded domains.
+        if not isinstance(url, str) or not url:
+            continue
+        if not any(isinstance(ex, str) and ex and ex in url for ex in excluded):
             filtered_urls.append(url)
     return filtered_urls
 
