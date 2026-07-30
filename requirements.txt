@@ -57,7 +57,9 @@ mistune>=3.0.2
 htmldocx>=0.0.6
 
 # MCP Support (optional)
-mcp>=1.9.1
+# mcp 2.0 removed the 1.x `mcp.server.fastmcp` import path our MCP server and
+# scope presets rely on — stay on 1.x until we migrate.
+mcp>=1.9.1,<2
 langchain-mcp-adapters>=0.1.0
 
 # Data Handling
