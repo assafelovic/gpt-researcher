@@ -17,6 +17,26 @@ Katailyst2, and Linear.
 | `LINEAR_MCP_URL` / `LINEAR_MCP_TOKEN` | Roadmap (optional) |
 | `HERMES_HOME` | Persistent disk path (default `/data/hermes`) |
 
+## Enabling the full Slack gateway (one-time, ~3 minutes in a browser)
+
+The service ships in **readiness-gateway mode** (health endpoint only) until
+Slack tokens exist. Everything else — OpenRouter key, MCP mounts, seeded
+memory, persistent disk — is already wired. To go live on Slack:
+
+1. Open https://api.slack.com/apps → **Create New App** → **From an app
+   manifest** → choose the HLT workspace → paste
+   [`slack-app-manifest.yaml`](./slack-app-manifest.yaml) → **Create**.
+2. On the app page: **Basic Information → App-Level Tokens → Generate Token**
+   with scope `connections:write`. Copy the `xapp-…` token.
+3. **Install App** (left sidebar) → **Install to Workspace** → copy the
+   **Bot User OAuth Token** (`xoxb-…`).
+4. In Render → `hlt-hermes` → Environment, set:
+   - `SLACK_BOT_TOKEN` = the `xoxb-…` token
+   - `SLACK_APP_TOKEN` = the `xapp-…` token
+   - `HERMES_ENABLE_GATEWAY` = `1`
+5. Save (Render redeploys automatically). `/health` switches from
+   `readiness_gateway` to the real Hermes gateway.
+
 ## Smoke
 
 After deploy: `curl https://<service>/health` then DM the Slack bot

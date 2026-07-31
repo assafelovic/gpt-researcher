@@ -55,8 +55,21 @@ Human UI: `https://gpt-researcher-ui.vercel.app` is branded as **Mastery
 Research**. Sliding Brain tabs: Ask, Codebase, Vision, Changelog, Roadmap.
 Launch Ask includes compact HLT scope toggles for Deep web, QBank, Media,
 Code, Registry, and Metrics. Those toggles are browser-safe metadata;
-server-side preset expansion, codegraph/GitHub/Katailyst MCP, Cloudinary, and
-`/api/brain/*` live in `backend/server/hlt_extensions.py`.
+server-side preset expansion, codegraph/GitHub/Katailyst/Apify MCP, Cloudinary,
+and `/api/brain/*` live in `backend/server/hlt_extensions.py`.
+
+Scraping stack: `SCRAPER=firecrawl` (Firecrawl API) is the production scraper;
+Deep web scope also mounts Apify's hosted MCP (`https://mcp.apify.com`) when
+`APIFY_TOKEN` is set. Roadmap and Changelog tabs pull live Linear data
+(projects + recently completed issues, 5-minute cache) when `LINEAR_API_KEY`
+is set, falling back to seed entries otherwise.
+
+Render sidecars: `hlt-codegraph` runs on the standard plan (gitnexus analyze
+OOMs on 512MB) with a 10GB disk at `/data`; boot reindex runs in the
+background so the port binds immediately. `hlt-hermes` has a 5GB disk and
+stays in readiness-gateway mode until Slack tokens exist — see
+`services/hermes/slack-app-manifest.yaml` and the README for the 3-minute
+enable flow.
 
 AI observability: HLT-hosted GPT Researcher emits Langfuse observations when
 `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` are configured. `/health`

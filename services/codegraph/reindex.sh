@@ -41,8 +41,21 @@ clone_or_update() {
   fi
 
   echo "[codegraph] analyzing $slug"
-  (cd "$dest" && gitnexus analyze --skip-agents-md --skip-skills --skip-embeddings || \
-     gitnexus analyze --skip-agents-md --skip-skills)
+  (cd "$dest" && gitnexus analyze --skip-agents-md --skip-skills)
+}
+
+FAILED_REPOS=()
+
+# One repo failing must not abort the rest (set -e would otherwise stop the loop).
+index_repo() {
+  local slug="$1"
+  local full="$2"
+  if clone_or_update "$slug" "$full"; then
+    echo "[codegraph] indexed $slug"
+  else
+    echo "[codegraph] FAILED to index $slug ($full); continuing" >&2
+    FAILED_REPOS+=("$slug")
+  fi
 }
 
 if [[ -n "$REPOS_SPEC" ]]; then
@@ -57,14 +70,18 @@ if [[ -n "$REPOS_SPEC" ]]; then
       full="$entry"
       slug="$(basename "$entry")"
     fi
-    clone_or_update "$slug" "$full"
+    index_repo "$slug" "$full"
   done
 else
   for entry in "${DEFAULT_REPOS[@]}"; do
     slug="${entry%%|*}"
     full="${entry#*|}"
-    clone_or_update "$slug" "$full"
+    index_repo "$slug" "$full"
   done
+fi
+
+if [[ ${#FAILED_REPOS[@]} -gt 0 ]]; then
+  echo "[codegraph] reindex finished with failures: ${FAILED_REPOS[*]}" >&2
 fi
 
 echo "[codegraph] indexed repos:"

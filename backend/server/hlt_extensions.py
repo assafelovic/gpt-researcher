@@ -99,7 +99,8 @@ _DEPTH_INSTRUCTIONS = {
 }
 
 _SCOPE_KEYS = ("codebase", "cms", "qbank", "metrics", "firecrawl", "media")
-_MCP_PRESETS = ("katailyst", "codegraph", "github", "metabase")
+_MCP_PRESETS = ("katailyst", "codegraph", "github", "metabase", "apify")
+_DEFAULT_APIFY_MCP_URL = "https://mcp.apify.com"
 _CLOUDINARY_RESOURCE_TYPES = ("image", "video", "raw")
 _CLOUDINARY_MAX_ASSETS = 8
 _CLOUDINARY_STOPWORDS = {
@@ -205,6 +206,12 @@ def _katailyst_mcp_token() -> str | None:
     )
 
 
+def _apify_token() -> str | None:
+    """Apify token for the hosted Apify MCP server (mcp.apify.com)."""
+
+    return os.getenv("APIFY_TOKEN") or os.getenv("APIFY_API_TOKEN")
+
+
 def _codebase_repos() -> tuple[str, ...]:
     raw = os.getenv("HLT_CODEBASE_REPOS")
     if raw:
@@ -268,6 +275,14 @@ def _preset_readiness(preset: str) -> dict[str, Any]:
             "configured": bool(url),
             "missing": [] if url else ["GITHUB_MCP_URL"],
             "token_configured": bool(os.getenv("GITHUB_MCP_TOKEN")),
+        }
+    if preset == "apify":
+        token = _apify_token()
+        return {
+            "status": "ready" if token else "unavailable",
+            "configured": bool(token),
+            "missing": [] if token else ["APIFY_TOKEN"],
+            "url_configured": bool(os.getenv("APIFY_MCP_URL")),
         }
     if preset == "metabase":
         url = os.getenv("METABASE_MCP_URL")
@@ -623,9 +638,143 @@ def get_brain_vision_documents() -> list[dict[str, Any]]:
     return documents
 
 
+_LINEAR_GRAPHQL_URL = "https://api.linear.app/graphql"
+_LINEAR_CACHE_TTL_SECONDS = 300
+_linear_cache: dict[str, tuple[float, Any]] = {}
+
+
+def _linear_graphql(query: str, timeout: int = 8) -> dict[str, Any] | None:
+    """Run a Linear GraphQL query with LINEAR_API_KEY. Returns None on any failure."""
+
+    api_key = os.getenv("LINEAR_API_KEY")
+    if not api_key:
+        return None
+    payload = json.dumps({"query": query}).encode("utf-8")
+    request = urllib.request.Request(_LINEAR_GRAPHQL_URL, data=payload, method="POST")
+    request.add_header("Authorization", api_key)
+    request.add_header("Content-Type", "application/json")
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:  # noqa: S310 - fixed Linear host
+            body = json.loads(response.read().decode("utf-8"))
+    except (urllib.error.URLError, TimeoutError, ValueError, OSError) as error:
+        logger.warning("Linear GraphQL request failed: %s", type(error).__name__)
+        return None
+    if not isinstance(body, dict) or body.get("errors"):
+        logger.warning("Linear GraphQL returned errors: %s", body.get("errors") if isinstance(body, dict) else "non-dict body")
+        return None
+    data = body.get("data")
+    return data if isinstance(data, dict) else None
+
+
+def _linear_cached(key: str, fetch) -> Any:
+    now = time.time()
+    cached = _linear_cache.get(key)
+    if cached and now - cached[0] < _LINEAR_CACHE_TTL_SECONDS:
+        return cached[1]
+    result = fetch()
+    if result is not None:
+        _linear_cache[key] = (now, result)
+    return result
+
+
+def _fetch_linear_milestones() -> list[dict[str, Any]] | None:
+    data = _linear_graphql(
+        """
+        query {
+          projects(first: 25) {
+            nodes {
+              id
+              name
+              description
+              state
+              progress
+              targetDate
+              url
+              updatedAt
+            }
+          }
+        }
+        """
+    )
+    if data is None:
+        return None
+    nodes = ((data.get("projects") or {}).get("nodes")) or []
+    state_rank = {"started": 0, "planned": 1, "backlog": 2, "paused": 3, "completed": 4}
+    milestones = []
+    for node in nodes:
+        state = node.get("state")
+        if state == "canceled":
+            continue
+        milestones.append(
+            {
+                "id": node.get("id"),
+                "title": node.get("name"),
+                "summary": node.get("description") or "",
+                "status": state,
+                "progress": round(float(node.get("progress") or 0.0), 2),
+                "target": node.get("targetDate"),
+                "url": node.get("url"),
+            }
+        )
+    milestones.sort(key=lambda item: state_rank.get(item["status"], 5))
+    return milestones
+
+
+def _fetch_linear_shipped() -> list[dict[str, Any]] | None:
+    since = time.strftime("%Y-%m-%d", time.gmtime(time.time() - 21 * 86400))
+    data = _linear_graphql(
+        f"""
+        query {{
+          issues(
+            first: 15
+            filter: {{ completedAt: {{ gte: "{since}" }} }}
+            orderBy: updatedAt
+          ) {{
+            nodes {{
+              id
+              identifier
+              title
+              url
+              completedAt
+              team {{ name }}
+              project {{ name }}
+            }}
+          }}
+        }}
+        """
+    )
+    if data is None:
+        return None
+    nodes = ((data.get("issues") or {}).get("nodes")) or []
+    entries = []
+    for node in nodes:
+        completed = node.get("completedAt") or ""
+        team = (node.get("team") or {}).get("name")
+        project = (node.get("project") or {}).get("name")
+        context = " · ".join(part for part in [team, project] if part)
+        entries.append(
+            {
+                "id": f"linear-{node.get('identifier')}",
+                "date": completed[:10],
+                "title": node.get("title"),
+                "summary": f"Shipped {node.get('identifier')}" + (f" ({context})" if context else ""),
+                "repos": [team] if team else [],
+                "kind": "shipped",
+                "url": node.get("url"),
+                "source": "linear",
+            }
+        )
+    return entries
+
+
 def get_brain_changelog() -> list[dict[str, Any]]:
-    """Seed changelog entries; Hermes / Linear can enrich later."""
-    return [
+    """Changelog feed: recent Linear completions first, then curated seed entries."""
+    live: list[dict[str, Any]] = []
+    if os.getenv("LINEAR_API_KEY"):
+        fetched = _linear_cached("shipped", _fetch_linear_shipped)
+        if fetched:
+            live = fetched
+    return live + [
         {
             "id": "upstream-sync-2026-07",
             "date": "2026-07-30",
@@ -663,8 +812,17 @@ def get_brain_changelog() -> list[dict[str, Any]]:
 
 
 def get_brain_roadmap() -> dict[str, Any]:
-    """Roadmap payload. Linear wiring when LINEAR_API_KEY / MCP is present."""
+    """Roadmap payload: live Linear projects when LINEAR_API_KEY works, else seed."""
     linear_ready = bool(os.getenv("LINEAR_API_KEY") or os.getenv("LINEAR_MCP_URL"))
+    if os.getenv("LINEAR_API_KEY"):
+        live = _linear_cached("milestones", _fetch_linear_milestones)
+        if live:
+            return {
+                "provider": "linear",
+                "linear_configured": True,
+                "milestones": live,
+                "note": "Live Linear projects (nursingmastery workspace), cached 5 minutes.",
+            }
     milestones = [
         {
             "id": "brain-v1",
@@ -686,7 +844,7 @@ def get_brain_roadmap() -> dict[str, Any]:
         },
     ]
     return {
-        "provider": "linear" if linear_ready else "seed",
+        "provider": "seed",
         "linear_configured": linear_ready,
         "milestones": milestones,
         "note": (
@@ -766,7 +924,10 @@ def get_hlt_readiness() -> dict[str, Any]:
         },
         "firecrawl": {
             "status": firecrawl_status["status"],
-            "components": {"firecrawl": firecrawl_status["status"]},
+            "components": {
+                "firecrawl": firecrawl_status["status"],
+                "apify": preset_statuses["apify"]["status"],
+            },
             "missing": firecrawl_status["missing"],
             "scraper": firecrawl_status["scraper"],
         },
@@ -827,6 +988,13 @@ def _mcp_config_for_preset(preset: str, name: str | None = None) -> dict[str, An
             return None
         url = os.getenv("GITHUB_MCP_URL")
         token = os.getenv("GITHUB_MCP_TOKEN")
+    elif preset == "apify":
+        readiness = _preset_readiness("apify")
+        if readiness["status"] != "ready":
+            logger.warning("Skipping Apify MCP preset: APIFY_TOKEN is unset")
+            return None
+        url = os.getenv("APIFY_MCP_URL") or _DEFAULT_APIFY_MCP_URL
+        token = _apify_token()
     elif preset == "metabase":
         readiness = _preset_readiness("metabase")
         if readiness["status"] != "ready":
@@ -911,6 +1079,11 @@ def resolve_research_scope(
             _append_unique_mcp_config(configs, {"name": "github", "preset": "github"})
     if requested["metrics"]:
         _append_unique_mcp_config(configs, {"name": "metabase", "preset": "metabase"})
+    if requested["firecrawl"]:
+        # Deep-web scope: add Apify's hosted MCP (actor marketplace) when a
+        # token exists so research can scrape sources Firecrawl cannot.
+        if readiness["preset_statuses"]["apify"]["status"] == "ready":
+            _append_unique_mcp_config(configs, {"name": "apify", "preset": "apify"})
 
     expanded_configs = expand_mcp_presets(configs)
     scope_statuses = {
