@@ -35,13 +35,19 @@ def _allowed_hosts() -> list[str]:
     if configured:
         return [host.strip() for host in configured.split(",") if host.strip()]
     port = os.getenv("PORT", "8080")
-    return [
+    hosts = [
         f"127.0.0.1:{port}",
         f"localhost:{port}",
         "127.0.0.1",
         "localhost",
         "0.0.0.0",
     ]
+    # Render terminates TLS at the edge and forwards with the public Host
+    # header, so the external hostname must be allowed for MCP clients.
+    external = os.getenv("RENDER_EXTERNAL_HOSTNAME")
+    if external:
+        hosts.append(external)
+    return hosts
 
 
 def _run_gitnexus(args: list[str], timeout: int = 120) -> str:
