@@ -90,6 +90,23 @@ _SCOPE_INSTRUCTIONS = {
         "Use Cloudinary media-library context when it is relevant. Treat returned "
         "assets as read-only references for examples, visual direction, and reuse."
     ),
+    "audience": (
+        "Ground the research in audience truth: what nurses and nursing students "
+        "actually say. Prioritize forums (Reddit r/nursing, r/StudentNurse, "
+        "allnurses.com), most-upvoted threads, comment sections, and reviews. "
+        "Quote the audience verbatim with links, capture recurring pain points and "
+        "the exact language they use, and rank findings by engagement (upvotes, "
+        "replies) rather than by what sources claim. Also consult the internal "
+        "audience corpus (voice-of-nurse briefs and quote banks) when present."
+    ),
+    "recruiting": (
+        "Specialize in nurse recruiting. Consult the internal Nursing Mastery "
+        "content inventory (nursingmastery.com) and audience corpus when present, "
+        "and treat www.nursingmastery.com as our own site. Compare our coverage "
+        "against the best recruiting and career content on earth, in any industry, "
+        "and say which of our pages a finding affects. The north star: help nurses "
+        "get a better first job with less effort."
+    ),
 }
 
 _DEPTH_INSTRUCTIONS = {
@@ -98,8 +115,37 @@ _DEPTH_INSTRUCTIONS = {
     "deep": "Go deeper. Compare sources, inspect primary context, and surface tradeoffs.",
 }
 
-_SCOPE_KEYS = ("codebase", "cms", "qbank", "metrics", "firecrawl", "media")
-_MCP_PRESETS = ("katailyst", "codegraph", "github", "metabase", "apify")
+# "Study what's already working" doctrine as an executable research mode.
+_RESEARCH_MODES = ("standard", "top1")
+_TOP1_MODE_INSTRUCTIONS = (
+    "Run this as a top-1% study. Steps, in order: "
+    "(1) Find the best-performing examples of this thing anywhere on earth — "
+    "usually outside our industry. Judge winners by feet-voting signals (what "
+    "people buy, share, finish, upvote, return to), never by what anyone claims. "
+    "(2) Distill WHY each winner actually works — the underlying mechanism "
+    "(format, hook, promise, feedback loop, incentive design, distribution). "
+    "Winners often misdiagnose their own success, so separate the stated reason "
+    "from the real driver. "
+    "(3) Propose how the mechanism rhymes with our niche (nursing / nurse "
+    "recruiting) — an adapted version that feels native, not a clone. "
+    "(4) Verify against customer truth: check what our audience actually asks, "
+    "complains about, and upvotes (forums, reviews, search behavior, and the "
+    "internal audience corpus when present). "
+    "Structure the report around: Winners found (with receipts), Mechanisms "
+    "distilled, Rhyme proposals for us, Audience verification."
+)
+
+_SCOPE_KEYS = (
+    "codebase",
+    "cms",
+    "qbank",
+    "metrics",
+    "firecrawl",
+    "media",
+    "audience",
+    "recruiting",
+)
+_MCP_PRESETS = ("katailyst", "codegraph", "github", "metabase", "apify", "qbank")
 _DEFAULT_APIFY_MCP_URL = "https://mcp.apify.com"
 _CLOUDINARY_RESOURCE_TYPES = ("image", "video", "raw")
 _CLOUDINARY_MAX_ASSETS = 8
@@ -295,6 +341,16 @@ def _preset_readiness(preset: str) -> dict[str, Any]:
             "missing": [] if direct_ready or fallback_ready else ["METABASE_MCP_URL", "KATAILYST2_MCP_TOKEN"],
             "token_configured": bool(os.getenv("METABASE_MCP_TOKEN")),
             "provider": "metabase" if direct_ready else "katailyst_metrics_fallback",
+        }
+    if preset == "qbank":
+        # Dedicated partner-API MCP for the 70k-item question bank. Until the
+        # credentials exist, qbank scope rides the Katailyst tool path.
+        url = os.getenv("QBANK_MCP_URL")
+        return {
+            "status": "ready" if url else "unavailable",
+            "configured": bool(url),
+            "missing": [] if url else ["QBANK_MCP_URL"],
+            "token_configured": bool(os.getenv("QBANK_MCP_TOKEN")),
         }
     return {
         "status": "unknown",
@@ -599,31 +655,33 @@ def get_brain_repos() -> list[dict[str, Any]]:
     ]
 
 
-def get_brain_vision_documents() -> list[dict[str, Any]]:
-    """Load vision markdown for the Vision tab + hybrid research.
+def _load_corpus_documents(subdir: str) -> list[dict[str, Any]]:
+    """Load a markdown corpus from DOC_PATH/<subdir> (repo docs/<subdir> fallback).
 
-    Looks in DOC_PATH/vision first, then repo docs/vision as a tracked fallback.
+    Corpora under DOC_PATH double as hybrid-research context: DocumentLoader
+    walks the whole DOC_PATH tree, so anything surfaced here is also what the
+    researcher reads in `hybrid`/`local` report sources.
     """
     candidates = [
-        os.path.join(os.getenv("DOC_PATH", "./my-docs"), "vision"),
-        os.path.join("docs", "vision"),
-        os.path.join(os.path.dirname(__file__), "..", "..", "docs", "vision"),
+        os.path.join(os.getenv("DOC_PATH", "./my-docs"), subdir),
+        os.path.join("docs", subdir),
+        os.path.join(os.path.dirname(__file__), "..", "..", "docs", subdir),
     ]
     documents: list[dict[str, Any]] = []
     seen: set[str] = set()
-    for vision_dir in candidates:
-        vision_dir = os.path.abspath(vision_dir)
-        if not os.path.isdir(vision_dir):
+    for corpus_dir in candidates:
+        corpus_dir = os.path.abspath(corpus_dir)
+        if not os.path.isdir(corpus_dir):
             continue
-        for name in sorted(os.listdir(vision_dir)):
+        for name in sorted(os.listdir(corpus_dir)):
             if not name.endswith(".md") or name in seen:
                 continue
-            path = os.path.join(vision_dir, name)
+            path = os.path.join(corpus_dir, name)
             try:
                 with open(path, encoding="utf-8") as handle:
                     content = handle.read()
             except OSError as exc:
-                logger.warning("Failed to read vision doc %s: %s", path, exc)
+                logger.warning("Failed to read %s doc %s: %s", subdir, path, exc)
                 continue
             seen.add(name)
             documents.append(
@@ -632,10 +690,142 @@ def get_brain_vision_documents() -> list[dict[str, Any]]:
                     "filename": name,
                     "title": name.removesuffix(".md").replace("-", " ").title(),
                     "content": content,
-                    "path": f"vision/{name}",
+                    "path": f"{subdir}/{name}",
                 }
             )
     return documents
+
+
+def _corpus_readiness(subdir: str) -> dict[str, Any]:
+    docs = _load_corpus_documents(subdir)
+    return {
+        "status": "ready" if docs else "unavailable",
+        "configured": bool(docs),
+        "document_count": len(docs),
+        "missing": [] if docs else [f"my-docs/{subdir}/*.md"],
+    }
+
+
+def get_brain_vision_documents() -> list[dict[str, Any]]:
+    """Load vision markdown for the Vision tab + hybrid research."""
+    return _load_corpus_documents("vision")
+
+
+def get_brain_audience() -> dict[str, Any]:
+    """Audience tab payload: voice-of-nurse corpus + recruiting content inventory."""
+    audience_docs = _load_corpus_documents("audience")
+    recruiting_docs = _load_corpus_documents("recruiting")
+    return {
+        "documents": audience_docs,
+        "recruiting_documents": recruiting_docs,
+        "note": (
+            "Voice-of-nurse briefs, quote banks, and the nursingmastery.com "
+            "content inventory. Every research run with the Audience or "
+            "Recruiting scope reads these; the weekly sweep keeps them fresh."
+        ),
+    }
+
+
+# --- Research library (memory layer over the report store) -------------------
+#
+# The frontend persists finished reports to REPORT_STORE_PATH via /api/reports.
+# These read-only helpers make that archive searchable and let new research
+# runs consult prior work so knowledge compounds instead of restarting.
+
+_LIBRARY_STOPWORDS = _CLOUDINARY_STOPWORDS | {"does", "how", "why", "can", "should", "our", "will"}
+
+
+def _report_store_entries() -> list[dict[str, Any]]:
+    path = os.getenv("REPORT_STORE_PATH", os.path.join("data", "reports.json"))
+    try:
+        with open(path, encoding="utf-8") as handle:
+            data = json.load(handle)
+    except (OSError, ValueError):
+        return []
+    if not isinstance(data, dict):
+        return []
+    return [entry for entry in data.values() if isinstance(entry, dict)]
+
+
+def _library_terms(text: str) -> set[str]:
+    return {
+        term
+        for term in re.findall(r"[a-z0-9][a-z0-9_-]{2,}", text.lower())
+        if term not in _LIBRARY_STOPWORDS
+    }
+
+
+def search_prior_reports(query: str, limit: int = 3) -> list[dict[str, Any]]:
+    """Rank stored reports by keyword overlap with `query`. Cheap by design."""
+
+    query_terms = _library_terms(query)
+    if not query_terms:
+        return []
+
+    scored: list[tuple[float, dict[str, Any]]] = []
+    for entry in _report_store_entries():
+        question = str(entry.get("question") or "")
+        answer = str(entry.get("answer") or "")
+        if not question or not answer:
+            continue
+        question_terms = _library_terms(question)
+        answer_terms = _library_terms(answer[:4000])
+        question_overlap = len(query_terms & question_terms)
+        answer_overlap = len(query_terms & answer_terms)
+        score = question_overlap * 3 + answer_overlap
+        if question_overlap == 0 and answer_overlap < 3:
+            continue
+        scored.append((score, entry))
+
+    scored.sort(key=lambda pair: (-pair[0], -(pair[1].get("timestamp") or 0)))
+    results = []
+    for score, entry in scored[:limit]:
+        timestamp = entry.get("timestamp")
+        date = (
+            time.strftime("%Y-%m-%d", time.gmtime(timestamp / 1000))
+            if isinstance(timestamp, (int, float)) and timestamp > 0
+            else None
+        )
+        answer = str(entry.get("answer") or "")
+        results.append(
+            {
+                "id": entry.get("id"),
+                "question": entry.get("question"),
+                "date": date,
+                "score": score,
+                "snippet": re.sub(r"\s+", " ", answer)[:400],
+            }
+        )
+    return results
+
+
+def get_brain_library(query: str | None = None, limit: int = 50) -> dict[str, Any]:
+    """Library tab payload: the searchable archive of past research runs."""
+
+    if query:
+        matches = search_prior_reports(query, limit=min(limit, 25))
+        return {"reports": matches, "query": query, "total": len(matches)}
+
+    entries = _report_store_entries()
+    entries.sort(key=lambda entry: -(entry.get("timestamp") or 0))
+    reports = []
+    for entry in entries[:limit]:
+        timestamp = entry.get("timestamp")
+        date = (
+            time.strftime("%Y-%m-%d", time.gmtime(timestamp / 1000))
+            if isinstance(timestamp, (int, float)) and timestamp > 0
+            else None
+        )
+        answer = str(entry.get("answer") or "")
+        reports.append(
+            {
+                "id": entry.get("id"),
+                "question": entry.get("question"),
+                "date": date,
+                "snippet": re.sub(r"\s+", " ", answer)[:280],
+            }
+        )
+    return {"reports": reports, "query": None, "total": len(entries)}
 
 
 _LINEAR_GRAPHQL_URL = "https://api.linear.app/graphql"
@@ -860,6 +1050,8 @@ def get_hlt_readiness() -> dict[str, Any]:
     preset_statuses = {preset: _preset_readiness(preset) for preset in _MCP_PRESETS}
     firecrawl_status = _firecrawl_readiness()
     cloudinary_status = _cloudinary_readiness()
+    audience_corpus = _corpus_readiness("audience")
+    recruiting_corpus = _corpus_readiness("recruiting")
 
     integrations = {
         "codebase": {
@@ -904,9 +1096,27 @@ def get_hlt_readiness() -> dict[str, Any]:
             "missing": preset_statuses["katailyst"]["missing"],
         },
         "qbank": {
-            "status": preset_statuses["katailyst"]["status"],
-            "components": {"katailyst": preset_statuses["katailyst"]["status"]},
-            "missing": preset_statuses["katailyst"]["missing"],
+            # Prefer the dedicated partner-API MCP; Katailyst tool path remains
+            # the fallback until QBANK_MCP_URL exists.
+            "status": (
+                "ready"
+                if preset_statuses["qbank"]["status"] == "ready"
+                or preset_statuses["katailyst"]["status"] == "ready"
+                else "unavailable"
+            ),
+            "components": {
+                "qbank_partner_api": preset_statuses["qbank"]["status"],
+                "katailyst": preset_statuses["katailyst"]["status"],
+            },
+            "missing": (
+                []
+                if preset_statuses["qbank"]["status"] == "ready"
+                or preset_statuses["katailyst"]["status"] == "ready"
+                else sorted(set(
+                    preset_statuses["qbank"]["missing"]
+                    + preset_statuses["katailyst"]["missing"]
+                ))
+            ),
             "access": "read_only_checked_on_use",
         },
         "metrics": {
@@ -936,6 +1146,45 @@ def get_hlt_readiness() -> dict[str, Any]:
             "components": {"cloudinary": cloudinary_status["status"]},
             "missing": cloudinary_status["missing"],
             "access": "read_only_server_side",
+        },
+        "audience": {
+            # Ready when the voice-of-nurse corpus exists; live sweeps degrade
+            # to partial when only the scrapers are configured.
+            "status": (
+                "ready"
+                if audience_corpus["status"] == "ready"
+                else (
+                    "partial"
+                    if firecrawl_status["status"] == "ready"
+                    or preset_statuses["apify"]["status"] == "ready"
+                    else "unavailable"
+                )
+            ),
+            "components": {
+                "corpus": audience_corpus["status"],
+                "firecrawl": firecrawl_status["status"],
+                "apify": preset_statuses["apify"]["status"],
+            },
+            "missing": audience_corpus["missing"] if audience_corpus["status"] != "ready" else [],
+            "document_count": audience_corpus["document_count"],
+        },
+        "recruiting": {
+            "status": (
+                "ready"
+                if recruiting_corpus["status"] == "ready"
+                else (
+                    "partial"
+                    if firecrawl_status["status"] == "ready"
+                    else "unavailable"
+                )
+            ),
+            "components": {
+                "content_inventory": recruiting_corpus["status"],
+                "audience_corpus": audience_corpus["status"],
+                "firecrawl": firecrawl_status["status"],
+            },
+            "missing": recruiting_corpus["missing"] if recruiting_corpus["status"] != "ready" else [],
+            "document_count": recruiting_corpus["document_count"],
         },
     }
 
@@ -1006,6 +1255,13 @@ def _mcp_config_for_preset(preset: str, name: str | None = None) -> dict[str, An
         else:
             url = os.getenv("METABASE_MCP_URL")
             token = os.getenv("METABASE_MCP_TOKEN")
+    elif preset == "qbank":
+        readiness = _preset_readiness("qbank")
+        if readiness["status"] != "ready":
+            logger.warning("Skipping QBank MCP preset: QBANK_MCP_URL is unset")
+            return None
+        url = os.getenv("QBANK_MCP_URL")
+        token = os.getenv("QBANK_MCP_TOKEN")
     else:
         logger.warning("Skipping unknown MCP preset: %s", preset)
         return None
@@ -1079,9 +1335,14 @@ def resolve_research_scope(
             _append_unique_mcp_config(configs, {"name": "github", "preset": "github"})
     if requested["metrics"]:
         _append_unique_mcp_config(configs, {"name": "metabase", "preset": "metabase"})
-    if requested["firecrawl"]:
-        # Deep-web scope: add Apify's hosted MCP (actor marketplace) when a
-        # token exists so research can scrape sources Firecrawl cannot.
+    if requested["qbank"]:
+        # Dedicated partner-API MCP when configured (Katailyst already added above).
+        if readiness["preset_statuses"]["qbank"]["status"] == "ready":
+            _append_unique_mcp_config(configs, {"name": "qbank", "preset": "qbank"})
+    if requested["firecrawl"] or requested["audience"]:
+        # Deep-web and audience scopes: add Apify's hosted MCP (actor
+        # marketplace) when a token exists so research can reach forums and
+        # social sources Firecrawl cannot.
         if readiness["preset_statuses"]["apify"]["status"] == "ready":
             _append_unique_mcp_config(configs, {"name": "apify", "preset": "apify"})
 
@@ -1090,7 +1351,14 @@ def resolve_research_scope(
         key: _scope_status(key, requested=requested[key], readiness=readiness)
         for key in _SCOPE_KEYS
     }
-    scraper_override = "firecrawl" if scope_statuses["firecrawl"]["active"] else None
+    # Audience and recruiting sweeps lean on Firecrawl scraping as well.
+    firecrawl_ready = readiness["scraper"]["status"] == "ready"
+    scraper_override = (
+        "firecrawl"
+        if scope_statuses["firecrawl"]["active"]
+        or (firecrawl_ready and (scope_statuses["audience"]["active"] or scope_statuses["recruiting"]["active"]))
+        else None
+    )
 
     active_sources = [
         key for key, status in scope_statuses.items()
@@ -1141,11 +1409,20 @@ def prepare_research_request(
     scope = research_scope or {}
     enabled_keys = [key for key in _SCOPE_KEYS if bool(scope.get(key))]
     depth = scope.get("depth") if scope.get("depth") in _DEPTH_INSTRUCTIONS else "balanced"
+    mode = scope.get("mode") if scope.get("mode") in _RESEARCH_MODES else "standard"
+    memory_enabled = scope.get("memory", True) is not False
 
     expanded_configs, scraper_override, hlt_scope_metadata = resolve_research_scope(
         mcp_configs=mcp_configs,
         research_scope=research_scope,
     )
+    hlt_scope_metadata["mode"] = mode
+
+    prior_reports = search_prior_reports(task, limit=3) if memory_enabled else []
+    hlt_scope_metadata["prior_research"] = [
+        {"id": item["id"], "question": item["question"], "date": item["date"]}
+        for item in prior_reports
+    ]
     if bool(scope.get("media")):
         media_result = search_cloudinary_assets(task)
         assets = media_result.get("assets", [])
@@ -1163,15 +1440,26 @@ def prepare_research_request(
     next_mcp_enabled = bool(mcp_enabled or expanded_configs)
     next_mcp_strategy = "fast" if depth == "fast" else "deep"
 
-    if not enabled_keys and depth == "balanced":
+    if not enabled_keys and depth == "balanced" and mode == "standard" and not prior_reports:
         return task, next_mcp_enabled, mcp_strategy, expanded_configs, hlt_scope_metadata, scraper_override
 
     instruction_lines = [_DEPTH_INSTRUCTIONS[depth]]
+    if mode == "top1":
+        instruction_lines.append(_TOP1_MODE_INSTRUCTIONS)
     instruction_lines.extend(
         _scope_instruction(key)
         for key in hlt_scope_metadata["active_sources"]
         if key in _SCOPE_INSTRUCTIONS
     )
+    if prior_reports:
+        prior_lines = "; ".join(
+            f"\"{item['question']}\" ({item['date'] or 'undated'}, id {item['id']})"
+            for item in prior_reports
+        )
+        instruction_lines.append(
+            "Prior internal research exists on related questions — build on it "
+            f"instead of restarting, and note what changed since: {prior_lines}."
+        )
     for key in hlt_scope_metadata["degraded_sources"]:
         if key in enabled_keys:
             instruction_lines.append(
@@ -1380,6 +1668,16 @@ def install(
     def brain_roadmap():  # noqa: D401
         """Roadmap milestones (Linear when configured; otherwise seed)."""
         return get_brain_roadmap()
+
+    @app.get("/api/brain/audience", tags=["hlt", "brain"])
+    def brain_audience():  # noqa: D401
+        """Voice-of-nurse corpus + nursingmastery.com content inventory."""
+        return get_brain_audience()
+
+    @app.get("/api/brain/library", tags=["hlt", "brain"])
+    def brain_library(q: str | None = None):  # noqa: D401
+        """Searchable archive of past research runs (the memory layer)."""
+        return get_brain_library(query=q)
 
     # 2. API-key auth (opt-in via env).
     api_key = os.getenv("API_AUTH_KEY") or None

@@ -31,6 +31,10 @@ HLT_ENV_KEYS = [
     "APIFY_TOKEN",
     "APIFY_API_TOKEN",
     "APIFY_MCP_URL",
+    "QBANK_MCP_URL",
+    "QBANK_MCP_TOKEN",
+    "REPORT_STORE_PATH",
+    "DOC_PATH",
     "FIRECRAWL_API_KEY",
     "FIRECRAWL_SERVER_URL",
     "CLOUDINARY_CLOUD_NAME",
@@ -584,3 +588,250 @@ def test_changelog_seed_only_without_linear(monkeypatch):
 
     assert all(e.get("source") != "linear" for e in entries)
     assert len(entries) >= 3
+
+
+def _seed_corpus(tmp_path, subdir, name="seed.md", content="# Seed\nNurses say things."):
+    corpus_dir = tmp_path / subdir
+    corpus_dir.mkdir(parents=True, exist_ok=True)
+    (corpus_dir / name).write_text(content, encoding="utf-8")
+    return tmp_path
+
+
+def test_audience_scope_injects_forum_instructions(monkeypatch, tmp_path):
+    clear_hlt_env(monkeypatch)
+    set_firecrawl_import(monkeypatch, True)
+    monkeypatch.setenv("DOC_PATH", str(_seed_corpus(tmp_path, "audience")))
+    monkeypatch.setenv("FIRECRAWL_API_KEY", "fire-secret")
+    monkeypatch.setenv("APIFY_TOKEN", "apify-secret")
+
+    task, mcp_enabled, _, configs, metadata, scraper = hlt_extensions.prepare_research_request(
+        task="What do new grad nurses complain about most?",
+        mcp_enabled=False,
+        mcp_strategy="fast",
+        mcp_configs=[],
+        research_scope={"audience": True, "depth": "deep"},
+    )
+
+    assert metadata["scope_statuses"]["audience"]["status"] == "ready"
+    assert "audience" in metadata["active_sources"]
+    assert "r/nursing" in task
+    assert "allnurses.com" in task
+    assert "verbatim" in task
+    # Audience scope mounts Apify for forum reach and scrapes via Firecrawl.
+    assert mcp_enabled is True
+    assert any(c.get("name") == "apify" for c in configs)
+    assert scraper == "firecrawl"
+
+
+def test_audience_scope_partial_with_scrapers_only(monkeypatch, tmp_path):
+    clear_hlt_env(monkeypatch)
+    set_firecrawl_import(monkeypatch, True)
+    monkeypatch.setenv("DOC_PATH", str(tmp_path))  # no corpus docs
+    monkeypatch.setenv("FIRECRAWL_API_KEY", "fire-secret")
+
+    _, _, _, _, metadata, _ = hlt_extensions.prepare_research_request(
+        task="What do nurses complain about?",
+        mcp_enabled=False,
+        mcp_strategy="fast",
+        mcp_configs=[],
+        research_scope={"audience": True},
+    )
+
+    status = metadata["scope_statuses"]["audience"]
+    assert status["status"] == "partial"
+    assert status["active"] is True
+    assert status["degraded"] is True
+    assert "my-docs/audience/*.md" in status["missing"]
+
+
+def test_recruiting_scope_names_nursingmastery(monkeypatch, tmp_path):
+    clear_hlt_env(monkeypatch)
+    set_firecrawl_import(monkeypatch, True)
+    monkeypatch.setenv("DOC_PATH", str(_seed_corpus(tmp_path, "recruiting")))
+    monkeypatch.setenv("FIRECRAWL_API_KEY", "fire-secret")
+
+    task, _, _, _, metadata, scraper = hlt_extensions.prepare_research_request(
+        task="Where are our content gaps for new grad ICU jobs?",
+        mcp_enabled=False,
+        mcp_strategy="fast",
+        mcp_configs=[],
+        research_scope={"recruiting": True, "depth": "deep"},
+    )
+
+    assert metadata["scope_statuses"]["recruiting"]["status"] == "ready"
+    assert "nursingmastery.com" in task
+    assert scraper == "firecrawl"
+
+
+def test_top1_mode_injects_doctrine(monkeypatch):
+    clear_hlt_env(monkeypatch)
+    set_firecrawl_import(monkeypatch, False)
+
+    task, _, _, _, metadata, _ = hlt_extensions.prepare_research_request(
+        task="Best referral program for nurse recruiting",
+        mcp_enabled=False,
+        mcp_strategy="fast",
+        mcp_configs=[],
+        research_scope={"mode": "top1"},
+    )
+
+    assert metadata["mode"] == "top1"
+    assert "top-1% study" in task
+    assert "misdiagnose their own success" in task
+    assert "rhymes with our niche" in task
+
+
+def test_standard_mode_leaves_task_untouched(monkeypatch):
+    clear_hlt_env(monkeypatch)
+    set_firecrawl_import(monkeypatch, False)
+
+    task, _, _, _, metadata, _ = hlt_extensions.prepare_research_request(
+        task="Plain question",
+        mcp_enabled=False,
+        mcp_strategy="fast",
+        mcp_configs=[],
+        research_scope={},
+    )
+
+    assert metadata["mode"] == "standard"
+    assert task == "Plain question"
+
+
+def _seed_report_store(tmp_path, monkeypatch, reports):
+    path = tmp_path / "reports.json"
+    path.write_text(json.dumps(reports), encoding="utf-8")
+    monkeypatch.setenv("REPORT_STORE_PATH", str(path))
+    return path
+
+
+def test_prior_research_is_injected_into_related_tasks(monkeypatch, tmp_path):
+    clear_hlt_env(monkeypatch)
+    set_firecrawl_import(monkeypatch, False)
+    _seed_report_store(
+        tmp_path,
+        monkeypatch,
+        {
+            "r1": {
+                "id": "r1",
+                "question": "How do travel nurse recruiters source candidates?",
+                "answer": "Recruiters source candidates from staffing marketplaces and referrals." * 5,
+                "timestamp": 1753000000000,
+            },
+            "r2": {
+                "id": "r2",
+                "question": "Totally unrelated question about kubernetes",
+                "answer": "Cluster things.",
+                "timestamp": 1753000000001,
+            },
+        },
+    )
+
+    task, _, _, _, metadata, _ = hlt_extensions.prepare_research_request(
+        task="What channels do nurse recruiters use to source candidates?",
+        mcp_enabled=False,
+        mcp_strategy="fast",
+        mcp_configs=[],
+        research_scope={},
+    )
+
+    assert [item["id"] for item in metadata["prior_research"]] == ["r1"]
+    assert "Prior internal research" in task
+    assert "travel nurse recruiters" in task
+    # Memory can be disabled per-request.
+    task_off, _, _, _, metadata_off, _ = hlt_extensions.prepare_research_request(
+        task="What channels do nurse recruiters use to source candidates?",
+        mcp_enabled=False,
+        mcp_strategy="fast",
+        mcp_configs=[],
+        research_scope={"memory": False},
+    )
+    assert metadata_off["prior_research"] == []
+    assert "Prior internal research" not in task_off
+
+
+def test_qbank_scope_prefers_dedicated_preset(monkeypatch):
+    clear_hlt_env(monkeypatch)
+    set_firecrawl_import(monkeypatch, False)
+    monkeypatch.setenv("KATAILYST2_MCP_TOKEN", "kata_k2-token")
+    monkeypatch.setenv("QBANK_MCP_URL", "https://qbank.example/mcp")
+    monkeypatch.setenv("QBANK_MCP_TOKEN", "qbank-secret")
+
+    _, mcp_enabled, _, configs, metadata, _ = hlt_extensions.prepare_research_request(
+        task="Which items still cite the 2020 AHA guideline?",
+        mcp_enabled=False,
+        mcp_strategy="fast",
+        mcp_configs=[],
+        research_scope={"qbank": True, "depth": "deep"},
+    )
+
+    assert mcp_enabled is True
+    names = [c["name"] for c in configs]
+    assert "katailyst" in names and "qbank" in names
+    qbank = next(c for c in configs if c["name"] == "qbank")
+    assert qbank["connection_url"] == "https://qbank.example/mcp"
+    assert qbank["connection_headers"] == {"Authorization": "Bearer qbank-secret"}
+    assert metadata["scope_statuses"]["qbank"]["status"] == "ready"
+    assert metadata["scope_statuses"]["qbank"]["components"]["qbank_partner_api"] == "ready"
+    assert "qbank-secret" not in json.dumps(metadata)
+
+
+def test_qbank_scope_falls_back_to_katailyst(monkeypatch):
+    clear_hlt_env(monkeypatch)
+    set_firecrawl_import(monkeypatch, False)
+    monkeypatch.setenv("KATAILYST2_MCP_TOKEN", "kata_k2-token")
+
+    _, _, _, configs, metadata, _ = hlt_extensions.prepare_research_request(
+        task="Audit guideline freshness",
+        mcp_enabled=False,
+        mcp_strategy="fast",
+        mcp_configs=[],
+        research_scope={"qbank": True},
+    )
+
+    assert [c["name"] for c in configs] == ["katailyst"]
+    assert metadata["scope_statuses"]["qbank"]["status"] == "ready"
+    assert metadata["scope_statuses"]["qbank"]["components"]["qbank_partner_api"] == "unavailable"
+
+
+def test_brain_audience_and_library_endpoints(monkeypatch, tmp_path):
+    clear_hlt_env(monkeypatch)
+    set_firecrawl_import(monkeypatch, False)
+    monkeypatch.setenv(
+        "DOC_PATH",
+        str(_seed_corpus(tmp_path, "audience", name="quotes.md", content="# Quote bank\n> so burned out")),
+    )
+    _seed_report_store(
+        tmp_path,
+        monkeypatch,
+        {
+            "r1": {
+                "id": "r1",
+                "question": "Nurse recruiting funnels",
+                "answer": "Funnels work like this.",
+                "timestamp": 1753000000000,
+            }
+        },
+    )
+
+    app = FastAPI()
+    hlt_extensions.install(app)
+    client = TestClient(app)
+
+    audience = client.get("/api/brain/audience")
+    assert audience.status_code == 200
+    body = audience.json()
+    assert body["documents"][0]["id"] == "quotes"
+    assert "burned out" in body["documents"][0]["content"]
+
+    library = client.get("/api/brain/library")
+    assert library.status_code == 200
+    assert library.json()["total"] == 1
+    assert library.json()["reports"][0]["question"] == "Nurse recruiting funnels"
+
+    search = client.get("/api/brain/library", params={"q": "recruiting funnels"})
+    assert search.status_code == 200
+    assert search.json()["reports"][0]["id"] == "r1"
+
+    empty = client.get("/api/brain/library", params={"q": "quantum chromodynamics"})
+    assert empty.status_code == 200
+    assert empty.json()["reports"] == []
