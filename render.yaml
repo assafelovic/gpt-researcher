@@ -7,7 +7,8 @@ services:
   - type: web
     name: hlt-codegraph
     runtime: docker
-    plan: starter
+    # standard (2GB): gitnexus analyze OOMs on the 512MB starter plan.
+    plan: standard
     region: oregon
     rootDir: services/codegraph
     dockerfilePath: ./Dockerfile

@@ -28,6 +28,9 @@ HLT_ENV_KEYS = [
     "METABASE_MCP_TOKEN",
     "LINEAR_API_KEY",
     "LINEAR_MCP_URL",
+    "APIFY_TOKEN",
+    "APIFY_API_TOKEN",
+    "APIFY_MCP_URL",
     "FIRECRAWL_API_KEY",
     "FIRECRAWL_SERVER_URL",
     "CLOUDINARY_CLOUD_NAME",
@@ -434,3 +437,150 @@ def test_langfuse_health_status_is_redacted(monkeypatch):
     assert langfuse["base_url"] == "https://us.cloud.langfuse.com"
     assert "pk-test" not in json.dumps(body)
     assert "sk-test" not in json.dumps(body)
+
+
+def test_deep_web_scope_adds_apify_preset(monkeypatch):
+    clear_hlt_env(monkeypatch)
+    set_firecrawl_import(monkeypatch, True)
+    monkeypatch.setenv("FIRECRAWL_API_KEY", "fire-secret")
+    monkeypatch.setenv("APIFY_TOKEN", "apify-secret")
+
+    _, mcp_enabled, _, configs, metadata, scraper = hlt_extensions.prepare_research_request(
+        task="Scrape competitor pricing pages",
+        mcp_enabled=False,
+        mcp_strategy="fast",
+        mcp_configs=[],
+        research_scope={"firecrawl": True, "depth": "deep"},
+    )
+
+    assert mcp_enabled is True
+    assert scraper == "firecrawl"
+    apify = next(c for c in configs if c.get("name") == "apify")
+    assert apify["connection_url"] == "https://mcp.apify.com"
+    assert apify["connection_headers"]["Authorization"] == "Bearer apify-secret"
+    assert metadata["preset_statuses"]["apify"]["status"] == "ready"
+
+
+def test_apify_preset_skipped_without_token(monkeypatch):
+    clear_hlt_env(monkeypatch)
+    set_firecrawl_import(monkeypatch, True)
+    monkeypatch.setenv("FIRECRAWL_API_KEY", "fire-secret")
+
+    _, _, _, configs, metadata, _ = hlt_extensions.prepare_research_request(
+        task="Scrape competitor pricing pages",
+        mcp_enabled=False,
+        mcp_strategy="fast",
+        mcp_configs=[],
+        research_scope={"firecrawl": True},
+    )
+
+    assert all(c.get("name") != "apify" for c in configs)
+    assert metadata["preset_statuses"]["apify"]["status"] == "unavailable"
+    assert "APIFY_TOKEN" in metadata["preset_statuses"]["apify"]["missing"]
+
+
+def _mock_linear_graphql(monkeypatch, payload_by_query_marker):
+    def fake_graphql(query, timeout=8):
+        for marker, payload in payload_by_query_marker.items():
+            if marker in query:
+                return payload
+        return None
+
+    monkeypatch.setattr(hlt_extensions, "_linear_graphql", fake_graphql)
+    hlt_extensions._linear_cache.clear()
+
+
+def test_roadmap_uses_live_linear_projects(monkeypatch):
+    clear_hlt_env(monkeypatch)
+    monkeypatch.setenv("LINEAR_API_KEY", "lin_api_secret")
+    _mock_linear_graphql(
+        monkeypatch,
+        {
+            "projects(": {
+                "projects": {
+                    "nodes": [
+                        {
+                            "id": "p1",
+                            "name": "Nurse funnel v2",
+                            "description": "Rebuild apply funnel",
+                            "state": "started",
+                            "progress": 0.6,
+                            "targetDate": "2026-09-01",
+                            "url": "https://linear.app/x/p1",
+                        },
+                        {
+                            "id": "p2",
+                            "name": "Dead project",
+                            "state": "canceled",
+                            "progress": 0.1,
+                        },
+                    ]
+                }
+            }
+        },
+    )
+
+    roadmap = hlt_extensions.get_brain_roadmap()
+
+    assert roadmap["provider"] == "linear"
+    assert roadmap["linear_configured"] is True
+    titles = [m["title"] for m in roadmap["milestones"]]
+    assert titles == ["Nurse funnel v2"]
+    assert roadmap["milestones"][0]["progress"] == 0.6
+    assert "lin_api_secret" not in json.dumps(roadmap)
+
+
+def test_roadmap_falls_back_to_seed_when_linear_fails(monkeypatch):
+    clear_hlt_env(monkeypatch)
+    monkeypatch.setenv("LINEAR_API_KEY", "lin_api_secret")
+    _mock_linear_graphql(monkeypatch, {})  # every query returns None
+
+    roadmap = hlt_extensions.get_brain_roadmap()
+
+    assert roadmap["provider"] == "seed"
+    assert roadmap["linear_configured"] is True
+    assert len(roadmap["milestones"]) >= 1
+
+
+def test_changelog_prepends_linear_completions(monkeypatch):
+    clear_hlt_env(monkeypatch)
+    monkeypatch.setenv("LINEAR_API_KEY", "lin_api_secret")
+    _mock_linear_graphql(
+        monkeypatch,
+        {
+            "issues(": {
+                "issues": {
+                    "nodes": [
+                        {
+                            "id": "i1",
+                            "identifier": "NUR-42",
+                            "title": "Ship recruiter dashboard",
+                            "url": "https://linear.app/x/NUR-42",
+                            "completedAt": "2026-07-28T12:00:00.000Z",
+                            "team": {"name": "Nursing Mastery"},
+                            "project": {"name": "Recruiting"},
+                        }
+                    ]
+                }
+            }
+        },
+    )
+
+    entries = hlt_extensions.get_brain_changelog()
+
+    assert entries[0]["id"] == "linear-NUR-42"
+    assert entries[0]["date"] == "2026-07-28"
+    assert entries[0]["kind"] == "shipped"
+    assert entries[0]["source"] == "linear"
+    # Seed entries stay after the live feed.
+    assert any(e["id"] == "upstream-sync-2026-07" for e in entries)
+
+
+def test_changelog_seed_only_without_linear(monkeypatch):
+    clear_hlt_env(monkeypatch)
+    hlt_extensions._linear_cache.clear()
+
+    entries = hlt_extensions.get_brain_changelog()
+
+    assert all(e.get("source") != "linear" for e in entries)
+    assert len(entries) >= 3
