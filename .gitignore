@@ -25,10 +25,16 @@ gpt_researcher.egg-info/
 /llm.txt
 /llms*.txt
 
-#Ignore my local docs
-my-docs/
+#Ignore my local docs, except the tracked research corpora
+# (vision, audience, recruiting, design ship with the repo so Railway's
+# DOC_PATH hybrid loader and the Brain tabs can read them in prod)
+# (`my-docs/*` not `my-docs/` — git cannot re-include children of an
+# excluded directory)
+my-docs/*
 !my-docs/vision/
-!my-docs/vision/**
+!my-docs/audience/
+!my-docs/recruiting/
+!my-docs/design/
 
 #Ignore pycache
 **/__pycache__/
