@@ -12,10 +12,14 @@ upstream `assafelovic/gpt-researcher` (check with
 customer/competitive research and for nontechnical teammates to ask
 capability questions across the estate.
 
-PRD: `docs/prd/mastery-brain.md`. UI tabs: Ask / Codebase / Vision /
-Changelog / Roadmap. Code scope prefers `CODEGRAPH_MCP_*` (GitNexus on Render)
-with GitHub MCP as fallback. Sidecars: `services/codegraph/`, `services/hermes/`
-(`render.yaml`). Vision corpus: `my-docs/vision/`.
+PRD: `docs/prd/mastery-brain.md`. UI tabs: Ask / Audience / Codebase /
+Library / Vision / Changelog / Roadmap. Code scope prefers `CODEGRAPH_MCP_*`
+(GitNexus on Render) with GitHub MCP as fallback. Sidecars:
+`services/codegraph/`, `services/hermes/` (`render.yaml`). Tracked corpora
+under `my-docs/`: `vision/`, `audience/` (voice-of-nurse quote bank + briefs),
+`recruiting/` (generated nursingmastery.com content inventory —
+`scripts/build_recruiting_inventory.py`), `design/` (Refero notes). All load
+as hybrid-research context via `DOC_PATH`.
 
 ## Where it sits in the HLT ecosystem
 
@@ -52,20 +56,49 @@ following servers auto-mount from `.mcp.json`:
    `docs/usage/owners-manual.md`.
 
 Human UI: `https://gpt-researcher-ui.vercel.app` is branded as **Mastery
-Research**. Sliding Brain tabs: Ask, Codebase, Vision, Changelog, Roadmap.
-Launch Ask includes compact HLT scope toggles for Deep web, QBank, Media,
-Code, Registry, and Metrics. Those toggles are browser-safe metadata;
-server-side preset expansion, codegraph/GitHub/Katailyst/Apify MCP, Cloudinary,
-and `/api/brain/*` live in `backend/server/hlt_extensions.py`.
+Research**. Sliding Brain tabs: Ask, Audience, Codebase, Library, Vision,
+Changelog, Roadmap — each tab has "What can I ask?" starter chips
+(`lib/starterPrompts.ts`) that launch scoped runs. Ask includes compact HLT
+scope toggles for Deep web, Audience, Recruiting, QBank, Media, Code,
+Registry, and Metrics, a Fast/Balanced/Deep depth picker, and a
+Standard/Top 1% mode picker (top1 injects the cross-industry
+winners → mechanisms → rhymes → audience-verification doctrine). Toggles are
+browser-safe metadata; server-side preset expansion,
+codegraph/GitHub/Katailyst/Apify/QBank MCP, Cloudinary, and `/api/brain/*`
+live in `backend/server/hlt_extensions.py`. Live runs render a Plan/Search/
+Read/Write phase rail (`components/brain/ResearchProgress.tsx`); raw agent
+logs are collapsed by default.
+
+Research memory: finished reports persist to `REPORT_STORE_PATH`
+(`data/reports.json` on the Railway volume) and are searchable at
+`/api/brain/library` (Library tab). `prepare_research_request` injects the
+top related prior reports into new runs (disable per-request with
+`hlt_research_scope.memory: false`).
 
 Scraping stack: `SCRAPER=firecrawl` (Firecrawl API) is the production scraper
 and `RETRIEVER=firecrawl,mcp` runs web search on the same Firecrawl plan via
 the HLT-added `firecrawl` retriever (`gpt_researcher/retrievers/firecrawl/`);
 Tavily remains supported but is off in prod (plan limit exhausted). Deep web
-scope also mounts Apify's hosted MCP (`https://mcp.apify.com`) when
-`APIFY_TOKEN` is set. Roadmap and Changelog tabs pull live Linear data
-(projects + recently completed issues, 5-minute cache) when `LINEAR_API_KEY`
-is set, falling back to seed entries otherwise.
+and Audience scopes also mount Apify's hosted MCP (`https://mcp.apify.com`)
+when `APIFY_TOKEN` is set; Audience/Recruiting scopes force Firecrawl
+scraping when configured. QBank scope prefers a dedicated `QBANK_MCP_URL`
+partner-API MCP and falls back to the Katailyst tool path. Roadmap and
+Changelog tabs pull live Linear data (projects + recently completed issues,
+5-minute cache) when `LINEAR_API_KEY` is set, falling back to seed entries.
+
+Automation: `.github/workflows/audience-sweep.yml` (Mondays) runs a deep
+audience-scoped report against the hosted API, refreshes the recruiting
+content inventory, and opens a PR into `my-docs/audience/`; it needs the
+`API_AUTH_KEY` and `FIRECRAWL_API_KEY` repo secrets.
+`.github/workflows/upstream-sync.yml` (Mondays) merges
+`assafelovic/gpt-researcher` master into a `sync/upstream-*` branch, runs the
+HLT test suite, and opens an AI-reviewable PR (with conflict markers
+committed when the merge conflicts).
+
+Katailyst registry: this service is registered as the tier-1 capability
+`tool:http-api-https-gpt-researcher-api-production-up-railway-app-post-report`
+(name "Mastery Research (GPT Researcher)", staged, org-shared). Re-register or
+amend with `scripts/katailyst_mcp.py` + `scripts/katailyst_capability.md`.
 
 Render sidecars: `hlt-codegraph` runs on the standard plan (gitnexus analyze
 OOMs on 512MB) with a 10GB disk at `/data`; boot reindex runs in the
