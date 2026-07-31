@@ -62,7 +62,14 @@ class PubMedCentralSearch:
             response.raise_for_status()
             data = response.json()
             
-            id_list = data.get('esearchresult', {}).get('idlist', [])
+            esearch = data.get("esearchresult") or {}
+            if not isinstance(esearch, dict):
+                return []
+            id_list = esearch.get("idlist") or []
+            if not isinstance(id_list, list):
+                return []
+            # IDs are strings/ints in NCT/PMC payloads; drop other shapes
+            id_list = [str(i) for i in id_list if isinstance(i, (str, int)) and str(i)]
             print(f"Found {len(id_list)} articles with full text available")
             return id_list
             
