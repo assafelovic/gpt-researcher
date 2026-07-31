@@ -58,8 +58,11 @@ Code, Registry, and Metrics. Those toggles are browser-safe metadata;
 server-side preset expansion, codegraph/GitHub/Katailyst/Apify MCP, Cloudinary,
 and `/api/brain/*` live in `backend/server/hlt_extensions.py`.
 
-Scraping stack: `SCRAPER=firecrawl` (Firecrawl API) is the production scraper;
-Deep web scope also mounts Apify's hosted MCP (`https://mcp.apify.com`) when
+Scraping stack: `SCRAPER=firecrawl` (Firecrawl API) is the production scraper
+and `RETRIEVER=firecrawl,mcp` runs web search on the same Firecrawl plan via
+the HLT-added `firecrawl` retriever (`gpt_researcher/retrievers/firecrawl/`);
+Tavily remains supported but is off in prod (plan limit exhausted). Deep web
+scope also mounts Apify's hosted MCP (`https://mcp.apify.com`) when
 `APIFY_TOKEN` is set. Roadmap and Changelog tabs pull live Linear data
 (projects + recently completed issues, 5-minute cache) when `LINEAR_API_KEY`
 is set, falling back to seed entries otherwise.

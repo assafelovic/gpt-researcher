@@ -77,6 +77,10 @@ def get_retriever(retriever: str):
             from gpt_researcher.retrievers import ExaSearch
 
             return ExaSearch
+        case "firecrawl":
+            from gpt_researcher.retrievers import FirecrawlSearch
+
+            return FirecrawlSearch
         case "semantic_scholar":
             from gpt_researcher.retrievers import SemanticScholarSearch
 
