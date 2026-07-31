@@ -59,11 +59,32 @@ async def filter_urls(urls: list[str], config: Config) -> list[str]:
     Returns:
         list[str]: Filtered list of URLs.
     """
+    if not urls:
+        return []
+    if not isinstance(urls, (list, tuple)):
+        logger.warning(
+            "filter_urls expected a list of URLs, got %s; treating as empty",
+            type(urls).__name__,
+        )
+        return []
+
+    raw_excluded = getattr(config, "excluded_domains", None) or []
+    if not isinstance(raw_excluded, (list, tuple, set)):
+        logger.warning(
+            "config.excluded_domains expected a list, got %s; ignoring exclusions",
+            type(raw_excluded).__name__,
+        )
+        raw_excluded = []
+    # Drop unusable exclusion entries rather than crash on ``in``.
+    excluded = [d for d in raw_excluded if isinstance(d, str) and d]
+
     filtered_urls = []
     for url in urls:
-        # Add your filtering logic here
-        # For example, you might want to exclude certain domains or URL patterns
-        if not any(excluded in url for excluded in config.excluded_domains):
+        # Retrievers can surface mixed/None rows; skip non-strings so one bad
+        # entry cannot TypeError the whole filter pass.
+        if not isinstance(url, str) or not url:
+            continue
+        if not any(domain in url for domain in excluded):
             filtered_urls.append(url)
     return filtered_urls
 
