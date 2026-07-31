@@ -1,6 +1,8 @@
 export type BrainTabId =
   | "ask"
+  | "audience"
   | "codebase"
+  | "library"
   | "vision"
   | "changelog"
   | "roadmap";
@@ -18,9 +20,19 @@ export const BRAIN_TABS: BrainTab[] = [
     description: "Deep research with Mastery scope toggles",
   },
   {
+    id: "audience",
+    label: "Audience",
+    description: "What nurses actually say — pains, quotes, trends",
+  },
+  {
     id: "codebase",
     label: "Codebase",
     description: "Estate capabilities and can-we-do-X",
+  },
+  {
+    id: "library",
+    label: "Library",
+    description: "Past research, searchable — knowledge compounds",
   },
   {
     id: "vision",

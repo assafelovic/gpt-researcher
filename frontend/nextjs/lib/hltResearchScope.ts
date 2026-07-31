@@ -7,7 +7,10 @@ export const defaultHLTResearchScope: HLTResearchScope = {
   metrics: false,
   firecrawl: false,
   media: false,
+  audience: false,
+  recruiting: false,
   depth: "balanced",
+  mode: "standard",
 };
 
 export function normalizeHLTResearchScope(
@@ -28,5 +31,7 @@ export function selectedScopeCount(scope?: Partial<HLTResearchScope>): number {
     normalized.metrics,
     normalized.firecrawl,
     normalized.media,
+    normalized.audience,
+    normalized.recruiting,
   ].filter(Boolean).length;
 }

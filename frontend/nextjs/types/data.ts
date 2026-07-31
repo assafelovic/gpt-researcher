@@ -71,6 +71,8 @@ export interface MCPConfig {
 
 export type HLTResearchDepth = "fast" | "balanced" | "deep";
 
+export type HLTResearchMode = "standard" | "top1";
+
 export interface HLTResearchScope {
   codebase: boolean;
   cms: boolean;
@@ -78,7 +80,10 @@ export interface HLTResearchScope {
   metrics: boolean;
   firecrawl: boolean;
   media: boolean;
+  audience: boolean;
+  recruiting: boolean;
   depth: HLTResearchDepth;
+  mode: HLTResearchMode;
 }
 
 export interface ChatBoxSettings {

@@ -9,7 +9,15 @@ type ResearchScopeSelectorProps = {
   compact?: boolean;
 };
 
-type ScopeKey = "firecrawl" | "qbank" | "media" | "codebase" | "cms" | "metrics";
+type ScopeKey =
+  | "firecrawl"
+  | "qbank"
+  | "media"
+  | "codebase"
+  | "cms"
+  | "metrics"
+  | "audience"
+  | "recruiting";
 
 const scopeOptions: Array<{
   key: ScopeKey;
@@ -20,6 +28,18 @@ const scopeOptions: Array<{
     key: "firecrawl",
     label: "Deep web",
     title: "Use deeper public web extraction.",
+  },
+  {
+    key: "audience",
+    label: "Audience",
+    title:
+      "Ground answers in what nurses actually say: forums (r/nursing, r/StudentNurse, allnurses), verbatim quotes with receipts, plus the internal voice-of-nurse corpus.",
+  },
+  {
+    key: "recruiting",
+    label: "Recruiting",
+    title:
+      "Specialize in nurse recruiting: nursingmastery.com content inventory, gap analysis vs the best recruiting content anywhere, audience cross-checks.",
   },
   {
     key: "qbank",
@@ -59,6 +79,20 @@ const depthOptions: Array<{ value: HLTResearchScope["depth"]; label: string }> =
     { value: "deep", label: "Deep" },
   ];
 
+const modeOptions: Array<{
+  value: HLTResearchScope["mode"];
+  label: string;
+  title: string;
+}> = [
+  { value: "standard", label: "Standard", title: "Regular cited research." },
+  {
+    value: "top1",
+    label: "Top 1%",
+    title:
+      "Rhyme mode: find the best examples anywhere on earth, distill why they win, propose how the mechanism maps to nursing, verify against audience truth.",
+  },
+];
+
 export default function ResearchScopeSelector({
   value,
   onChange,
@@ -76,21 +110,42 @@ export default function ResearchScopeSelector({
       aria-label="Research scope"
     >
       <div className="flex flex-col items-center justify-center gap-2.5">
-        <div className="inline-flex w-fit rounded-md border border-white/10 bg-white/[0.04] p-0.5 backdrop-blur">
-          {depthOptions.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => update({ depth: option.value })}
-              className={`h-7 rounded px-3 text-xs font-semibold transition-colors ${
-                scope.depth === option.value
-                  ? "bg-[#155EEF] text-white"
-                  : "text-slate-400 hover:text-white"
-              }`}
-            >
-              {option.label}
-            </button>
-          ))}
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <div className="inline-flex w-fit rounded-md border border-white/10 bg-white/[0.04] p-0.5 backdrop-blur">
+            {depthOptions.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => update({ depth: option.value })}
+                className={`h-7 rounded px-3 text-xs font-semibold transition-colors ${
+                  scope.depth === option.value
+                    ? "bg-[#155EEF] text-white"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          <div className="inline-flex w-fit rounded-md border border-white/10 bg-white/[0.04] p-0.5 backdrop-blur">
+            {modeOptions.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                title={option.title}
+                onClick={() => update({ mode: option.value })}
+                className={`h-7 rounded px-3 text-xs font-semibold transition-colors ${
+                  scope.mode === option.value
+                    ? option.value === "top1"
+                      ? "bg-amber-500/90 text-black"
+                      : "bg-[#155EEF] text-white"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div

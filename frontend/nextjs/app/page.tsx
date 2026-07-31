@@ -7,7 +7,7 @@ import { useResearchHistoryContext } from '@/hooks/ResearchHistoryContext';
 import { useScrollHandler } from '@/hooks/useScrollHandler';
 import { startLanggraphResearch } from '../components/Langgraph/Langgraph';
 import findDifferences from '../helpers/findDifferences';
-import { Data, ChatBoxSettings, QuestionData, ChatMessage, ChatData } from '../types/data';
+import { Data, ChatBoxSettings, QuestionData, ChatMessage, ChatData, HLTResearchScope } from '../types/data';
 import { preprocessOrderedData } from '../utils/dataProcessing';
 import { toast } from "react-hot-toast";
 import { v4 as uuidv4 } from 'uuid';
@@ -336,6 +336,23 @@ export default function Home() {
     setBrainTab("ask");
     setPromptValue(question);
     void handleDisplayResult(question);
+  };
+
+  const handleStarterPrompt = (starter: {
+    prompt: string;
+    scope?: Partial<HLTResearchScope>;
+  }) => {
+    setChatBoxSettings((prev) => ({
+      ...prev,
+      hlt_research_scope: {
+        ...defaultHLTResearchScope,
+        ...(prev.hlt_research_scope || {}),
+        ...(starter.scope || {}),
+      },
+    }));
+    setBrainTab("ask");
+    setPromptValue(starter.prompt);
+    void handleDisplayResult(starter.prompt);
   };
 
   const handleDisplayResult = async (newQuestion: string) => {
@@ -762,6 +779,7 @@ export default function Home() {
                 activeTab={brainTab}
                 onTabChange={setBrainTab}
                 onCodebaseAsk={handleCodebaseAsk}
+                onStarterPrompt={handleStarterPrompt}
                 askChildren={
                   <Hero
                     promptValue={promptValue}
