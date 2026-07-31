@@ -11,6 +11,7 @@ from .serpapi.serpapi import SerpApiSearch
 from .serper.serper import SerperSearch
 from .tavily.tavily_search import TavilySearch
 from .exa.exa import ExaSearch
+from .firecrawl.firecrawl_search import FirecrawlSearch
 from .getxapi.getxapi import GetXAPISearch
 from .mcp import MCPRetriever
 from .bocha.bocha import BoChaSearch
@@ -30,6 +31,7 @@ __all__ = [
     "SemanticScholarSearch",
     "PubMedCentralSearch",
     "ExaSearch",
+    "FirecrawlSearch",
     "GetXAPISearch",
     "MCPRetriever",
     "BoChaSearch",

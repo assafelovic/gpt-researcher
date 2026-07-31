@@ -58,6 +58,7 @@ VALID_RETRIEVERS = [
     "semantic_scholar",
     "pubmed_central",
     "exa",
+    "firecrawl",
     "getxapi",
     "mcp",
     "xquik",
