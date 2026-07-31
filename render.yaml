@@ -28,6 +28,14 @@ services:
         value: "1"
       - key: CODEGRAPH_REINDEX_HOURS
         value: "24"
+      # Cap parser memory: worker pool defaults to host cores (up to 16),
+      # which OOMs a 2GB container mid-analyze.
+      - key: GITNEXUS_WORKER_POOL_SIZE
+        value: "2"
+      - key: GITNEXUS_PARSE_CHUNK_CONCURRENCY
+        value: "1"
+      - key: NODE_OPTIONS
+        value: "--max-old-space-size=1024"
       - key: GITHUB_TOKEN
         sync: false
       - key: CODEGRAPH_MCP_TOKEN
