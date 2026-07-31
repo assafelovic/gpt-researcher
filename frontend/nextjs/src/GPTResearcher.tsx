@@ -316,6 +316,7 @@ export const GPTResearcher = ({
                   chatBoxSettings={chatBoxSettings}
                   handleClickSuggestion={handleClickSuggestion}
                   currentResearchId={undefined}
+                  loading={loading}
                 />
               </div>
 

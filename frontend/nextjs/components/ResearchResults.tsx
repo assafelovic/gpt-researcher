@@ -6,6 +6,7 @@ import ImageSection from "./ResearchBlocks/ImageSection";
 import SubQuestions from "./ResearchBlocks/elements/SubQuestions";
 import LogsSection from "./ResearchBlocks/LogsSection";
 import AccessReport from "./ResearchBlocks/AccessReport";
+import ResearchProgress from "./brain/ResearchProgress";
 import { preprocessOrderedData } from "../utils/dataProcessing";
 import { Data } from "../types/data";
 
@@ -18,6 +19,7 @@ interface ResearchResultsProps {
   currentResearchId?: string;
   isProcessingChat?: boolean;
   onShareClick?: () => void;
+  loading?: boolean;
 }
 
 export const ResearchResults: React.FC<ResearchResultsProps> = ({
@@ -29,6 +31,7 @@ export const ResearchResults: React.FC<ResearchResultsProps> = ({
   currentResearchId,
   isProcessingChat = false,
   onShareClick,
+  loading = false,
 }) => {
   const groupedData = preprocessOrderedData(orderedData);
   const pathData = groupedData.find((data) => data.type === "path");
@@ -87,6 +90,7 @@ export const ResearchResults: React.FC<ResearchResultsProps> = ({
   return (
     <>
       {initialQuestion && <Question question={initialQuestion.content} />}
+      <ResearchProgress orderedData={orderedData} loading={loading && !hasCompletedRun} />
       {pathData && (
         <AccessReport
           accessData={pathData.output}
@@ -101,10 +105,9 @@ export const ResearchResults: React.FC<ResearchResultsProps> = ({
         <Report answer={finalReport.content} researchId={currentResearchId} />
       )}
       {orderedData.length > 0 && (
-        <LogsSection
-          logs={allLogs}
-          collapsedByDefault={hasCompletedRun || hasInlineReport}
-        />
+        // The phase rail above carries live progress; raw agent activity is
+        // opt-in so the default view stays readable for non-technical users.
+        <LogsSection logs={allLogs} collapsedByDefault />
       )}
       {subqueriesComponent && (
         <SubQuestions
