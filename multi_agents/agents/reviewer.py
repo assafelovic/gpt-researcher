@@ -18,8 +18,11 @@ class ReviewerAgent:
         :param draft_state:
         :return:
         """
-        task = draft_state.get("task")
-        guidelines = "- ".join(guideline for guideline in task.get("guidelines"))
+        task = draft_state.get("task") or {}
+        raw_guidelines = task.get("guidelines") or []
+        if not isinstance(raw_guidelines, (list, tuple)):
+            raw_guidelines = [raw_guidelines] if raw_guidelines else []
+        guidelines = "- ".join(str(g) for g in raw_guidelines if g is not None)
         revision_notes = draft_state.get("revision_notes")
 
         revise_prompt = f"""The reviser has already revised the draft based on your previous review notes with the following feedback:
