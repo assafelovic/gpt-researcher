@@ -1,0 +1,98 @@
+name: Weekly upstream sync
+
+# Keeps this fork "main-branch-ish" against assafelovic/gpt-researcher.
+# Merges upstream into a sync branch, runs the HLT test suite, and opens an
+# AI-reviewable PR. On merge conflicts it opens the PR anyway with a conflict
+# report so an agent can resolve it.
+
+on:
+  schedule:
+    - cron: "0 12 * * 1" # Mondays 12:00 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Merge upstream/master
+        id: merge
+        run: |
+          set -uo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote add upstream https://github.com/assafelovic/gpt-researcher.git
+          git fetch upstream master
+
+          BEHIND=$(git rev-list --count HEAD..upstream/master)
+          echo "behind=$BEHIND" >> "$GITHUB_OUTPUT"
+          if [ "$BEHIND" = "0" ]; then
+            echo "Already up to date with upstream."
+            exit 0
+          fi
+
+          BRANCH="sync/upstream-$(date +%Y-%m-%d)"
+          git checkout -b "$BRANCH"
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+
+          if git merge --no-edit upstream/master; then
+            echo "conflicts=" >> "$GITHUB_OUTPUT"
+          else
+            CONFLICTS=$(git diff --name-only --diff-filter=U | tr '\n' ' ')
+            echo "conflicts=$CONFLICTS" >> "$GITHUB_OUTPUT"
+            # Ship the conflicted files with markers so an agent can resolve in-PR.
+            git add -A
+            git commit -m "wip: upstream merge with unresolved conflicts"
+          fi
+          git push -u origin "$BRANCH"
+
+      - name: Set up Python
+        if: steps.merge.outputs.behind != '0' && steps.merge.outputs.conflicts == ''
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run HLT test suite
+        if: steps.merge.outputs.behind != '0' && steps.merge.outputs.conflicts == ''
+        id: tests
+        run: |
+          pip install -r requirements.txt pytest >/dev/null 2>&1 || true
+          if python -m pytest tests/test_hlt_extensions.py tests/test_firecrawl_retriever.py -q; then
+            echo "result=pass" >> "$GITHUB_OUTPUT"
+          else
+            echo "result=fail" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open sync PR
+        if: steps.merge.outputs.behind != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -n "${{ steps.merge.outputs.conflicts }}" ]; then
+            STATUS="**Merge conflicts** in: ${{ steps.merge.outputs.conflicts }} — conflict markers are committed on this branch; resolve before merging."
+          elif [ "${{ steps.tests.outputs.result }}" = "pass" ]; then
+            STATUS="Clean merge, HLT test suite **passing**."
+          else
+            STATUS="Clean merge but HLT test suite **failing** — investigate before merging."
+          fi
+
+          gh pr create \
+            --head "${{ steps.merge.outputs.branch }}" \
+            --title "Upstream sync $(date +%Y-%m-%d) (${{ steps.merge.outputs.behind }} commits)" \
+            --body "Weekly sync from assafelovic/gpt-researcher.
+
+          ${STATUS}
+
+          HLT overlay files to double-check after any upstream churn:
+          - backend/server/hlt_extensions.py
+          - gpt_researcher/retrievers/firecrawl/
+          - frontend/nextjs/components/brain/
+          - mcp_server/" || echo "PR may already exist for this branch"
