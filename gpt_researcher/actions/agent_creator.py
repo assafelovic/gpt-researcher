@@ -55,7 +55,16 @@ async def choose_agent(
             **kwargs
         )
 
-        agent_dict = json.loads(response)
+        # Prefer json_repair so fenced / lightly broken LLM JSON succeeds
+        # on the hot path instead of always falling through exception handling.
+        try:
+            agent_dict = json_repair.loads(response) if response is not None else None
+        except Exception:
+            agent_dict = None
+        if not isinstance(agent_dict, dict):
+            agent_dict = json.loads(response)
+        if not isinstance(agent_dict, dict):
+            raise ValueError("agent JSON was not an object")
         return agent_dict["server"], agent_dict["agent_role_prompt"]
 
     except Exception as e:
