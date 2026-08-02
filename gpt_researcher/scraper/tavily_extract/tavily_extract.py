@@ -37,23 +37,41 @@ class TavilyExtract:
 
         try:
             response = self.tavily_client.extract(urls=self.link)
-            if response['failed_results']:
+            if not isinstance(response, dict):
+                return "", [], ""
+            if response.get("failed_results"):
                 return "", [], ""
 
-            # Parse the HTML content of the response to create a BeautifulSoup object for the utility functions
-            response_bs = self.session.get(self.link, timeout=4)
-            soup = BeautifulSoup(
-                response_bs.content, "lxml", from_encoding=response_bs.encoding
-            )
+            results = response.get("results") or []
+            if not isinstance(results, list) or not results:
+                return "", [], ""
+            first = results[0]
+            if not isinstance(first, dict):
+                return "", [], ""
+            content = first.get("raw_content") or ""
 
-            # Since only a single link is provided to tavily_client, the results will contain only one entry.
-            content = response['results'][0]['raw_content']
-
-            # Get relevant images using the utility function
-            image_urls = get_relevant_images(soup, self.link)
-
-            # Extract the title using the utility function
-            title = extract_title(soup)
+            # Image/title enrichment is best-effort. Callers often construct
+            # TavilyExtract(link, session=None); a bare session.get would
+            # TypeError and (with the broad except) previously discarded the
+            # already-extracted Tavily content too. Keep content even when
+            # enrichment is unavailable.
+            image_urls = []
+            title = ""
+            if self.session is not None:
+                try:
+                    response_bs = self.session.get(self.link, timeout=4)
+                    soup = BeautifulSoup(
+                        response_bs.content,
+                        "lxml",
+                        from_encoding=response_bs.encoding,
+                    )
+                    image_urls = get_relevant_images(soup, self.link)
+                    title = extract_title(soup)
+                except Exception as enrich_err:
+                    print(
+                        "Warning: TavilyExtract image/title enrichment failed: "
+                        + str(enrich_err)
+                    )
 
             return content, image_urls, title
 
