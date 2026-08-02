@@ -20,10 +20,7 @@ class SemanticScholarSearch:
         """
         self.query = query
         assert sort in self.VALID_SORT_CRITERIA, "Invalid sort criterion"
-        # Preserve the exact (camelCase) criterion. The Semantic Scholar API
-        # expects ``citationCount`` / ``publicationDate`` verbatim; lowercasing
-        # them produced ``citationcount`` / ``publicationdate``, which the API
-        # rejects or silently ignores.
+        # Keep API sort casing (citationCount / publicationDate); only validate above.
         self.sort = sort
 
     def search(self, max_results: int = 20) -> List[Dict[str, str]]:
@@ -47,28 +44,41 @@ class SemanticScholarSearch:
             print(f"An error occurred while accessing Semantic Scholar API: {e}")
             return []
 
-        payload = response.json()
+        try:
+            payload = response.json()
+        except ValueError as e:
+            print(f"An error occurred while decoding Semantic Scholar JSON: {e}")
+            return []
+
         if not isinstance(payload, dict):
             return []
-        results = payload.get("data") or []
+
+        results = payload.get("data", [])
         if not isinstance(results, list):
             return []
 
         search_result = []
+
         for result in results:
             if not isinstance(result, dict):
                 continue
-            pdf = result.get("openAccessPdf")
-            if not (result.get("isOpenAccess") and isinstance(pdf, dict)):
+            if not result.get("isOpenAccess"):
                 continue
-            href = pdf.get("url") or ""
+            open_access_pdf = result.get("openAccessPdf")
+            # API may return null, a URL string, or an object with url.
+            if isinstance(open_access_pdf, dict):
+                href = open_access_pdf.get("url") or ""
+            elif isinstance(open_access_pdf, str):
+                href = open_access_pdf
+            else:
+                continue
             if not href:
                 continue
             search_result.append(
                 {
-                    "title": result.get("title") or "No Title",
+                    "title": result.get("title", "No Title"),
                     "href": href,
-                    "body": result.get("abstract") or "Abstract not available",
+                    "body": result.get("abstract", "Abstract not available"),
                 }
             )
 
