@@ -6,6 +6,7 @@ contextually relevant images for research reports using AI image generation.
 
 import asyncio
 import json
+import json_repair
 import logging
 import re
 from typing import Any, Dict, List, Optional, Tuple
@@ -435,18 +436,37 @@ Return ONLY the JSON, no additional text."""
             List of image suggestion dictionaries.
         """
         try:
-            # Try to extract JSON from the response
-            json_match = re.search(r'\{[\s\S]*\}', response)
-            if not json_match:
-                logger.warning("No JSON found in analysis response")
+            if not isinstance(response, str) or not response.strip():
+                logger.warning("Empty analysis response")
                 return []
-            
-            data = json.loads(json_match.group())
+
+            # Accept raw JSON, fenced blocks, or lightly broken LLM JSON
+            data = None
+            try:
+                data = json_repair.loads(response)
+            except Exception:
+                json_match = re.search(r'\{[\s\S]*\}', response)
+                if json_match:
+                    try:
+                        data = json_repair.loads(json_match.group())
+                    except Exception:
+                        data = None
+
+            if not isinstance(data, dict):
+                logger.warning("No JSON object found in analysis response")
+                return []
+
             suggestions = data.get("suggestions", [])
             
             # Enrich with section data
             enriched = []
+            if not isinstance(suggestions, list):
+                logger.warning("Analysis JSON missing list suggestions")
+                return []
+
             for s in suggestions:
+                if not isinstance(s, dict):
+                    continue
                 section_num = s.get("section_number", 0) - 1  # Convert to 0-indexed
                 if 0 <= section_num < len(sections):
                     section = sections[section_num]
