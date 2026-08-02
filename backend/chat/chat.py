@@ -11,7 +11,10 @@ from gpt_researcher.memory import Memory
 from gpt_researcher.config.config import Config
 from gpt_researcher.utils.llm import create_chat_completion
 from gpt_researcher.utils.tools import create_chat_completion_with_tools, create_search_tool
-from tavily import TavilyClient
+try:
+    from tavily import TavilyClient
+except ImportError:  # optional dependency for chat web search
+    TavilyClient = None
 from datetime import datetime
 
 # Setup logging
@@ -69,36 +72,62 @@ class ChatAgentWithMemory:
         
         # Initialize Tavily client (optional - only if API key is available)
         tavily_api_key = os.environ.get("TAVILY_API_KEY")
-        if tavily_api_key:
+        if tavily_api_key and TavilyClient is not None:
             self.tavily_client = TavilyClient(api_key=tavily_api_key)
         else:
             self.tavily_client = None
-            logger.warning("TAVILY_API_KEY not set - web search in chat will be disabled")
+            if TavilyClient is None:
+                logger.warning("tavily package not installed - web search in chat will be disabled")
+            else:
+                logger.warning("TAVILY_API_KEY not set - web search in chat will be disabled")
         
         # Process document and create vector store if not provided
-        if not self.vector_store and False:
+        if not self.vector_store and self.report:
             self._setup_vector_store()
+        elif self.vector_store is not None and self.retriever is None:
+            # Allow callers to inject a store; build a retriever with supported kwargs.
+            try:
+                self.retriever = self.vector_store.as_retriever(search_kwargs={"k": 4})
+            except TypeError:
+                self.retriever = self.vector_store.as_retriever()
     
     def _setup_vector_store(self):
         """Setup vector store for document retrieval"""
         # Process document into chunks
         documents = self._process_document(self.report)
+        if not documents:
+            return
         
         # Create unique thread ID
         self.thread_id = str(uuid.uuid4())
         
-        # Setup embeddings and vector store
-        cfg = Config()
-        self.embedding = Memory(
-            cfg.embedding_provider,
-            cfg.embedding_model,
-            **cfg.embedding_kwargs
-        ).get_embeddings()
-        
-        # Create vector store and retriever
-        self.vector_store = InMemoryVectorStore(self.embedding)
-        self.vector_store.add_texts(documents)
-        self.retriever = self.vector_store.as_retriever(k=4)
+        # Setup embeddings and vector store using the agent config_path.
+        # Embedding construction can fail eagerly (e.g. OpenAI embeddings raise
+        # at init when OPENAI_API_KEY is unset), so fall back to no-RAG / full
+        # report mode instead of leaving chat broken for that message.
+        cfg = self.config
+        try:
+            self.embedding = Memory(
+                cfg.embedding_provider,
+                cfg.embedding_model,
+                **cfg.embedding_kwargs
+            ).get_embeddings()
+
+            # Create vector store and retriever
+            self.vector_store = InMemoryVectorStore(self.embedding)
+            self.vector_store.add_texts(documents)
+            try:
+                self.retriever = self.vector_store.as_retriever(search_kwargs={"k": 4})
+            except TypeError:
+                # Older langchain APIs accepted k= directly; prefer kwargs form.
+                self.retriever = self.vector_store.as_retriever(k=4)
+        except Exception as exc:  # noqa: BLE001 - embeddings must not break chat
+            logger.warning(
+                f"Vector store setup failed, using full report (no RAG): {exc}"
+            )
+            self.embedding = None
+            self.vector_store = None
+            self.retriever = None
         
     def _process_document(self, report):
         """Split Report into Chunks"""
@@ -184,6 +213,31 @@ class ChatAgentWithMemory:
         return response, processed_metadata
 
 
+
+    def _retrieve_context(self, user_message: str) -> str:
+        """Return top retrieved report chunks for the latest user message.
+
+        Falls back to the full report when retrieval is unavailable so chat stays
+        usable offline / without embeddings.
+        """
+        if not self.retriever or not user_message:
+            return self.report or ""
+        try:
+            docs = self.retriever.invoke(user_message)
+        except Exception as exc:  # noqa: BLE001 - retrieval must not break chat
+            logger.warning(f"Report retrieval failed, using full report: {exc}")
+            return self.report or ""
+        chunks = []
+        for doc in docs or []:
+            content = getattr(doc, "page_content", None)
+            if content is None and isinstance(doc, dict):
+                content = doc.get("page_content") or doc.get("content")
+            if content:
+                chunks.append(str(content))
+        if not chunks:
+            return self.report or ""
+        return "\n\n".join(chunks)
+
     async def chat(self, messages, websocket=None):
         """Chat with configured LLM provider (supports OpenAI, Google Gemini, Anthropic, etc.)
         
@@ -196,6 +250,14 @@ class ChatAgentWithMemory:
         """
         try:
             
+            # Prefer retrieved report slices over stuffing the entire report each turn
+            last_user = ""
+            for msg in reversed(messages or []):
+                if isinstance(msg, dict) and msg.get("role") == "user" and msg.get("content"):
+                    last_user = str(msg.get("content"))
+                    break
+            report_context = self._retrieve_context(last_user)
+
             # Format system prompt with the report context
             system_prompt = f"""
             You are GPT Researcher, an autonomous research agent created by an open source community at https://github.com/assafelovic/gpt-researcher, homepage: https://gptr.dev. 
@@ -213,7 +275,7 @@ class ChatAgentWithMemory:
             
             Assume the current time is: {datetime.now()}.
             
-            Report: {self.report}
+            Report: {report_context}
             
             """
             
@@ -228,7 +290,7 @@ class ChatAgentWithMemory:
             
             # Add user/assistant message history - filter out non-essential fields
             for msg in messages:
-                if 'role' in msg and 'content' in msg:
+                if isinstance(msg, dict) and 'role' in msg and 'content' in msg:
                     formatted_messages.append({
                         "role": msg["role"],
                         "content": msg["content"]
