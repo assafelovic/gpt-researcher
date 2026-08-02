@@ -72,6 +72,16 @@ def estimate_llm_cost(input_content: str, output_content: str) -> float:
     Returns:
         The estimated cost in USD.
     """
+    # Callbacks and stream paths may pass None before content is available.
+    # tiktoken.encode(None) raises TypeError and abort sq col of the caller.
+    if input_content is None:
+        input_content = ""
+    if output_content is None:
+        output_content = ""
+    if not isinstance(input_content, str):
+        input_content = str(input_content)
+    if not isinstance(output_content, str):
+        output_content = str(output_content)
     encoding = tiktoken.get_encoding(ENCODING_MODEL)
     input_tokens = encoding.encode(input_content)
     output_tokens = encoding.encode(output_content)
