@@ -42,8 +42,6 @@ class ResearchConductor:
         self.json_handler = get_json_handler()
         # Add cache for MCP results to avoid redundant calls
         self._mcp_results_cache = None
-        # Guards cache population when research passes run concurrently
-        self._mcp_cache_lock = asyncio.Lock()
         # Track MCP query count for balanced mode
         self._mcp_query_count = 0
 
@@ -61,13 +59,7 @@ class ResearchConductor:
             self.researcher.websocket,
         )
 
-        search_results = await get_search_results(
-            query,
-            self.researcher.retrievers[0],
-            query_domains,
-            researcher=self.researcher,
-            max_results=self.researcher.cfg.max_search_results_per_query,
-        )
+        search_results = await get_search_results(query, self.researcher.retrievers[0], query_domains, researcher=self.researcher)
         self.logger.info(f"Initial search results obtained: {len(search_results)} results")
 
         await stream_output(
@@ -105,10 +97,8 @@ class ResearchConductor:
         retriever_names = [r.__name__ for r in self.researcher.retrievers]
         self.logger.info(f"Active retrievers: {retriever_names}")
         
-        # Note: visited_urls is deliberately NOT cleared here. It may be
-        # shared with a parent researcher (e.g. detailed reports pass their
-        # accumulated URLs into each subtopic researcher) so that already
-        # scraped URLs are not fetched again.
+        # Reset visited_urls and source_urls at the start of each research task
+        self.researcher.visited_urls.clear()
         research_data = []
 
         if self.researcher.verbose:
@@ -145,7 +135,7 @@ class ResearchConductor:
         if self.researcher.source_urls:
             self.logger.info("Using provided source URLs")
             research_data = await self._get_context_by_urls(self.researcher.source_urls)
-            if research_data and len(research_data) == 0 and self.researcher.verbose:
+            if not research_data and self.researcher.verbose:
                 await stream_output(
                     "logs",
                     "answering_from_memory",
@@ -175,12 +165,8 @@ class ResearchConductor:
                 document_data = await DocumentLoader(self.researcher.cfg.doc_path).load()
             if self.researcher.vector_store:
                 self.researcher.vector_store.load(document_data)
-            # The local-docs pass and the web pass are independent, so run
-            # them concurrently; visited_urls still dedupes across both.
-            docs_context, web_context = await asyncio.gather(
-                self._get_context_by_web_search(self.researcher.query, document_data, self.researcher.query_domains),
-                self._get_context_by_web_search(self.researcher.query, [], self.researcher.query_domains),
-            )
+            docs_context = await self._get_context_by_web_search(self.researcher.query, document_data, self.researcher.query_domains)
+            web_context = await self._get_context_by_web_search(self.researcher.query, [], self.researcher.query_domains)
             research_data = self.researcher.prompt_family.join_local_web_documents(docs_context, web_context)
         elif self.researcher.report_source == ReportSource.Azure.value:
             from ..document.azure_document_loader import AzureDocumentLoader
@@ -310,52 +296,49 @@ class ResearchConductor:
         # Get MCP strategy configuration
         mcp_strategy = self._get_mcp_strategy()
         
-        # Lock so concurrent research passes (e.g. hybrid mode) populate the
-        # MCP cache once instead of racing to run the same MCP research twice.
-        async with self._mcp_cache_lock:
-            if mcp_retrievers and self._mcp_results_cache is None:
-                if mcp_strategy == "disabled":
-                    # MCP disabled - skip MCP research entirely
-                    self.logger.info("MCP disabled by strategy, skipping MCP research")
-                    if self.researcher.verbose:
-                        await stream_output(
-                            "logs",
-                            "mcp_disabled",
-                            f"⚡ MCP research disabled by configuration",
-                            self.researcher.websocket,
-                        )
-                elif mcp_strategy == "fast":
-                    # Fast: Run MCP once with original query
-                    self.logger.info("MCP fast strategy: Running once with original query")
-                    if self.researcher.verbose:
-                        await stream_output(
-                            "logs",
-                            "mcp_optimization",
-                            f"🚀 MCP Fast: Running once for main query (performance mode)",
-                            self.researcher.websocket,
-                        )
-
-                    # Execute MCP research once with the original query
-                    mcp_context = await self._execute_mcp_research_for_queries([query], mcp_retrievers)
-                    self._mcp_results_cache = mcp_context
-                    self.logger.info(f"MCP results cached: {len(mcp_context)} total context entries")
-                elif mcp_strategy == "deep":
-                    # Deep: Will run MCP for all queries (original behavior) - defer to per-query execution
-                    self.logger.info("MCP deep strategy: Will run for all queries")
-                    if self.researcher.verbose:
-                        await stream_output(
-                            "logs",
-                            "mcp_comprehensive",
-                            f"🔍 MCP Deep: Will run for each sub-query (thorough mode)",
-                            self.researcher.websocket,
-                        )
-                    # Don't cache - let each sub-query run MCP individually
-                else:
-                    # Unknown strategy - default to fast
-                    self.logger.warning(f"Unknown MCP strategy '{mcp_strategy}', defaulting to fast")
-                    mcp_context = await self._execute_mcp_research_for_queries([query], mcp_retrievers)
-                    self._mcp_results_cache = mcp_context
-                    self.logger.info(f"MCP results cached: {len(mcp_context)} total context entries")
+        if mcp_retrievers and self._mcp_results_cache is None:
+            if mcp_strategy == "disabled":
+                # MCP disabled - skip MCP research entirely
+                self.logger.info("MCP disabled by strategy, skipping MCP research")
+                if self.researcher.verbose:
+                    await stream_output(
+                        "logs",
+                        "mcp_disabled",
+                        f"⚡ MCP research disabled by configuration",
+                        self.researcher.websocket,
+                    )
+            elif mcp_strategy == "fast":
+                # Fast: Run MCP once with original query
+                self.logger.info("MCP fast strategy: Running once with original query")
+                if self.researcher.verbose:
+                    await stream_output(
+                        "logs",
+                        "mcp_optimization",
+                        f"🚀 MCP Fast: Running once for main query (performance mode)",
+                        self.researcher.websocket,
+                    )
+                
+                # Execute MCP research once with the original query
+                mcp_context = await self._execute_mcp_research_for_queries([query], mcp_retrievers)
+                self._mcp_results_cache = mcp_context
+                self.logger.info(f"MCP results cached: {len(mcp_context)} total context entries")
+            elif mcp_strategy == "deep":
+                # Deep: Will run MCP for all queries (original behavior) - defer to per-query execution
+                self.logger.info("MCP deep strategy: Will run for all queries")
+                if self.researcher.verbose:
+                    await stream_output(
+                        "logs",
+                        "mcp_comprehensive",
+                        f"🔍 MCP Deep: Will run for each sub-query (thorough mode)",
+                        self.researcher.websocket,
+                    )
+                # Don't cache - let each sub-query run MCP individually
+            else:
+                # Unknown strategy - default to fast
+                self.logger.warning(f"Unknown MCP strategy '{mcp_strategy}', defaulting to fast")
+                mcp_context = await self._execute_mcp_research_for_queries([query], mcp_retrievers)
+                self._mcp_results_cache = mcp_context
+                self.logger.info(f"MCP results cached: {len(mcp_context)} total context entries")
 
         # Generate Sub-Queries including original query
         sub_queries = await self.plan_research(query, query_domains)
@@ -477,34 +460,6 @@ class ResearchConductor:
         
         return all_mcp_context
 
-    def _tavily_mcp_redundant_with_direct(self, mcp_retrievers, non_mcp_retrievers) -> bool:
-        """True when MCP would only re-query Tavily while direct Tavily is active.
-
-        The frontend Tavily Web Search MCP preset hits the same API as
-        `TavilySearch` and adds extra LLM tool-selection cost for no new data
-        when both run together (#1875).
-        """
-        if not mcp_retrievers or not non_mcp_retrievers:
-            return False
-        has_direct_tavily = any(
-            getattr(r, "__name__", "").lower() == "tavilysearch" for r in non_mcp_retrievers
-        )
-        if not has_direct_tavily:
-            return False
-        configs = getattr(self.researcher, "mcp_configs", None) or []
-        if not configs:
-            return False
-        # If every configured MCP server is a Tavily MCP package, treat as redundant.
-        def _is_tavily_mcp(cfg: dict) -> bool:
-            name = str(cfg.get("name", "")).lower()
-            args = " ".join(str(a) for a in (cfg.get("args") or [])).lower()
-            command = str(cfg.get("command", "")).lower()
-            blob = f"{name} {args} {command}"
-            return "tavily" in blob
-
-        return all(isinstance(c, dict) and _is_tavily_mcp(c) for c in configs)
-
-
     async def _process_sub_query(self, sub_query: str, scraped_data: list = [], query_domains: list = []):
         """Takes in a sub query and scrapes urls based on it and gathers context."""
         if self.json_handler:
@@ -525,20 +480,6 @@ class ResearchConductor:
             # Identify MCP retrievers
             mcp_retrievers = [r for r in self.researcher.retrievers if "mcpretriever" in r.__name__.lower()]
             non_mcp_retrievers = [r for r in self.researcher.retrievers if "mcpretriever" not in r.__name__.lower()]
-
-            # Avoid dual Tavily path (direct retriever + tavily-mcp) under default RETRIEVER=tavily.
-            if self._tavily_mcp_redundant_with_direct(mcp_retrievers, non_mcp_retrievers):
-                self.logger.warning(
-                    "Skipping LLM MCP Tavily path because TavilySearch is already configured as a direct retriever; set RETRIEVER without tavily or use non-Tavily MCP servers to keep MCP."
-                )
-                if self.researcher.verbose:
-                    await stream_output(
-                        "logs",
-                        "mcp_tavily_deduped",
-                        "⚠️ Skipping Tavily MCP (redundant with direct Tavily retriever) to avoid double API cost",
-                        self.researcher.websocket,
-                    )
-                mcp_retrievers = []
             
             # Initialize context components
             mcp_context = []
@@ -849,10 +790,9 @@ class ResearchConductor:
                 # Separate results that already have content from those needing scraping
                 for result in search_results:
                     url = result.get("href") or result.get("url")
-                    raw_content = result.get("raw_content")
+                    raw_content = result.get("raw_content") or result.get("body")
                     if url and raw_content and len(raw_content) > 100:
-                        # Only raw_content signals that a retriever already fetched the full page.
-                        # body is snippet-sized text for most web retrievers and still needs scraping.
+                        # Retriever already fetched full content (e.g. PubMed Central)
                         prefetched_content.append({
                             "url": url,
                             "raw_content": raw_content,
