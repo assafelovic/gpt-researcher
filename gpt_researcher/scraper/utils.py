@@ -18,6 +18,8 @@ def get_relevant_images(soup: BeautifulSoup, url: str) -> list:
     image_urls = []
     
     try:
+        if soup is None:
+            return []
         # Find all img tags with src attribute
         all_images = soup.find_all('img', src=True)
         
@@ -26,7 +28,12 @@ def get_relevant_images(soup: BeautifulSoup, url: str) -> list:
             if img_src.startswith(('http://', 'https://')):
                 score = 0
                 # Check for relevant classes
-                if any(cls in img.get('class', []) for cls in ['header', 'featured', 'hero', 'thumbnail', 'main', 'content']):
+                classes = img.get("class") or []
+                if isinstance(classes, str):
+                    classes = classes.split()
+                elif not isinstance(classes, (list, tuple, set)):
+                    classes = []
+                if any(cls in classes for cls in ['header', 'featured', 'hero', 'thumbnail', 'main', 'content']):
                     score = 4  # Higher score
                 # Check for size attributes
                 elif img.get('width') and img.get('height'):
