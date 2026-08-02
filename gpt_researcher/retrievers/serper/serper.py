@@ -114,6 +114,10 @@ class SerperSearch():
             return []
         if search_results is None:
             return []
+        # Error HTML/text sometimes still parses as a JSON array/string; those
+        # payloads have no ``.get`` and must not crash the research loop.
+        if not isinstance(search_results, dict):
+            return []
 
         results = search_results.get("organic") or []
         if not isinstance(results, list):
