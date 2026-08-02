@@ -4,7 +4,6 @@
 import os
 import requests
 import json
-from urllib.parse import urlencode
 
 
 class GoogleSearch:
@@ -65,50 +64,46 @@ class GoogleSearch:
 
         print("Searching with query {0}...".format(search_query))
 
-        # URL-encode every parameter. Interpolating the raw query broke any
-        # search containing reserved characters (e.g. "&" in "AT&T" added a
-        # spurious param, "#" truncated the rest of the query).
-        query_string = urlencode(
-            {
-                "key": self.api_key,
-                "cx": self.cx_key,
-                "q": search_query,
-                "start": 1,
-            }
-        )
-        url = f"https://www.googleapis.com/customsearch/v1?{query_string}"
+        url = f"https://www.googleapis.com/customsearch/v1?key={self.api_key}&cx={self.cx_key}&q={search_query}&start=1"
         resp = requests.get(url)
 
         if resp.status_code < 200 or resp.status_code >= 300:
             print("Google search: unexpected response status: ", resp.status_code)
 
         if resp is None:
-            return []
+            return
         try:
             search_results = json.loads(resp.text)
         except Exception:
-            return []
+            return
+        if search_results is None:
+            return
+
         if not isinstance(search_results, dict):
             return []
 
-        results = search_results.get("items", []) or []
-        search_response = []
+        results = search_results.get("items", [])
+        if not isinstance(results, list):
+            return []
 
-        # Normalizing results to match the format of the other search APIs.
-        # Use .get so a missing title/snippet cannot drop a valid link; skip
-        # non-dict rows and empty links outright.
+        search_results = []
+
+        # Normalizing results to match the format of the other search APIs
         for result in results:
             if not isinstance(result, dict):
                 continue
             link = result.get("link") or ""
-            if not link or "youtube.com" in link:
+            if not isinstance(link, str) or not link:
                 continue
-            search_response.append(
-                {
-                    "title": result.get("title") or "",
-                    "href": link,
-                    "body": result.get("snippet") or "",
-                }
-            )
+            # skip youtube results
+            if "youtube.com" in link:
+                continue
+            title = result.get("title") or ""
+            body = result.get("snippet") or result.get("htmlSnippet") or ""
+            search_results.append({
+                "title": title if isinstance(title, str) else str(title),
+                "href": link,
+                "body": body if isinstance(body, str) else str(body),
+            })
 
-        return search_response[:max_results]
+        return search_results[:max_results]
