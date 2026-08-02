@@ -24,8 +24,27 @@ class VectorStoreWrapper:
         self.vector_store.add_documents(splitted_documents)
     
     def _create_langchain_documents(self, data: List[Dict[str, str]]) -> List[Document]:
-        """Convert GPT Researcher Document to Langchain Document"""
-        return [Document(page_content=item["raw_content"], metadata={"source": item["url"]}) for item in data]
+        """Convert GPT Researcher Document to Langchain Document.
+
+        Skip non-dict rows and entries without usable ``raw_content``. Missing
+        ``url`` still yields a document with empty source rather than KeyError.
+        """
+        docs: List[Document] = []
+        if not data:
+            return docs
+        for item in data:
+            if not isinstance(item, dict):
+                continue
+            content = item.get("raw_content")
+            if content is None:
+                continue
+            docs.append(
+                Document(
+                    page_content=str(content),
+                    metadata={"source": item.get("url") or ""},
+                )
+            )
+        return docs
 
     def _split_documents(self, documents: List[Document], chunk_size: int = 1000, chunk_overlap: int = 200) -> List[Document]:
         """
