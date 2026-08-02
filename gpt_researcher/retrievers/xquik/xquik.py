@@ -68,30 +68,46 @@ class XquikSearch:
         with urllib.request.urlopen(req, timeout=15) as resp:
             data = json.loads(resp.read().decode("utf-8"))
 
-        # Use `or` fallbacks so an explicit JSON null ("tweets": null,
-        # "author": null, "text": null) does not slip a None past `.get()`'s
-        # default and crash slicing / attribute access below — which the
-        # broad except in search() would swallow, silently dropping every
-        # result. Mirrors the sibling GetXAPI retriever.
-        tweets = data.get("tweets") or []
+        if not isinstance(data, dict):
+            return []
+
+        tweets = data.get("tweets") or data.get("data") or []
+        if not isinstance(tweets, list):
+            return []
+
         search_results = []
 
         for tweet in tweets[:max_results]:
+            if not isinstance(tweet, dict):
+                continue
             author = tweet.get("author") or {}
-            username = author.get("username") or "unknown"
-            text = tweet.get("text") or ""
-            tweet_id = tweet.get("id") or ""
+            if not isinstance(author, dict):
+                author = {}
+            username = (
+                author.get("username")
+                or author.get("userName")
+                or author.get("screen_name")
+                or tweet.get("username")
+                or "unknown"
+            )
+            text = tweet.get("text") or tweet.get("full_text") or ""
+            if not isinstance(text, str):
+                text = str(text) if text is not None else ""
+            tweet_id = tweet.get("id") or tweet.get("id_str") or ""
+            if not tweet_id:
+                continue
 
-            likes = tweet.get("likeCount", 0)
-            retweets = tweet.get("retweetCount", 0)
-            views = tweet.get("viewCount", 0)
+            likes = tweet.get("likeCount") or tweet.get("favorite_count") or 0
+            retweets = tweet.get("retweetCount") or tweet.get("retweet_count") or 0
+            views = tweet.get("viewCount") or tweet.get("view_count") or 0
 
             engagement = f"{likes} likes, {retweets} RTs"
             if views:
                 engagement += f", {views} views"
 
+            title_body = text[:120] + ("..." if len(text) > 120 else "")
             search_results.append({
-                "title": f"@{username}: {text[:120]}{'...' if len(text) > 120 else ''}",
+                "title": f"@{username}: {title_body}",
                 "href": f"https://x.com/{username}/status/{tweet_id}",
                 "body": f"{text}\n\n[{engagement}]",
             })
