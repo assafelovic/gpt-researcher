@@ -1,8 +1,10 @@
 import importlib.util
 import sys
+import tempfile
 import types
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 
 class _FakeBlobServiceClient:
@@ -79,8 +81,37 @@ class TestAzureDocumentLoader(unittest.IsolatedAsyncioTestCase):
         loader = AzureDocumentLoader.__new__(AzureDocumentLoader)
         loader.container = _Container({"../escape.txt": b"nope"})
 
-        with self.assertRaises(ValueError):
-            await loader.load()
+        with tempfile.TemporaryDirectory() as parent:
+            temp_dir = Path(parent) / "azure-download"
+            temp_dir.mkdir()
+
+            with patch.object(
+                azure_document_loader.tempfile,
+                "mkdtemp",
+                return_value=str(temp_dir),
+            ):
+                with self.assertRaises(ValueError):
+                    await loader.load()
+
+            self.assertFalse(temp_dir.exists())
+
+    async def test_load_removes_unused_directory_for_empty_container(self):
+        loader = AzureDocumentLoader.__new__(AzureDocumentLoader)
+        loader.container = _Container({})
+
+        with tempfile.TemporaryDirectory() as parent:
+            temp_dir = Path(parent) / "azure-download"
+            temp_dir.mkdir()
+
+            with patch.object(
+                azure_document_loader.tempfile,
+                "mkdtemp",
+                return_value=str(temp_dir),
+            ):
+                file_paths = await loader.load()
+
+            self.assertEqual(file_paths, [])
+            self.assertFalse(temp_dir.exists())
 
 
 if __name__ == "__main__":
