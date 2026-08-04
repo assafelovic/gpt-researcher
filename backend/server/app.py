@@ -16,12 +16,13 @@ from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse, HTMLResponse
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 
 # Add the parent directory to sys.path to make sure we can import from server
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
 
 from server.websocket_manager import WebSocketManager
+from gpt_researcher.utils.language import normalize_report_language
 from server.server_utils import (
     get_config_dict, sanitize_filename,
     update_environment_variables, handle_file_upload, handle_file_deletion,
@@ -59,6 +60,12 @@ class ResearchRequest(BaseModel):
     repo_name: str
     branch_name: str
     generate_in_background: bool = True
+    language: str | None = None
+
+    @field_validator("language", mode="before")
+    @classmethod
+    def normalize_language(cls, value):
+        return normalize_report_language(value)
 
 
 class ChatRequest(BaseModel):
@@ -297,7 +304,8 @@ async def write_report(research_request: ResearchRequest, research_id: str = Non
         headers=research_request.headers,
         query_domains=[],
         config_path="",
-        return_researcher=True
+        return_researcher=True,
+        language=research_request.language,
     )
 
     docx_path = await write_md_to_word(report_information[0], research_id)

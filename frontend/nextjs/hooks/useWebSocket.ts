@@ -72,7 +72,7 @@ export const useWebSocket = (
         
         const domainFilters = JSON.parse(localStorage.getItem('domainFilters') || '[]');
         const domains = domainFilters ? domainFilters.map((domain: any) => domain.value) : [];
-        const { report_type, report_source, tone, mcp_enabled, mcp_configs, mcp_strategy } = chatBoxSettings;
+        const { report_type, report_source, tone, language, mcp_enabled, mcp_configs, mcp_strategy } = chatBoxSettings;
         
         // Start a new research
         try {
@@ -82,6 +82,7 @@ export const useWebSocket = (
             report_type, 
             report_source, 
             tone,
+            language,
             query_domains: domains,
             mcp_enabled: mcp_enabled || false,
             mcp_strategy: mcp_strategy || "fast",

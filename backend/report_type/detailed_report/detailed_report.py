@@ -25,6 +25,7 @@ class DetailedReport:
         mcp_configs=None,
         mcp_strategy=None,
         max_search_results=None,
+        language=None,
     ):
         self.query = query
         self.report_type = report_type
@@ -56,6 +57,7 @@ class DetailedReport:
             "websocket": self.websocket,
             "headers": self.headers,
             "complement_source_urls": self.complement_source_urls,
+            "language": language,
         }
 
         # Add MCP parameters if provided
@@ -154,7 +156,8 @@ class DetailedReport:
             source_urls=self.source_urls,
             # Propagate MCP configuration so follow-up researchers can use MCP
             mcp_configs=self.gpt_researcher.mcp_configs,
-            mcp_strategy=self.gpt_researcher.mcp_strategy
+            mcp_strategy=self.gpt_researcher.mcp_strategy,
+            language=self.gpt_researcher.cfg.language,
         )
 
         # Propagate max_search_results override to subtopic researcher

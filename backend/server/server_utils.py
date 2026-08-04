@@ -9,6 +9,7 @@ from typing import Awaitable, Dict, List, Any
 from fastapi.responses import JSONResponse, FileResponse
 from gpt_researcher.document.document import DocumentLoader
 from gpt_researcher import GPTResearcher
+from gpt_researcher.utils.language import normalize_report_language
 from utils import write_md_to_pdf, write_md_to_word, write_text_to_md
 from pathlib import Path
 from datetime import datetime
@@ -138,6 +139,7 @@ async def handle_start_command(websocket, data: str, manager):
         mcp_strategy,
         mcp_configs,
         max_search_results,
+        language,
     ) = extract_command_data(json_data)
 
     if not task or not report_type:
@@ -157,19 +159,20 @@ async def handle_start_command(websocket, data: str, manager):
     sanitized_filename = sanitize_filename(f"task_{int(time.time())}_{task}")
 
     report = await manager.start_streaming(
-        task,
-        report_type,
-        report_source,
-        source_urls,
-        document_urls,
-        tone,
-        websocket,
-        headers,
-        query_domains,
-        mcp_enabled,
-        mcp_strategy,
-        mcp_configs,
-        max_search_results,
+        task=task,
+        report_type=report_type,
+        report_source=report_source,
+        source_urls=source_urls,
+        document_urls=document_urls,
+        tone=tone,
+        websocket=websocket,
+        headers=headers,
+        query_domains=query_domains,
+        mcp_enabled=mcp_enabled,
+        mcp_strategy=mcp_strategy,
+        mcp_configs=mcp_configs,
+        max_search_results=max_search_results,
+        language=language,
     )
     report = str(report)
     file_paths = await generate_report_files(report, sanitized_filename)
@@ -409,4 +412,5 @@ def extract_command_data(json_data: Dict) -> tuple:
         json_data.get("mcp_strategy", "fast"),
         json_data.get("mcp_configs", []),
         json_data.get("max_search_results"),
+        normalize_report_language(json_data.get("language")),
     )

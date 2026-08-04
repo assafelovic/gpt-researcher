@@ -104,10 +104,12 @@ class WebSocketManagerTests(unittest.IsolatedAsyncioTestCase):
                 document_urls=[],
                 tone="Objective",
                 websocket=object(),
+                language="Chinese (Simplified)",
             )
 
         self.assertEqual(report, "stub-report")
         self.assertEqual(call_kwargs["config_path"], "custom-config")
+        self.assertEqual(call_kwargs["language"], "Chinese (Simplified)")
 
 
 if __name__ == "__main__":

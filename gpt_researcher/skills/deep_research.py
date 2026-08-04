@@ -431,7 +431,8 @@ Return ONLY a JSON object using this exact schema:
                         visited_urls=self.visited_urls,
                         # Propagate MCP configuration to nested researchers
                         mcp_configs=self.researcher.mcp_configs,
-                        mcp_strategy=self.researcher.mcp_strategy
+                        mcp_strategy=self.researcher.mcp_strategy,
+                        language=self.researcher.cfg.language,
                     )
 
                     # Conduct research

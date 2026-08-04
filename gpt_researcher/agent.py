@@ -29,6 +29,7 @@ from .skills.image_generator import ImageGenerator
 from .skills.researcher import ResearchConductor
 from .skills.writer import ReportGenerator
 from .utils.enum import ReportSource, ReportType, Tone
+from .utils.language import normalize_report_language
 from .utils.llm import create_chat_completion
 from .vector_store import VectorStoreWrapper
 
@@ -76,6 +77,7 @@ class GPTResearcher:
         max_subtopics: int = 5,
         log_handler=None,
         prompt_family: str | None = None,
+        language: str | None = None,
         mcp_configs: list[dict] | None = None,
         mcp_max_iterations: int | None = None,
         mcp_strategy: str | None = None,
@@ -110,6 +112,7 @@ class GPTResearcher:
             max_subtopics (int): Maximum number of subtopics to generate.
             log_handler: Handler for logging events.
             prompt_family: Family of prompts to use.
+            language (str, optional): Task-level report language.
             mcp_configs (list[dict], optional): List of MCP server configurations.
                 Each dictionary can contain:
                 - name (str): Name of the MCP server
@@ -138,6 +141,9 @@ class GPTResearcher:
         self.query = query
         self.report_type = report_type
         self.cfg = Config(config_path)
+        task_language = normalize_report_language(language)
+        if task_language:
+            self.cfg.language = task_language
         self.cfg.set_verbose(verbose)
         self.report_source = report_source if report_source else getattr(self.cfg, 'report_source', None)
         self.report_format = report_format

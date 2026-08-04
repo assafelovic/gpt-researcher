@@ -45,6 +45,7 @@ export default function ResearchPage({ params }: { params: { id: string } }) {
       mcp_enabled: false,
       mcp_configs: [],
       mcp_strategy: "fast",
+      language: "Chinese (Simplified)" as const,
     };
 
     // Try to load all settings from localStorage
@@ -591,4 +592,4 @@ export default function ResearchPage({ params }: { params: { id: string } }) {
       </div>
     )
   });
-} 
+}

@@ -38,6 +38,8 @@ export interface MCPConfig {
   env: Record<string, string>;
 }
 
+export type ReportLanguage = "Chinese (Simplified)" | "English";
+
 export interface ChatBoxSettings {
   report_type: string;
   report_source: string;
@@ -48,6 +50,7 @@ export interface ChatBoxSettings {
   mcp_enabled: boolean;
   mcp_configs: MCPConfig[];
   mcp_strategy?: string;
+  language: ReportLanguage;
 }
 
 export interface Domain {
@@ -68,4 +71,4 @@ export interface ResearchHistoryItem {
   timestamp: number;
   orderedData: Data[];
   chatMessages?: ChatMessage[];
-} 
+}

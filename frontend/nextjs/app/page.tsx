@@ -45,6 +45,7 @@ export default function Home() {
       mcp_enabled: false,
       mcp_configs: [],
       mcp_strategy: "fast",
+      language: "Chinese (Simplified)" as const,
     };
 
     // Try to load all settings from localStorage

@@ -1,7 +1,7 @@
 import React, { useRef, useState } from "react";
 import { Toaster } from "react-hot-toast";
 import Image from "next/image";
-import { ChatBoxSettings } from "@/types/data";
+import { ChatBoxSettings, ReportLanguage } from "@/types/data";
 import { useResearchHistoryContext } from "@/hooks/ResearchHistoryContext";
 import { formatDistanceToNow } from "date-fns";
 
@@ -251,7 +251,22 @@ export default function MobileLayout({
                   <option value="scholar">Scholar</option>
                 </select>
               </div>
-              
+
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">报告语言</label>
+                <select
+                  className="w-full bg-gray-900 border border-gray-700 rounded-md py-1.5 px-2 text-sm text-gray-300 focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
+                  value={chatBoxSettings.language}
+                  onChange={(e) => setChatBoxSettings({
+                    ...chatBoxSettings,
+                    language: e.target.value as ReportLanguage,
+                  })}
+                >
+                  <option value="Chinese (Simplified)">中文（简体）</option>
+                  <option value="English">English</option>
+                </select>
+              </div>
+
               <div>
                 <label className="block text-xs text-gray-400 mb-1">Research Tone</label>
                 <select 
@@ -398,4 +413,4 @@ export default function MobileLayout({
       `}</style>
     </main>
   );
-} 
+}

@@ -3,6 +3,7 @@ import FileUpload from "../Settings/FileUpload";
 import ToneSelector from "../Settings/ToneSelector";
 import MCPSelector from "../Settings/MCPSelector";
 import LayoutSelector from "../Settings/LayoutSelector";
+import LanguageSelector from "../Settings/LanguageSelector";
 import DomainFilter from "./DomainFilter";
 import { useAnalytics } from "../../hooks/useAnalytics";
 import { ChatBoxSettings, Domain, MCPConfig } from '@/types/data';
@@ -28,7 +29,7 @@ export default function ResearchForm({
   const [newDomain, setNewDomain] = useState('');
 
   // Destructure necessary fields from chatBoxSettings
-  let { report_type, report_source, tone, layoutType } = chatBoxSettings;
+  let { report_type, report_source, tone, layoutType, language } = chatBoxSettings;
 
   const [domains, setDomains] = useState<Domain[]>(() => {
     if (typeof window !== 'undefined') {
@@ -152,7 +153,12 @@ export default function ResearchForm({
       {report_source === "local" || report_source === "hybrid" ? (
         <FileUpload />
       ) : null}
-      
+
+      <LanguageSelector
+        language={language}
+        onLanguageChange={onFormChange}
+      />
+
       <ToneSelector tone={tone} onToneChange={onToneChange} />
 
       <MCPSelector 
