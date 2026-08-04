@@ -36,7 +36,8 @@ class OpenAlexSearch:
         :param sort: Sort criterion. One of VALID_SORT_CRITERIA.
         """
         self.query = query
-        assert sort in self.VALID_SORT_CRITERIA, f"Invalid sort criterion: {sort}"
+        if sort not in self.VALID_SORT_CRITERIA:
+            raise ValueError(f"Invalid sort criterion: {sort}")
         self.sort = sort
         self.email: Optional[str] = os.environ.get("OPENALEX_EMAIL")
         self.api_key: Optional[str] = os.environ.get("OPENALEX_API_KEY")
