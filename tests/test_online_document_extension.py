@@ -20,5 +20,15 @@ def test_get_extension_strips_query_string():
     assert OnlineDocumentLoader._get_extension("https://x.com/a.pdf") == ".pdf"
 
 
+def test_get_extension_strips_url_fragment():
+    assert OnlineDocumentLoader._get_extension("https://x.com/report.pdf#page=2") == ".pdf"
+    assert (
+        OnlineDocumentLoader._get_extension(
+            "https://x.com/report.PDF?sig=abc#page=2"
+        )
+        == ".pdf"
+    )
+
+
 def test_get_extension_no_extension():
     assert OnlineDocumentLoader._get_extension("https://x.com/page") == ""
