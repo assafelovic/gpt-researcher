@@ -276,7 +276,7 @@ async def main(args):
             query=args.query,
             query_domains=query_domains,
             report_type="research_report",
-            report_source="web_search",
+            report_source=args.report_source,
         )
 
         report = await detailed_report.run()
