@@ -1,6 +1,8 @@
-from azure.storage.blob import BlobServiceClient
+import shutil
 import tempfile
 from pathlib import Path, PurePosixPath
+
+from azure.storage.blob import BlobServiceClient
 
 
 class AzureDocumentLoader:
@@ -13,14 +15,21 @@ class AzureDocumentLoader:
         temp_dir = Path(tempfile.mkdtemp()).resolve()
         blobs = self.container.list_blobs()
         file_paths = []
-        for blob in blobs:
-            blob_client = self.container.get_blob_client(blob.name)
-            local_path = self._get_blob_path(temp_dir, blob.name)
-            local_path.parent.mkdir(parents=True, exist_ok=True)
-            with open(local_path, "wb") as f:
-                blob_data = blob_client.download_blob()
-                f.write(blob_data.readall())
-            file_paths.append(str(local_path))
+        try:
+            for blob in blobs:
+                blob_client = self.container.get_blob_client(blob.name)
+                local_path = self._get_blob_path(temp_dir, blob.name)
+                local_path.parent.mkdir(parents=True, exist_ok=True)
+                with open(local_path, "wb") as f:
+                    blob_data = blob_client.download_blob()
+                    f.write(blob_data.readall())
+                file_paths.append(str(local_path))
+        except BaseException:
+            shutil.rmtree(temp_dir, ignore_errors=True)
+            raise
+
+        if not file_paths:
+            shutil.rmtree(temp_dir, ignore_errors=True)
         return file_paths  # Pass to existing DocumentLoader
 
     @staticmethod
