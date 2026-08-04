@@ -10,6 +10,29 @@ from gpt_researcher.skills.deep_research import DeepResearchSkill
 
 
 @pytest.mark.asyncio
+async def test_stops_when_no_search_queries_are_generated():
+    skill = DeepResearchSkill.__new__(DeepResearchSkill)
+    skill.generate_search_queries = AsyncMock(return_value=[])
+
+    result = await skill.deep_research(
+        query="topic",
+        breadth=2,
+        depth=3,
+        learnings=["existing learning"],
+        citations={"existing learning": "https://example.com/source"},
+        visited_urls={"https://example.com/source"},
+    )
+
+    assert result == {
+        "learnings": ["existing learning"],
+        "visited_urls": {"https://example.com/source"},
+        "citations": {"existing learning": "https://example.com/source"},
+        "context": [],
+        "sources": [],
+    }
+
+
+@pytest.mark.asyncio
 async def test_stops_when_all_query_processors_return_none():
     researcher = SimpleNamespace(
         cfg=SimpleNamespace(

@@ -393,6 +393,12 @@ Return ONLY a JSON object using this exact schema:
         if visited_urls is None:
             visited_urls = set()
 
+        all_learnings = learnings.copy()
+        all_citations = citations.copy()
+        all_visited_urls = visited_urls.copy()
+        all_context = []
+        all_sources = []
+
         progress = ResearchProgress(depth, breadth)
 
         if on_progress:
@@ -412,12 +418,6 @@ Return ONLY a JSON object using this exact schema:
                 'context': all_context,
                 'sources': all_sources,
             }
-
-        all_learnings = learnings.copy()
-        all_citations = citations.copy()
-        all_visited_urls = visited_urls.copy()
-        all_context = []
-        all_sources = []
 
         # Process queries with concurrency limit
         semaphore = asyncio.Semaphore(self.concurrency_limit)
