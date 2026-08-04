@@ -56,8 +56,11 @@ def setup_research_logging():
     research_logger = logging.getLogger('research')
     research_logger.setLevel(logging.INFO)
     
-    # Remove any existing handlers to avoid duplicates
-    research_logger.handlers.clear()
+    # Remove and close existing handlers to avoid duplicate output and leaked
+    # file descriptors when logging is configured more than once.
+    for handler in research_logger.handlers[:]:
+        research_logger.removeHandler(handler)
+        handler.close()
     
     # Add file handler
     research_logger.addHandler(file_handler)
@@ -72,6 +75,7 @@ def setup_research_logging():
     
     # Create JSON handler
     json_handler = JSONResearchHandler(json_file)
+    research_logger.json_handler = json_handler
     
     return str(log_file), str(json_file), research_logger, json_handler
 
