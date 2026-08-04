@@ -300,10 +300,14 @@ async def write_report(research_request: ResearchRequest, research_id: str = Non
         return_researcher=True
     )
 
-    docx_path = await write_md_to_word(report_information[0], research_id)
-    pdf_path = await write_md_to_pdf(report_information[0], research_id)
-    if research_request.report_type != "multi_agents":
+    if research_request.report_type == "multi_agents":
+        report = report_information
+    else:
         report, researcher = report_information
+
+    docx_path = await write_md_to_word(report, research_id)
+    pdf_path = await write_md_to_pdf(report, research_id)
+    if research_request.report_type != "multi_agents":
         response = {
             "research_id": research_id,
             "research_information": {
@@ -318,7 +322,7 @@ async def write_report(research_request: ResearchRequest, research_id: str = Non
             "pdf_path": pdf_path
         }
     else:
-        response = { "research_id": research_id, "report": "", "docx_path": docx_path, "pdf_path": pdf_path }
+        response = { "research_id": research_id, "report": report, "docx_path": docx_path, "pdf_path": pdf_path }
 
     return response
 
