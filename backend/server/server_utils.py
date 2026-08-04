@@ -16,6 +16,7 @@ from datetime import datetime
 from fastapi import HTTPException
 import logging
 import hashlib
+import uuid
 
 from .multi_agent_runner import run_multi_agent_task
 
@@ -36,7 +37,7 @@ class CustomLogsHandler:
     def __init__(self, websocket, task: str):
         self.logs = []
         self.websocket = websocket
-        sanitized_filename = sanitize_filename(f"task_{int(time.time())}_{task}")
+        sanitized_filename = sanitize_filename(f"task_{uuid.uuid4().hex}_{task}")
         self.log_file = os.path.join("outputs", f"{sanitized_filename}.json")
         self.timestamp = datetime.now().isoformat()
         # Initialize log file with metadata
