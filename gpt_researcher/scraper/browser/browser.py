@@ -70,7 +70,10 @@ class BrowserScraper:
             return "", [], ""
         finally:
             if self.driver:
-                self.driver.quit()
+                try:
+                    self.driver.quit()
+                except Exception as e:
+                    print(f"Failed to close browser driver: {str(e)}")
             self._cleanup_cookie_file()
 
     def _import_selenium(self):
