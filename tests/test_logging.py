@@ -1,6 +1,7 @@
 import pytest
 from unittest.mock import AsyncMock
 from fastapi import WebSocket
+from backend.server import server_utils
 from backend.server.server_utils import CustomLogsHandler
 import os
 import json
@@ -59,3 +60,49 @@ async def test_content_update():
         assert log_data['content']['query'] == "test query"
         assert log_data['content']['sources'] == ["source1", "source2"]
         assert log_data['content']['report'] == "test report"
+
+
+@pytest.mark.asyncio
+async def test_start_command_passes_initialized_logs_handler(
+    tmp_path, monkeypatch
+):
+    mock_websocket = AsyncMock()
+    captured = {}
+
+    class FakeManager:
+        async def start_streaming(self, *args, **kwargs):
+            captured.update(kwargs)
+            return "report"
+
+    async def fake_generate_report_files(report, filename):
+        return {}
+
+    async def fake_send_file_paths(websocket, file_paths):
+        return None
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        server_utils, "generate_report_files", fake_generate_report_files
+    )
+    monkeypatch.setattr(server_utils, "send_file_paths", fake_send_file_paths)
+
+    command = {
+        "task": "test query",
+        "report_type": "research_report",
+        "source_urls": [],
+        "document_urls": [],
+        "tone": "Objective",
+        "report_source": "web",
+    }
+
+    await server_utils.handle_start_command(
+        mock_websocket,
+        f"start {json.dumps(command)}",
+        FakeManager(),
+    )
+
+    logs_handler = captured["logs_handler"]
+    with open(logs_handler.log_file, "r") as file:
+        log_data = json.load(file)
+
+    assert log_data["content"]["query"] == "test query"

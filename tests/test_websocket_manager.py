@@ -5,7 +5,7 @@ import types
 import unittest
 from enum import Enum
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -108,6 +108,60 @@ class WebSocketManagerTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(report, "stub-report")
         self.assertEqual(call_kwargs["config_path"], "custom-config")
+
+    async def test_start_streaming_forwards_existing_logs_handler(self):
+        websocket_manager = _load_websocket_manager_module()
+        manager = websocket_manager.WebSocketManager()
+        call_kwargs = {}
+        logs_handler = object()
+
+        async def fake_run_agent(*args, **kwargs):
+            call_kwargs.update(kwargs)
+            return "stub-report"
+
+        websocket_manager.run_agent = fake_run_agent
+
+        await manager.start_streaming(
+            task="test-task",
+            report_type="research_report",
+            report_source="web",
+            source_urls=[],
+            document_urls=[],
+            tone="Objective",
+            websocket=object(),
+            logs_handler=logs_handler,
+        )
+
+        self.assertIs(call_kwargs["logs_handler"], logs_handler)
+
+    async def test_run_agent_reuses_existing_logs_handler(self):
+        websocket_manager = _load_websocket_manager_module()
+        logs_handler = object()
+        received = {}
+
+        async def fake_run_multi_agent_task(*args, **kwargs):
+            received.update(kwargs)
+            return {"report": "stub-report"}
+
+        websocket_manager.run_multi_agent_task = fake_run_multi_agent_task
+        websocket_manager.CustomLogsHandler = Mock(
+            side_effect=AssertionError("unexpected second logs handler")
+        )
+
+        report = await websocket_manager.run_agent(
+            task="test-task",
+            report_type="multi_agents",
+            report_source="web",
+            source_urls=[],
+            document_urls=[],
+            tone=websocket_manager.Tone.Objective,
+            websocket=object(),
+            logs_handler=logs_handler,
+        )
+
+        self.assertEqual(report, "stub-report")
+        self.assertIs(received["websocket"], logs_handler)
+        websocket_manager.CustomLogsHandler.assert_not_called()
 
 
 if __name__ == "__main__":

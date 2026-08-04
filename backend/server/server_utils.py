@@ -170,6 +170,7 @@ async def handle_start_command(websocket, data: str, manager):
         mcp_strategy,
         mcp_configs,
         max_search_results,
+        logs_handler=logs_handler,
     )
     report = str(report)
     file_paths = await generate_report_files(report, sanitized_filename)
