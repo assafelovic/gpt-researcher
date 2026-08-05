@@ -80,7 +80,7 @@ class DocumentLoader:
             loader = loader_dict.get(file_extension, None)
             if loader:
                 try:
-                    ret_data = loader.load()
+                    ret_data = await asyncio.to_thread(loader.load)
                 except Exception as e:
                     print(f"Failed to load HTML document : {file_path}")
                     print(e)

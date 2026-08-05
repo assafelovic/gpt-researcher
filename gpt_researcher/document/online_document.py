@@ -1,3 +1,4 @@
+import asyncio
 import os
 import aiohttp
 import tempfile
@@ -76,7 +77,7 @@ class OnlineDocumentLoader:
 
             loader = loader_dict.get(file_extension, None)
             if loader:
-                ret_data = loader.load()
+                ret_data = await asyncio.to_thread(loader.load)
 
         except Exception as e:
             print(f"Failed to load document : {file_path}")
