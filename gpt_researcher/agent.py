@@ -164,6 +164,7 @@ class GPTResearcher:
         self.headers = headers or {}
         self.research_costs = 0.0
         self.step_costs: dict[str, float] = {}
+        self._background_tasks: set[asyncio.Task] = set()
         self._current_step: str = "general"
         self.log_handler = log_handler
         self.prompt_family = get_prompt_family(prompt_family or self.cfg.prompt_family, self.cfg)
@@ -787,8 +788,20 @@ class GPTResearcher:
         step = self._current_step
         self.step_costs[step] = self.step_costs.get(step, 0.0) + cost
         if self.log_handler:
-            self._log_event("research", step="cost_update", details={
-                "cost": cost,
-                "total_cost": self.research_costs,
-                "step_name": step,
-            })
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                return
+            task = loop.create_task(
+                self._log_event(
+                    "research",
+                    step="cost_update",
+                    details={
+                        "cost": cost,
+                        "total_cost": self.research_costs,
+                        "step_name": step,
+                    },
+                )
+            )
+            self._background_tasks.add(task)
+            task.add_done_callback(self._background_tasks.discard)
