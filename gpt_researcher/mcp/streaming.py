@@ -37,11 +37,12 @@ class MCPStreamer:
             try:
                 from ..actions.utils import stream_output
                 await stream_output(
-                    type="logs", 
-                    content="mcp_retriever", 
-                    output=message, 
+                    log_type="logs",
+                    step="mcp_retriever",
+                    content=message,
                     websocket=self.websocket,
-                    metadata=data
+                    with_data=data is not None,
+                    data=data,
                 )
             except Exception as e:
                 logger.error(f"Error streaming log: {e}")
@@ -99,4 +100,4 @@ class MCPStreamer:
 
     async def stream_info(self, info_msg: str):
         """Stream informational messages."""
-        await self.stream_log(f"ℹ️ {info_msg}") 
+        await self.stream_log(f"ℹ️ {info_msg}")
