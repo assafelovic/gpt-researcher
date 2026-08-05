@@ -419,7 +419,7 @@ Available models:
 - MiniMax-M2.7: 204,800-token context; text input; always-on thinking.
 - MiniMax-M2.7-highspeed: existing low-latency variant.
 
-Pricing per million tokens follows the configured model tiers. MiniMax-M3 standard pricing is $0.30 input / $1.20 output up to 512,000 input tokens, $0.60 / $2.40 above 512,000, with priority pricing of $0.45 / $1.80 and $0.90 / $3.60. MiniMax-M2.7 is $0.30 input / $1.20 output, with $0.06 cache reads and $0.375 cache writes.
+Pricing per million tokens is $0.60 input, $2.40 output, and $0.12 cache reads for MiniMax-M3. MiniMax-M2.7 is $0.30 input, $1.20 output, $0.06 cache reads, and $0.375 cache writes.
 
 ## Avian
 

@@ -55,8 +55,13 @@ class TestMiniMaxProvider(unittest.TestCase):
             204_800,
         )
         self.assertEqual(
-            len(MINIMAX_MODEL_SPECS["MiniMax-M3"]["pricing_tiers_usd_per_million_tokens"]),
-            4,
+            MINIMAX_MODEL_SPECS["MiniMax-M3"]["pricing_usd_per_million_tokens"],
+            {
+                "input": 0.6,
+                "output": 2.4,
+                "cache_read": 0.12,
+                "cache_write": None,
+            },
         )
 
     def test_openai_provider_and_embeddings_use_selected_region(self):
