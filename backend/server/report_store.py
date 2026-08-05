@@ -9,25 +9,31 @@ class ReportStore:
         self._path = path
         self._lock = asyncio.Lock()
 
-    async def _ensure_parent_dir(self) -> None:
-        self._path.parent.mkdir(parents=True, exist_ok=True)
-
     async def _read_all_unlocked(self) -> Dict[str, Dict[str, Any]]:
-        if not self._path.exists():
+        def read_all() -> Dict[str, Dict[str, Any]]:
+            if not self._path.exists():
+                return {}
+            try:
+                data = json.loads(self._path.read_text(encoding="utf-8"))
+                if isinstance(data, dict):
+                    return data  # type: ignore[return-value]
+            except Exception:
+                return {}
             return {}
-        try:
-            data = json.loads(self._path.read_text(encoding="utf-8"))
-            if isinstance(data, dict):
-                return data  # type: ignore[return-value]
-        except Exception:
-            return {}
-        return {}
+
+        return await asyncio.to_thread(read_all)
 
     async def _write_all_unlocked(self, data: Dict[str, Dict[str, Any]]) -> None:
-        await self._ensure_parent_dir()
-        tmp_path = self._path.with_suffix(self._path.suffix + ".tmp")
-        tmp_path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
-        tmp_path.replace(self._path)
+        def write_all() -> None:
+            self._path.parent.mkdir(parents=True, exist_ok=True)
+            tmp_path = self._path.with_suffix(self._path.suffix + ".tmp")
+            tmp_path.write_text(
+                json.dumps(data, ensure_ascii=False),
+                encoding="utf-8",
+            )
+            tmp_path.replace(self._path)
+
+        await asyncio.to_thread(write_all)
 
     async def list_reports(self, report_ids: List[str] | None = None) -> List[Dict[str, Any]]:
         async with self._lock:
