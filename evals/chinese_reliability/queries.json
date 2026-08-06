@@ -1,0 +1,62 @@
+[
+  {
+    "id": "simple-01",
+    "report_type": "research_report",
+    "category": "AI工程",
+    "question": "RAG与模型微调在成本、知识更新和适用场景方面有什么区别？"
+  },
+  {
+    "id": "simple-02",
+    "report_type": "research_report",
+    "category": "历史",
+    "question": "宋代科举制度有哪些主要特点和历史影响？"
+  },
+  {
+    "id": "simple-03",
+    "report_type": "research_report",
+    "category": "产业",
+    "question": "中国新能源汽车出口增长的主要驱动因素有哪些？"
+  },
+  {
+    "id": "simple-04",
+    "report_type": "research_report",
+    "category": "教育",
+    "question": "生成式AI在高校教学中有哪些典型应用和风险？"
+  },
+  {
+    "id": "simple-05",
+    "report_type": "research_report",
+    "category": "消费",
+    "question": "当代年轻人常见的健康消费趋势有哪些？"
+  },
+  {
+    "id": "deep-01",
+    "report_type": "deep",
+    "category": "就业",
+    "question": "分析2024年至2026年中国AI应用开发岗位需求变化，并给出求职技能路线。"
+  },
+  {
+    "id": "deep-02",
+    "report_type": "deep",
+    "category": "产业",
+    "question": "分析中国新能源汽车出海的竞争力、风险和未来趋势。"
+  },
+  {
+    "id": "deep-03",
+    "report_type": "deep",
+    "category": "AI架构",
+    "question": "比较RAG、模型微调和Agent在企业知识助手中的适用边界与架构选择。"
+  },
+  {
+    "id": "deep-04",
+    "report_type": "deep",
+    "category": "教育",
+    "question": "分析生成式AI对高校教育在教学、评价和治理方面的长期影响。"
+  },
+  {
+    "id": "deep-05",
+    "report_type": "deep",
+    "category": "社会",
+    "question": "分析人口老龄化对中国养老服务产业的影响和AI技术机会。"
+  }
+]
