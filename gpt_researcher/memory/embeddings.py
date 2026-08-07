@@ -100,10 +100,12 @@ class Memory:
                 )  # quick fix for lmstudio
             case "openai":
                 from langchain_openai import OpenAIEmbeddings
+                
+                # Support custom OpenAI-compatible APIs
+                emb_base = os.environ.get("EMBEDDING_BASE_URL") or os.environ.get("OPENAI_BASE_URL")
 
-                # Support custom OpenAI-compatible APIs via OPENAI_BASE_URL
-                if "openai_api_base" not in embedding_kwargs and os.environ.get("OPENAI_BASE_URL"):
-                    embedding_kwargs["openai_api_base"] = os.environ["OPENAI_BASE_URL"]
+                if "openai_api_base" not in embedding_kwargs and emb_base:
+                    embedding_kwargs["openai_api_base"] = emb_base
 
                 _embeddings = OpenAIEmbeddings(model=model, **embedding_kwargs)
             case "azure_openai":
