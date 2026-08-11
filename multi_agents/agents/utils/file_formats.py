@@ -1,8 +1,10 @@
-import aiofiles
+import inspect
+import os
 import urllib
 import uuid
+
+import aiofiles
 import mistune
-import os
 
 async def write_to_file(filename: str, text: str) -> None:
     """Asynchronously write text to a file in UTF-8 encoding.
@@ -56,10 +58,20 @@ async def write_md_to_pdf(text: str, path: str) -> str:
         
         # Moved imports to inner function to avoid known import errors with gobject-2.0
         from md2pdf.core import md2pdf
-        md2pdf(file_path,
-               raw=text,
-               css=css_path,
-               base_url=None)
+        if "raw" in inspect.signature(md2pdf).parameters:
+            md2pdf(
+                file_path,
+                raw=text,
+                css=css_path,
+                base_url=None,
+            )
+        else:
+            md2pdf(
+                file_path,
+                md_content=text,
+                css_file_path=css_path,
+                base_url=None,
+            )
         print(f"Report written to {file_path}")
     except Exception as e:
         print(f"Error in converting Markdown to PDF: {e}")
