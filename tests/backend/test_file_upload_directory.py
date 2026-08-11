@@ -1,10 +1,8 @@
-import builtins
-import importlib
+import importlib.util
 import io
 import sys
 import tempfile
 import types
-import typing
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
@@ -12,27 +10,46 @@ from unittest.mock import patch
 
 
 def _load_server_utils():
+    gpt_researcher = types.ModuleType("gpt_researcher")
+    gpt_researcher.__path__ = []
+    gpt_researcher.GPTResearcher = object
+
+    document_package = types.ModuleType("gpt_researcher.document")
+    document_package.__path__ = []
+    document_module = types.ModuleType("gpt_researcher.document.document")
+    document_module.DocumentLoader = object
+
     utils_module = types.ModuleType("utils")
     utils_module.write_md_to_pdf = lambda *args, **kwargs: None
     utils_module.write_md_to_word = lambda *args, **kwargs: None
     utils_module.write_text_to_md = lambda *args, **kwargs: None
 
-    original_any = getattr(builtins, "Any", None)
-    original_list = getattr(builtins, "List", None)
-    builtins.Any = typing.Any
-    builtins.List = typing.List
-    try:
-        with patch.dict(sys.modules, {"utils": utils_module}):
-            return importlib.import_module("backend.server.server_utils")
-    finally:
-        if original_any is None:
-            del builtins.Any
-        else:
-            builtins.Any = original_any
-        if original_list is None:
-            del builtins.List
-        else:
-            builtins.List = original_list
+    runner_module = types.ModuleType("backend.server.multi_agent_runner")
+    runner_module.run_multi_agent_task = None
+
+    chat_package = types.ModuleType("chat")
+    chat_package.__path__ = []
+    chat_module = types.ModuleType("chat.chat")
+    chat_module.ChatAgentWithMemory = object
+
+    module_path = Path(__file__).resolve().parents[2] / "backend/server/server_utils.py"
+    spec = importlib.util.spec_from_file_location(
+        "backend.server._server_utils_upload_test",
+        module_path,
+    )
+    module = importlib.util.module_from_spec(spec)
+    dependencies = {
+        "gpt_researcher": gpt_researcher,
+        "gpt_researcher.document": document_package,
+        "gpt_researcher.document.document": document_module,
+        "utils": utils_module,
+        "backend.server.multi_agent_runner": runner_module,
+        "chat": chat_package,
+        "chat.chat": chat_module,
+    }
+    with patch.dict(sys.modules, dependencies):
+        spec.loader.exec_module(module)
+    return module
 
 
 server_utils = _load_server_utils()
