@@ -19,7 +19,8 @@ class SemanticScholarSearch:
         :param sort: Sort criterion ('relevance', 'citationCount', 'publicationDate')
         """
         self.query = query
-        assert sort in self.VALID_SORT_CRITERIA, "Invalid sort criterion"
+        if sort not in self.VALID_SORT_CRITERIA:
+            raise ValueError("Invalid sort criterion")
         # Preserve the exact (camelCase) criterion. The Semantic Scholar API
         # expects ``citationCount`` / ``publicationDate`` verbatim; lowercasing
         # them produced ``citationcount`` / ``publicationdate``, which the API

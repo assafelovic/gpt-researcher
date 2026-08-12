@@ -8,7 +8,8 @@ class ArxivSearch:
     def __init__(self, query, sort='Relevance', query_domains=None):
         self.arxiv = arxiv
         self.query = query
-        assert sort in ['Relevance', 'SubmittedDate'], "Invalid sort criterion"
+        if sort not in ['Relevance', 'SubmittedDate']:
+            raise ValueError("Invalid sort criterion")
         self.sort = arxiv.SortCriterion.SubmittedDate if sort == 'SubmittedDate' else arxiv.SortCriterion.Relevance
         
 
