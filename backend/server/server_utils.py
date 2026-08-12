@@ -9,12 +9,14 @@ from typing import Awaitable, Dict, List, Any
 from fastapi.responses import JSONResponse, FileResponse
 from gpt_researcher.document.document import DocumentLoader
 from gpt_researcher import GPTResearcher
+from gpt_researcher.actions import stream_output
 from utils import write_md_to_pdf, write_md_to_word, write_text_to_md
 from pathlib import Path
 from datetime import datetime
 from fastapi import HTTPException
 import logging
 import hashlib
+import uuid
 
 from .multi_agent_runner import run_multi_agent_task
 
@@ -35,7 +37,7 @@ class CustomLogsHandler:
     def __init__(self, websocket, task: str):
         self.logs = []
         self.websocket = websocket
-        sanitized_filename = sanitize_filename(f"task_{int(time.time())}_{task}")
+        sanitized_filename = sanitize_filename(f"task_{uuid.uuid4().hex}_{task}")
         self.log_file = os.path.join("outputs", f"{sanitized_filename}.json")
         self.timestamp = datetime.now().isoformat()
         # Initialize log file with metadata
@@ -170,6 +172,7 @@ async def handle_start_command(websocket, data: str, manager):
         mcp_strategy,
         mcp_configs,
         max_search_results,
+        logs_handler=logs_handler,
     )
     report = str(report)
     file_paths = await generate_report_files(report, sanitized_filename)
@@ -293,6 +296,7 @@ def update_environment_variables(config: Dict[str, str]):
 
 
 async def handle_file_upload(file, DOC_PATH: str) -> Dict[str, str]:
+    os.makedirs(DOC_PATH, exist_ok=True)
     file_path = os.path.join(DOC_PATH, os.path.basename(file.filename))
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)

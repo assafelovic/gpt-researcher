@@ -113,6 +113,9 @@ class ChatAgentWithMemory:
 
     def quick_search(self, query):
         """Perform a web search for current information using Tavily"""
+        if not hasattr(self, "search_metadata_by_query"):
+            self.search_metadata_by_query = {}
+
         try:
             # Check if Tavily client is available
             if self.tavily_client is None:
@@ -122,6 +125,7 @@ class ChatAgentWithMemory:
                     "sources": [],
                     "error": "Web search is disabled - TAVILY_API_KEY not configured"
                 }
+                self.search_metadata_by_query[query] = self.search_metadata
                 return {
                     "error": "Web search is disabled - TAVILY_API_KEY not configured",
                     "results": []
@@ -140,10 +144,17 @@ class ChatAgentWithMemory:
                     for result in results.get("results", [])
                 ]
             }
+            self.search_metadata_by_query[query] = self.search_metadata
             
             return results
         except Exception as e:
             logger.error(f"Error performing web search: {str(e)}", exc_info=True)
+            self.search_metadata = {
+                "query": query,
+                "sources": [],
+                "error": str(e),
+            }
+            self.search_metadata_by_query[query] = self.search_metadata
             return {
                 "error": str(e),
                 "results": []
@@ -152,6 +163,8 @@ class ChatAgentWithMemory:
 
     async def process_chat_completion(self, messages: List[Dict[str, str]]):
         """Process chat completion using configured LLM provider with tool calling support"""
+        self.search_metadata_by_query = {}
+
         # Create a search tool using the utility function
         search_tool = create_search_tool(self.quick_search)
         
@@ -170,15 +183,11 @@ class ChatAgentWithMemory:
             if metadata.get("tool") == "search_tool":
                 # Extract query from args
                 query = metadata.get("args", {}).get("query", "")
-                
-                # Trigger search again to get metadata (the search was already executed by LangChain)
-                if query:
-                    self.quick_search(query)  # This populates self.search_metadata
-                    
+
                 processed_metadata.append({
                     "tool": "quick_search",
                     "query": query,
-                    "search_metadata": self.search_metadata
+                    "search_metadata": self.search_metadata_by_query.get(query),
                 })
         
         return response, processed_metadata
