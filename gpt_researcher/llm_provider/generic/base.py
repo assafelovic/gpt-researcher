@@ -113,6 +113,24 @@ class ChatLogger:
                     "stacktrace": traceback.format_exc()
                 }) + "\n")
 
+
+def _content_to_text(content: Any) -> str:
+    """Normalize LangChain message content into plain text."""
+    if content is None:
+        return ""
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts = []
+        for block in content:
+            if isinstance(block, str):
+                parts.append(block)
+            elif isinstance(block, dict) and isinstance(block.get("text"), str):
+                parts.append(block["text"])
+        return "".join(parts)
+    return str(content)
+
+
 class GenericLLMProvider:
 
     def __init__(self, llm, chat_log: str | None = None,  verbose: bool = True):
@@ -360,7 +378,7 @@ class GenericLLMProvider:
             output = await self.llm.ainvoke(messages, **kwargs)
             self._capture_response_metadata(output)
 
-            res = output.content
+            res = _content_to_text(output.content)
 
         else:
             res = await self.stream_response(messages, websocket, **kwargs)
@@ -378,7 +396,7 @@ class GenericLLMProvider:
         # Streaming the response using the chain astream method from langchain
         async for chunk in self.llm.astream(messages, **kwargs):
             self._capture_response_metadata(chunk)
-            content = chunk.content
+            content = _content_to_text(chunk.content)
             if not content:
                 continue
             response += content

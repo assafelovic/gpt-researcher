@@ -49,16 +49,6 @@ class Config:
         if config_to_use['REPORT_SOURCE'] != 'web':
           self._set_doc_path(config_to_use)
 
-        # MCP support configuration
-        self.mcp_servers = []  # List of MCP server configurations
-        self.mcp_allowed_root_paths = []  # Allowed root paths for MCP servers
-
-        # Read from config
-        if hasattr(self, 'mcp_servers'):
-            self.mcp_servers = self.mcp_servers
-        if hasattr(self, 'mcp_allowed_root_paths'):
-            self.mcp_allowed_root_paths = self.mcp_allowed_root_paths
-
     def _set_attributes(self, config: Dict[str, Any]) -> None:
         """Set configuration attributes from config dictionary.
 
@@ -209,16 +199,18 @@ class Config:
             return None, None
         try:
             llm_provider, llm_model = llm_str.split(":", 1)
-            assert llm_provider in _SUPPORTED_PROVIDERS, (
-                f"Unsupported {llm_provider}.\nSupported llm providers are: "
-                + ", ".join(_SUPPORTED_PROVIDERS)
-            )
-            return llm_provider, llm_model
-        except ValueError:
+        except ValueError as exc:
             raise ValueError(
                 "Set SMART_LLM or FAST_LLM = '<llm_provider>:<llm_model>' "
                 "Eg 'openai:gpt-4o-mini'"
+            ) from exc
+
+        if llm_provider not in _SUPPORTED_PROVIDERS:
+            raise ValueError(
+                f"Unsupported {llm_provider}.\nSupported llm providers are: "
+                + ", ".join(_SUPPORTED_PROVIDERS)
             )
+        return llm_provider, llm_model
 
     @staticmethod
     def parse_reasoning_effort(reasoning_effort_str: str | None) -> str | None:
@@ -238,16 +230,18 @@ class Config:
             return None, None
         try:
             embedding_provider, embedding_model = embedding_str.split(":", 1)
-            assert embedding_provider in _SUPPORTED_PROVIDERS, (
-                f"Unsupported {embedding_provider}.\nSupported embedding providers are: "
-                + ", ".join(_SUPPORTED_PROVIDERS)
-            )
-            return embedding_provider, embedding_model
-        except ValueError:
+        except ValueError as exc:
             raise ValueError(
                 "Set EMBEDDING = '<embedding_provider>:<embedding_model>' "
                 "Eg 'openai:text-embedding-3-large'"
+            ) from exc
+
+        if embedding_provider not in _SUPPORTED_PROVIDERS:
+            raise ValueError(
+                f"Unsupported {embedding_provider}.\nSupported embedding providers are: "
+                + ", ".join(_SUPPORTED_PROVIDERS)
             )
+        return embedding_provider, embedding_model
 
     def validate_doc_path(self):
         """Ensure that the folder exists at the doc path"""
