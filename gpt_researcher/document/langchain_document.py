@@ -15,10 +15,13 @@ class LangChainDocumentLoader:
     async def load(self, metadata_source_index="title") -> List[Dict[str, str]]:
         docs = []
         for document in self.documents:
+            source = document.metadata.get(
+                metadata_source_index
+            ) or document.metadata.get("source", "")
             docs.append(
                 {
                     "raw_content": document.page_content,
-                    "url": document.metadata.get(metadata_source_index, ""),
+                    "url": source,
                 }
             )
         return docs

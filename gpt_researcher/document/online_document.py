@@ -1,6 +1,9 @@
+import asyncio
 import os
 import aiohttp
 import tempfile
+from urllib.parse import urlparse
+
 from langchain_community.document_loaders import (
     PyMuPDFLoader,
     TextLoader,
@@ -76,7 +79,7 @@ class OnlineDocumentLoader:
 
             loader = loader_dict.get(file_extension, None)
             if loader:
-                ret_data = loader.load()
+                ret_data = await asyncio.to_thread(loader.load)
 
         except Exception as e:
             print(f"Failed to load document : {file_path}")
@@ -90,6 +93,6 @@ class OnlineDocumentLoader:
     def _get_extension(url: str) -> str:
         # Lower-case the extension so loader lookup (whose keys are lower-case,
         # e.g. "pdf"/"docx") matches URLs that use upper-case extensions like
-        # "report.PDF" or "doc.DOCX". The leading "?" split drops query strings
-        # (signed CDN/S3 URLs) before extracting the suffix.
-        return os.path.splitext(url.split("?")[0])[1].lower()
+        # "report.PDF" or "doc.DOCX". Parse the URL path so signed query
+        # strings and fragments such as "#page=2" do not pollute the suffix.
+        return os.path.splitext(urlparse(url).path)[1].lower()

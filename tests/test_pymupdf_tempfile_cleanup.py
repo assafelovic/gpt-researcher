@@ -17,11 +17,23 @@ from gpt_researcher.scraper.pymupdf.pymupdf import PyMuPDFScraper
 
 
 class _FakeResponse:
+    def __init__(self):
+        self.closed = False
+
     def raise_for_status(self):
         return None
 
     def iter_content(self, chunk_size=8192):
         yield b"%PDF-1.4 not-a-real-pdf"
+
+    def close(self):
+        self.closed = True
+
+
+class _InterruptedResponse(_FakeResponse):
+    def iter_content(self, chunk_size=8192):
+        yield b"%PDF-1.4 partial"
+        raise RuntimeError("connection interrupted")
 
 
 def _temp_pdfs() -> set:
@@ -33,12 +45,13 @@ def test_tempfile_removed_when_loader_raises():
 
     before = _temp_pdfs()
 
-    with patch(
-        "gpt_researcher.scraper.pymupdf.pymupdf.requests.get",
-        return_value=_FakeResponse(),
-    ), patch(
-        "gpt_researcher.scraper.pymupdf.pymupdf.PyMuPDFLoader"
-    ) as mock_loader:
+    with (
+        patch(
+            "gpt_researcher.scraper.pymupdf.pymupdf.requests.get",
+            return_value=_FakeResponse(),
+        ),
+        patch("gpt_researcher.scraper.pymupdf.pymupdf.PyMuPDFLoader") as mock_loader,
+    ):
         mock_loader.return_value.load.side_effect = RuntimeError("corrupt PDF")
 
         content, images, title = scraper.scrape()
@@ -46,5 +59,22 @@ def test_tempfile_removed_when_loader_raises():
     # Broad except still yields the empty-result contract...
     assert (content, images, title) == ("", [], "")
     # ...but no new *.pdf temp file is left behind.
+    leaked = _temp_pdfs() - before
+    assert not leaked, f"PyMuPDFScraper leaked temp file(s): {leaked}"
+
+
+def test_response_and_tempfile_cleaned_when_download_is_interrupted():
+    scraper = PyMuPDFScraper("https://example.com/interrupted.pdf")
+    response = _InterruptedResponse()
+    before = _temp_pdfs()
+
+    with patch(
+        "gpt_researcher.scraper.pymupdf.pymupdf.requests.get",
+        return_value=response,
+    ):
+        result = scraper.scrape()
+
+    assert result == ("", [], "")
+    assert response.closed
     leaked = _temp_pdfs() - before
     assert not leaked, f"PyMuPDFScraper leaked temp file(s): {leaked}"
