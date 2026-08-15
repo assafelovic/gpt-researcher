@@ -6,6 +6,12 @@ from urllib.parse import urlsplit
 
 import requests
 
+# `body` is snippet-sized for web retrievers here — GPT-Researcher scrapes each
+# `href` for the full page anyway (only `raw_content` marks a result as already
+# fetched). Keenable returns whole-page text, so cap it to keep the shape the
+# other retrievers have.
+MAX_BODY_CHARS = 500
+
 
 class KeenableSearch:
     """
@@ -64,6 +70,25 @@ class KeenableSearch:
             f"KEENABLE_API_URL must be an https:// URL with a host, got {base!r}"
         )
 
+    @staticmethod
+    def _result_body(obj):
+        """
+        Extracts a result's text.
+
+        Keenable returns both ``snippet`` and ``description``; ``snippet``
+        carries the page text and ``description`` is frequently empty, so
+        prefer whichever has content. Snippets arrive as raw page text with
+        newlines, so collapse whitespace and cap the length.
+
+        Args:
+            obj (dict): One result from the Keenable API.
+
+        Returns:
+            str: Snippet-sized text for the result, possibly empty.
+        """
+        text = " ".join(str(obj.get("snippet") or obj.get("description") or "").split())
+        return text[:MAX_BODY_CHARS]
+
     def search(self, max_results=10):
         """
         Searches the query via the Keenable API.
@@ -107,7 +132,7 @@ class KeenableSearch:
                 {
                     "title": obj.get("title"),
                     "href": obj.get("url"),
-                    "body": obj.get("description"),
+                    "body": self._result_body(obj),
                 }
                 for obj in results
                 if obj.get("url")
