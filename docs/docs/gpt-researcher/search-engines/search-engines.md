@@ -30,6 +30,8 @@ Thanks to our community, we have integrated the following web search engines:
 - [SearchApi](https://www.searchapi.io/) - Env: `RETRIEVER=searchapi`
 - [Serp API](https://serpapi.com/) - Env: `RETRIEVER=serpapi`
 - [Serper](https://serper.dev/) - Env: `RETRIEVER=serper` - [Setup Guide](#serper)
+- [Serply](https://serply.io/) - Env: `RETRIEVER=serply` and `SERPLY_API_KEY` - [Docs](https://serply.io/docs)
+- [Serply Scholar](https://serply.io/) - Google Scholar results - Env: `RETRIEVER=serply_scholar` and `SERPLY_API_KEY` - [Docs](https://serply.io/docs)
 - [Searx](https://searx.github.io/searx/) - Env: `RETRIEVER=searx`
 - [Duckduckgo](https://pypi.org/project/duckduckgo-search/) - Env: `RETRIEVER=duckduckgo`
 - [Arxiv](https://info.arxiv.org/help/api/index.html) - Env: `RETRIEVER=arxiv`

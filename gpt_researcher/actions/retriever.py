@@ -20,6 +20,8 @@ def get_retriever(retriever: str):
         - searchapi: SearchAPI service
         - serpapi: SerpAPI service
         - serper: Serper API
+        - serply: Serply SERP API (Google web results)
+        - serply_scholar: Serply SERP API (Google Scholar results)
         - duckduckgo: DuckDuckGo search
         - bing: Bing search
         - brave: Brave Search API
@@ -56,6 +58,14 @@ def get_retriever(retriever: str):
             from gpt_researcher.retrievers import SerperSearch
 
             return SerperSearch
+        case "serply":
+            from gpt_researcher.retrievers import SerplySearch
+
+            return SerplySearch
+        case "serply_scholar":
+            from gpt_researcher.retrievers import SerplyScholarSearch
+
+            return SerplyScholarSearch
         case "duckduckgo":
             from gpt_researcher.retrievers import Duckduckgo
 
