@@ -105,6 +105,14 @@ class ReportGenerator:
             )
 
         report_params = self.research_params.copy()
+        # self.research_params["websocket"] was captured once in __init__,
+        # at GPTResearcher construction time -- a caller that sets
+        # researcher.websocket after construction (e.g. to stream progress
+        # only during conduct_research(), then disable it before
+        # write_report() so a report-writing retry isn't treated as an
+        # unreplayable live stream) would otherwise have that change
+        # silently ignored here. Re-read the live attribute instead.
+        report_params["websocket"] = self.researcher.websocket
         if not report_params["agent_role_prompt"]:
             report_params["agent_role_prompt"] = self.researcher.cfg.agent_role or self.researcher.role
         report_params["context"] = context
