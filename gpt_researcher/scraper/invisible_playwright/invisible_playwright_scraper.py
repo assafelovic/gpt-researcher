@@ -5,13 +5,13 @@ from bs4 import BeautifulSoup
 from ..utils import get_relevant_images, extract_title, get_text_from_soup, clean_soup
 
 
-class InvisibleFirefoxScraper:
+class InvisiblePlaywrightScraper:
     """Opt-in scraper that renders a page with a patched, fingerprint-real Firefox
     (``invisible_playwright``) before parsing it, for sources that block or fingerprint
     stock automation. Once the HTML is rendered it is parsed with the same BeautifulSoup
     utilities the other scrapers use, so the output format is unchanged.
 
-    Select it with ``SCRAPER=invisible_firefox``; when it is not selected nothing changes,
+    Select it with ``SCRAPER=invisible_playwright``; when it is not selected nothing changes,
     so defaults are untouched. ``invisible_playwright`` is imported lazily and is therefore
     NOT a required dependency: install it only if you use this scraper::
 
@@ -31,7 +31,7 @@ class InvisibleFirefoxScraper:
                 from invisible_playwright.async_api import InvisiblePlaywright
             except ImportError as e:
                 raise ImportError(
-                    "InvisibleFirefoxScraper requires invisible_playwright. Install it with "
+                    "InvisiblePlaywrightScraper requires invisible_playwright. Install it with "
                     '`pip install "git+https://github.com/feder-cr/invisible_playwright.git"` '
                     "and run `python -m invisible_playwright fetch` to download the browser."
                 ) from e

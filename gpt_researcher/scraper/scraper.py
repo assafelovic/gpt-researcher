@@ -20,7 +20,7 @@ from . import (
     BeautifulSoupScraper,
     BrowserScraper,
     FireCrawl,
-    InvisibleFirefoxScraper,
+    InvisiblePlaywrightScraper,
     NoDriverScraper,
     PyMuPDFScraper,
     TavilyExtract,
@@ -195,7 +195,7 @@ class Scraper:
             "nodriver": NoDriverScraper,
             "tavily_extract": TavilyExtract,
             "firecrawl": FireCrawl,
-            "invisible_firefox": InvisibleFirefoxScraper,
+            "invisible_playwright": InvisiblePlaywrightScraper,
         }
 
         scraper_key = None
