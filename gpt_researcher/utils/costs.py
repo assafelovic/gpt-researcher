@@ -15,6 +15,14 @@ OUTPUT_COST_PER_TOKEN = 0.000015
 IMAGE_INFERENCE_COST = 0.003825
 EMBEDDING_COST = 0.02 / 1000000  # Assumes new ada-3-small
 
+# OpenAI's automatic prompt caching bills the cached portion of input
+# tokens at a discount off the standard input rate (currently 50% across
+# the GPT-4o/4.1/5 families). Kept as a single constant since OpenAI has
+# used a flat 50% cache discount across all its cached models to date;
+# revisit if a future model introduces a different ratio.
+# https://openai.com/api/pricing/
+OPENAI_CACHED_INPUT_DISCOUNT = 0.5
+
 logger = logging.getLogger(__name__)
 
 # (patterns, input $/MTok, output $/MTok) - first match wins, so more
@@ -184,13 +192,26 @@ def calculate_anthropic_cost(
 
 def _extract_usage_tokens(
     usage_metadata: Mapping[str, Any] | Any | None,
-) -> tuple[int, int] | None:
+) -> tuple[int, int, int] | None:
+    """Returns (input_tokens, output_tokens, cache_read_tokens).
+
+    cache_read_tokens is the portion of input_tokens that hit the
+    provider's prompt cache (LangChain's standardized
+    ``input_token_details.cache_read``) and should be billed at
+    OPENAI_CACHED_INPUT_DISCOUNT instead of the standard input rate.
+    Defaults to 0 when the response doesn't report cache details, so
+    non-cached calls are unaffected.
+    """
     usage = _mapping_to_dict(usage_metadata)
     input_tokens = usage.get("input_tokens")
     output_tokens = usage.get("output_tokens")
     if input_tokens is None or output_tokens is None:
         return None
-    return int(input_tokens), int(output_tokens)
+
+    input_token_details = _mapping_to_dict(usage.get("input_token_details"))
+    cache_read_tokens = int(input_token_details.get("cache_read") or 0)
+
+    return int(input_tokens), int(output_tokens), cache_read_tokens
 
 
 def _get_openai_pricing(model: str | None) -> tuple[float, float] | None:
@@ -225,16 +246,30 @@ def calculate_llm_cost(
     # reasoning tokens entirely.
     usage_tokens = _extract_usage_tokens(usage_metadata)
     if usage_tokens is not None:
-        input_tokens, output_tokens = usage_tokens
+        input_tokens, output_tokens, cache_read_tokens = usage_tokens
+        # cache_read_tokens is a subset of input_tokens, not additional
+        # tokens -- split input_tokens into its non-cached and cached
+        # portions so the cached share is priced at the discount rate
+        # instead of the full input rate.
+        non_cached_input_tokens = input_tokens - cache_read_tokens
         pricing = _get_openai_pricing(model)
         if pricing is not None:
             input_price_per_mtok, output_price_per_mtok = pricing
-            return (
-                input_tokens * input_price_per_mtok
-                + output_tokens * output_price_per_mtok
-            ) / 1_000_000
+            non_cached_cost = non_cached_input_tokens * input_price_per_mtok
+            cached_cost = (
+                cache_read_tokens
+                * input_price_per_mtok
+                * OPENAI_CACHED_INPUT_DISCOUNT
+            )
+            output_cost = output_tokens * output_price_per_mtok
+            return (non_cached_cost + cached_cost + output_cost) / 1_000_000
+        cached_cost = (
+            cache_read_tokens * INPUT_COST_PER_TOKEN * OPENAI_CACHED_INPUT_DISCOUNT
+        )
+        non_cached_cost = non_cached_input_tokens * INPUT_COST_PER_TOKEN
         return (
-            input_tokens * INPUT_COST_PER_TOKEN
+            non_cached_cost
+            + cached_cost
             + output_tokens * OUTPUT_COST_PER_TOKEN
         )
 
@@ -261,4 +296,3 @@ def estimate_embedding_cost(model: str, docs: list) -> float:
         encoding = tiktoken.get_encoding(ENCODING_MODEL)
     total_tokens = sum(len(encoding.encode(str(doc))) for doc in docs)
     return total_tokens * EMBEDDING_COST
-
