@@ -1,6 +1,7 @@
 import json_repair
 
 from gpt_researcher.llm_provider.generic.base import ReasoningEfforts
+from typing import Any, Dict, List
 
 
 def _normalize_sub_queries(parsed: Any, fallback_query: str) -> List[str]:
@@ -34,7 +35,6 @@ def _normalize_sub_queries(parsed: Any, fallback_query: str) -> List[str]:
     return queries
 from ..utils.llm import create_chat_completion
 from ..prompts import PromptFamily
-from typing import Any, List, Dict
 from ..config import Config
 import logging
 
@@ -126,7 +126,7 @@ async def generate_sub_queries(
         )
     except Exception as e:
         logger.warning(f"Error with strategic LLM: {e}. Retrying with max_tokens={cfg.strategic_token_limit}.")
-        logger.warning(f"See https://github.com/assafelovic/gpt-researcher/issues/1022")
+        logger.warning("See https://github.com/assafelovic/gpt-researcher/issues/1022")
         try:
             response = await create_chat_completion(
                 model=cfg.strategic_llm_model,
