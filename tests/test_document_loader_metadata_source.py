@@ -30,6 +30,7 @@ def _load():
         "PyMuPDFLoader",
         "TextLoader",
         "UnstructuredCSVLoader",
+        "UnstructuredEPubLoader",
         "UnstructuredExcelLoader",
         "UnstructuredMarkdownLoader",
         "UnstructuredPowerPointLoader",
