@@ -107,6 +107,21 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[test]"
+      # tiktoken downloads its BPE tables from the network on first use and
+      # caches them on disk. A developer machine already has that cache, a
+      # fresh runner does not -- so the cost tests reached the network in CI
+      # and only in CI, where GPTR_BLOCK_NETWORK correctly refused them. Warm
+      # the cache here, before the suite runs: this step is outside pytest, so
+      # the guard in tests/conftest.py does not apply to it.
+      - name: Warm the tiktoken encoding cache
+        run: |
+          python - <<'PY'
+          import tiktoken
+          for name in ("o200k_base", "cl100k_base"):
+              tiktoken.get_encoding(name)
+              print(f"cached {name}")
+          PY
+
       # --forked runs each test in its own process. The suite currently leaks
       # global state across modules -- several files pass alone and fail when
       # run together -- so without this the results depend on collection order.
