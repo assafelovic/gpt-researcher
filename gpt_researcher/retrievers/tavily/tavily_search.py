@@ -20,6 +20,10 @@ class TavilySearch:
     Tavily API Retriever
     """
 
+    # Tavily's search() never sets include_raw_content, so results are always
+    # links plus a snippet -- the page still has to be scraped.
+    requires_scraping = True
+
     def __init__(self, query, headers=None, topic="general", query_domains=None):
         """
         Initializes the TavilySearch object.

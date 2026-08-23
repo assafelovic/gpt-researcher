@@ -8,6 +8,10 @@ class CustomRetriever:
     Custom API Retriever
     """
 
+    # The documented contract is list[{url, raw_content}] -- the caller's own
+    # endpoint supplies the content.
+    requires_scraping = False
+
     def __init__(self, query: str, query_domains=None):
         self.endpoint = os.getenv('RETRIEVER_ENDPOINT')
         if not self.endpoint:
