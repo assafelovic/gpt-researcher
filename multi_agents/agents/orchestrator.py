@@ -10,6 +10,10 @@ from .plan_review import (
     DEFAULT_MAX_PLAN_REVISIONS,
     route_human_feedback,
 )
+from .fact_review import (
+    DEFAULT_MAX_FACT_CHECK_REVISIONS,
+    route_fact_check,
+)
 
 # Import agent classes
 from . import \
@@ -107,6 +111,11 @@ class ChiefEditorAgent:
         max_plan_revisions = self.task.get(
             "max_plan_revisions", DEFAULT_MAX_PLAN_REVISIONS)
         return route_human_feedback(review, max_plan_revisions)
+
+    def _route_fact_check(self, state):
+        max_fact_check_revisions = self.task.get(
+            "max_fact_check_revisions", DEFAULT_MAX_FACT_CHECK_REVISIONS)
+        return route_fact_check(state, max_fact_check_revisions)
 
     def init_research_team(self):
         """Initialize and create a workflow for the research team."""
