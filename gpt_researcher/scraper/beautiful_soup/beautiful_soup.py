@@ -61,6 +61,10 @@ class BeautifulSoupScraper:
         Returns the response on success, or None when the page is
         unreachable, an error status, or too large to be worth parsing.
         """
+        if self.session is None:
+            logger.warning(f"No session provided for {self.link}; cannot fetch")
+            return None
+
         for attempt in (1, 2):
             try:
                 response = self.session.get(self.link, timeout=10)
@@ -84,9 +88,16 @@ class BeautifulSoupScraper:
                 return None
 
             content_length = response.headers.get("Content-Length")
-            if content_length and int(content_length) > MAX_CONTENT_BYTES:
-                logger.warning(f"Content too large for {self.link} ({content_length} bytes), skipping")
-                return None
+            if content_length:
+                try:
+                    length_val = int(str(content_length).strip())
+                except (TypeError, ValueError):
+                    length_val = None
+                if length_val is not None and length_val > MAX_CONTENT_BYTES:
+                    logger.warning(
+                        f"Content too large for {self.link} ({content_length} bytes), skipping"
+                    )
+                    return None
 
             return response
 

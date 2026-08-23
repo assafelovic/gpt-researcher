@@ -23,11 +23,16 @@ class WebBaseLoaderScraper:
             from langchain_community.document_loaders import WebBaseLoader
             loader = WebBaseLoader(self.link)
             loader.requests_kwargs = {"verify": False}
-            docs = loader.load()
+            docs = loader.load() or []
             content = ""
 
             for doc in docs:
-                content += doc.page_content
+                if doc is None:
+                    continue
+                page = getattr(doc, "page_content", None)
+                if page is None:
+                    continue
+                content += str(page)
 
             response = self.session.get(self.link)
             soup = BeautifulSoup(response.content, 'html.parser')
