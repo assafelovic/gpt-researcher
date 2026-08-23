@@ -26,6 +26,10 @@ class SearxSearch():
     """
     SearxNG API Retriever
     """
+
+    # SearxNG puts an ordinary result snippet in "content"/"body"; the real
+    # page text still has to be fetched.
+    requires_scraping = True
     def __init__(self, query: str, query_domains=None):
         """
         Initializes the SearxSearch object

@@ -9,6 +9,10 @@ class PubMedCentralSearch:
     PubMed Central Full-Text Search
     """
 
+    # PubMed Central returns full article text inline, so there is nothing
+    # left to scrape.
+    requires_scraping = False
+
     def __init__(self, query: str, query_domains=None):
         self.base_search_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
         self.base_fetch_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"

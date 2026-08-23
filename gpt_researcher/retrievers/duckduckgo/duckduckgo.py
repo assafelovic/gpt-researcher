@@ -23,6 +23,10 @@ class Duckduckgo:
     """
     Duckduckgo API Retriever
     """
+
+    # ddgs returns a snippet in "body"; the real page text still has to be
+    # fetched.
+    requires_scraping = True
     def __init__(self, query, query_domains=None):
         check_pkg('ddgs')
         from ddgs import DDGS
