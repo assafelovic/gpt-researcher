@@ -82,6 +82,30 @@ def _looks_like_word_list(text: str) -> bool:
     return (sentence_endings / len(text)) < _MAX_SENTENCE_DENSITY
 
 
+# get_scraper() picks a backend from the URL's suffix, but PDFs served from
+# institutional repositories (DSpace/EPrints-style download endpoints) are
+# routed by content type, not a file extension -- e.g.
+# "scholarspace.manoa.hawaii.edu/bitstreams/<uuid>/download" has none. Those
+# fall through to a text/HTML scraper, which has no way to decode the PDF
+# body and returns its raw bytes (FlateDecode streams, xref tables, /Annot
+# objects) as if it were the page's real text -- silently: no exception, a
+# normal-looking content_length, just unusable content.
+#
+# These tokens are PDF's own internal structural syntax; they essentially
+# never occur, even coincidentally, in real prose. Two independent hits is
+# enough to be confident this is raw PDF, not text that happens to contain
+# one of these words in isolation.
+_PDF_STRUCTURE_MARKERS = ("endobj", "endstream", "/FlateDecode", "xref", "trailer")
+_MIN_PDF_MARKER_HITS = 2
+
+
+def _looks_like_unextracted_pdf(text: str) -> bool:
+    if text.startswith("%PDF-"):
+        return True
+    hits = sum(1 for marker in _PDF_STRUCTURE_MARKERS if marker in text)
+    return hits >= _MIN_PDF_MARKER_HITS
+
+
 class Scraper:
     """
     Scraper class to extract the content from the links
@@ -214,6 +238,23 @@ class Scraper:
                 if _looks_like_word_list(content):
                     return self._reject(link, title, "Word-list-like content detected")
 
+                if _looks_like_unextracted_pdf(content) and Scraper is not PyMuPDFScraper:
+                    self.logger.warning(
+                        f"{link} looks like unextracted PDF binary via {scraper_name} "
+                        f"(no .pdf suffix, so get_scraper() didn't route it to "
+                        f"PyMuPDFScraper) -- retrying with PyMuPDFScraper"
+                    )
+                    retried = await self._retry_as_pdf(link, session)
+                    if retried is not None:
+                        return retried
+                    self.logger.warning(f"PyMuPDFScraper retry also failed for {link}")
+                    return {
+                        "url": link,
+                        "raw_content": None,
+                        "image_urls": [],
+                        "title": title,
+                    }
+
                 return {
                     "url": link,
                     "raw_content": content,
@@ -231,6 +272,30 @@ class Scraper:
         downstream code (Scraper.run) drops any raw_content: None entry."""
         self.logger.warning(f"{reason} for {link}, treating as fetch failure")
         return {"url": link, "raw_content": None, "image_urls": [], "title": title}
+
+
+    async def _retry_as_pdf(self, link, session):
+        """Re-fetch link with PyMuPDFScraper after the scraper get_scraper()
+        originally picked returned unextracted PDF binary.
+
+        Returns the normal extract_data_from_url result dict on success, or
+        None if the retry also failed to produce usable content (so the
+        caller falls back to treating this as an ordinary fetch failure
+        instead of passing binary through).
+        """
+        scraper = PyMuPDFScraper(link, session)
+        content, image_urls, title = await asyncio.get_running_loop().run_in_executor(
+            self.worker_pool.executor, scraper.scrape
+        )
+        if not content or len(content) < 100:
+            return None
+        self.logger.info(f"PyMuPDFScraper retry recovered {len(content)} characters for {link}")
+        return {
+            "url": link,
+            "raw_content": content,
+            "image_urls": image_urls,
+            "title": title,
+        }
 
     def get_scraper(self, link):
         """
