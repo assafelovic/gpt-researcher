@@ -47,6 +47,15 @@ class MCPClientManager:
         server_configs = {}
         
         for i, config in enumerate(self.mcp_configs):
+            # GPT Researcher MCP configs are dicts; tolerate list/json drift so
+            # a single bad entry cannot AttributeError the whole conversion.
+            if not isinstance(config, dict):
+                logger.warning(
+                    "Skipping MCP server config at index %s: expected dict, got %s",
+                    i,
+                    type(config).__name__,
+                )
+                continue
             # Generate server name
             server_name = config.get("name", f"mcp_server_{i+1}")
             
