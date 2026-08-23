@@ -9,6 +9,18 @@ import pytest
 
 from backend import utils as backend_utils
 
+# The test mocks md2pdf, but reaching it imports weasyprint, which dlopens
+# pango/gobject. Those are present on CI (installed via apt) and usually absent
+# on a developer machine, where the import raises OSError rather than
+# ImportError -- so importorskip does not cover it.
+try:  # pragma: no cover - environment probe
+    import weasyprint  # noqa: F401
+except (ImportError, OSError) as _exc:  # pragma: no cover
+    pytest.skip(
+        f"weasyprint native libraries unavailable: {_exc}",
+        allow_module_level=True,
+    )
+
 
 @pytest.mark.asyncio
 async def test_empty_filename_does_not_write_dot_pdf(tmp_path, monkeypatch):

@@ -119,6 +119,10 @@ jobs:
             --timeout=60 \
             -p no:warnings \
             --deselect tests/test_researcher_logging.py \
-            --deselect tests/test_logging_output.py
-      # Both deselected files construct a real OpenAI client at call time and
-      # need OPENAI_API_KEY. They belong to a live suite, not this one.
+            --deselect tests/test_logging_output.py \
+            --deselect tests/test_mcp.py
+      # These three belong to a live suite, not this one. The first two build a
+      # real OpenAI client at call time and need OPENAI_API_KEY. test_mcp.py
+      # runs an actual web-search research task ("latest updates in the NBA
+      # playoffs"), which hangs here rather than failing -- it only surfaced on
+      # a full 3.12 install, where every optional dependency is present.
