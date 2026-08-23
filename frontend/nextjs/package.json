@@ -84,6 +84,9 @@
     "typescript": "^5",
     "@ducanh2912/next-pwa": "^10.0.1"
   },
+  "overrides": {
+    "jsdom": "25.0.1"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/assafelovic/gpt-researcher.git"

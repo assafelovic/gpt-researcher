@@ -41,15 +41,16 @@ class PyMuPDFScraper:
         """
         try:
             if self.is_url():
+                http = self.session or requests
                 try:
-                    response = requests.get(self.link, timeout=(5, 30), stream=True)
+                    response = http.get(self.link, timeout=(5, 30), stream=True)
                     response.raise_for_status()
                 except requests.exceptions.SSLError:
                     import logging
                     logging.getLogger(__name__).warning(
                         f"SSL verification failed for {self.link}, retrying without verification"
                     )
-                    response = requests.get(self.link, timeout=(5, 30), stream=True, verify=False)
+                    response = http.get(self.link, timeout=(5, 30), stream=True, verify=False)
                     response.raise_for_status()
 
                 with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:

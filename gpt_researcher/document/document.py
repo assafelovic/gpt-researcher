@@ -5,6 +5,7 @@ from langchain_community.document_loaders import (
     PyMuPDFLoader,
     TextLoader,
     UnstructuredCSVLoader,
+UnstructuredEPubLoader,
     UnstructuredExcelLoader,
     UnstructuredMarkdownLoader,
     UnstructuredPowerPointLoader,
@@ -65,6 +66,7 @@ class DocumentLoader:
         try:
             loader_dict = {
                 "pdf": PyMuPDFLoader(file_path),
+"epub": UnstructuredEPubLoader(file_path),
                 "txt": TextLoader(file_path),
                 "doc": UnstructuredWordDocumentLoader(file_path),
                 "docx": UnstructuredWordDocumentLoader(file_path),

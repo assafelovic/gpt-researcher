@@ -2,6 +2,8 @@ import unittest
 
 from gpt_researcher.utils.costs import (
     EMBEDDING_COST,
+    INPUT_COST_PER_TOKEN,
+    OUTPUT_COST_PER_TOKEN,
     calculate_llm_cost,
     estimate_embedding_cost,
     estimate_llm_cost,
@@ -98,6 +100,86 @@ class TestEmbeddingCost(unittest.TestCase):
         )
 
 
+class TestOpenAICachedInputPricing(unittest.TestCase):
+    """Covers #2065: cached OpenAI input tokens were billed at full price
+    because calculate_llm_cost never read input_token_details.cache_read
+    from LangChain's standardized usage_metadata."""
+
+    def test_no_cache_details_unaffected(self):
+        cost = calculate_llm_cost(
+            llm_provider="openai",
+            model="gpt-4o",
+            input_content="",
+            output_content="",
+            usage_metadata={"input_tokens": 5000, "output_tokens": 200},
+        )
+        self.assertAlmostEqual(cost, 0.0145)
+
+    def test_partial_cache_hit_is_discounted(self):
+        # Exact repro from issue #2065: 4500 of 5000 input tokens hit the
+        # cache and must be billed at the discounted rate, not full price.
+        cost = calculate_llm_cost(
+            llm_provider="openai",
+            model="gpt-4o",
+            input_content="",
+            output_content="",
+            usage_metadata={
+                "input_tokens": 5000,
+                "output_tokens": 200,
+                "input_token_details": {"cache_read": 4500},
+            },
+        )
+        self.assertLess(cost, 0.0145)
+        self.assertAlmostEqual(cost, 0.008875)
+
+    def test_explicit_zero_cache_read_matches_baseline(self):
+        cost = calculate_llm_cost(
+            llm_provider="openai",
+            model="gpt-4o",
+            input_content="",
+            output_content="",
+            usage_metadata={
+                "input_tokens": 5000,
+                "output_tokens": 200,
+                "input_token_details": {"cache_read": 0},
+            },
+        )
+        self.assertAlmostEqual(cost, 0.0145)
+
+    def test_fully_cached_input(self):
+        cost = calculate_llm_cost(
+            llm_provider="openai",
+            model="gpt-4o",
+            input_content="",
+            output_content="",
+            usage_metadata={
+                "input_tokens": 5000,
+                "output_tokens": 200,
+                "input_token_details": {"cache_read": 5000},
+            },
+        )
+        expected = (5000 * 2.5 * 0.5 + 200 * 10.0) / 1_000_000
+        self.assertAlmostEqual(cost, expected)
+
+    def test_unknown_model_fallback_still_applies_cache_discount(self):
+        cost = calculate_llm_cost(
+            llm_provider="openai",
+            model="some-future-model",
+            input_content="",
+            output_content="",
+            usage_metadata={
+                "input_tokens": 1000,
+                "output_tokens": 100,
+                "input_token_details": {"cache_read": 500},
+            },
+        )
+        expected = (
+            500 * INPUT_COST_PER_TOKEN * 0.5
+            + 500 * INPUT_COST_PER_TOKEN
+            + 100 * OUTPUT_COST_PER_TOKEN
+        )
+        self.assertAlmostEqual(cost, expected, places=12)
+
+
 if __name__ == "__main__":
     unittest.main()
-

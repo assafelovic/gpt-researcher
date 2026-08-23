@@ -261,27 +261,73 @@ async def get_report_chat(research_id: str):
 
 
 @app.post("/api/reports/{research_id}/chat")
-async def add_report_chat_message(research_id: str, request: Request):
+async def research_report_chat(research_id: str, request: Request):
+    """Chat against a stored report: LLM reply + persist user/assistant messages."""
     report = await report_store.get_report(research_id)
     if report is None:
         raise HTTPException(status_code=404, detail="Report not found")
 
-    message = await request.json()
-    chat_messages = report.get("chatMessages") or []
-    if isinstance(chat_messages, list):
-        chat_messages = [*chat_messages, message]
-    else:
-        chat_messages = [message]
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    if not isinstance(data, dict):
+        data = {}
+
+    # Accept either a bare chat message object or {messages, report, message}
+    incoming_messages = data.get("messages")
+    if not isinstance(incoming_messages, list):
+        if any(key in data for key in ("role", "content")):
+            incoming_messages = [data]
+        elif isinstance(data.get("message"), dict):
+            incoming_messages = [data["message"]]
+        else:
+            incoming_messages = []
+
+    report_text = data.get("report") or report.get("answer") or ""
+    history = report.get("chatMessages") or []
+    if not isinstance(history, list):
+        history = []
+
+    messages_for_llm = list(history)
+    for msg in incoming_messages:
+        if isinstance(msg, dict):
+            messages_for_llm.append(msg)
+
+    try:
+        chat_agent = ChatAgentWithMemory(
+            report=report_text if isinstance(report_text, str) else str(report_text),
+            config_path="default",
+            headers=None,
+        )
+        response_content, tool_calls_metadata = await chat_agent.chat(messages_for_llm, None)
+    except Exception as e:
+        logger.error(f"Error in research report chat: {str(e)}", exc_info=True)
+        return {"error": str(e)}
 
     now_ms = int(time.time() * 1000)
-    updated = {
-        **report,
-        "chatMessages": chat_messages,
+    response_message = {
+        "role": "assistant",
+        "content": response_content,
         "timestamp": now_ms,
+        "metadata": {"tool_calls": tool_calls_metadata} if tool_calls_metadata else None,
     }
 
+    new_chat = list(history)
+    for msg in incoming_messages:
+        if isinstance(msg, dict):
+            new_chat.append(msg)
+    new_chat.append(response_message)
+
+    updated = {
+        **report,
+        "chatMessages": new_chat,
+        "timestamp": now_ms,
+    }
     await report_store.upsert_report(research_id, updated)
-    return {"success": True, "id": research_id}
+    return {"success": True, "id": research_id, "response": response_message}
+
+
 
 
 async def write_report(research_request: ResearchRequest, research_id: str = None):
@@ -417,51 +463,3 @@ async def chat(chat_request: ChatRequest):
         logger.error(f"Error processing chat request: {str(e)}", exc_info=True)
         return {"error": str(e)}
 
-@app.post("/api/reports/{research_id}/chat")
-async def research_report_chat(research_id: str, request: Request):
-    """Handle chat requests for a specific research report.
-    Directly processes the raw request data to avoid validation errors.
-    """
-    try:
-        # Get raw JSON data from request
-        data = await request.json()
-        
-        # Create chat agent with the report
-        chat_agent = ChatAgentWithMemory(
-            report=data.get("report", ""),
-            config_path="default",
-            headers=None
-        )
-
-        # Process the chat and get response with metadata
-        response_content, tool_calls_metadata = await chat_agent.chat(data.get("messages", []), None)
-        
-        if tool_calls_metadata:
-            logger.info(f"Tool calls used: {json.dumps(tool_calls_metadata)}")
-
-        # Format response as a ChatMessage object
-        response_message = {
-            "role": "assistant",
-            "content": response_content,
-            "timestamp": int(time.time() * 1000),
-            "metadata": {
-                "tool_calls": tool_calls_metadata
-            } if tool_calls_metadata else None
-        }
-
-        return {"response": response_message}
-    except Exception as e:
-        logger.error(f"Error in research report chat: {str(e)}", exc_info=True)
-        return {"error": str(e)}
-
-@app.put("/api/reports/{research_id}")
-async def update_report(research_id: str, request: Request):
-    """Update a specific research report by ID - no database configured."""
-    logger.debug(f"Update requested for report {research_id} - no database configured, not persisted")
-    return {"success": True, "id": research_id}
-
-@app.delete("/api/reports/{research_id}")
-async def delete_report(research_id: str):
-    """Delete a specific research report by ID - no database configured."""
-    logger.debug(f"Delete requested for report {research_id} - no database configured, nothing to delete")
-    return {"success": True, "id": research_id}

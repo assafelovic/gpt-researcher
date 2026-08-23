@@ -4,8 +4,10 @@ This module provides the SourceCurator class that evaluates and ranks
 research sources based on relevance, credibility, and reliability.
 """
 
-import json
 from typing import Dict, List, Optional
+
+import json_repair
+from langchain_core.utils.json import parse_json_markdown
 
 from ..actions import stream_output
 from ..config.config import Config
@@ -71,7 +73,20 @@ class SourceCurator:
                 cost_callback=self.researcher.add_costs,
             )
 
-            curated_sources = json.loads(response)
+            # LLMs frequently wrap the JSON in ```json fences or add prose
+            # despite the prompt's instructions, which plain json.loads cannot
+            # parse. Recover the payload the same way the rest of the codebase
+            # does (see actions/query_processing.py, multi_agents/agents/utils/
+            # llms.py) so a well-formed-but-fenced response is not discarded.
+            curated_sources = parse_json_markdown(response, parser=json_repair.loads)
+            # json_repair never raises: on unusable output it returns "" or a
+            # dict rather than a list. Guard so such a result still falls back
+            # to the uncurated sources below instead of emptying the context.
+            if not isinstance(curated_sources, list):
+                raise ValueError(
+                    f"expected a JSON list of sources, got "
+                    f"{type(curated_sources).__name__}"
+                )
             print(f"\n\nFinal Curated sources {len(source_data)} sources: {curated_sources}")
 
             if self.researcher.verbose:

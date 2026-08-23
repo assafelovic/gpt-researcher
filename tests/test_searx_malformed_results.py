@@ -69,6 +69,23 @@ class SearxMalformedTests(unittest.TestCase):
         with patch.dict(os.environ, {"SEARX_URL": "https://searx.example/"}):
             self.assertEqual(mod.SearxSearch("q").search(), [])
 
+    def test_long_snippet_capped_to_100_chars(self):
+        # gpt_researcher.skills.researcher._search_relevant_source_urls()
+        # treats any body over 100 chars as already-fetched full text, which
+        # skips the real scrape -- see issue #17. SearxNG's ordinary result
+        # snippets routinely exceed 100 chars, so this must be capped at the
+        # source or every result is wrongly treated as pre-fetched.
+        mod, requests_mod = _load()
+        resp = MagicMock()
+        resp.raise_for_status = MagicMock()
+        long_snippet = "y" * 250
+        resp.json.return_value = {"results": [{"url": "https://a.example", "content": long_snippet}]}
+        requests_mod.get.return_value = resp
+        with patch.dict(os.environ, {"SEARX_URL": "https://searx.example/"}):
+            out = mod.SearxSearch("q").search(max_results=10)
+        self.assertEqual(len(out[0]["body"]), 100)
+        self.assertEqual(out[0]["body"], long_snippet[:100])
+
 
 if __name__ == "__main__":
     unittest.main()
