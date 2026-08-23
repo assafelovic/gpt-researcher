@@ -19,22 +19,32 @@ class ArxivSearch:
         :param max_results:
         :return:
         """
-
-        arxiv_gen = list(arxiv.Client().results(
-        self.arxiv.Search(
-            query= self.query, #+
-            max_results=max_results,
-            sort_by=self.sort,
-        )))
+        try:
+            arxiv_gen = list(arxiv.Client().results(
+                self.arxiv.Search(
+                    query=self.query,
+                    max_results=max_results,
+                    sort_by=self.sort,
+                )
+            ))
+        except Exception as e:
+            print(f"Error: {e}. Failed fetching arXiv sources. Resulting in empty response.")
+            return []
 
         search_result = []
-
         for result in arxiv_gen:
-
+            # Incomplete arxiv.Result objects can surface None for title/pdf_url
+            # /summary. Skip entries without a usable href; default other fields
+            # so a single partial hit cannot crash the normalizer.
+            href = getattr(result, "pdf_url", None) or getattr(result, "entry_id", None)
+            if not href:
+                continue
+            title = getattr(result, "title", None) or ""
+            body = getattr(result, "summary", None) or ""
             search_result.append({
-                "title": result.title,
-                "href": result.pdf_url,
-                "body": result.summary,
+                "title": title,
+                "href": href,
+                "body": body,
             })
-        
+
         return search_result
