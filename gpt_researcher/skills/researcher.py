@@ -145,7 +145,9 @@ class ResearchConductor:
         if self.researcher.source_urls:
             self.logger.info("Using provided source URLs")
             research_data = await self._get_context_by_urls(self.researcher.source_urls)
-            if research_data and len(research_data) == 0 and self.researcher.verbose:
+            # `research_data and len(research_data) == 0` can never be true --
+            # a truthy value is never empty -- so this notification never fired.
+            if not research_data and self.researcher.verbose:
                 await stream_output(
                     "logs",
                     "answering_from_memory",
