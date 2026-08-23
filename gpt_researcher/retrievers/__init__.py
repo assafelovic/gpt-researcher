@@ -10,6 +10,8 @@ from .semantic_scholar.semantic_scholar import SemanticScholarSearch
 from .searchapi.searchapi import SearchApiSearch
 from .serpapi.serpapi import SerpApiSearch
 from .serper.serper import SerperSearch
+from .serply.serply import SerplySearch
+from .serply_scholar.serply_scholar import SerplyScholarSearch
 from .tavily.tavily_search import TavilySearch
 from .groundroute.groundroute import GroundRouteSearch
 from .exa.exa import ExaSearch
@@ -27,6 +29,8 @@ __all__ = [
     "Duckduckgo",
     "SearchApiSearch",
     "SerperSearch",
+    "SerplySearch",
+    "SerplyScholarSearch",
     "SerpApiSearch",
     "GoogleSearch",
     "SearxSearch",
