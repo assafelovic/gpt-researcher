@@ -75,6 +75,23 @@ def calculate_cost(
     Returns:
         float: The calculated cost in USD.
     """
+    try:
+        prompt_tokens = int(prompt_tokens or 0)
+        completion_tokens = int(completion_tokens or 0)
+    except (TypeError, ValueError):
+        logger.warning(
+            "Invalid token counts for cost calculation "
+            f"(prompt={prompt_tokens!r}, completion={completion_tokens!r}); treating as 0."
+        )
+        prompt_tokens = 0
+        completion_tokens = 0
+    if prompt_tokens < 0:
+        prompt_tokens = 0
+    if completion_tokens < 0:
+        completion_tokens = 0
+    if not isinstance(model, str) or not model:
+        model = ""
+
     # Define cost per 1k tokens for different models
     costs = {
         "gpt-3.5-turbo": 0.002,
@@ -107,7 +124,11 @@ def format_token_count(count: int) -> str:
     Returns:
         str: The formatted token count.
     """
-    return f"{count:,}"
+    try:
+        value = int(count or 0)
+    except (TypeError, ValueError):
+        return "0"
+    return f"{value:,}"
 
 
 async def update_cost(

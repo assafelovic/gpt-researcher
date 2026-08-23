@@ -37,16 +37,24 @@ class ArxivScraper:
 
         Returns:
             (context, images, title) matching other scrapers.
+
+        When the query matches no paper (malformed/non-arXiv id, or empty
+        client results), degrade to an empty result instead of raising so a
+        single bad URL cannot abort the whole scrape pipeline.
         """
+        paper_id = _paper_id_from_link(self.link)
+        if not paper_id:
+            return "", [], ""
+
         import arxiv
 
-        paper_id = _paper_id_from_link(self.link)
         client = arxiv.Client()
         search = arxiv.Search(id_list=[paper_id], max_results=1)
         try:
             paper = next(client.results(search))
-        except StopIteration as exc:
-            raise ValueError(f"No arXiv paper found for id {paper_id!r}") from exc
+        except StopIteration:
+            # No matching paper — mirror other scrapers: empty degrade.
+            return "", [], ""
 
         authors = ", ".join(a.name for a in (paper.authors or []))
         published = paper.published.date().isoformat() if paper.published else ""

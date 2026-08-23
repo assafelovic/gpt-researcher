@@ -35,8 +35,11 @@ async def scrape_urls(
         scraper = Scraper(urls, user_agent, cfg.scraper, worker_pool=worker_pool)
         scraped_data = await scraper.run()
         for item in scraped_data:
-            if 'image_urls' in item:
-                images.extend(item['image_urls'])
+            if not isinstance(item, dict):
+                continue
+            image_urls = item.get("image_urls")
+            if image_urls:
+                images.extend(image_urls)
     except Exception as e:
         print(f"{Fore.RED}Error in scrape_urls: {e}{Style.RESET_ALL}")
     finally:
@@ -60,10 +63,15 @@ async def filter_urls(urls: list[str], config: Config) -> list[str]:
         list[str]: Filtered list of URLs.
     """
     filtered_urls = []
-    for url in urls:
-        # Add your filtering logic here
-        # For example, you might want to exclude certain domains or URL patterns
-        if not any(excluded in url for excluded in config.excluded_domains):
+    excluded = getattr(config, "excluded_domains", None) or []
+    if not isinstance(excluded, (list, tuple, set)):
+        excluded = []
+    for url in urls or []:
+        # URLs must be non-empty strings; null/int noise TypeErrors the
+        # substring check on excluded domains.
+        if not isinstance(url, str) or not url:
+            continue
+        if not any(isinstance(ex, str) and ex and ex in url for ex in excluded):
             filtered_urls.append(url)
     return filtered_urls
 
@@ -95,12 +103,17 @@ async def process_scraped_data(scraped_data: list[dict[str, Any]], config: Confi
     """
     processed_data = []
     for item in scraped_data:
-        if item['status'] == 'success':
-            main_content = await extract_main_content(item['content'])
+        if not isinstance(item, dict):
+            continue
+        # Partial scraper payloads historically used strict key access and
+        # crashed mid-batch; skip/or re-emit guards keep the rest of the run.
+        status = item.get("status")
+        if status == "success":
+            main_content = await extract_main_content(item.get("content") or "")
             processed_data.append({
-                'url': item['url'],
-                'content': main_content,
-                'status': 'success'
+                "url": item.get("url") or "",
+                "content": main_content,
+                "status": "success",
             })
         else:
             processed_data.append(item)

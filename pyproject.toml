@@ -52,7 +52,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
-asyncio_mode = "strict"
+asyncio_mode = "auto"
 addopts = "-v"
 testpaths = ["tests"]
 python_files = "test_*.py"
@@ -214,6 +214,12 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+test = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "pytest-timeout>=2.3",
+    "pytest-forked>=1.6",
+]
 requirements-txt = [
     "ag2[openai]>=0.11.2",
     "arxiv_client",

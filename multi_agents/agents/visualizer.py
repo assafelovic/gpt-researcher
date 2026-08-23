@@ -1,5 +1,7 @@
 from .utils.views import print_agent_output
 from .utils.llms import call_model
+from .utils.none_sentinels import is_none_accept_response
+
 
 class VisualizerAgent:
     def __init__(self, websocket=None, stream_output=None, headers=None):
@@ -39,7 +41,7 @@ class VisualizerAgent:
         diagram_output = await self.generate_visualizations(research_state)
 
         diagrams = []
-        if "None" not in diagram_output:
+        if not is_none_accept_response(diagram_output):
             diagrams.append(diagram_output)
             if self.websocket and self.stream_output:
                 await self.stream_output("logs", "visualizing", f"Generated diagrams.", self.websocket)

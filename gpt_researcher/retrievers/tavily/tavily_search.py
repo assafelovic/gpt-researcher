@@ -128,8 +128,12 @@ class TavilySearch:
                 topic=self.topic,
                 include_domains=include_domains,
             )
+            # API/proxy glitches can yield a list or scalar JSON body; only dict
+            # responses have a top-level "results" key we understand.
+            if not isinstance(results, dict):
+                raise Exception("No results found with Tavily API search.")
             sources = results.get("results", [])
-            if not sources:
+            if not isinstance(sources, list) or not sources:
                 raise Exception("No results found with Tavily API search.")
             # Return the results. Guard each source against missing/None
             # fields so a single malformed hit does not drop the whole page.

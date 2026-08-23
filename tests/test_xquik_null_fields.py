@@ -60,3 +60,21 @@ class TestXquikNullFields(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+    def test_non_list_tweets_returns_empty_list(self):
+        results = self._run_with_payload({"tweets": "not-a-list"})
+        self.assertEqual(results, [])
+
+    def test_non_dict_tweet_rows_are_skipped(self):
+        results = self._run_with_payload(
+            {
+                "tweets": [
+                    "bad",
+                    None,
+                    {"author": {"username": "ok"}, "text": "good", "id": "9"},
+                ]
+            }
+        )
+        self.assertEqual(len(results), 1)
+        self.assertIn("@ok", results[0]["title"])

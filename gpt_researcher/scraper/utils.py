@@ -18,6 +18,8 @@ def get_relevant_images(soup: BeautifulSoup, url: str) -> list:
     image_urls = []
     
     try:
+        if soup is None:
+            return []
         # Find all img tags with src attribute
         all_images = soup.find_all('img', src=True)
         
@@ -26,7 +28,12 @@ def get_relevant_images(soup: BeautifulSoup, url: str) -> list:
             if img_src.startswith(('http://', 'https://')):
                 score = 0
                 # Check for relevant classes
-                if any(cls in img.get('class', []) for cls in ['header', 'featured', 'hero', 'thumbnail', 'main', 'content']):
+                classes = img.get("class") or []
+                if isinstance(classes, str):
+                    classes = classes.split()
+                elif not isinstance(classes, (list, tuple, set)):
+                    classes = []
+                if any(cls in classes for cls in ['header', 'featured', 'hero', 'thumbnail', 'main', 'content']):
                     score = 4  # Higher score
                 # Check for size attributes
                 elif img.get('width') and img.get('height'):
@@ -57,6 +64,16 @@ def get_relevant_images(soup: BeautifulSoup, url: str) -> list:
 
 def parse_dimension(value: str) -> int:
     """Parse dimension value, handling px units"""
+    # HTML width/height attrs are often missing or non-string; callers pass
+    # img.get('width') which may be None.
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        try:
+            return int(float(value))
+        except (ValueError, TypeError) as e:
+            logging.debug("Could not parse dimension value %r: %s", value, e)
+            return None
     if value.lower().endswith('px'):
         value = value[:-2]  # Remove 'px' suffix
     try:
@@ -138,6 +155,8 @@ def clean_soup(soup: BeautifulSoup) -> BeautifulSoup:
 
 def get_text_from_soup(soup: BeautifulSoup) -> str:
     """Get the relevant text from the soup with improved filtering"""
+    if soup is None:
+        return ""
     text = soup.get_text(strip=True, separator="\n")
     # Remove excess whitespace
     text = re.sub(r"\s{2,}", " ", text)

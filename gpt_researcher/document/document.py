@@ -5,6 +5,7 @@ from langchain_community.document_loaders import (
     PyMuPDFLoader,
     TextLoader,
     UnstructuredCSVLoader,
+UnstructuredEPubLoader,
     UnstructuredExcelLoader,
     UnstructuredMarkdownLoader,
     UnstructuredPowerPointLoader,
@@ -65,6 +66,7 @@ class DocumentLoader:
         try:
             loader_dict = {
                 "pdf": PyMuPDFLoader(file_path),
+"epub": UnstructuredEPubLoader(file_path),
                 "txt": TextLoader(file_path),
                 "doc": UnstructuredWordDocumentLoader(file_path),
                 "docx": UnstructuredWordDocumentLoader(file_path),
@@ -82,7 +84,9 @@ class DocumentLoader:
                 try:
                     ret_data = loader.load()
                 except Exception as e:
-                    print(f"Failed to load HTML document : {file_path}")
+                    print(
+                        f"Failed to load {file_extension or 'unknown'} document: {file_path}"
+                    )
                     print(e)
 
         except Exception as e:
