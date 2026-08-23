@@ -10,6 +10,7 @@ from ..memory.draft import DraftState
 from . import ResearchAgent, ReviewerAgent, ReviserAgent
 from .draft_review import (
     DEFAULT_MAX_DRAFT_REVISIONS,
+    MaxDraftRevisionsExceededError,
     route_draft_review,
 )
 
@@ -148,10 +149,19 @@ class EditorAgent:
         return workflow
 
     def _route_draft_review(self, draft: Dict[str, any]) -> str:
+        """Route reviewer output; force-accept once the ceiling is passed.
+
+        ``route_draft_review`` raises when max_draft_revisions is exceeded.
+        Its own docstring says the edge should force-accept gracefully rather
+        than hit LangGraph's recursion_limit, which is what this does.
+        """
         task = draft.get("task") or {}
         max_draft_revisions = task.get(
             "max_draft_revisions", DEFAULT_MAX_DRAFT_REVISIONS)
-        return route_draft_review(draft, max_draft_revisions)
+        try:
+            return route_draft_review(draft, max_draft_revisions)
+        except MaxDraftRevisionsExceededError:
+            return "accept"
 
     def _log_parallel_research(self, queries: List[str]) -> None:
         """Log the start of parallel research tasks."""
