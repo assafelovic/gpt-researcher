@@ -34,12 +34,16 @@ class WebBaseLoaderScraper:
                     continue
                 content += str(page)
 
-            response = self.session.get(self.link)
-            soup = BeautifulSoup(response.content, 'html.parser')
-            image_urls = get_relevant_images(soup, self.link)
-            
-            # Extract the title using the utility function
-            title = extract_title(soup)
+            image_urls, title = [], ""
+            try:
+                response = self.session.get(self.link)
+                soup = BeautifulSoup(response.content, 'html.parser')
+                image_urls = get_relevant_images(soup, self.link)
+
+                # Extract the title using the utility function
+                title = extract_title(soup)
+            except Exception as e:
+                print("Error extracting images/title! : " + str(e))
 
             return content, image_urls, title
 
