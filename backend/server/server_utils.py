@@ -20,6 +20,7 @@ except ImportError:  # pragma: no cover - legacy sys.path-shimmed import
 from pathlib import Path
 from datetime import datetime
 from fastapi import HTTPException
+from starlette.websockets import WebSocketDisconnect
 import logging
 import hashlib
 
@@ -394,6 +395,10 @@ async def handle_websocket_communication(websocket, manager):
                         "content": "error",
                         "output": "Unknown command received by server"
                     })
+            except WebSocketDisconnect:
+                # Re-raise WebSocketDisconnect to be handled by the outer handler in app.py
+                # which properly cleans up the connection via WebSocketManager
+                raise
             except Exception as e:
                 logger.error(f"WebSocket error: {str(e)}\n{traceback.format_exc()}")
                 print(f"WebSocket error: {e}")
