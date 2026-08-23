@@ -55,7 +55,19 @@ class GlobalRateLimiter:
         Args:
             rate_limit_delay: Minimum seconds between requests (0 = no limit)
         """
-        self.rate_limit_delay = rate_limit_delay
+        # Env/config may hand us strings; wait_if_needed compares as float.
+        if rate_limit_delay is None:
+            self.rate_limit_delay = 0.0
+            return
+        try:
+            delay = float(rate_limit_delay)
+        except (TypeError, ValueError) as e:
+            raise ValueError(
+                f"rate_limit_delay must be a number, got {rate_limit_delay!r}"
+            ) from e
+        if delay < 0:
+            raise ValueError(f"rate_limit_delay must be non-negative, got {delay}")
+        self.rate_limit_delay = delay
 
     async def wait_if_needed(self):
         """
