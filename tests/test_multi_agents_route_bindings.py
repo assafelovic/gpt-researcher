@@ -1,79 +1,19 @@
-"""Regression test for #2060: ChiefEditorAgent/EditorAgent must bind
-_route_fact_check/_route_draft_review to the free functions in
-fact_review.py/draft_review.py, not just reference them as unbound names.
+"""Regression test for #2060: ChiefEditorAgent and EditorAgent must bind
+_route_fact_check / _route_draft_review to the free functions in
+fact_review.py / draft_review.py, not merely reference them.
 
-Importing multi_agents.agents.orchestrator/editor for real pulls in
-gpt_researcher (via the package's ResearchAgent and editor.py's own
-.utils.llms), which independently fails to import on this HEAD (already
-filed as #2055, an unordered typing import unrelated to this fix). The
-loader below stubs only the handful of sibling agent classes and the
-call_model import that orchestrator.py/editor.py reference but this test
-never exercises, and lets everything else (fact_review, draft_review,
-memory.research, utils.views, utils.utils) import for real.
+Before the fix, add_conditional_edges looked up self._route_fact_check /
+self._route_draft_review at graph-construction time and raised
+AttributeError, so multi_agents never started.
+
+This imports both modules for real. The original version of this test
+stubbed multi_agents.agents into sys.modules to route around the
+import-time NameError in gpt_researcher/actions/query_processing.py, but
+that fix ships in this same change, and the stubs leaked into sys.modules
+and broke collection of tests/test_new_agents.py.
 """
-import sys
-import types
-import importlib.util
-from pathlib import Path
-
-REPO_ROOT = Path(__file__).resolve().parents[1]
-
-
-def _noop(*args, **kwargs):
-    return {}
-
-
-def _stub_class(name):
-    return type(name, (), {
-        "__init__": lambda self, *a, **kw: None,
-        "__getattr__": lambda self, item: _noop,
-    })
-
-
-def _ensure_pkg(name, path):
-    if name not in sys.modules:
-        mod = types.ModuleType(name)
-        mod.__path__ = [str(path)]
-        sys.modules[name] = mod
-    return sys.modules[name]
-
-
-def _load_module(mod_name, rel_path):
-    spec = importlib.util.spec_from_file_location(mod_name, REPO_ROOT / rel_path)
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[mod_name] = module
-    spec.loader.exec_module(module)
-    return module
-
-
-def _load_orchestrator_and_editor():
-    _ensure_pkg("multi_agents", REPO_ROOT / "multi_agents")
-    agents_pkg = _ensure_pkg("multi_agents.agents", REPO_ROOT / "multi_agents" / "agents")
-    for name in (
-        "WriterAgent", "EditorAgent", "PublisherAgent", "ResearchAgent",
-        "HumanAgent", "FactCheckerAgent", "VisualizerAgent",
-        "ReviewerAgent", "ReviserAgent",
-    ):
-        if not hasattr(agents_pkg, name):
-            setattr(agents_pkg, name, _stub_class(name))
-
-    utils_pkg = _ensure_pkg("multi_agents.agents.utils", REPO_ROOT / "multi_agents" / "agents" / "utils")
-    if "multi_agents.agents.utils.llms" not in sys.modules:
-        llms_stub = types.ModuleType("multi_agents.agents.utils.llms")
-
-        async def call_model(*args, **kwargs):
-            raise NotImplementedError("stubbed for import isolation, not exercised by this test")
-
-        llms_stub.call_model = call_model
-        sys.modules["multi_agents.agents.utils.llms"] = llms_stub
-        utils_pkg.llms = llms_stub
-
-    orchestrator = _load_module("multi_agents.agents.orchestrator", "multi_agents/agents/orchestrator.py")
-    editor = _load_module("multi_agents.agents.editor", "multi_agents/agents/editor.py")
-    return orchestrator, editor
-
-
-orchestrator_mod, editor_mod = _load_orchestrator_and_editor()
+from multi_agents.agents import orchestrator as orchestrator_mod
+from multi_agents.agents import editor as editor_mod
 
 
 class _FakeSubAgent:
