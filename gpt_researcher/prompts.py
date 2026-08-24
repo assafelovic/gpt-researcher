@@ -686,7 +686,7 @@ Using the latest information available, construct a draft section title headers 
 "Task":
 1. Create a list of draft section title headers for the subtopic report.
 2. Each header should be concise and relevant to the subtopic.
-3. The header should't be too high level, but detailed enough to cover the main aspects of the subtopic.
+3. The header shouldn't be too high level, but detailed enough to cover the main aspects of the subtopic.
 4. Use markdown syntax for the headers, using H3 (###) as H1 and H2 will be used for the larger report's heading.
 5. Ensure the headers cover main aspects of the subtopic.
 
