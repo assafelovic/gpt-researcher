@@ -8,7 +8,6 @@
 [![Documentation](https://img.shields.io/badge/Documentation-DOCS-f472b6?logo=googledocs&logoColor=white&style=for-the-badge)](https://docs.gptr.dev)
 [![Discord](https://img.shields.io/discord/1127851779011391548?logo=discord&logoColor=white&label=Discord&color=34b76a&style=for-the-badge)](https://discord.gg/QgZXvJAccX)
 
-
 [![PyPI version](https://img.shields.io/pypi/v/gpt-researcher?logo=pypi&logoColor=white&style=flat)](https://badge.fury.io/py/gpt-researcher)
 ![GitHub Release](https://img.shields.io/github/v/release/assafelovic/gpt-researcher?style=flat&logo=github)
 [![Open In Colab](https://img.shields.io/static/v1?message=Open%20in%20Colab&logo=googlecolab&labelColor=grey&color=yellow&label=%20&style=flat&logoSize=40)](https://colab.research.google.com/github/assafelovic/gpt-researcher/blob/master/docs/docs/examples/pip-run.ipynb)
@@ -18,11 +17,15 @@
 
 [English](README.md) | [中文](README-zh_CN.md) | [日本語](README-ja_JP.md) | [한국어](README-ko_KR.md)
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/assafelovic/gpt-researcher)
+
+<sub>Deploys on Render's native Python runtime, which has no bundled browser, so set `TAVILY_API_KEY` to run scraping through Tavily and BeautifulSoup. The default `starter` plan (512 MB) handles light use. For memory-heavy workloads like Deep Research, which explores a topic recursively across many concurrent agents and their scraped context, raise the plan to `standard` (2 GB) or higher in `render.yaml`.</sub>
+
 </div>
 
 # 🔎 GPT Researcher
 
-**GPT Researcher the first open deep research agent designed for both web and local research on any given task.** 
+**GPT Researcher the first open deep research agent designed for both web and local research on any given task.**
 
 The agent produces detailed, factual, and unbiased research reports with citations. GPT Researcher provides a full suite of customization options to create tailor made and domain specific research agents. Inspired by the recent [Plan-and-Solve](https://arxiv.org/abs/2305.04091) and [RAG](https://arxiv.org/abs/2005.11401) papers, GPT Researcher addresses misinformation, speed, determinism, and reliability by offering stable performance and increased speed through parallelized agent work.
 
@@ -37,6 +40,7 @@ The agent produces detailed, factual, and unbiased research reports with citatio
 - Selective web sources can introduce bias into research tasks.
 
 ## Demo
+
 <a href="https://www.youtube.com/watch?v=f60rlc_QCxE" target="_blank" rel="noopener">
   <img src="https://github.com/user-attachments/assets/ac2ec55f-b487-4b3f-ae6f-b8743ad296e4" alt="Demo video" width="800" target="_blank" />
 </a>
@@ -60,16 +64,18 @@ The core idea is to utilize 'planner' and 'execution' agents. The planner genera
 </div>
 
 Steps:
-* Create a task-specific agent based on a research query.
-* Generate questions that collectively form an objective opinion on the task.
-* Use a crawler agent for gathering information for each question.
-* Summarize and source-track each resource.
-* Filter and aggregate summaries into a final research report.
+
+- Create a task-specific agent based on a research query.
+- Generate questions that collectively form an objective opinion on the task.
+- Use a crawler agent for gathering information for each question.
+- Summarize and source-track each resource.
+- Filter and aggregate summaries into a final research report.
 
 ## Tutorials
- - [How it Works](https://docs.gptr.dev/blog/building-gpt-researcher)
- - [How to Install](https://www.loom.com/share/04ebffb6ed2a4520a27c3e3addcdde20?sid=da1848e8-b1f1-42d1-93c3-5b0b9c3b24ea)
- - [Live Demo](https://www.loom.com/share/6a3385db4e8747a1913dd85a7834846f?sid=a740fd5b-2aa3-457e-8fb7-86976f59f9b8)
+
+- [How it Works](https://docs.gptr.dev/blog/building-gpt-researcher)
+- [How to Install](https://www.loom.com/share/04ebffb6ed2a4520a27c3e3addcdde20?sid=da1848e8-b1f1-42d1-93c3-5b0b9c3b24ea)
+- [Live Demo](https://www.loom.com/share/6a3385db4e8747a1913dd85a7834846f?sid=a740fd5b-2aa3-457e-8fb7-86976f59f9b8)
 
 ## Features
 
@@ -86,6 +92,7 @@ Steps:
 ## 📖 Documentation
 
 See the [Documentation](https://docs.gptr.dev/docs/gpt-researcher/getting-started) for:
+
 - Installation and setup guides
 - Configuration and customization options
 - How-To examples
@@ -98,48 +105,51 @@ See the [Documentation](https://docs.gptr.dev/docs/gpt-researcher/getting-starte
 1. Install Python 3.11 or later. [Guide](https://www.tutorialsteacher.com/python/install-python).
 2. Clone the project and navigate to the directory:
 
-    ```bash
-    git clone https://github.com/assafelovic/gpt-researcher.git
-    cd gpt-researcher
-    ```
+   ```bash
+   git clone https://github.com/assafelovic/gpt-researcher.git
+   cd gpt-researcher
+   ```
 
 3. Set up API keys by exporting them or storing them in a `.env` file.
 
-    ```bash
-    export OPENAI_API_KEY={Your OpenAI API Key here}
-    export TAVILY_API_KEY={Your Tavily API Key here}
-    ```
+   ```bash
+   export OPENAI_API_KEY={Your OpenAI API Key here}
+   export TAVILY_API_KEY={Your Tavily API Key here}
+   ```
 
-    (Optional) For enhanced tracing and observability, you can also set:
-    
-    ```bash
-    # export LANGCHAIN_TRACING_V2=true
-    # export LANGCHAIN_API_KEY={Your LangChain API Key here}
-    ```
+   (Optional) For enhanced tracing and observability, you can also set:
 
-    For custom OpenAI-compatible APIs (e.g., local models, other providers), you can also set:
-    
-    ```bash
-    export OPENAI_BASE_URL={Your custom API base URL here}
-    ```
+   ```bash
+   # export LANGCHAIN_TRACING_V2=true
+   # export LANGCHAIN_API_KEY={Your LangChain API Key here}
+   ```
+
+   For custom OpenAI-compatible APIs (e.g., local models, other providers), you can also set:
+
+   ```bash
+   export OPENAI_BASE_URL={Your custom API base URL here}
+   ```
 
 4. Install dependencies and start the server:
 
-    ```bash
-    pip install -r requirements.txt
-    python -m uvicorn main:app --reload
-    ```
+   ```bash
+   pip install -r requirements.txt
+   python -m uvicorn main:app --reload
+   ```
 
 Visit [http://localhost:8000](http://localhost:8000) to start.
 
 For other setups (e.g., Poetry or virtual environments), check the [Getting Started page](https://docs.gptr.dev/docs/gpt-researcher/getting-started).
 
 ## Run as PIP package
+
 ```bash
 pip install gpt-researcher
 
 ```
+
 ### Example Usage:
+
 ```python
 ...
 from gpt_researcher import GPTResearcher
@@ -156,6 +166,7 @@ report = await researcher.write_report()
 **For more examples and configurations, please refer to the [PIP documentation](https://docs.gptr.dev/docs/gpt-researcher/gptr/pip-package) page.**
 
 ### 🔧 MCP Client
+
 GPT Researcher supports MCP integration to connect with specialized data sources like GitHub repositories, databases, and custom APIs. This enables research from data sources alongside web search.
 
 ```bash
@@ -170,7 +181,7 @@ import os
 async def mcp_research_example():
     # Enable MCP with web search
     os.environ["RETRIEVER"] = "tavily,mcp"
-    
+
     researcher = GPTResearcher(
         query="What are the top open source web research agents?",
         mcp_configs=[
@@ -182,7 +193,7 @@ async def mcp_research_example():
             }
         ]
     )
-    
+
     research_result = await researcher.conduct_research()
     report = await researcher.write_report()
     return report
@@ -202,6 +213,7 @@ IMAGE_GENERATION_MODEL=models/gemini-2.5-flash-image
 ```
 
 When enabled, the system will:
+
 1. Analyze your research context to identify visualization opportunities
 2. Pre-generate 2-3 relevant images during the research phase
 3. Embed them inline as the report is written
@@ -235,16 +247,17 @@ docker-compose up --build
 ```
 
 If that doesn't work, try running it without the dash:
+
 ```bash
 docker compose up --build
 ```
 
 > **Step 4** - By default, if you haven't uncommented anything in your docker-compose file, this flow will start 2 processes:
- - the Python server running on localhost:8000<br>
- - the React app running on localhost:3000<br>
+
+- the Python server running on localhost:8000<br>
+- the React app running on localhost:3000<br>
 
 Visit localhost:3000 on any browser and enjoy researching!
-
 
 ## 📄 Research on Local Documents
 
@@ -256,10 +269,10 @@ Step 1: Add the env variable `DOC_PATH` pointing to the folder where your docume
 export DOC_PATH="./my-docs"
 ```
 
-Step 2: 
- - If you're running the frontend app on localhost:8000, simply select "My Documents" from the "Report Source" Dropdown Options.
- - If you're running GPT Researcher with the [PIP package](https://docs.tavily.com/guides/gpt-researcher/gpt-researcher#pip-package), pass the `report_source` argument as "local" when you instantiate the `GPTResearcher` class [code sample here](https://docs.gptr.dev/docs/gpt-researcher/context/tailored-research).
+Step 2:
 
+- If you're running the frontend app on localhost:8000, simply select "My Documents" from the "Report Source" Dropdown Options.
+- If you're running GPT Researcher with the [PIP package](https://docs.tavily.com/guides/gpt-researcher/gpt-researcher#pip-package), pass the `report_source` argument as "local" when you instantiate the `GPTResearcher` class [code sample here](https://docs.gptr.dev/docs/gpt-researcher/context/tailored-research).
 
 ## 🤖 MCP Server
 
@@ -268,6 +281,7 @@ We've moved our MCP server to a dedicated repository: [gptr-mcp](https://github.
 The GPT Researcher MCP Server enables AI applications like Claude to conduct deep research. While LLM apps can access web search tools with MCP, GPT Researcher MCP delivers deeper, more reliable research results.
 
 Features:
+
 - Deep research capabilities for AI assistants
 - Higher quality information with optimized context usage
 - Comprehensive results with better reasoning for LLMs
@@ -275,8 +289,8 @@ Features:
 
 For detailed installation and usage instructions, please visit the [official repository](https://github.com/assafelovic/gptr-mcp).
 
-
 ## 👪 Multi-Agent Assistant
+
 As AI evolves from prompt engineering and RAG to multi-agent systems, we're excited to introduce multi-agent assistants built with [LangGraph](https://python.langchain.com/v0.1/docs/langgraph/) and [AG2](https://github.com/ag2ai/ag2).
 
 By using multi-agent frameworks, the research process can be significantly improved in depth and quality by leveraging multiple agents with specialized skills. Inspired by the recent [STORM](https://arxiv.org/abs/2402.14207) paper, this project showcases how a team of AI agents can work together to conduct research on a given topic, from planning to publication.
@@ -290,6 +304,7 @@ Check it out [here](https://github.com/assafelovic/gpt-researcher/tree/master/mu
 GPT Researcher supports **LangSmith** for enhanced tracing and observability, making it easier to debug and optimize complex multi-agent workflows.
 
 To enable tracing:
+
 1. Set the following environment variables:
    ```bash
    export LANGCHAIN_TRACING_V2=true
@@ -326,19 +341,23 @@ GPT-Researcher now features an enhanced frontend to improve the user experience 
 - Customizable settings for tailored research experiences
 
 Two deployment options are available:
+
 1. A lightweight static frontend served by FastAPI
 2. A feature-rich NextJS application for advanced functionality
 
 For detailed setup instructions and more information about the frontend features, please visit our [documentation page](https://docs.gptr.dev/docs/gpt-researcher/frontend/introduction).
 
 ## 🚀 Contributing
+
 We highly welcome contributions! Please check out [contributing](https://github.com/assafelovic/gpt-researcher/blob/master/CONTRIBUTING.md) if you're interested.
 
 Please check out our [roadmap](https://trello.com/b/3O7KBePw/gpt-researcher-roadmap) page and reach out to us via our [Discord community](https://discord.gg/QgZXvJAccX) if you're interested in joining our mission.
 <a href="https://github.com/assafelovic/gpt-researcher/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=assafelovic/gpt-researcher&max=1000" />
+<img src="https://contrib.rocks/image?repo=assafelovic/gpt-researcher&max=1000" />
 </a>
+
 ## ✉️ Support / Contact us
+
 - [Community Discord](https://discord.gg/spBgZmm3Xe)
 - Author Email: assaf.elovic@gmail.com
 
@@ -347,6 +366,7 @@ Please check out our [roadmap](https://trello.com/b/3O7KBePw/gpt-researcher-road
 This project, GPT Researcher, is an experimental application and is provided "as-is" without any warranty, express or implied. We are sharing codes for academic purposes under the Apache 2 license. Nothing herein is academic advice, and NOT a recommendation to use in academic or research papers.
 
 Our view on unbiased research claims:
+
 1. The main goal of GPT Researcher is to reduce incorrect and biased facts. How? We assume that the more sites we scrape the less chances of incorrect data. By scraping multiple sites per research, and choosing the most frequent information, the chances that they are all wrong is extremely low.
 2. We do not aim to eliminate biases; we aim to reduce it as much as possible. **We are here as a community to figure out the most effective human/llm interactions.**
 3. In research, people also tend towards biases as most have already opinions on the topics they research about. This tool scrapes many opinions and will evenly explain diverse views that a biased person would never have read.
@@ -362,7 +382,6 @@ Our view on unbiased research claims:
   </picture>
 </a>
 </p>
-
 
 <p align="right">
   <a href="#top">⬆️ Back to Top</a>
