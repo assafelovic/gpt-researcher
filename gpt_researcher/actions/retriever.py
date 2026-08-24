@@ -30,6 +30,7 @@ def get_retriever(retriever: str):
         - semantic_scholar: Semantic Scholar academic search
         - pubmed_central: PubMed Central medical literature
         - openalex: OpenAlex scholarly works catalog
+        - sciverse: Sciverse scientific literature full-text search
         - custom: Custom user-defined retriever
         - mcp: Model Context Protocol retriever
         - xquik: Xquik X/Twitter search
@@ -116,6 +117,10 @@ def get_retriever(retriever: str):
             from gpt_researcher.retrievers import OpenAlexSearch
 
             return OpenAlexSearch
+        case "sciverse":
+            from gpt_researcher.retrievers import SciverseSearch
+
+            return SciverseSearch
         case "getxapi":
             from gpt_researcher.retrievers import GetXAPISearch
 
