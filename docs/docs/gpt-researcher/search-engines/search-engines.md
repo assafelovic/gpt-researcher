@@ -46,6 +46,7 @@ Thanks to our community, we have integrated the following web search engines and
 - [Exa](https://docs.exa.ai/reference/getting-started) - Env: `RETRIEVER=exa`
 - [fastCRW](https://fastcrw.com/docs/rest-api) - Env: `RETRIEVER=crw`
 - [PubMedCentral](https://www.ncbi.nlm.nih.gov/home/develop/api/) - Env: `RETRIEVER=pubmed_central`
+- [Sciverse](https://sciverse.space) - Env: `RETRIEVER=sciverse` and `SCIVERSE_API_TOKEN`; optional `SCIVERSE_MODE=fast|balanced|quality`. Scientific literature search over paper full text — each result carries the retrieved passage as ready-to-use content.
 - [Xquik](https://xquik.com/) - Env: `RETRIEVER=xquik` and `XQUIK_API_KEY`
 - [MCP](../retrievers/mcp-configs) - Env: `RETRIEVER=mcp`
 
