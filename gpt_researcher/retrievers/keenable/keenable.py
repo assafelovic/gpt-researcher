@@ -23,6 +23,10 @@ class KeenableSearch:
     authenticated endpoint and lift rate limits.
     """
 
+    # Results are links plus a capped `body` preview -- the page still has to
+    # be scraped for its real content.
+    requires_scraping = True
+
     def __init__(self, query, query_domains=None, **kwargs):
         """
         Initializes the KeenableSearch object.

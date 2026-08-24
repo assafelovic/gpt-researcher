@@ -113,6 +113,10 @@ class TestKeenableSearch(unittest.TestCase):
 
         self.assertEqual([r["href"] for r in results], ["https://example.com/one"])
 
+    def test_declares_requires_scraping(self):
+        # `body` is a capped preview, so the page still has to be fetched.
+        self.assertIs(KeenableSearch.requires_scraping, True)
+
 
 if __name__ == "__main__":
     unittest.main()
