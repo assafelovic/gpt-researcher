@@ -684,6 +684,8 @@ async def evaluate_report(
     *,
     run_subtopic: bool = True,
     run_unsupported: bool = True,
+    subqueries: list[str] | None = None,
+    subtopic_cache: dict | None = None,
 ) -> dict:
     """Backwards-compatible dict view over the standardized `suite.evaluate()`.
 
@@ -691,14 +693,19 @@ async def evaluate_report(
     metrics gated off by the flags — the shape run_eval/benchmark already expect.
     New code should prefer `suite.evaluate()`, which returns typed `MetricResult`
     objects carrying group / score / concept-alignment metadata.
+
+    `subqueries` and `subtopic_cache` are forwarded to subtopic_coverage; see
+    that function for what each buys (gap attribution and a stable expected set).
     """
     # Local import breaks the metrics.py <-> suite.py import cycle.
     from evals.quality_eval.suite import evaluate as _suite_evaluate, default_metrics
     from evals.quality_eval.base import EvalSample
 
-    sample  = EvalSample(query=query, report=report, sources=sources, context=context)
+    sample  = EvalSample(query=query, report=report, sources=sources,
+                         context=context, subqueries=subqueries)
     results = await _suite_evaluate(
-        sample, default_metrics(run_subtopic, run_unsupported), grader_model)
+        sample, default_metrics(run_subtopic, run_unsupported, subtopic_cache),
+        grader_model)
 
     out = {r.name: (skipped(r.reason) if r.skipped else r.breakdown) for r in results}
     out.setdefault("subtopic_coverage", None)     # None when gated off by flag

@@ -24,6 +24,7 @@ from evals.quality_eval.metrics import (
     is_skipped,
 )
 from evals.quality_eval.base import EvalSample
+from evals.quality_eval.pipeline_probe import PipelineTrace
 from evals.quality_eval.suite import (
     CitationFaithfulnessMetric,
     UnsupportedClaimMetric,
@@ -511,6 +512,63 @@ class TestSuite(unittest.IsolatedAsyncioTestCase):
                          {"citation_faithfulness", "source_diversity", "source_authority"})
         for r in results:                       # every result is uniformly tagged
             self.assertTrue(r.group and r.aligned_with)
+
+
+# ---------------------------------------------------------------------------
+# 8. PipelineTrace  (per-stage funnel; pure recording, no pipeline needed)
+# ---------------------------------------------------------------------------
+
+class TestPipelineTrace(unittest.TestCase):
+
+    def _trace(self):
+        t = PipelineTrace()
+        t.subqueries = ["q1", "q2"]
+        # 3 attempted, 2 returned content
+        t.record_scrape(
+            ["https://a.gov/x", "https://b.com/y", "https://c.edu/z"],
+            [{"url": "https://b.com/y", "raw_content": "b" * 500},
+             {"url": "https://c.edu/z", "raw_content": "c" * 500}])
+        return t
+
+    def test_scrape_rate_counts_only_pages_that_returned_content(self):
+        f = self._trace().funnel()
+        self.assertEqual((f["urls_attempted"], f["urls_scraped"]), (3, 2))
+        self.assertAlmostEqual(f["scrape_rate"], 0.667)
+
+    def test_scraped_and_failed_urls_partition_the_attempts(self):
+        t = self._trace()
+        self.assertEqual(t.scraped_urls, ["https://b.com/y", "https://c.edu/z"])
+        self.assertEqual(t.failed_urls, ["https://a.gov/x"])
+        self.assertEqual(len(t.scraped_urls) + len(t.failed_urls),
+                         len(set(t.attempted_urls)))
+
+    def test_scraped_urls_deduplicates_across_batches(self):
+        t = self._trace()
+        t.record_scrape(["https://b.com/y"],
+                        [{"url": "https://b.com/y", "raw_content": "again"}])
+        self.assertEqual(t.scraped_urls.count("https://b.com/y"), 1)
+
+    def test_compression_rate_is_context_over_corpus(self):
+        t = PipelineTrace()
+        t.record_compression("q", [{"raw_content": "x" * 10000}], 2500)
+        self.assertAlmostEqual(t.funnel()["compression_rate"], 0.25)
+
+    def test_top_n_cap_flagged_only_when_it_binds(self):
+        """More qualifying chunks than top_n admits means the count cap did the
+        cutting, not the similarity threshold."""
+        t = PipelineTrace()
+        t.record_compression("bound", [{"raw_content": "x" * 90000}], 100,
+                             docs_after_filter=37, top_n=10)
+        t.record_compression("slack", [{"raw_content": "x" * 90000}], 100,
+                             docs_after_filter=4, top_n=10)
+        self.assertEqual(t.funnel()["top_n_capped_calls"], 1)
+
+    def test_fast_path_predicate_matches_the_compressor(self):
+        t = PipelineTrace()
+        t.record_compression("small", [{"raw_content": "x" * 1000}], 900)
+        t.record_compression("large", [{"raw_content": "x" * 90000}], 900)
+        self.assertEqual([c["fast_path"] for c in t.compressions], [True, False])
+        self.assertEqual(t.funnel()["fast_path_calls"], 1)
 
 
 if __name__ == "__main__":

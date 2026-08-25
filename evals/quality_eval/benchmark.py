@@ -36,6 +36,7 @@ from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 
 from evals.quality_eval.metrics import evaluate_report, is_skipped as _is_skipped
+from evals.quality_eval.pipeline_probe import PipelineProbe
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -177,6 +178,7 @@ async def _evaluate_query(
     config: dict,
     grader_model,
     run_llm_metrics: bool,
+    subtopic_cache: dict | None = None,
 ) -> dict:
     arch  = config["arch"]
     model = config["model"]
@@ -185,20 +187,38 @@ async def _evaluate_query(
     t0 = time.perf_counter()
 
     try:
-        if arch == "single":
-            report, sources, context, cost = await _run_single_agent(query, model)
-        else:
-            report, sources, context, cost = await _run_multi_agent(query, model)
+        # The probe records what each stage was handed and what it passed on, so
+        # a weak score can be traced to a stage instead of just to the report.
+        with PipelineProbe() as probe:
+            if arch == "single":
+                report, sources, context, cost = await _run_single_agent(query, model)
+            else:
+                report, sources, context, cost = await _run_multi_agent(query, model)
+        trace = probe.trace
     except Exception as e:
         print(f"      [ERROR] researcher failed: {e}")
         return {"topic": topic, "query": query, "error": str(e)}
 
+    # Score source quality against the pages that actually loaded. `sources`
+    # counts everything the retriever proposed, and the sites with the
+    # strictest bot defences are disproportionately the authoritative ones, so
+    # scoring the proposed set credits the pipeline for evidence the writer
+    # never saw — measured at +0.066 authority on a three-query sample.
+    scored_sources = trace.scraped_urls or sources
+    funnel = trace.funnel()
+    if funnel["scrape_rate"] is not None:
+        print(f"      funnel: {funnel['urls_scraped']}/{funnel['urls_attempted']} scraped "
+              f"({funnel['scrape_rate']:.0%})  compression {funnel['compression_rate']:.0%}"
+              f"  top-N capped {funnel['top_n_capped_calls']}/{funnel['compress_calls']}")
+
     latency = round(time.perf_counter() - t0, 2)
-    print(f"      report={len(report)} chars  sources={len(sources)}  latency={latency}s")
+    print(f"      report={len(report)} chars  sources={len(scored_sources)} scored"
+          f" of {len(sources)} retrieved  latency={latency}s")
 
     m = await evaluate_report(
-        report, sources, context, query, grader_model,
+        report, scored_sources, context, query, grader_model,
         run_subtopic=run_llm_metrics, run_unsupported=run_llm_metrics,
+        subqueries=trace.subqueries, subtopic_cache=subtopic_cache,
     )
     citation    = m["citation_faithfulness"]
     diversity   = m["source_diversity"]
@@ -237,13 +257,24 @@ async def _evaluate_query(
         "query":             query,
         "latency_seconds":   latency,
         "cost":              cost,
-        "source_count":      len(sources),
+        "source_count":      len(scored_sources),
         "report_length":     len(report),
         "citation_faithfulness": citation,
         "source_diversity":  diversity,
         "source_authority":  authority,
         "subtopic_coverage": subtopic,
         "unsupported_claim": unsupported,
+        # Per-stage record: which layer lost what.
+        "pipeline_funnel":   funnel,
+        "subqueries":        trace.subqueries,
+        "sources_attempted": trace.attempted_urls,
+        "sources_scraped":   trace.scraped_urls,
+        "sources_failed":    trace.failed_urls,
+        # Persisted so a later metric change can be applied to THESE runs
+        # instead of invalidating them. Every historical log predates this and
+        # is therefore frozen at whatever the metrics did on the day it ran.
+        "report":            report,
+        "context":           str(context),
     }
 
 
@@ -262,7 +293,12 @@ def _avg(results, *key_path):
     return round(sum(vals) / len(vals), 3) if vals else None
 
 
-async def run_config(config: dict, grader_model, run_llm_metrics: bool, max_topics: int | None = None) -> dict:
+async def run_config(config: dict, grader_model, run_llm_metrics: bool,
+                     max_topics: int | None = None,
+                     subtopic_cache: dict | None = None) -> dict:
+    """`subtopic_cache` should be shared across configs in a sweep: the topic set
+    is fixed, so the expected subtopics for each query must be too, or part of
+    any gap between configurations is just the yardstick being redrawn."""
     name = config["name"]
     print(f"\n{'='*60}")
     print(f"  CONFIG: {name}  (arch={config['arch']}  model={config['model']})")
@@ -278,7 +314,8 @@ async def run_config(config: dict, grader_model, run_llm_metrics: bool, max_topi
 
     for topic, query in queries:
         try:
-            r = await _evaluate_query(topic, query, config, grader_model, run_llm_metrics)
+            r = await _evaluate_query(topic, query, config, grader_model,
+                                      run_llm_metrics, subtopic_cache)
         except Exception as e:
             print(f"      [ERROR] unexpected: {e}")
             r = {"topic": topic, "query": query, "error": str(e)}
@@ -294,7 +331,12 @@ async def run_config(config: dict, grader_model, run_llm_metrics: bool, max_topi
         "avg_subtopic_coverage_rate": _avg(successful, "subtopic_coverage",  "subtopic_coverage_rate"),
         "avg_claim_score":            _avg(successful, "unsupported_claim",  "avg_claim_score"),
         "avg_unsupported_claim_rate": _avg(successful, "unsupported_claim",  "unsupported_claim_rate"),
+        "avg_retrieval_gap_rate":     _avg(successful, "subtopic_coverage",  "retrieval_gap_rate"),
         "avg_latency_seconds":        _avg(successful, "latency_seconds"),
+        # Stage-level health, so a change in the metrics above can be read
+        # against where the pipeline actually lost material.
+        "avg_scrape_rate":            _avg(successful, "pipeline_funnel", "scrape_rate"),
+        "avg_compression_rate":       _avg(successful, "pipeline_funnel", "compression_rate"),
         "successful":                 len(successful),
         "failed":                     len(results) - len(successful),
     }
@@ -525,6 +567,9 @@ async def main(
         return
 
     logs = []
+    # Shared across every config in the sweep so each query is measured against
+    # one expected-subtopic set rather than a freshly generated one per config.
+    subtopic_cache: dict = {}
     for config in selected:
         if resume:
             existing = _find_latest_log(config["name"])
@@ -534,7 +579,8 @@ async def main(
                     logs.append(json.loads(f.readline()))
                 continue
 
-        log = await run_config(config, grader_model, run_llm_metrics, max_topics=max_topics)
+        log = await run_config(config, grader_model, run_llm_metrics,
+                               max_topics=max_topics, subtopic_cache=subtopic_cache)
         logs.append(log)
 
     _print_summary(logs)
