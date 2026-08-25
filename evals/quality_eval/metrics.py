@@ -323,6 +323,11 @@ You are a research quality evaluator.
 Decide whether the single subtopic below is clearly and substantively addressed
 in the research report (not merely mentioned in passing).
 
+A subtopic counts as covered ONLY if the report's prose explains it. Source
+titles, reference entries, link text and URLs do NOT count as coverage, even
+when they name the subtopic — a citation to a paper about X is not an
+explanation of X.
+
 Subtopic: {subtopic}
 
 Report:
@@ -333,10 +338,19 @@ Return ONLY a JSON object: {{"covered": true}} or {{"covered": false}}.
 
 
 async def _check_one_subtopic(subtopic: str, report: str, grader_model) -> bool:
-    """Judge a single subtopic's coverage independently (no batch effects)."""
+    """Judge a single subtopic's coverage independently (no batch effects).
+
+    Judges the BODY only. A trailing `## References` list names every source,
+    and those titles routinely contain the subtopic's keywords, so leaving the
+    list in lets a report score coverage it never wrote: an empty report that
+    is nothing but its reference list was scored 43-57% covered. Stripping the
+    section deterministically is more reliable than asking the grader to ignore
+    it (the prompt above says so too, as defence in depth).
+    """
+    body, _ = _split_at_references(report)
     try:
         resp   = await grader_model.ainvoke(
-            _COVERAGE_ONE_PROMPT.format(subtopic=subtopic, report=report[:12000]))
+            _COVERAGE_ONE_PROMPT.format(subtopic=subtopic, report=body[:12000]))
         result = _parse_json(resp.content)
         return bool(result.get("covered", False))
     except Exception:
@@ -345,7 +359,8 @@ async def _check_one_subtopic(subtopic: str, report: str, grader_model) -> bool:
 
 async def subtopic_coverage(query: str, report: str, grader_model, subtopics=None) -> dict:
     """
-    LLM-judged coverage of expected subtopics (~2 calls, ~$0.02/query).
+    LLM-judged coverage of expected subtopics (1 generation call + 1 call per
+    subtopic, run concurrently — so ~5-8 calls for a typical query).
 
     Step 1: generate expected subtopics for the query (adaptive count).
     Step 2: check which subtopics the report covers.
@@ -401,11 +416,29 @@ Guidelines for how many claims to extract:
 - Typical research reports: 6-8 claims
 - Long or multi-topic reports: up to 10 claims
 
-Report (first 3000 characters):
+Report:
 {report}
 
 Return ONLY a JSON array of claim strings. No explanation or extra text.
 """.strip()
+
+# How much of the source context each claim is scored against. The context is
+# the evidence; anything cut off cannot support a claim, so a claim whose
+# evidence lives past this point is scored "unsupported" for a reason that has
+# nothing to do with the report.
+#
+# This was 4000, which measurably inflated the metric. Ablation over 3 fixtures
+# with the claim set held fixed (only the window varied):
+#
+#     window   1000    2000    4000    8000
+#     rate     0.958   0.850   0.808   0.700
+#
+# i.e. a quarter of the "unsupported" verdicts at 1000 chars were just evidence
+# the grader was never shown. The curve had not flattened at 8000 — that is the
+# fixtures' own context cap, not a plateau — so this is set to match the 12000
+# report window used elsewhere in this module. Worth re-running the ablation
+# against full-length context to find the real knee.
+CONTEXT_CHARS = 12000
 
 _VERIFY_CLAIMS_PROMPT = """
 You are a fact-checking assistant.
@@ -436,7 +469,7 @@ Any claim with a specific number, date, or statistic not in the context → scor
 Claims:
 {claims}
 
-Source context (first 4000 characters):
+Source context:
 {context}
 
 Return ONLY a JSON array, one object per claim:
@@ -448,13 +481,14 @@ Return ONLY a JSON array, one object per claim:
 """.strip()
 
 
-async def _verify_one_claim(claim: str, context_text: str, grader_model) -> dict:
+async def _verify_one_claim(claim: str, context_text: str, grader_model,
+                            context_chars: int = CONTEXT_CHARS) -> dict:
     """Score a single claim independently against the context (no batch effects)."""
     try:
         resp   = await grader_model.ainvoke(
             _VERIFY_CLAIMS_PROMPT.format(
                 claims=json.dumps([claim], ensure_ascii=False),
-                context=context_text[:4000],
+                context=context_text[:context_chars],
             )
         )
         result = _parse_json(resp.content)
@@ -468,9 +502,11 @@ async def _verify_one_claim(claim: str, context_text: str, grader_model) -> dict
             "reason": "verification failed"}
 
 
-async def unsupported_claim(report: str, context, grader_model, claims=None) -> dict:
+async def unsupported_claim(report: str, context, grader_model, claims=None,
+                            context_chars: int = CONTEXT_CHARS) -> dict:
     """
-    Claim-level credibility scoring (~2 calls, ~$0.02/query).
+    Claim-level credibility scoring (1 extraction call + 1 call per claim, run
+    concurrently — so ~7-11 calls for a typical report).
 
     Step 1: extract 3-10 specific verifiable claims from the report.
     Step 2: score each claim as supported (1.0), inferred (0.3-0.9), or unsupported (0.0).
@@ -509,7 +545,8 @@ async def unsupported_claim(report: str, context, grader_model, claims=None) -> 
     # unrelated claims in the same batch — so a claim's score depended on its
     # batch-mates. Independent scoring makes each claim's score self-contained.
     scored_claims = await asyncio.gather(
-        *(_verify_one_claim(c, context_text, grader_model) for c in claims)
+        *(_verify_one_claim(c, context_text, grader_model, context_chars)
+          for c in claims)
     )
 
     supported_l   = [c for c in scored_claims if c.get("category") == "supported"]

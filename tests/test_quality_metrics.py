@@ -272,6 +272,32 @@ class TestSubtopicCoverage(unittest.IsolatedAsyncioTestCase):
         result = await subtopic_coverage("narrow query", "report", mock)
         self.assertEqual(result["subtopic_coverage_rate"], 0.0)
 
+    async def test_references_section_excluded_from_coverage_judgement(self):
+        """Regression: the trailing `## References` list must not reach the grader.
+
+        Source titles routinely contain the subtopic's own keywords, so leaving
+        the list in let a report score coverage it never wrote — a report that
+        was nothing but its reference list scored 43-57% covered.
+        """
+        subtopics = ["quantum error correction"]
+        report = (
+            "# Report\n\n"
+            "The agent found little to say.\n\n"
+            "## References\n\n"
+            "Smith (2024). A complete survey of quantum error correction. "
+            "https://example.com/qec\n"
+        )
+        mock = _mock_subtopic(subtopics, [False])
+        await subtopic_coverage("query", report, mock)
+
+        # call 0 generates the subtopics; the rest judge coverage
+        judged = [call.args[0] for call in mock.ainvoke.call_args_list[1:]]
+        self.assertTrue(judged, "expected at least one coverage-check call")
+        for prompt in judged:
+            self.assertNotIn("## References", prompt)
+            self.assertNotIn("A complete survey of quantum error correction", prompt)
+            self.assertIn("The agent found little to say", prompt)
+
     async def test_subtopic_extraction_failure_returns_error(self):
         mock   = _mock_model_raw("not json")
         result = await subtopic_coverage("query", "report", mock)
