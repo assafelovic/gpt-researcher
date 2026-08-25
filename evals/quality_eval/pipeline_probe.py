@@ -43,11 +43,27 @@ class PipelineTrace:
     """What each stage received and produced during one research run."""
 
     subqueries:   list[str]  = field(default_factory=list)
+    searches:     list[dict] = field(default_factory=list)
     scrapes:      list[dict] = field(default_factory=list)
     compressions: list[dict] = field(default_factory=list)
     context_len:  int = 0
 
     # --- recording -------------------------------------------------------
+
+    def record_search(self, proposed: list[str], accepted: list[str]) -> None:
+        """One search's results, before and after de-duplication.
+
+        The pipeline drops URLs it has already seen before anything is scraped,
+        so every later stage sees disjoint sets by construction — measuring
+        overlap downstream can only ever return zero. This is the one place the
+        redundancy is still visible: a sub-query whose results were all seen
+        already spent a search slot and returned nothing new.
+        """
+        self.searches.append({
+            "proposed": len(proposed or []),
+            "accepted": len(accepted or []),
+            "duplicate": len(proposed or []) - len(accepted or []),
+        })
 
     def record_scrape(self, urls_in: list[str], pages_out: list[dict]) -> None:
         """One scrape batch: which URLs were attempted, which came back."""
@@ -119,6 +135,8 @@ class PipelineTrace:
         """Stage-by-stage volumes and retention rates."""
         attempted = len(self.attempted_urls)
         scraped   = len(self.scraped_urls)
+        proposed  = sum(s["proposed"] for s in self.searches)
+        duplicate = sum(s["duplicate"] for s in self.searches)
         chars_in  = sum(c["chars_in"] for c in self.compressions)
         chars_out = sum(c["chars_out"] for c in self.compressions)
         capped    = [c for c in self.compressions
@@ -127,6 +145,12 @@ class PipelineTrace:
                      and c["docs_after_filter"] > c["top_n"]]
         return {
             "subqueries":        len(self.subqueries),
+            "urls_proposed":     proposed,
+            "urls_duplicate":    duplicate,
+            # Share of search results already seen by an earlier query — how
+            # much of the retrieval budget the planner spent on ground it had
+            # already covered.
+            "search_overlap":    round(duplicate / proposed, 3) if proposed else None,
             "urls_attempted":    attempted,
             "urls_scraped":      scraped,
             "scrape_rate":       round(scraped / attempted, 3) if attempted else None,
@@ -167,6 +191,7 @@ class PipelineProbe:
         trace = self.trace
         orig_plan     = ResearchConductor.plan_research
         orig_browse   = BrowserManager.browse_urls
+        orig_dedupe   = ResearchConductor._get_new_urls
         orig_compress = ContextManager.get_similar_content_by_query
         orig_pretty   = PromptFamily.pretty_print_docs
 
@@ -184,6 +209,12 @@ class PipelineProbe:
             trace.record_scrape(urls, pages or [])
             return pages
 
+        async def dedupe(self, url_set_input, *a, **k):
+            proposed = list(url_set_input or [])
+            accepted = await orig_dedupe(self, url_set_input, *a, **k)
+            trace.record_search(proposed, accepted or [])
+            return accepted
+
         def pretty(docs, top_n=None):
             last_cut["docs"] = len(docs or [])
             last_cut["top_n"] = top_n
@@ -198,11 +229,13 @@ class PipelineProbe:
             return ctx
 
         ResearchConductor.plan_research = plan
+        ResearchConductor._get_new_urls = dedupe
         BrowserManager.browse_urls = browse
         ContextManager.get_similar_content_by_query = compress
         PromptFamily.pretty_print_docs = staticmethod(pretty)
         self._restore = [
             (ResearchConductor, "plan_research", orig_plan),
+            (ResearchConductor, "_get_new_urls", orig_dedupe),
             (BrowserManager, "browse_urls", orig_browse),
             (ContextManager, "get_similar_content_by_query", orig_compress),
             (PromptFamily, "pretty_print_docs", staticmethod(orig_pretty)),

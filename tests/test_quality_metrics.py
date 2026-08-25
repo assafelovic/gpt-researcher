@@ -548,6 +548,20 @@ class TestPipelineTrace(unittest.TestCase):
                         [{"url": "https://b.com/y", "raw_content": "again"}])
         self.assertEqual(t.scraped_urls.count("https://b.com/y"), 1)
 
+    def test_search_overlap_counts_results_already_seen(self):
+        """De-duplication happens before scraping, so a sub-query that returned
+        nothing new is invisible downstream — this is the only stage where a
+        wasted search slot can still be counted."""
+        t = PipelineTrace()
+        t.record_search(["a", "b", "c", "d"], ["a", "b", "c", "d"])   # all new
+        t.record_search(["a", "b", "e", "f"], ["e", "f"])             # half seen
+        f = t.funnel()
+        self.assertEqual((f["urls_proposed"], f["urls_duplicate"]), (8, 2))
+        self.assertAlmostEqual(f["search_overlap"], 0.25)
+
+    def test_search_overlap_none_when_no_searches_recorded(self):
+        self.assertIsNone(PipelineTrace().funnel()["search_overlap"])
+
     def test_compression_rate_is_context_over_corpus(self):
         t = PipelineTrace()
         t.record_compression("q", [{"raw_content": "x" * 10000}], 2500)
