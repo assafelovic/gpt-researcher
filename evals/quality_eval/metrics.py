@@ -427,18 +427,24 @@ Return ONLY a JSON array of claim strings. No explanation or extra text.
 # evidence lives past this point is scored "unsupported" for a reason that has
 # nothing to do with the report.
 #
-# This was 4000, which measurably inflated the metric. Ablation over 3 fixtures
-# with the claim set held fixed (only the window varied):
+# This was 4000, and that single constant was producing the metric's entire
+# signal. Ablation on three reports carrying their full pipeline context
+# (32-44k chars), with the claim set and grader held fixed so only the window
+# varied:
 #
-#     window   1000    2000    4000    8000
-#     rate     0.958   0.850   0.808   0.700
+#     window   4000    8000    12000   24000   full
+#     rate     0.659   0.556   0.452   0.137   0.000
 #
-# i.e. a quarter of the "unsupported" verdicts at 1000 chars were just evidence
-# the grader was never shown. The curve had not flattened at 8000 — that is the
-# fixtures' own context cap, not a plateau — so this is set to match the 12000
-# report window used elsewhere in this module. Worth re-running the ablation
-# against full-length context to find the real knee.
-CONTEXT_CHARS = 12000
+# Every "unsupported" verdict was evidence the grader had simply not been
+# shown: given the whole context, all 29 claims across the three reports are
+# supported. A truncating default does not make the metric cheaper, it makes it
+# wrong — and wrong in a direction that looks like a finding about the agent.
+#
+# The context handed to this metric is already the pipeline's own compressed,
+# relevance-filtered output, so there is nothing to gain by cutting it further.
+# This cap exists only as a guard against pathological input. To spend less,
+# use a cheaper grader — that costs accuracy; truncating costs validity.
+CONTEXT_CHARS = 50000
 
 _VERIFY_CLAIMS_PROMPT = """
 You are a fact-checking assistant.
