@@ -88,16 +88,28 @@ class SubtopicCoverageMetric(BaseMetric):
     aligned_with = "RAGAS answer relevancy (measures completeness)"
     needs_llm    = True
 
+    def __init__(self, subtopic_cache: dict | None = None):
+        """`subtopic_cache` keeps the expected subtopic set stable per query.
+
+        Pass one shared dict when the same query is scored more than once — a
+        benchmark sweeping configurations over a fixed topic set, say — so the
+        yardstick is generated once instead of being redrawn for each run.
+        """
+        self.subtopic_cache = subtopic_cache
+
     async def measure(self, sample: EvalSample, grader_model=None) -> MetricResult:
-        raw   = await m.subtopic_coverage(sample.query, sample.report, grader_model)
+        raw   = await m.subtopic_coverage(
+            sample.query, sample.report, grader_model,
+            subtopic_cache=self.subtopic_cache, subqueries=sample.subqueries)
         score = raw.get("subtopic_coverage_rate")
         if score is None:
             return MetricResult.skip(self, raw.get("error", "coverage unavailable"))
+        reason = f"{len(raw['covered'])}/{len(raw['expected_subtopics'])} subtopics covered"
+        if raw.get("retrieval_gap_rate"):
+            reason += f", {raw['retrieval_gap_rate']:.0%} never searched for"
         return MetricResult(
             name=self.name, group=self.group, aligned_with=self.aligned_with,
-            score=score,
-            reason=f"{len(raw['covered'])}/{len(raw['expected_subtopics'])} subtopics covered",
-            breakdown=raw,
+            score=score, reason=reason, breakdown=raw,
         )
 
 
@@ -130,15 +142,21 @@ class UnsupportedClaimMetric(BaseMetric):
 # Registry + entry point
 # ---------------------------------------------------------------------------
 
-def default_metrics(run_subtopic: bool = True, run_unsupported: bool = True) -> list[BaseMetric]:
-    """Zero-cost metrics always; the two LLM metrics gated by flags (ordered cheap→expensive)."""
+def default_metrics(run_subtopic: bool = True, run_unsupported: bool = True,
+                    subtopic_cache: dict | None = None) -> list[BaseMetric]:
+    """Zero-cost metrics always; the two LLM metrics gated by flags (ordered cheap→expensive).
+
+    Pass `subtopic_cache` (a dict the caller owns and may persist) when the same
+    queries are scored repeatedly, so subtopic_coverage compares every run
+    against the same expected set.
+    """
     suite: list[BaseMetric] = [
         CitationFaithfulnessMetric(),
         SourceDiversityMetric(),
         SourceAuthorityMetric(),
     ]
     if run_subtopic:
-        suite.append(SubtopicCoverageMetric())
+        suite.append(SubtopicCoverageMetric(subtopic_cache=subtopic_cache))
     if run_unsupported:
         suite.append(UnsupportedClaimMetric())
     return suite

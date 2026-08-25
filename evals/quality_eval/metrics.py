@@ -337,6 +337,45 @@ Return ONLY a JSON object: {{"covered": true}} or {{"covered": false}}.
 """.strip()
 
 
+_GAP_PROMPT = """
+You are analysing why a research report failed to cover an expected subtopic.
+
+Below is a subtopic the report did not cover, and the list of search queries the
+research agent actually issued while gathering its sources.
+
+Decide whether ANY of those queries would plausibly have retrieved material
+about the subtopic.
+
+Subtopic: {subtopic}
+
+Search queries the agent issued:
+{subqueries}
+
+Return ONLY a JSON object:
+{{"covered_by_search": true}}   if some query targets this subtopic
+{{"covered_by_search": false}}  if no query targets it
+""".strip()
+
+
+async def _classify_gap(subtopic: str, subqueries: list[str], grader_model) -> str:
+    """Was a missing subtopic ever searched for?
+
+    "retrieval" — no search query targeted it, so no source could have covered
+                  it and the writer never had the option. The gap belongs to
+                  the planning/retrieval stage.
+    "writing"   — a query did target it, so material was plausibly available
+                  and the report omitted it anyway.
+    """
+    try:
+        resp = await grader_model.ainvoke(_GAP_PROMPT.format(
+            subtopic=subtopic,
+            subqueries="\n".join(f"- {q}" for q in subqueries)))
+        result = _parse_json(resp.content)
+        return "writing" if result.get("covered_by_search") else "retrieval"
+    except Exception:
+        return "unknown"
+
+
 async def _check_one_subtopic(subtopic: str, report: str, grader_model) -> bool:
     """Judge a single subtopic's coverage independently (no batch effects).
 
@@ -357,7 +396,9 @@ async def _check_one_subtopic(subtopic: str, report: str, grader_model) -> bool:
         return False
 
 
-async def subtopic_coverage(query: str, report: str, grader_model, subtopics=None) -> dict:
+async def subtopic_coverage(query: str, report: str, grader_model, subtopics=None,
+                            subtopic_cache: dict | None = None,
+                            subqueries: list[str] | None = None) -> dict:
     """
     LLM-judged coverage of expected subtopics (1 generation call + 1 call per
     subtopic, run concurrently — so ~5-8 calls for a typical query).
@@ -369,11 +410,37 @@ async def subtopic_coverage(query: str, report: str, grader_model, subtopics=Non
     skipped and coverage is judged against these exact subtopics — this fixes the
     subtopic set across calls (e.g. for perturbation testing, so coverage isn't
     confounded by re-generation drift).
+
+    `subtopic_cache`: a caller-owned dict mapping query -> subtopic list. The
+    expected set is generated once per query and reused, which matters whenever
+    the same query is scored more than once: a benchmark comparing configurations
+    over a shared topic set was regenerating the yardstick for every
+    configuration, so part of any difference between them was generation drift
+    rather than report quality. Measured spread from that drift alone was ~0.1
+    on the same three reports. The metric only reads and writes the dict; the
+    caller decides whether to persist it.
+
+    `subqueries`: the search queries the agent actually issued. When supplied,
+    each MISSING subtopic is classified (one extra call each) as:
+        "retrieval" — nothing was searched for it, so no source could cover it
+        "writing"   — it was searched for, and the report omitted it anyway
+    This separates a planning failure from a writing failure, which the bare
+    coverage rate conflates. It does NOT separate out the third case the rate
+    hides: a boilerplate expectation ("define your terms") whose absence is not
+    a defect at all. Such an expectation lands in whichever bucket the searches
+    happen to imply — observed as "retrieval" for a definition subtopic no query
+    asked about — so a low rate still needs a human read before it is called a
+    defect. Reported as `retrieval_gap_rate` over all expected subtopics.
     """
+    if subtopics is None and subtopic_cache is not None:
+        subtopics = subtopic_cache.get(query)
+
+    generated = False
     if subtopics is None:
         try:
             resp1     = await grader_model.ainvoke(_SUBTOPICS_PROMPT.format(query=query))
             subtopics = _parse_json(resp1.content)
+            generated = True
         except Exception:
             return {
                 "expected_subtopics":     [],
@@ -382,6 +449,9 @@ async def subtopic_coverage(query: str, report: str, grader_model, subtopics=Non
                 "subtopic_coverage_rate": None,
                 "error":                  "Failed to parse subtopics from LLM",
             }
+
+    if generated and subtopic_cache is not None:
+        subtopic_cache[query] = subtopics
 
     # Judge each subtopic INDEPENDENTLY (one call each, concurrent) so a
     # subtopic's verdict isn't swayed by the others in the same batch.
@@ -392,12 +462,22 @@ async def subtopic_coverage(query: str, report: str, grader_model, subtopics=Non
     missing = [s for s, ok in zip(subtopics, flags) if not ok]
 
     total = len(subtopics)
-    return {
+    out = {
         "expected_subtopics":     subtopics,
         "covered":                covered,
         "missing":                missing,
         "subtopic_coverage_rate": round(len(covered) / total, 3) if total else 0.0,
     }
+
+    if missing and subqueries:
+        gaps = await asyncio.gather(
+            *(_classify_gap(s, subqueries, grader_model) for s in missing))
+        out["missing_breakdown"] = [{"subtopic": s, "gap": g}
+                                    for s, g in zip(missing, gaps)]
+        n_retrieval = sum(g == "retrieval" for g in gaps)
+        out["retrieval_gap_rate"] = round(n_retrieval / total, 3) if total else 0.0
+
+    return out
 
 
 # ---------------------------------------------------------------------------

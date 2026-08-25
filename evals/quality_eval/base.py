@@ -41,12 +41,17 @@ class EvalSample:
     `sources` (raw URLs the agent retrieved) is the field RAG frameworks lack and
     the reason source-level metrics can exist here. `reference` is an optional
     ground-truth answer, unused by the ground-truth-free metrics.
+
+    `subqueries` are the searches the agent actually issued. They are optional —
+    most callers cannot see inside the pipeline — but when present they let a
+    missing subtopic be attributed to planning rather than writing.
     """
-    query:     str = ""
-    report:    str = ""
-    sources:   list[str] = field(default_factory=list)
-    context:   str = ""
-    reference: str | None = None
+    query:      str = ""
+    report:     str = ""
+    sources:    list[str] = field(default_factory=list)
+    context:    str = ""
+    reference:  str | None = None
+    subqueries: list[str] | None = None
 
 
 @dataclass

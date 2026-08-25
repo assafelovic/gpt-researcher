@@ -272,6 +272,50 @@ class TestSubtopicCoverage(unittest.IsolatedAsyncioTestCase):
         result = await subtopic_coverage("narrow query", "report", mock)
         self.assertEqual(result["subtopic_coverage_rate"], 0.0)
 
+    async def test_subtopic_cache_reuses_the_expected_set(self):
+        """A cached query must not regenerate its yardstick.
+
+        Scoring the same query twice used to draw a fresh expected-subtopic list
+        each time, so repeat runs were partly measuring generation drift.
+        """
+        subtopics = ["A", "B"]
+        cache = {}
+
+        first = _mock_subtopic(subtopics, [True, True])
+        r1 = await subtopic_coverage("query", "report", first, subtopic_cache=cache)
+        self.assertEqual(cache["query"], subtopics)
+        self.assertEqual(first.ainvoke.call_count, 3)      # 1 generate + 2 checks
+
+        # Second run: only coverage checks are queued, so a generation call
+        # would consume a check payload and change the outcome.
+        second = _mock_model({"covered": True}, {"covered": False})
+        r2 = await subtopic_coverage("query", "report", second, subtopic_cache=cache)
+        self.assertEqual(second.ainvoke.call_count, 2)     # no generate
+        self.assertEqual(r1["expected_subtopics"], r2["expected_subtopics"])
+        self.assertAlmostEqual(r2["subtopic_coverage_rate"], 0.5)
+
+    async def test_missing_subtopics_split_into_retrieval_and_writing_gaps(self):
+        """A subtopic nobody searched for is a planning failure, not a writing one."""
+        subtopics = ["A", "B", "C"]
+        mock = _mock_model(
+            subtopics,
+            {"covered": True}, {"covered": False}, {"covered": False},
+            {"covered_by_search": False},   # B was never searched -> retrieval
+            {"covered_by_search": True},    # C was searched -> writing
+        )
+        result = await subtopic_coverage("query", "report", mock,
+                                         subqueries=["some search"])
+        gaps = {d["subtopic"]: d["gap"] for d in result["missing_breakdown"]}
+        self.assertEqual(gaps, {"B": "retrieval", "C": "writing"})
+        self.assertEqual(result["retrieval_gap_rate"], 0.333)   # 1 of 3 expected
+
+    async def test_no_gap_classification_without_subqueries(self):
+        """Without the agent's searches the split is unknowable, so it is omitted."""
+        mock = _mock_subtopic(["A", "B"], [True, False])
+        result = await subtopic_coverage("query", "report", mock)
+        self.assertNotIn("missing_breakdown", result)
+        self.assertNotIn("retrieval_gap_rate", result)
+
     async def test_references_section_excluded_from_coverage_judgement(self):
         """Regression: the trailing `## References` list must not reach the grader.
 
