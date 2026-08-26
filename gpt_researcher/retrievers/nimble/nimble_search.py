@@ -9,11 +9,17 @@ from typing import Optional, Sequence
 
 import requests
 
+from ..base import BaseRetriever
 
-class NimbleSearch:
+
+class NimbleSearch(BaseRetriever):
     """
     Nimble Search API Retriever
     """
+
+    # Nimble lite returns a URL plus a snippet (content/description); the
+    # real page text still has to be scraped. Matches Tavily/Searx/DuckDuckGo.
+    requires_scraping = True
 
     def __init__(self, query, query_domains=None):
         """

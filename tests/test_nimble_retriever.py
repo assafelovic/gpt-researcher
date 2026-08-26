@@ -2,10 +2,16 @@ import os
 import unittest
 from unittest.mock import MagicMock, patch
 
+from gpt_researcher.retrievers.base import BaseRetriever
 from gpt_researcher.retrievers.nimble.nimble_search import NimbleSearch
 
 
 class TestNimbleSearch(unittest.TestCase):
+    def test_is_base_retriever_and_requires_scraping(self):
+        # Nimble lite returns snippets; pages still need to be scraped.
+        self.assertTrue(issubclass(NimbleSearch, BaseRetriever))
+        self.assertIs(NimbleSearch.requires_scraping, True)
+
     def test_missing_api_key_defaults_to_blank(self):
         with patch.dict(os.environ, {}, clear=True):
             retriever = NimbleSearch("test query")
