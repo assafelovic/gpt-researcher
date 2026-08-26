@@ -119,6 +119,7 @@ def test_base_class_requires_a_search_method():
         ("gpt_researcher.retrievers.tavily.tavily_search", "TavilySearch", True),
         ("gpt_researcher.retrievers.searx.searx", "SearxSearch", True),
         ("gpt_researcher.retrievers.duckduckgo.duckduckgo", "Duckduckgo", True),
+        ("gpt_researcher.retrievers.nimble.nimble_search", "NimbleSearch", True),
         ("gpt_researcher.retrievers.pubmed_central.pubmed_central", "PubMedCentralSearch", False),
         ("gpt_researcher.retrievers.custom.custom", "CustomRetriever", False),
     ],
