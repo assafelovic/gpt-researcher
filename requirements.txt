@@ -25,7 +25,7 @@ google-genai>=1.0.0  # For image generation with Imagen
 
 # Search & Research
 tavily-python>=0.7.12
-ddgs>=9.0.0
+ddgs>=9.15.0
 arxiv>=2.0.0
 
 # Document Processing
