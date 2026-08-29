@@ -28,6 +28,7 @@ from .skills.curator import SourceCurator
 from .skills.deep_research import DeepResearchSkill
 from .skills.image_generator import ImageGenerator
 from .skills.researcher import ResearchConductor
+from .skills.source_assessor import SourceAssessor
 from .skills.writer import ReportGenerator
 from .utils.enum import ReportSource, ReportType, Tone
 from .utils.llm import create_chat_completion
@@ -80,6 +81,11 @@ class GPTResearcher:
         mcp_configs: list[dict] | None = None,
         mcp_max_iterations: int | None = None,
         mcp_strategy: str | None = None,
+        source_assessment_prompt: str | None = None,
+        source_assessment_threshold: float = 0.25,
+        source_assessment_max_content_chars: int = 12000,
+        source_assessment_max_concurrency: int = 4,
+        search_exclude_terms: list[str] | None = None,
         **kwargs
     ):
         """
@@ -150,6 +156,13 @@ class GPTResearcher:
         self.query_domains = query_domains or []
         self.research_sources = []  # The list of scraped sources including title, content and images
         self.research_images = []  # The list of selected research images
+        self.source_assessment_prompt = source_assessment_prompt
+        self.source_assessment_threshold = source_assessment_threshold
+        self.source_assessment_max_content_chars = source_assessment_max_content_chars
+        self.source_assessment_max_concurrency = source_assessment_max_concurrency
+        self.search_exclude_terms = search_exclude_terms or []
+        self.source_assessments: list[dict[str, Any]] = []
+        self.rejected_sources: list[dict[str, Any]] = []
         self.documents = documents
         self.vector_store = VectorStoreWrapper(vector_store) if vector_store else None
         self.vector_store_filter = vector_store_filter
@@ -188,6 +201,7 @@ class GPTResearcher:
         self.context_manager: ContextManager = ContextManager(self)
         self.scraper_manager: BrowserManager = BrowserManager(self)
         self.source_curator: SourceCurator = SourceCurator(self)
+        self.source_assessor: SourceAssessor = SourceAssessor(self)
         self.deep_researcher: Optional[DeepResearchSkill] = None
         if report_type == ReportType.DeepResearch.value:
             self.deep_researcher = DeepResearchSkill(self)
@@ -540,7 +554,11 @@ class GPTResearcher:
             search_results = await self._search_all_retrievers(query, query_domains)
         else:
             search_results = await get_search_results(
-                query, self.retrievers[0], query_domains=query_domains, researcher=self
+                query,
+                self.retrievers[0],
+                query_domains=query_domains,
+                researcher=self,
+                exclude_terms=self.search_exclude_terms,
             )
 
         if not aggregated_summary:
@@ -586,7 +604,13 @@ class GPTResearcher:
             A merged, de-duplicated list of search results.
         """
         tasks = [
-            get_search_results(query, retriever, query_domains=query_domains, researcher=self)
+            get_search_results(
+                query,
+                retriever,
+                query_domains=query_domains,
+                researcher=self,
+                exclude_terms=self.search_exclude_terms,
+            )
             for retriever in self.retrievers
         ]
         results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -684,6 +708,22 @@ class GPTResearcher:
             sources: List of source dictionaries to add.
         """
         self.research_sources.extend(sources)
+
+    def get_source_assessments(self) -> list[dict[str, Any]]:
+        """Get source assessment records collected during research."""
+        return list(self.source_assessments)
+
+    def add_source_assessments(self, assessments: list[dict[str, Any]]) -> None:
+        """Add source assessment records."""
+        self.source_assessments.extend(assessments)
+
+    def get_rejected_sources(self) -> list[dict[str, Any]]:
+        """Get rejected source assessment records collected during research."""
+        return list(self.rejected_sources)
+
+    def add_rejected_sources(self, sources: list[dict[str, Any]]) -> None:
+        """Add rejected source assessment records."""
+        self.rejected_sources.extend(sources)
 
     def add_references(self, report_markdown: str, visited_urls: set) -> str:
         """Add reference section to a markdown report.

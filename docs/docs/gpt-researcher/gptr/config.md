@@ -102,6 +102,10 @@ The hard upper bound is 200k (sanity guard against typos).
 - **`DEEP_RESEARCH_DEPTH`**: Controls the depth of deep research, defining how many sequential searches to perform. Defaults to `2`.
 - **`DEEP_RESEARCH_CONCURRENCY`**: Controls the concurrency level for deep research operations. Defaults to `4`.
 - **`REASONING_EFFORT`**: Controls the reasoning effort of strategic models. Default to `medium`.
+- **`SOURCE_ASSESSMENT_PROMPT`**: Optional admission policy text for source quality gating. When set, scraped sources are scored by a fast LLM and rejected if their violation score exceeds the threshold. Defaults to `None` (disabled). See [Source Admission Policy](/docs/gpt-researcher/gptr/source-admission-policy) for details.
+- **`SOURCE_ASSESSMENT_THRESHOLD`**: Maximum violation score `[0.0, 1.0]` for source acceptance. Defaults to `0.25`.
+- **`SOURCE_ASSESSMENT_MAX_CONTENT_CHARS`**: Raw content characters sent to the LLM per source during assessment. Defaults to `12000`. Use `-1` for full content.
+- **`SOURCE_ASSESSMENT_MAX_CONCURRENCY`**: Maximum number of sources assessed in parallel. Defaults to `4`.
 
 ## Deep Research Configuration
 

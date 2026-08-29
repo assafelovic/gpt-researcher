@@ -4,6 +4,7 @@ from .writer import ReportGenerator
 from .browser import BrowserManager
 from .curator import SourceCurator
 from .image_generator import ImageGenerator
+from .source_assessor import SourceAssessor
 
 __all__ = [
     'ResearchConductor',
@@ -12,4 +13,5 @@ __all__ = [
     'BrowserManager',
     'SourceCurator',
     'ImageGenerator',
+    'SourceAssessor',
 ]

@@ -1,5 +1,6 @@
 from itertools import islice
-from ..utils import check_pkg
+from typing import List, Optional
+from ..utils import append_exclude_terms, check_pkg
 
 # gpt_researcher.skills.researcher._search_relevant_source_urls() treats
 # any search result whose raw_content/body exceeds 100 characters as
@@ -23,15 +24,15 @@ class Duckduckgo:
     """
     Duckduckgo API Retriever
     """
-
-    # ddgs returns a snippet in "body"; the real page text still has to be
-    # fetched.
+    # ddgs returns a snippet in "body"; the real page text still has to
+    # be fetched.
     requires_scraping = True
-    def __init__(self, query, query_domains=None):
+
+    def __init__(self, query: str, query_domains: Optional[List[str]] = None, exclude_terms: Optional[List[str]] = None):
         check_pkg('ddgs')
         from ddgs import DDGS
         self.ddg = DDGS()
-        self.query = query
+        self.query = append_exclude_terms(query, exclude_terms)
         self.query_domains = query_domains or None
 
     def search(self, max_results=5):

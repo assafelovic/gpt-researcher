@@ -14,6 +14,7 @@ from ..actions.agent_creator import choose_agent
 from ..actions.query_processing import get_search_results, plan_research_outline
 from ..actions.utils import stream_output
 from ..document import DocumentLoader, LangChainDocumentLoader, OnlineDocumentLoader
+from ..retrievers.utils import supports_exclude_terms
 from ..utils.enum import ReportSource, ReportType
 from ..utils.logging_config import get_json_handler
 
@@ -67,6 +68,7 @@ class ResearchConductor:
             query_domains,
             researcher=self.researcher,
             max_results=self.researcher.cfg.max_search_results_per_query,
+            exclude_terms=self.researcher.search_exclude_terms,
         )
         self.logger.info(f"Initial search results obtained: {len(search_results)} results")
 
@@ -838,7 +840,15 @@ class ResearchConductor:
 
             try:
                 # Instantiate the retriever with the sub-query
-                retriever = retriever_class(query, query_domains=query_domains)
+                _exclude = getattr(self.researcher, "search_exclude_terms", None)
+                if _exclude and supports_exclude_terms(retriever_class):
+                    retriever = retriever_class(
+                        query,
+                        query_domains=query_domains,
+                        exclude_terms=_exclude,
+                    )
+                else:
+                    retriever = retriever_class(query, query_domains=query_domains)
 
                 # Perform the search using the current retriever
                 search_results = await asyncio.to_thread(
@@ -883,10 +893,13 @@ class ResearchConductor:
                         # Undeclared: legacy behaviour, unchanged.
                         prefetched_content.append({
                             "url": url,
+                            "title": result.get("title", ""),
                             "raw_content": raw_content,
                         })
-                        self.researcher.add_research_sources([{"url": url}])
-                    else:
+                        # If the source assessment prompt is not set, we can't add the source immediately as we don't know if it's relevant.
+                        if getattr(self.researcher, "source_assessment_prompt", None) is None:
+                            self.researcher.add_research_sources([{"url": url}])
+                    elif url:
                         new_search_urls.append(url)
             except Exception as e:
                 self.logger.error(f"Error searching with {retriever_class.__name__}: {e}")
@@ -927,6 +940,12 @@ class ResearchConductor:
         scraped_content = await self.researcher.scraper_manager.browse_urls(new_search_urls)
 
         # Merge pre-fetched content from retrievers that already provide full text
+        if getattr(self.researcher, "source_assessment_prompt", None) is not None:
+            prefetched_content, rejected_sources = await self.researcher.source_assessor.assess_sources(
+                prefetched_content
+            )
+            self.researcher.add_rejected_sources(rejected_sources)
+            self.researcher.add_research_sources(prefetched_content)
         scraped_content.extend(prefetched_content)
 
         if self.researcher.vector_store:
@@ -1107,4 +1126,3 @@ class ResearchConductor:
                     "progress": progress
                 }
             )
-

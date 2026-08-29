@@ -1,23 +1,28 @@
-# Tavily API Retriever
+# Google Custom Search API Retriever
 
 # libraries
 import os
 import requests
 import json
+from typing import List, Optional
 from urllib.parse import urlencode
+from ..utils import append_exclude_terms
 
 
 class GoogleSearch:
     """
     Google API Retriever
     """
-    def __init__(self, query, headers=None, query_domains=None):
+    def __init__(self, query: str, headers=None, query_domains: Optional[List[str]] = None, exclude_terms: Optional[List[str]] = None):
         """
         Initializes the GoogleSearch object
         Args:
-            query:
+            query: The search query string.
+            headers: Additional headers (api keys).
+            query_domains: Optional list of domains to restrict search to.
+            exclude_terms: Optional list of terms to exclude from results.
         """
-        self.query = query
+        self.query = append_exclude_terms(query, exclude_terms)
         self.headers = headers or {}
         self.query_domains = query_domains or None
         self.api_key = self.headers.get("google_api_key") or self.get_api_key()  # Use the passed api_key or fallback to environment variable

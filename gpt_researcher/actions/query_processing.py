@@ -38,6 +38,7 @@ def _normalize_sub_queries(parsed: Any, fallback_query: str) -> List[str]:
     if not queries and fallback_query.strip():
         return [fallback_query.strip()]
     return queries
+from ..retrievers.utils import supports_exclude_terms
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +48,7 @@ async def get_search_results(
     query_domains: List[str] = None,
     researcher=None,
     max_results: int | None = None,
+    exclude_terms: List[str] = None,
 ) -> List[Dict[str, Any]]:
     """
     Get web search results for a given query.
@@ -57,6 +59,7 @@ async def get_search_results(
         query_domains: Optional list of domains to search
         researcher: The researcher instance (needed for MCP retrievers)
         max_results: Optional cap on the number of results
+        exclude_terms: Optional list of terms to exclude from search results
 
     Returns:
         A list of search results
@@ -66,12 +69,21 @@ async def get_search_results(
     # Check if this is an MCP retriever and pass the researcher instance
     if "mcpretriever" in retriever.__name__.lower():
         search_retriever = retriever(
-            query, 
+            query,
             query_domains=query_domains,
             researcher=researcher  # Pass researcher instance for MCP retrievers
         )
     else:
-        search_retriever = retriever(query, query_domains=query_domains)
+        if exclude_terms and supports_exclude_terms(retriever):
+            search_retriever = retriever(
+                query, query_domains=query_domains, exclude_terms=exclude_terms
+            )
+        else:
+            if exclude_terms:
+                logger.warning(
+                    f"{retriever.__name__} does not support exclude_terms; ignoring"
+                )
+            search_retriever = retriever(query, query_domains=query_domains)
 
     search_kwargs = {}
     if max_results is not None:
