@@ -82,6 +82,7 @@ Steps:
 - 🔍 JavaScript-enabled web scraping.
 - 📂 Maintains memory and context throughout research.
 - 📄 Export reports to PDF, Word, and other formats.
+- ⚡ **Concept-Diff Ingestion Gatekeeper**: Optional token-reduction middleware for 85%+ web context savings with live conflict detection.
 
 ## 📖 Documentation
 
@@ -221,6 +222,25 @@ GPT Researcher now includes Deep Research - an advanced recursive research workf
 - 💰 Costs ~$0.4 per research (using `o3-mini` on "high" reasoning effort)
 
 [Learn more about Deep Research](https://docs.gptr.dev/docs/gpt-researcher/gptr/deep_research) in our documentation.
+
+## ⚡ Concept-Diff Ingestion Gatekeeper (85% Token Reduction)
+
+GPT Researcher includes an optional, zero-dependency ingestion gatekeeper middleware to prevent web context bloat during deep scraping loops:
+
+- 🧠 **Session Knowledge Graph:** In-memory graph tracking atomic facts (`Subject ──► Predicate ──► Object`) and numerical metrics.
+- 🗑️ **Fluff Deduplication (DISCARD):** Removes identical introductory history and background boilerplate ($0 downstream tokens).
+- ⚠️ **Conflict Detection (DIFF_CONFLICT):** Automatically surfaces conflicting numbers, dates, or specifications across distinct web sources.
+- 📉 **Up to 85%+ Ingestion Token Savings:** Cuts input context costs significantly without losing technical depth.
+
+```bash
+# Enable in your .env file
+ENABLE_CONCEPT_DIFF=True
+
+# Configurable with any LLM provider (e.g. Gemini 2.5 Flash, GPT-4o-mini, Claude 3.5 Haiku)
+FAST_LLM=google_genai:gemini-2.5-flash
+# or
+FAST_LLM=openai:gpt-4o-mini
+```
 
 ## Run with Docker
 
