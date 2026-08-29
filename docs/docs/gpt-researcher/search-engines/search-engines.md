@@ -47,6 +47,7 @@ Thanks to our community, we have integrated the following web search engines and
 - [fastCRW](https://fastcrw.com/docs/rest-api) - Env: `RETRIEVER=crw`
 - [PubMedCentral](https://www.ncbi.nlm.nih.gov/home/develop/api/) - Env: `RETRIEVER=pubmed_central`
 - [Xquik](https://xquik.com/) - Env: `RETRIEVER=xquik` and `XQUIK_API_KEY`
+- [Microsoft Web IQ](https://webiq.microsoft.ai/documentation/overview/) - Env: `RETRIEVER=webiq` and `WEBIQ_API_KEY`
 - [MCP](../retrievers/mcp-configs) - Env: `RETRIEVER=mcp`
 
 ## Custom Retrievers
@@ -99,6 +100,22 @@ To use [Brave Search](https://brave.com/search/api/) as your search engine:
 RETRIEVER=brave
 BRAVE_API_KEY=your_api_key_here
 ```
+
+### Microsoft Web IQ
+
+To use [Microsoft Web IQ](https://webiq.microsoft.ai/documentation/overview/) as your search engine:
+
+```bash
+RETRIEVER=webiq
+WEBIQ_API_KEY=your_api_key_here
+```
+
+Web IQ Search returns query-relevant passages of up to 2,500 characters by
+default. GPT Researcher keeps these as search snippets and scrapes the result
+URLs through its normal pipeline. Increasing `WEBIQ_MAX_LENGTH` can provide more
+context to quick-search summaries, but does not change how full report sources
+are scraped. Language, region, endpoint, content format, safe search, result
+length, and request timeout options are documented in `.env.example`.
 
 ### Serper
 

@@ -25,6 +25,7 @@
 | Exa | `ExaSearch` | `EXA_API_KEY` |
 | GroundRoute | `GroundRouteSearch` | `GROUNDROUTE_API_KEY` |
 | fastCRW | `CRWRetriever` | `CRW_API_KEY` |
+| Microsoft Web IQ | `WebIQSearch` | `WEBIQ_API_KEY` |
 | BoCha | `BoChaSearch` | `BOCHA_API_KEY` |
 | Xquik | `XquikSearch` | `XQUIK_API_KEY` |
 | GetXAPI (X/Twitter) | `GetXAPISearch` | `GETXAPI_API_KEY` |

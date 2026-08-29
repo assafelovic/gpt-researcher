@@ -50,7 +50,7 @@ python gpt_researcher/main.py --config_path my_config.json
 
 Below is a list of current supported options:
 
-- **`RETRIEVER`**: Search engine or research retriever used for retrieving sources. Defaults to `tavily`. Options include `tavily`, `duckduckgo`, `bing`, `brave`, `google`, `searchapi`, `serper`, `serpapi`, `searx`, `arxiv`, `openalex`, `semantic_scholar`, `pubmed_central`, `exa`, `crw`, `groundroute`, `bocha`, `xquik`, `custom`, and `mcp`. You can also combine retrievers with commas, such as `tavily,openalex,semantic_scholar`. [Check here](https://github.com/assafelovic/gpt-researcher/tree/master/gpt_researcher/retrievers) for supported retrievers
+- **`RETRIEVER`**: Search engine or research retriever used for retrieving sources. Defaults to `tavily`. Options include `tavily`, `duckduckgo`, `bing`, `brave`, `google`, `searchapi`, `serper`, `serpapi`, `searx`, `arxiv`, `openalex`, `semantic_scholar`, `pubmed_central`, `exa`, `crw`, `groundroute`, `bocha`, `xquik`, `webiq`, `custom`, and `mcp`. You can also combine retrievers with commas, such as `tavily,openalex,semantic_scholar`. [Check here](https://github.com/assafelovic/gpt-researcher/tree/master/gpt_researcher/retrievers) for supported retrievers
 - **`EMBEDDING`**: Embedding model. Defaults to `openai:text-embedding-3-small`. Options: `ollama`, `huggingface`, `azure_openai`, `custom`.
 - **`SIMILARITY_THRESHOLD`**: Threshold value for similarity comparison when processing documents. Defaults to `0.42`.
 - **`FAST_LLM`**: Model name for fast LLM operations such summaries. Defaults to `openai:gpt-5.4-mini`.

@@ -80,6 +80,7 @@ VALID_RETRIEVERS = [
     "mcp",
     "xquik",
     "openalex",
+    "webiq",
     "mock"
 ]
 
