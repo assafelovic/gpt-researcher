@@ -883,10 +883,13 @@ class ResearchConductor:
                         # Undeclared: legacy behaviour, unchanged.
                         prefetched_content.append({
                             "url": url,
+                            "title": result.get("title", ""),
                             "raw_content": raw_content,
                         })
-                        self.researcher.add_research_sources([{"url": url}])
-                    else:
+                        # If the source assessment prompt is not set, we can't add the source immediately as we don't know if it's relevant.
+                        if getattr(self.researcher, "source_assessment_prompt", None) is None:
+                            self.researcher.add_research_sources([{"url": url}])
+                    elif url:
                         new_search_urls.append(url)
             except Exception as e:
                 self.logger.error(f"Error searching with {retriever_class.__name__}: {e}")
@@ -927,6 +930,12 @@ class ResearchConductor:
         scraped_content = await self.researcher.scraper_manager.browse_urls(new_search_urls)
 
         # Merge pre-fetched content from retrievers that already provide full text
+        if getattr(self.researcher, "source_assessment_prompt", None) is not None:
+            prefetched_content, rejected_sources = await self.researcher.source_assessor.assess_sources(
+                prefetched_content
+            )
+            self.researcher.add_rejected_sources(rejected_sources)
+            self.researcher.add_research_sources(prefetched_content)
         scraped_content.extend(prefetched_content)
 
         if self.researcher.vector_store:
@@ -1107,4 +1116,3 @@ class ResearchConductor:
                     "progress": progress
                 }
             )
-

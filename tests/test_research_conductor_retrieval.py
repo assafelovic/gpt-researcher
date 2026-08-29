@@ -1,5 +1,6 @@
 import unittest
 from types import SimpleNamespace
+from unittest.mock import AsyncMock
 
 from gpt_researcher.skills.researcher import ResearchConductor
 
@@ -74,7 +75,37 @@ class ResearchConductorRetrievalTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(urls, [])
         self.assertEqual(
             prefetched,
-            [{"url": "https://example.com/full", "raw_content": "C" * 500}],
+            [{"url": "https://example.com/full", "title": "", "raw_content": "C" * 500}],
+        )
+
+    async def test_prefetched_raw_content_is_assessed_when_policy_enabled(self):
+        researcher = self.make_researcher(FakeFullContentRetriever)
+        researcher.source_assessment_prompt = "policy"
+        researcher.rejected_sources = []
+        researcher.scraper_manager = SimpleNamespace(browse_urls=AsyncMock(return_value=[]))
+        researcher.vector_store = None
+
+        async def assess_sources(sources):
+            self.assertEqual(
+                sources,
+                [{"url": "https://example.com/full", "title": "", "raw_content": "C" * 500}],
+            )
+            return sources, []
+
+        researcher.source_assessor = SimpleNamespace(assess_sources=assess_sources)
+        researcher.add_rejected_sources = lambda sources: researcher.rejected_sources.extend(sources)
+
+        conductor = ResearchConductor(researcher)
+
+        scraped = await conductor._scrape_data_by_urls("pubmed article")
+
+        self.assertEqual(
+            scraped,
+            [{"url": "https://example.com/full", "title": "", "raw_content": "C" * 500}],
+        )
+        self.assertEqual(
+            researcher.research_sources,
+            [{"url": "https://example.com/full", "title": "", "raw_content": "C" * 500}],
         )
 
 

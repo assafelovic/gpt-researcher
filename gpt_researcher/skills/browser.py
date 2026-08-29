@@ -55,15 +55,34 @@ class BrowserManager:
         scraped_content, images = await scrape_urls(
             urls, self.researcher.cfg, self.worker_pool
         )
+        source_count = len(scraped_content)
+        rejected_sources = []
+        if getattr(self.researcher, "source_assessment_prompt", None) is not None:
+            scraped_content, rejected_sources = await self.researcher.source_assessor.assess_sources(
+                scraped_content
+            )
+            self.researcher.add_rejected_sources(rejected_sources)
+            images = [
+                image
+                for source in scraped_content
+                for image in source.get("image_urls", [])
+            ]
+
         self.researcher.add_research_sources(scraped_content)
         new_images = self.select_top_images(images, k=4)  # Select top 4 images
         self.researcher.add_research_images(new_images)
 
         if self.researcher.verbose:
+            content_summary = f"📄 Scraped {source_count} pages of content"
+            if getattr(self.researcher, "source_assessment_prompt", None) is not None:
+                content_summary = (
+                    f"📄 Scraped {source_count} pages of content; "
+                    f"accepted {len(scraped_content)}, rejected {len(rejected_sources)} due to source assessment"
+                )
             await stream_output(
                 "logs",
                 "scraping_content",
-                f"📄 Scraped {len(scraped_content)} pages of content",
+                content_summary,
                 self.researcher.websocket,
             )
             await stream_output(
