@@ -12,6 +12,22 @@ MODULE_PATH = ROOT / "gpt_researcher" / "retrievers" / "searx" / "searx.py"
 
 
 def _load():
+    # Set up parent packages so relative imports (from ..utils import ...) work
+    sys.modules.setdefault("gpt_researcher", types.ModuleType("gpt_researcher"))
+    ret_pkg = types.ModuleType("gpt_researcher.retrievers")
+    sys.modules.setdefault("gpt_researcher.retrievers", ret_pkg)
+
+    # Load utils first (needed for append_exclude_terms import in searx.py)
+    utils_path = MODULE_PATH.parent.parent / "utils.py"
+    utils_spec = importlib.util.spec_from_file_location(
+        "gpt_researcher.retrievers.utils", utils_path
+    )
+    utils_mod = importlib.util.module_from_spec(utils_spec)
+    utils_mod.__package__ = "gpt_researcher.retrievers"
+    sys.modules["gpt_researcher.retrievers.utils"] = utils_mod
+    ret_pkg.utils = utils_mod
+    utils_spec.loader.exec_module(utils_mod)
+
     requests_mod = types.ModuleType("requests")
     class RequestException(Exception):
         pass
@@ -29,6 +45,7 @@ def _load():
         "gpt_researcher.retrievers.searx.searx_testmod", MODULE_PATH
     )
     mod = importlib.util.module_from_spec(spec)
+    mod.__package__ = "gpt_researcher.retrievers.searx"
     sys.modules[spec.name] = mod
     with patch.dict(os.environ, {"SEARX_URL": "https://searx.example/"}, clear=False):
         spec.loader.exec_module(mod)

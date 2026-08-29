@@ -1,7 +1,7 @@
 import os
 import json
 import requests
-from typing import List, Dict
+from typing import Dict, List, Optional
 from urllib.parse import urljoin
 
 # gpt_researcher.skills.researcher._search_relevant_source_urls() treats
@@ -21,22 +21,26 @@ from urllib.parse import urljoin
 # actual page content, not this snippet.
 _MAX_PREFETCHED_LEN = 100
 
+from ..utils import append_exclude_terms
+
 
 class SearxSearch():
     """
     SearxNG API Retriever
     """
-
     # SearxNG puts an ordinary result snippet in "content"/"body"; the real
     # page text still has to be fetched.
     requires_scraping = True
-    def __init__(self, query: str, query_domains=None):
+
+    def __init__(self, query: str, query_domains: Optional[List[str]] = None, exclude_terms: Optional[List[str]] = None):
         """
         Initializes the SearxSearch object
         Args:
-            query: Search query string
+            query: Search query string.
+            query_domains: Optional list of domains to restrict search to.
+            exclude_terms: Optional list of terms to exclude from results.
         """
-        self.query = query
+        self.query = append_exclude_terms(query, exclude_terms)
         self.query_domains = query_domains or None
         self.base_url = self.get_searxng_url()
 

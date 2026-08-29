@@ -3,8 +3,10 @@
 # libraries
 import logging
 import os
+from typing import List, Optional
 
 import requests
+from ..utils import append_exclude_terms
 
 
 class BraveSearch:
@@ -12,13 +14,15 @@ class BraveSearch:
     Brave Search API Retriever
     """
 
-    def __init__(self, query, query_domains=None):
+    def __init__(self, query: str, query_domains: Optional[List[str]] = None, exclude_terms: Optional[List[str]] = None):
         """
         Initializes the BraveSearch object
         Args:
-            query:
+            query: The search query string.
+            query_domains: Optional list of domains to restrict search to.
+            exclude_terms: Optional list of terms to exclude from results.
         """
-        self.query = query
+        self.query = append_exclude_terms(query, exclude_terms)
         self.query_domains = query_domains or None
         self.api_key = self.get_api_key()
         self.logger = logging.getLogger(__name__)

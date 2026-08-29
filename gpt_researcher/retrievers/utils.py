@@ -5,9 +5,11 @@ various search retriever implementations.
 """
 
 import importlib.util
+import inspect
 import logging
 import os
 import sys
+from typing import List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -105,3 +107,46 @@ def get_all_retriever_names():
     except Exception as e:
         logger.error(f"Error getting retrievers: {e}")
         return VALID_RETRIEVERS
+
+
+def append_exclude_terms(query: str, exclude_terms: Optional[List[str]]) -> str:
+    """Append Google-style exclusion operators to a search query.
+
+    Single-word terms become ``-term``. Multi-word terms are quoted
+    (``-"multi word"``).  If a multi-word term itself contains double
+    quotes it is wrapped in single quotes instead.
+
+    Returns the original query unchanged when *exclude_terms* is ``None``
+    or empty.
+    """
+    if not exclude_terms:
+        return query
+
+    parts: List[str] = []
+    for w in exclude_terms:
+        w = w.strip()
+        if not w:
+            continue
+        if " " in w:
+            if '"' in w:
+                parts.append(f"-'{w}'")
+            else:
+                parts.append(f'-"{w}"')
+        else:
+            parts.append(f"-{w}")
+
+    return query + " " + " ".join(parts)
+
+
+def supports_exclude_terms(retriever_cls) -> bool:
+    """Check whether a retriever class explicitly accepts the ``exclude_terms`` kwarg.
+
+    Returns ``True`` only when there is a named ``exclude_terms`` parameter.
+    Classes that rely solely on ``**kwargs`` return ``False`` — they may
+    swallow the argument silently but do not act on it.
+    """
+    try:
+        params = inspect.signature(retriever_cls.__init__).parameters
+    except (TypeError, ValueError):
+        return False
+    return "exclude_terms" in params

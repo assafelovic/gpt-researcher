@@ -7,16 +7,37 @@ aborts the whole ``search()`` call.
 import importlib.util
 import os
 import pathlib
+import sys
+import types
 from unittest.mock import patch
 
-# Import the module directly to avoid importing the heavy gpt_researcher package
-# (which pulls optional deps at import time).
-_SERPAPI_PATH = (
-    pathlib.Path(__file__).resolve().parent.parent
-    / "gpt_researcher" / "retrievers" / "serpapi" / "serpapi.py"
+ROOT = pathlib.Path(__file__).resolve().parent.parent
+RETRIEVERS_DIR = ROOT / "gpt_researcher" / "retrievers"
+
+# Set up parent packages so relative imports (from ..utils import ...) work
+sys.modules.setdefault("gpt_researcher", types.ModuleType("gpt_researcher"))
+ret_pkg = types.ModuleType("gpt_researcher.retrievers")
+sys.modules.setdefault("gpt_researcher.retrievers", ret_pkg)
+
+# Load utils first (needed for append_exclude_terms import in serpapi.py)
+_utils_path = RETRIEVERS_DIR / "utils.py"
+_utils_spec = importlib.util.spec_from_file_location(
+    "gpt_researcher.retrievers.utils", _utils_path
 )
-_spec = importlib.util.spec_from_file_location("_serpapi_under_test", _SERPAPI_PATH)
+_utils_mod = importlib.util.module_from_spec(_utils_spec)
+_utils_mod.__package__ = "gpt_researcher.retrievers"
+sys.modules["gpt_researcher.retrievers.utils"] = _utils_mod
+ret_pkg.utils = _utils_mod
+_utils_spec.loader.exec_module(_utils_mod)
+
+# Now load serpapi with proper package context
+_SERPAPI_PATH = RETRIEVERS_DIR / "serpapi" / "serpapi.py"
+_spec = importlib.util.spec_from_file_location(
+    "gpt_researcher.retrievers.serpapi.serpapi", _SERPAPI_PATH
+)
 _serpapi = importlib.util.module_from_spec(_spec)
+_serpapi.__package__ = "gpt_researcher.retrievers.serpapi"
+sys.modules[_spec.name] = _serpapi
 _spec.loader.exec_module(_serpapi)
 SerpApiSearch = _serpapi.SerpApiSearch
 

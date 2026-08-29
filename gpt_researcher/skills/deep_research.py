@@ -298,7 +298,8 @@ class DeepResearchSkill:
                 results = await get_search_results(
                     query,
                     retriever,
-                    researcher=self.researcher
+                    researcher=self.researcher,
+                    exclude_terms=getattr(self.researcher, "search_exclude_terms", None),
                 )
                 all_search_results.extend(results)
             except Exception as e:

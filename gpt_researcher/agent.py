@@ -85,6 +85,7 @@ class GPTResearcher:
         source_assessment_threshold: float = 0.25,
         source_assessment_max_content_chars: int = 12000,
         source_assessment_max_concurrency: int = 4,
+        search_exclude_terms: list[str] | None = None,
         **kwargs
     ):
         """
@@ -159,6 +160,7 @@ class GPTResearcher:
         self.source_assessment_threshold = source_assessment_threshold
         self.source_assessment_max_content_chars = source_assessment_max_content_chars
         self.source_assessment_max_concurrency = source_assessment_max_concurrency
+        self.search_exclude_terms = search_exclude_terms or []
         self.source_assessments: list[dict[str, Any]] = []
         self.rejected_sources: list[dict[str, Any]] = []
         self.documents = documents
@@ -552,7 +554,11 @@ class GPTResearcher:
             search_results = await self._search_all_retrievers(query, query_domains)
         else:
             search_results = await get_search_results(
-                query, self.retrievers[0], query_domains=query_domains, researcher=self
+                query,
+                self.retrievers[0],
+                query_domains=query_domains,
+                researcher=self,
+                exclude_terms=self.search_exclude_terms,
             )
 
         if not aggregated_summary:
@@ -598,7 +604,13 @@ class GPTResearcher:
             A merged, de-duplicated list of search results.
         """
         tasks = [
-            get_search_results(query, retriever, query_domains=query_domains, researcher=self)
+            get_search_results(
+                query,
+                retriever,
+                query_domains=query_domains,
+                researcher=self,
+                exclude_terms=self.search_exclude_terms,
+            )
             for retriever in self.retrievers
         ]
         results = await asyncio.gather(*tasks, return_exceptions=True)

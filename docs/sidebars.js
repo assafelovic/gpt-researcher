@@ -107,6 +107,7 @@
       collapsed: true,
       items: [
         'gpt-researcher/search-engines/search-engines',
+        'gpt-researcher/search-engines/exclude-terms',
         'gpt-researcher/retrievers/mcp-configs',
         'gpt-researcher/search-engines/test-your-retriever',
         ]

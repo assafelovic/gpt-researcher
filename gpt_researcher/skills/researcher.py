@@ -14,6 +14,7 @@ from ..actions.agent_creator import choose_agent
 from ..actions.query_processing import get_search_results, plan_research_outline
 from ..actions.utils import stream_output
 from ..document import DocumentLoader, LangChainDocumentLoader, OnlineDocumentLoader
+from ..retrievers.utils import supports_exclude_terms
 from ..utils.enum import ReportSource, ReportType
 from ..utils.logging_config import get_json_handler
 
@@ -67,6 +68,7 @@ class ResearchConductor:
             query_domains,
             researcher=self.researcher,
             max_results=self.researcher.cfg.max_search_results_per_query,
+            exclude_terms=self.researcher.search_exclude_terms,
         )
         self.logger.info(f"Initial search results obtained: {len(search_results)} results")
 
@@ -838,7 +840,15 @@ class ResearchConductor:
 
             try:
                 # Instantiate the retriever with the sub-query
-                retriever = retriever_class(query, query_domains=query_domains)
+                _exclude = getattr(self.researcher, "search_exclude_terms", None)
+                if _exclude and supports_exclude_terms(retriever_class):
+                    retriever = retriever_class(
+                        query,
+                        query_domains=query_domains,
+                        exclude_terms=_exclude,
+                    )
+                else:
+                    retriever = retriever_class(query, query_domains=query_domains)
 
                 # Perform the search using the current retriever
                 search_results = await asyncio.to_thread(

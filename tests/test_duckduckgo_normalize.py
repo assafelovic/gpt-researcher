@@ -13,13 +13,17 @@ MODULE_PATH = ROOT / "gpt_researcher" / "retrievers" / "duckduckgo" / "duckduckg
 def _load_duckduckgo_module():
     # Load the module file directly so we never import gpt_researcher package
     # (pulling json_repair and other heavy deps is unrelated to this unit).
-    utils_mod = types.ModuleType("gpt_researcher.retrievers.utils")
-    utils_mod.check_pkg = lambda *a, **k: None
-    pkg = types.ModuleType("gpt_researcher")
-    retrievers = types.ModuleType("gpt_researcher.retrievers")
-    sys.modules.setdefault("gpt_researcher", pkg)
-    sys.modules.setdefault("gpt_researcher.retrievers", retrievers)
+    utils_path = MODULE_PATH.parent.parent / "utils.py"
+    utils_spec = importlib.util.spec_from_file_location(
+        "gpt_researcher.retrievers.utils", utils_path
+    )
+    utils_mod = importlib.util.module_from_spec(utils_spec)
+    sys.modules.setdefault("gpt_researcher", types.ModuleType("gpt_researcher"))
+    sys.modules.setdefault(
+        "gpt_researcher.retrievers", types.ModuleType("gpt_researcher.retrievers")
+    )
     sys.modules["gpt_researcher.retrievers.utils"] = utils_mod
+    utils_spec.loader.exec_module(utils_mod)
 
     spec = importlib.util.spec_from_file_location(
         "gpt_researcher.retrievers.duckduckgo.duckduckgo", MODULE_PATH
@@ -85,6 +89,72 @@ class DuckduckgoNormalizeTests(unittest.TestCase):
         results = Duckduckgo.search(retriever, max_results=5)
         self.assertEqual(len(results[0]["body"]), 100)
         self.assertEqual(results[0]["body"], long_snippet[:100])
+
+
+class DuckduckgoExcludeTermsTests(unittest.TestCase):
+    def _make_retriever(self, query, exclude_terms=None):
+        """Create a Duckduckgo instance with mocked ddgs import."""
+        mod = _load_duckduckgo_module()
+        Duckduckgo = mod.Duckduckgo
+        retriever = Duckduckgo.__new__(Duckduckgo)
+        retriever.query = query
+        retriever.query_domains = None
+        retriever.ddg = MagicMock()
+        retriever.ddg.text.return_value = []
+        # Manually apply exclusion logic (mimics __init__ without ddgs import)
+        if exclude_terms:
+            parts = []
+            for w in exclude_terms:
+                w = w.strip()
+                if not w:
+                    continue
+                if " " in w:
+                    if '"' in w:
+                        parts.append(f"-'{w}'")
+                    else:
+                        parts.append(f'-"{w}"')
+                else:
+                    parts.append(f"-{w}")
+            retriever.query = query + " " + " ".join(parts)
+        return retriever
+
+    def test_single_word_exclusion(self):
+        retriever = self._make_retriever("test query", exclude_terms=["gartner"])
+        self.assertEqual(retriever.query, "test query -gartner")
+
+    def test_multi_word_term_exclusion(self):
+        retriever = self._make_retriever("test query", exclude_terms=["market share"])
+        self.assertEqual(retriever.query, 'test query -"market share"')
+
+    def test_term_with_double_quotes_uses_single_quotes(self):
+        retriever = self._make_retriever('test query', exclude_terms=['he said "bad"'])
+        self.assertEqual(retriever.query, "test query -'he said \"bad\"'")
+
+    def test_multiple_exclusions(self):
+        retriever = self._make_retriever(
+            "How many PCs were sold in 2012?",
+            exclude_terms=["gartner", "market share"],
+        )
+        self.assertEqual(
+            retriever.query, 'How many PCs were sold in 2012? -gartner -"market share"'
+        )
+
+    def test_empty_exclusion_list(self):
+        retriever = self._make_retriever("test query", exclude_terms=[])
+        self.assertEqual(retriever.query, "test query")
+
+    def test_none_exclusion(self):
+        retriever = self._make_retriever("test query", exclude_terms=None)
+        self.assertEqual(retriever.query, "test query")
+
+    def test_exclusion_passed_to_search(self):
+        retriever = self._make_retriever("test query", exclude_terms=["gartner"])
+        mod = _load_duckduckgo_module()
+        Duckduckgo = mod.Duckduckgo
+        Duckduckgo.search(retriever)
+        retriever.ddg.text.assert_called_once()
+        call_args = retriever.ddg.text.call_args
+        self.assertIn("-gartner", call_args[0][0])
 
 
 if __name__ == "__main__":

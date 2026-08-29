@@ -48,6 +48,7 @@ class ResearchConductorRetrievalTests(unittest.IsolatedAsyncioTestCase):
                 self.websocket = None
                 self.visited_urls = set()
                 self.research_sources = []
+                self.search_exclude_terms = None
 
             def add_research_sources(self, sources):
                 self.research_sources.extend(sources)

@@ -4,13 +4,16 @@
 import os
 import requests
 import json
+from typing import List, Optional
+
+from gpt_researcher.retrievers.utils import append_exclude_terms
 
 
 class SerperSearch():
     """
     Google Serper Retriever with support for country, language, and date filtering
     """
-    def __init__(self, query, query_domains=None, country=None, language=None, time_range=None, exclude_sites=None):
+    def __init__(self, query: str, query_domains: Optional[List[str]] = None, country=None, language=None, time_range=None, exclude_sites=None, exclude_terms: Optional[List[str]] = None):
         """
         Initializes the SerperSearch object
         Args:
@@ -20,8 +23,9 @@ class SerperSearch():
             language (str, optional): Language code for search results (e.g., 'en', 'ko', 'ja'). Defaults to None.
             time_range (str, optional): Time range filter (e.g., 'qdr:h', 'qdr:d', 'qdr:w', 'qdr:m', 'qdr:y'). Defaults to None.
             exclude_sites (list, optional): List of sites to exclude from search results. Defaults to None.
+            exclude_terms (list, optional): List of terms to exclude from results. Defaults to None.
         """
-        self.query = query
+        self.query = append_exclude_terms(query, exclude_terms)
         self.query_domains = query_domains or None
         self.country = country or os.getenv("SERPER_REGION")
         self.language = language or os.getenv("SERPER_LANGUAGE")
