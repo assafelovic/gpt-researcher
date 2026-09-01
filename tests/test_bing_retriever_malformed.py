@@ -1,8 +1,8 @@
 """Regression tests for BingSearch result normalization.
 
-Without the fix, a single result missing an expected key (``url``/``name``/
-``snippet``) raises a KeyError that aborts the whole ``search()`` call, and a
-response without a ``webPages`` block raises a KeyError instead of returning [].
+Without the fix, a single non-dict or null result raises AttributeError that
+aborts the whole ``search()`` call, and a response without a ``webPages``
+block should return [].
 """
 import importlib.util
 import json
@@ -45,6 +45,27 @@ def test_bing_skips_results_missing_keys():
     assert results[0] == {"title": "A", "href": "https://a.example", "body": "sa"}
     assert results[1]["body"] == ""
     assert results[2]["title"] == ""
+
+
+@patch.dict(os.environ, {"BING_API_KEY": "test-key"})
+def test_bing_skips_non_dict_and_empty_url():
+    payload = {
+        "webPages": {
+            "value": [
+                "not-a-dict",
+                None,
+                {"name": "No URL"},
+                {"name": "Ok", "url": "https://ok.example", "snippet": "body"},
+                {"name": "YT", "url": "https://youtube.com/watch?v=1"},
+            ]
+        }
+    }
+    with patch.object(_bing.requests, "get", return_value=_FakeResp(payload)):
+        results = BingSearch("q").search()
+
+    assert results == [
+        {"title": "Ok", "href": "https://ok.example", "body": "body"},
+    ]
 
 
 @patch.dict(os.environ, {"BING_API_KEY": "test-key"})

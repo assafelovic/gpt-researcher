@@ -17,12 +17,38 @@ from fastapi.responses import JSONResponse
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from backend.server.server_utils import (
-    secure_filename, 
-    validate_file_path, 
-    handle_file_upload, 
-    handle_file_deletion
-)
+import pytest
+
+# NOTE: this suite targets an API that no longer exists.
+#
+# 994245ea ("fix(security): resolve critical path traversal vulnerability in
+# file operations") added secure_filename() and validate_file_path() to
+# backend/server/server_utils.py. 08fd99ba ("added boilerplate for new
+# design") removed both. secure_filename was effectively replaced by
+# sanitize_filename(); validate_file_path has no replacement.
+#
+# Traversal is still contained in practice -- handle_file_upload and
+# handle_file_deletion both wrap the caller-supplied name in
+# os.path.basename() -- so this is a loss of defense-in-depth and of test
+# coverage, not a known live vulnerability.
+#
+# The import below has failed since 08fd99ba, and because a collection error
+# aborts the whole run, it has silently blocked `pytest tests/` entirely. It
+# is skipped rather than deleted so the gap stays visible: these cases need
+# to be reworked against sanitize_filename() and the current upload/deletion
+# handlers.
+try:
+    from backend.server.server_utils import (
+        secure_filename,
+        validate_file_path,
+        handle_file_upload,
+        handle_file_deletion,
+    )
+except ImportError as exc:  # pragma: no cover
+    pytest.skip(
+        f"security helpers removed in 08fd99ba, suite needs rework: {exc}",
+        allow_module_level=True,
+    )
 
 
 class TestSecureFilename:

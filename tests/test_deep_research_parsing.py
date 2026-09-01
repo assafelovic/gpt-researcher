@@ -22,6 +22,9 @@ def make_skill() -> DeepResearchSkill:
         deep_research_depth=2,
         deep_research_concurrency=2,
         config_path=None,
+        # Config.__init__ always sets this; the double has to match or the
+        # skill's llm_kwargs pass-through raises AttributeError here only.
+        llm_kwargs={},
     )
     researcher = SimpleNamespace(
         cfg=cfg,

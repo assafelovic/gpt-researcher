@@ -73,10 +73,17 @@ class XquikSearch:
         # default and crash slicing / attribute access below — which the
         # broad except in search() would swallow, silently dropping every
         # result. Mirrors the sibling GetXAPI retriever.
+        # Also reject non-list `tweets` and non-dict tweet rows: an API could
+        # return a string/object envelope or sparse tuples that would either
+        # iterate characters or AttributeError on .get — same silent drop.
         tweets = data.get("tweets") or []
+        if not isinstance(tweets, list):
+            return []
         search_results = []
 
         for tweet in tweets[:max_results]:
+            if not isinstance(tweet, dict):
+                continue
             author = tweet.get("author") or {}
             username = author.get("username") or "unknown"
             text = tweet.get("text") or ""

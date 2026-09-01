@@ -4,6 +4,31 @@ import os
 import uuid
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
+# Optional Monocle observability, gated by MONOCLE_TRACING (mirrors the LangSmith
+# toggle below). Runs before the framework imports so Monocle instruments them as
+# they load. The app owns MONOCLE_EXPORTERS: it validates the selection, then
+# forwards the raw comma-separated string to Monocle. No-op when unset.
+if os.environ.get("MONOCLE_TRACING", "").strip().lower() in ("1", "true", "yes", "on"):
+    _exporters = os.environ.get("MONOCLE_EXPORTERS", "").strip() or "file"
+    _allowed = ("file", "console", "okahu", "s3", "blob", "gcs")
+    _selected = [e.strip() for e in _exporters.split(",") if e.strip()]
+    _unknown = [e for e in _selected if e not in _allowed]
+    if _unknown:
+        raise ValueError(
+            f"MONOCLE_EXPORTERS has unknown exporter(s): {', '.join(_unknown)}. "
+            f"Allowed: {', '.join(_allowed)}."
+        )
+    if "okahu" in _selected and not os.environ.get("OKAHU_API_KEY"):
+        raise ValueError("Monocle 'okahu' exporter is selected but OKAHU_API_KEY is not set.")
+    try:
+        from monocle_apptrace import setup_monocle_telemetry
+    except ImportError as exc:
+        raise RuntimeError(
+            "MONOCLE_TRACING is enabled but monocle_apptrace is not installed. "
+            'Install the "monocle" extra: pip install "gpt-researcher[monocle]".'
+        ) from exc
+    setup_monocle_telemetry(workflow_name="gpt-researcher", monocle_exporters_list=_exporters)
+
 from multi_agents.agents import ChiefEditorAgent
 import asyncio
 import json

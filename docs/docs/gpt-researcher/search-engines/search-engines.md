@@ -18,14 +18,22 @@ You can also specify multiple retrievers by separating them with commas. The sys
 For example:
 
 ```bash
-RETRIEVER=tavily, arxiv
+RETRIEVER=tavily,arxiv
 ```
 
-Thanks to our community, we have integrated the following web search engines:
+For academic literature reviews, combine a broad web retriever with scholarly retrievers:
+
+```bash
+RETRIEVER=tavily,openalex,semantic_scholar
+```
+
+Thanks to our community, we have integrated the following web search engines and research retrievers:
 
 - [Tavily](https://app.tavily.com) - Default
 - [Bing](https://www.microsoft.com/en-us/bing/apis/bing-web-search-api) - Env: `RETRIEVER=bing`
 - [Brave Search](https://brave.com/search/api/) - Env: `RETRIEVER=brave` and `BRAVE_API_KEY`
+- [GroundRoute](https://groundroute.ai/) - Env: `RETRIEVER=groundroute` and `GROUNDROUTE_API_KEY`
+- [BoCha](https://bochaai.com/) - Env: `RETRIEVER=bocha` and `BOCHA_API_KEY`
 - [Google](https://developers.google.com/custom-search/v1/overview) - Env: `RETRIEVER=google`
 - [SearchApi](https://www.searchapi.io/) - Env: `RETRIEVER=searchapi`
 - [Serp API](https://serpapi.com/) - Env: `RETRIEVER=serpapi`
@@ -33,9 +41,13 @@ Thanks to our community, we have integrated the following web search engines:
 - [Searx](https://searx.github.io/searx/) - Env: `RETRIEVER=searx`
 - [Duckduckgo](https://pypi.org/project/duckduckgo-search/) - Env: `RETRIEVER=duckduckgo`
 - [Arxiv](https://info.arxiv.org/help/api/index.html) - Env: `RETRIEVER=arxiv`
+- [OpenAlex](https://docs.openalex.org/) - Env: `RETRIEVER=openalex`; optional `OPENALEX_EMAIL` and `OPENALEX_API_KEY`
+- [Semantic Scholar](https://www.semanticscholar.org/product/api) - Env: `RETRIEVER=semantic_scholar`
 - [Exa](https://docs.exa.ai/reference/getting-started) - Env: `RETRIEVER=exa`
 - [fastCRW](https://fastcrw.com/docs/rest-api) - Env: `RETRIEVER=crw`
 - [PubMedCentral](https://www.ncbi.nlm.nih.gov/home/develop/api/) - Env: `RETRIEVER=pubmed_central`
+- [Xquik](https://xquik.com/) - Env: `RETRIEVER=xquik` and `XQUIK_API_KEY`
+- [MCP](../retrievers/mcp-configs) - Env: `RETRIEVER=mcp`
 
 ## Custom Retrievers
 
@@ -107,6 +119,28 @@ SERPER_REGION=us                    # Country code (us, kr, jp, etc.)
 SERPER_LANGUAGE=en                  # Language code (en, ko, ja, etc.)
 SERPER_TIME_RANGE=qdr:w            # Time filter (qdr:h, qdr:d, qdr:w, qdr:m, qdr:y)
 SERPER_EXCLUDE_SITES=youtube.com   # Exclude sites (comma-separated)
+```
+
+### OpenAlex
+
+To use [OpenAlex](https://docs.openalex.org/) for scholarly works:
+
+```bash
+RETRIEVER=openalex
+OPENALEX_EMAIL=you@example.com      # Optional but recommended for polite API usage
+OPENALEX_API_KEY=your_api_key_here  # Optional; improves rate limits
+```
+
+OpenAlex works without an API key, but setting an email or free API key can make larger research runs more reliable.
+
+### PubMed Central
+
+To use PubMed Central full-text retrieval:
+
+```bash
+RETRIEVER=pubmed_central
+NCBI_API_KEY=your_api_key_here      # Optional; improves NCBI rate limits
+PUBMED_DB=pmc                       # Optional; defaults to pmc
 ```
 
 Missing a retriever? Feel free to contribute to this project by submitting issues or pull requests on our [GitHub](https://github.com/assafelovic/gpt-researcher) page.

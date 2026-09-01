@@ -51,17 +51,24 @@ class ExaSearch:
         Returns:
             A list of search results.
         """
-        results = self.client.search(
-            self.query,
-            type=search_type,
-            use_autoprompt=use_autoprompt,
-            num_results=max_results,
-            include_domains=self.query_domains,
-            **filters
-        )
+        try:
+            results = self.client.search(
+                self.query,
+                type=search_type,
+                use_autoprompt=use_autoprompt,
+                num_results=max_results,
+                include_domains=self.query_domains,
+                **filters
+            )
+        except Exception as e:
+            print(f"Error: {e}. Failed fetching sources from Exa. Empty response.")
+            return []
 
         search_response = []
-        for result in results.results or []:
+        rows = getattr(results, "results", None) or []
+        if not isinstance(rows, list):
+            return []
+        for result in rows:
             href = getattr(result, "url", None)
             if not href:
                 continue

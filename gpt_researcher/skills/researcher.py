@@ -145,7 +145,9 @@ class ResearchConductor:
         if self.researcher.source_urls:
             self.logger.info("Using provided source URLs")
             research_data = await self._get_context_by_urls(self.researcher.source_urls)
-            if research_data and len(research_data) == 0 and self.researcher.verbose:
+            # `research_data and len(research_data) == 0` can never be true --
+            # a truthy value is never empty -- so this notification never fired.
+            if not research_data and self.researcher.verbose:
                 await stream_output(
                     "logs",
                     "answering_from_memory",
@@ -846,19 +848,45 @@ class ResearchConductor:
                 if not search_results:
                     continue
 
+                # Does this retriever return URLs to scrape, or content it
+                # already fetched? Prefer an explicit declaration
+                # (BaseRetriever.requires_scraping); fall back to the legacy
+                # length heuristic when the retriever does not declare, so
+                # third-party and user-defined retrievers are unaffected.
+                requires_scraping = getattr(retriever, "requires_scraping", None)
+
                 # Separate results that already have content from those needing scraping
                 for result in search_results:
                     url = result.get("href") or result.get("url")
                     raw_content = result.get("raw_content")
-                    if url and raw_content and len(raw_content) > 100:
-                        # Only raw_content signals that a retriever already fetched the full page.
-                        # body is snippet-sized text for most web retrievers and still needs scraping.
+
+                    if not url:
+                        continue
+
+                    if requires_scraping is True:
+                        # Declared: anything alongside the URL is a preview,
+                        # however long, so the page is still fetched. This is
+                        # what stops a long snippet from being mistaken for
+                        # article text and the citation being lost.
+                        new_search_urls.append(url)
+                    elif requires_scraping is False:
+                        # Declared: the retriever fetched the content itself.
+                        if raw_content:
+                            prefetched_content.append({
+                                "url": url,
+                                "raw_content": raw_content,
+                            })
+                            self.researcher.add_research_sources([{"url": url}])
+                        else:
+                            new_search_urls.append(url)
+                    elif raw_content and len(raw_content) > 100:
+                        # Undeclared: legacy behaviour, unchanged.
                         prefetched_content.append({
                             "url": url,
                             "raw_content": raw_content,
                         })
                         self.researcher.add_research_sources([{"url": url}])
-                    elif url:
+                    else:
                         new_search_urls.append(url)
             except Exception as e:
                 self.logger.error(f"Error searching with {retriever_class.__name__}: {e}")

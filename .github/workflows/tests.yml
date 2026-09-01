@@ -1,0 +1,143 @@
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+
+concurrency:
+  group: tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Prove the suite is offline instead of assuming it. See tests/conftest.py.
+  GPTR_BLOCK_NETWORK: "1"
+
+jobs:
+  # Cheapest, fastest signal, and the one that would have caught the regression
+  # that shipped in v0.16.0: a typing import placed below its first use crashed
+  # every supported interpreter except 3.14, where PEP 649 hides it. Run this
+  # across the full matrix before spending time on the suite.
+  imports:
+    name: imports (py${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+      - name: Import the library
+        run: python -c "import gpt_researcher; from gpt_researcher import GPTResearcher; print(GPTResearcher)"
+      - name: Import every submodule
+        run: |
+          python - <<'PY'
+          import importlib, pkgutil, sys
+          import gpt_researcher
+          # Optional integrations may legitimately be absent from a bare install.
+          OPTIONAL = {"gpt_researcher.document.azure_document_loader"}
+          failed = []
+          for m in pkgutil.walk_packages(gpt_researcher.__path__, "gpt_researcher."):
+              try:
+                  importlib.import_module(m.name)
+              except ModuleNotFoundError as exc:
+                  if m.name in OPTIONAL:
+                      print(f"skip (optional): {m.name} -> {exc}")
+                      continue
+                  failed.append((m.name, exc))
+              except Exception as exc:
+                  failed.append((m.name, exc))
+          for name, exc in failed:
+              print(f"FAIL {name}: {type(exc).__name__}: {exc}", file=sys.stderr)
+          sys.exit(1 if failed else 0)
+          PY
+      - name: Import the ASGI app
+        run: python -c "from backend.server.app import app; print(app)"
+
+  # A single un-importable test module aborts collection for the entire suite,
+  # which is how tests/test_security_fix.py silently disabled `pytest tests/`
+  # for months. Fail the PR on collection errors specifically.
+  collect:
+    name: collect
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[test]"
+      - name: Collect the full suite
+        run: python -m pytest tests/ --collect-only -q
+
+  unit:
+    name: unit (py${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [imports, collect]
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - name: Install WeasyPrint system libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz0b \
+            libgdk-pixbuf-2.0-0 libffi-dev
+      - name: Install package and test deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[test]"
+      # tiktoken downloads its BPE tables from the network on first use and
+      # caches them on disk. A developer machine already has that cache, a
+      # fresh runner does not -- so the cost tests reached the network in CI
+      # and only in CI, where GPTR_BLOCK_NETWORK correctly refused them. Warm
+      # the cache here, before the suite runs: this step is outside pytest, so
+      # the guard in tests/conftest.py does not apply to it.
+      - name: Warm the tiktoken encoding cache
+        run: |
+          python - <<'PY'
+          import tiktoken
+          for name in ("o200k_base", "cl100k_base"):
+              tiktoken.get_encoding(name)
+              print(f"cached {name}")
+          PY
+
+      # --forked runs each test in its own process. The suite currently leaks
+      # global state across modules -- several files pass alone and fail when
+      # run together -- so without this the results depend on collection order.
+      # Removing the flag is the goal; it is tracked separately, and until then
+      # it keeps the signal trustworthy rather than hiding the failures.
+      - name: Run offline suite
+        run: |
+          python -m pytest tests/ \
+            --forked \
+            --timeout=60 \
+            -p no:warnings \
+            --deselect tests/test_researcher_logging.py \
+            --deselect tests/test_logging_output.py \
+            --deselect tests/test_mcp.py
+      # These three belong to a live suite, not this one. The first two build a
+      # real OpenAI client at call time and need OPENAI_API_KEY. test_mcp.py
+      # runs an actual web-search research task ("latest updates in the NBA
+      # playoffs"), which hangs here rather than failing -- it only surfaced on
+      # a full 3.12 install, where every optional dependency is present.
