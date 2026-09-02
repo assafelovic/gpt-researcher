@@ -21,6 +21,7 @@ from . import (
     ArxivScraper,
     BeautifulSoupScraper,
     BrowserScraper,
+    DomPrunerScraper,
     FireCrawl,
     NoDriverScraper,
     PyMuPDFScraper,
@@ -129,6 +130,8 @@ class Scraper:
             self._check_pkg(self.scraper)
         if self.scraper == "firecrawl":
             self._check_pkg(self.scraper)
+        if self.scraper == "dompruner":
+            self._check_pkg(self.scraper)
         self.logger = logging.getLogger(__name__)
         self.worker_pool = worker_pool
 
@@ -171,6 +174,10 @@ class Scraper:
             "firecrawl": {
                 "package_installation_name": "firecrawl-py",
                 "import_name": "firecrawl",
+            },
+            "dompruner": {
+                "package_installation_name": "dompruner",
+                "import_name": "dompruner",
             },
         }
         pkg = pkg_map[scrapper_name]
@@ -330,6 +337,7 @@ class Scraper:
             "nodriver": NoDriverScraper,
             "tavily_extract": TavilyExtract,
             "firecrawl": FireCrawl,
+            "dompruner": DomPrunerScraper,
         }
 
         scraper_key = None
