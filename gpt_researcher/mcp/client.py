@@ -5,6 +5,7 @@ Handles MCP client creation, configuration conversion, and connection management
 """
 import asyncio
 import logging
+from urllib.parse import urlsplit
 from typing import List, Dict, Any, Optional
 
 try:
@@ -65,10 +66,11 @@ class MCPClientManager:
             # Auto-detect transport type from URL if provided
             connection_url = config.get("connection_url")
             if connection_url:
-                if connection_url.startswith(("wss://", "ws://")):
+                scheme = urlsplit(connection_url).scheme.lower()
+                if scheme in {"ws", "wss"}:
                     server_config["transport"] = "websocket"
                     server_config["url"] = connection_url
-                elif connection_url.startswith(("https://", "http://")):
+                elif scheme in {"http", "https"}:
                     server_config["transport"] = "streamable_http"
                     server_config["url"] = connection_url
                 else:
