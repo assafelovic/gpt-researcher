@@ -47,6 +47,7 @@ Thanks to our community, we have integrated the following web search engines and
 - [fastCRW](https://fastcrw.com/docs/rest-api) - Env: `RETRIEVER=crw`
 - [PubMedCentral](https://www.ncbi.nlm.nih.gov/home/develop/api/) - Env: `RETRIEVER=pubmed_central`
 - [Xquik](https://xquik.com/) - Env: `RETRIEVER=xquik` and `XQUIK_API_KEY`
+- [Sofya](https://sofya.co/) - Env: `RETRIEVER=sofya` and `SOFYA_API_KEY`; optional `SOFYA_SEARCH_DEPTH`
 - [MCP](../retrievers/mcp-configs) - Env: `RETRIEVER=mcp`
 
 ## Custom Retrievers
@@ -99,6 +100,26 @@ To use [Brave Search](https://brave.com/search/api/) as your search engine:
 RETRIEVER=brave
 BRAVE_API_KEY=your_api_key_here
 ```
+
+### Sofya
+
+To use [Sofya](https://sofya.co/) as your search engine:
+
+1. Get your API key from [sofya.co](https://sofya.co/)
+2. Set the required environment variables:
+
+```bash
+RETRIEVER=sofya
+SOFYA_API_KEY=your_api_key_here
+```
+
+**Optional Configuration:**
+
+```bash
+SOFYA_SEARCH_DEPTH=basic   # "basic" returns the page content, "snippets" returns links and snippets only. Defaults to basic
+```
+
+At `basic` depth the results carry the page content, so those pages are not scraped again.
 
 ### Serper
 
