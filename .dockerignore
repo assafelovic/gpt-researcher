@@ -1,2 +1,6 @@
 .git
-output/
+.env
+.env.*
+venv/
+.venv/
+outputs/

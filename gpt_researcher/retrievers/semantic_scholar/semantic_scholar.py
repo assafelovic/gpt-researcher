@@ -41,7 +41,7 @@ class SemanticScholarSearch:
         }
 
         try:
-            response = requests.get(self.BASE_URL, params=params)
+            response = requests.get(self.BASE_URL, params=params, timeout=20)
             response.raise_for_status()
         except requests.RequestException as e:
             print(f"An error occurred while accessing Semantic Scholar API: {e}")

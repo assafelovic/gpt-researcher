@@ -5,11 +5,14 @@ research sources based on relevance, credibility, and reliability.
 """
 
 import json
+import logging
 from typing import Dict, List, Optional
 
 from ..actions import stream_output
 from ..config.config import Config
 from ..utils.llm import create_chat_completion
+
+logger = logging.getLogger(__name__)
 
 
 class SourceCurator:
@@ -46,7 +49,7 @@ class SourceCurator:
         Returns:
             str: Ranked list of source URLs with reasoning
         """
-        print(f"\n\nCurating {len(source_data)} sources: {source_data}")
+        logger.debug(f"Curating {len(source_data)} sources")
         if self.researcher.verbose:
             await stream_output(
                 "logs",
@@ -72,7 +75,7 @@ class SourceCurator:
             )
 
             curated_sources = json.loads(response)
-            print(f"\n\nFinal Curated sources {len(source_data)} sources: {curated_sources}")
+            logger.debug(f"Curated {len(curated_sources)} sources")
 
             if self.researcher.verbose:
                 await stream_output(
@@ -85,7 +88,7 @@ class SourceCurator:
             return curated_sources
 
         except Exception as e:
-            print(f"Error in curate_sources from LLM response: {response}")
+            logger.error(f"Error in curate_sources: {e}")
             if self.researcher.verbose:
                 await stream_output(
                     "logs",

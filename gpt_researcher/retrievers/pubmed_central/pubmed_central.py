@@ -58,7 +58,7 @@ class PubMedCentralSearch:
         }
         
         try:
-            response = requests.get(self.base_search_url, params=search_params)
+            response = requests.get(self.base_search_url, params=search_params, timeout=20)
             response.raise_for_status()
             data = response.json()
             
@@ -83,7 +83,7 @@ class PubMedCentralSearch:
         }
         
         try:
-            response = requests.get(self.base_fetch_url, params=fetch_params)
+            response = requests.get(self.base_fetch_url, params=fetch_params, timeout=20)
             response.raise_for_status()
             
             # Parse XML content
