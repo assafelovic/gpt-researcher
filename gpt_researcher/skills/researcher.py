@@ -877,6 +877,9 @@ class ResearchConductor:
                                 "raw_content": raw_content,
                             })
                             self.researcher.add_research_sources([{"url": url}])
+                            # #2100: prefetched URLs must join visited_urls like scraped
+                            # ones do in _get_new_urls, or repeats re-merge and references vanish.
+                            self.researcher.visited_urls.add(url)
                         else:
                             new_search_urls.append(url)
                     elif raw_content and len(raw_content) > 100:
@@ -886,6 +889,8 @@ class ResearchConductor:
                             "raw_content": raw_content,
                         })
                         self.researcher.add_research_sources([{"url": url}])
+                        # #2100: same visited_urls bookkeeping as above.
+                        self.researcher.visited_urls.add(url)
                     else:
                         new_search_urls.append(url)
             except Exception as e:
