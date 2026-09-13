@@ -51,6 +51,7 @@ _SUPPORTED_PROVIDERS = {
     "openrouter",
     "minimax",
     "nebius",
+    "api-route",
 }
 
 
@@ -219,6 +220,15 @@ class Memory:
                     model=model,
                     openai_api_key=os.getenv("NEBIUS_API_KEY"),
                     openai_api_base=os.getenv("NEBIUS_BASE_URL", "https://api.tokenfactory.nebius.com/v1"),
+                    **embedding_kwargs,
+                )
+            case "api-route":
+                from langchain_openai import OpenAIEmbeddings
+
+                _embeddings = OpenAIEmbeddings(
+                    model=model,
+                    openai_api_key=os.getenv("API_ROUTE_API_KEY"),
+                    openai_api_base=os.getenv("API_ROUTE_BASE_URL", "https://global.api-route.com/v1"),
                     **embedding_kwargs,
                 )
             case _:

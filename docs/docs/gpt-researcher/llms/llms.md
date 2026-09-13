@@ -3,7 +3,7 @@
 As described in the [introduction](/docs/gpt-researcher/gptr/config), the default LLM and embedding is OpenAI due to its superior performance and speed. 
 With that said, GPT Researcher supports various open/closed source LLMs and embeddings, and you can easily switch between them by updating the `SMART_LLM`, `FAST_LLM` and `EMBEDDING` env variables. You might also need to include the provider API key and corresponding configuration params.
 
-Current supported LLMs are `openai`, `anthropic`, `azure_openai`, `cohere`, `google_vertexai`, `google_genai`, `fireworks`, `ollama`, `together`, `mistralai`, `huggingface`, `groq`, `bedrock`, `litellm`, `minimax`, `atlascloud` and `nebius`.
+Current supported LLMs are `openai`, `anthropic`, `azure_openai`, `cohere`, `google_vertexai`, `google_genai`, `fireworks`, `ollama`, `together`, `mistralai`, `huggingface`, `groq`, `bedrock`, `litellm`, `minimax`, `atlascloud` `nebius` and `api-route`.
 
 Current supported embeddings are `openai`, `azure_openai`, `cohere`, `google_vertexai`, `google_genai`, `fireworks`, `ollama`, `together`, `mistralai`, `huggingface`, `nomic` ,`voyageai`, `bedrock` and `nebius`.
 
@@ -479,3 +479,20 @@ EMBEDDING=voyageai:voyage-law-2
 ```
 
 Add `langchain-voyageai` to [requirements.txt](https://github.com/assafelovic/gpt-researcher/blob/master/requirements.txt) for Docker Support or `pip install` it
+
+## API Route
+
+[API Route](https://www.api-route.com) provides unified access to leading LLMs (Claude, GPT-4o, DeepSeek, Gemini, and open models) with an OpenAI-compatible interface.
+
+Sign up at [api-route.com](https://www.api-route.com) to generate an API key, then configure the following environment variables:
+
+```env
+API_ROUTE_API_KEY=[Your API Route Key]
+FAST_LLM=api-route:gpt-4o-mini
+SMART_LLM=api-route:claude-sonnet-4-5
+STRATEGIC_LLM=api-route:deepseek-chat
+
+EMBEDDING=api-route:text-embedding-3-small
+```
+
+To customize the base endpoint, set `API_ROUTE_BASE_URL` (defaults to `https://global.api-route.com/v1`).

@@ -25,6 +25,7 @@ The following LLMs are supported by GPTR (though you'll need to install the rele
 - avian
 - atlascloud
 - nebius
+- api-route
 - vllm
 
 If you'd like to know the name of the langchain package for each LLM, you can check the [Langchain documentation](https://python.langchain.com/v0.2/docs/integrations/platforms/), or run GPTR as is and inspect the error message.

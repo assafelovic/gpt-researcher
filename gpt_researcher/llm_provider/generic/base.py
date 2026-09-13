@@ -38,6 +38,7 @@ _SUPPORTED_PROVIDERS = {
     "minimax",
     "atlascloud",
     "nebius",
+    "api-route",
 }
 
 NO_SUPPORT_TEMPERATURE_MODELS = [
@@ -345,6 +346,15 @@ class GenericLLMProvider:
                      openai_api_key=os.environ["NEBIUS_API_KEY"],
                      **kwargs
                 )
+        elif provider == "api-route":
+            _check_pkg("langchain_openai")
+            from langchain_openai import ChatOpenAI
+
+            llm = ChatOpenAI(
+                openai_api_base=os.getenv("API_ROUTE_BASE_URL", "https://global.api-route.com/v1"),
+                openai_api_key=os.environ["API_ROUTE_API_KEY"],
+                **kwargs
+            )
         elif provider == 'netmind':
             _check_pkg("langchain_netmind")
             from langchain_netmind import ChatNetmind
