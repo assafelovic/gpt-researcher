@@ -69,7 +69,7 @@ researcher = GPTResearcher(
     query="How does React's useState hook work?",
     mcp_configs=[
         {
-            "name": "github_api"
+            "name": "github_api",
             "command": "npx",
             "args": ["-y", "@modelcontextprotocol/server-github"],
             "env": {"GITHUB_TOKEN": os.getenv("GITHUB_TOKEN")}
@@ -93,6 +93,7 @@ Each MCP configuration dictionary supports these keys:
 | `env` | Environment variables for the server | `{"API_KEY": "key"}` | No |
 | `connection_url` | URL for remote connections | `"wss://api.example.com"` | Yes** |
 | `connection_type` | Connection type (auto-detected) | `"websocket"` | No |
+| `connection_headers` | Request headers for remote connections, including HTTP authentication | `{"Authorization": "Bearer <token>"}` | No |
 | `connection_token` | Authentication token | `"bearer_token"` | No |
 
 **Local servers**: Require `name`, `command`, and `args`  
@@ -285,6 +286,63 @@ researcher = GPTResearcher(
 ```
 
 ## Remote MCP Server
+
+### Authenticated Streamable HTTP
+
+For a hosted Streamable HTTP server, set `connection_url` to its MCP endpoint
+and supply authentication through `connection_headers`. An `https://` URL is
+automatically mapped to the `streamable_http` transport. Install the optional
+adapter if needed with `pip install langchain-mcp-adapters`.
+
+This example uses [Baizhi Cloud Agent Toolkit](https://baizhi.cloud/landing/agent-toolkit),
+a hosted MCP service requiring your own account and API key. Set
+`BAIZHI_API_KEY` in your environment without putting its value in source control
+or a research prompt. Configure your model provider separately, as for other
+GPT Researcher tasks.
+
+```python
+import asyncio
+import os
+from gpt_researcher import GPTResearcher
+
+
+async def main():
+    api_key = os.environ["BAIZHI_API_KEY"].strip()
+    if not api_key:
+        raise ValueError("BAIZHI_API_KEY must not be empty")
+
+    os.environ["RETRIEVER"] = "mcp"
+    researcher = GPTResearcher(
+        query="Find official documentation explaining MCP transports and authentication.",
+        mcp_configs=[{
+            "name": "baizhi",
+            "connection_url": "https://agent-toolkit.app.baizhi.cloud/mcp",
+            "connection_headers": {"Authorization": f"Bearer {api_key}"},
+        }],
+    )
+    await researcher.conduct_research()
+    report = await researcher.write_report()
+    print(report)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+The Python code reads the environment variable explicitly; a literal
+`"Bearer ${BAIZHI_API_KEY}"` is not expanded by the MCP configuration converter.
+Keep the key in the header, not in the endpoint URL. To add this to an existing
+setup, append the server to your `mcp_configs` and include `mcp` in your existing
+retriever selection rather than replacing unrelated servers.
+
+Tool arguments go to the service, and results can enter your model context.
+Review the service's current permissions and credit costs in its
+[console](https://agent-toolkit.app.baizhi.cloud/) and avoid sending sensitive inputs.
+If your account supports scoped keys, use the minimum permissions required. GPT Researcher's tool selection does not
+replace service-side authorization. This example does not make the hosted
+backend open source or imply endorsement by GPT Researcher.
+
+### WebSocket
 
 ```python
 # Enable MCP with web search fallback
@@ -571,4 +629,4 @@ print(f"✅ MCP configs loaded: {len(researcher.mcp_configs)}")
 
 ---
 
-*For more examples and advanced use cases, check out the [GPT Researcher examples repository](https://github.com/assafelovic/gpt-researcher/tree/master/examples).* :-) 
+*For more examples and advanced use cases, check out the [GPT Researcher examples repository](https://github.com/assafelovic/gpt-researcher/tree/master/examples).* :-)
