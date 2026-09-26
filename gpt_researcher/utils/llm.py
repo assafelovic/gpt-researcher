@@ -59,7 +59,7 @@ async def create_chat_completion(
         max_tokens (int, optional): The max tokens to use. Defaults to 4000.
         llm_provider (str, optional): The LLM Provider to use.
         stream (bool): Whether to stream the response. Defaults to False.
-        webocket (WebSocket): The websocket used in the currect request,
+        websocket (WebSocket): The websocket used in the current request,
         llm_kwargs (dict[str, Any], optional): Additional LLM keyword arguments. Defaults to None.
         cost_callback: Callback function for updating cost.
         reasoning_effort (str, optional): Reasoning effort for OpenAI's reasoning models. Defaults to 'low'.
@@ -83,15 +83,6 @@ async def create_chat_completion(
     # Get the provider from supported providers
     provider_kwargs = {'model': model}
 
-    if llm_kwargs:
-        provider_kwargs.update(llm_kwargs)
-    elif os.environ.get("LLM_KWARGS"):
-        import json
-        try:
-            provider_kwargs.update(json.loads(os.environ["LLM_KWARGS"]))
-        except json.JSONDecodeError:
-            pass
-
     if model in SUPPORT_REASONING_EFFORT_MODELS:
         provider_kwargs['reasoning_effort'] = reasoning_effort
 
@@ -104,6 +95,19 @@ async def create_chat_completion(
         # covers reasoning tokens too, so budgets need extra headroom.
         provider_kwargs['temperature'] = None
     provider_kwargs['max_tokens'] = max_tokens
+
+    # Caller/env overrides win over the computed defaults above. Applied last on purpose: before this the
+    # unconditional ``provider_kwargs['temperature'] = ...`` clobbered a temperature passed through
+    # ``llm_kwargs`` or ``LLM_KWARGS`` — the documented escape hatch — so providers that accept exactly one
+    # temperature (Moonshot kimi-k3 answers 400 "only 1 is allowed for this model" to 0.35) could not be used.
+    if llm_kwargs:
+        provider_kwargs.update(llm_kwargs)
+    elif os.environ.get("LLM_KWARGS"):
+        import json
+        try:
+            provider_kwargs.update(json.loads(os.environ["LLM_KWARGS"]))
+        except json.JSONDecodeError:
+            pass
 
     if llm_provider == "openai":
         base_url = os.environ.get("OPENAI_BASE_URL", None)

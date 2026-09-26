@@ -4,6 +4,14 @@ This module provides functions to instantiate and manage various
 search retriever implementations.
 """
 
+import logging
+from importlib.metadata import entry_points
+
+logger = logging.getLogger(__name__)
+
+#: Entry-point group that third-party packages use to register retrievers.
+RETRIEVER_ENTRY_POINT_GROUP = "gpt_researcher.retrievers"
+
 
 def get_retriever(retriever: str):
     """Get a retriever class by name.
@@ -34,6 +42,9 @@ def get_retriever(retriever: str):
         - mcp: Model Context Protocol retriever
         - xquik: Xquik X/Twitter search
         - getxapi: GetXAPI X/Twitter search
+
+    Any other name is looked up among installed plugins registered under the
+    ``gpt_researcher.retrievers`` entry-point group. Built-in names always win.
     """
     match retriever:
         case "google":
@@ -122,7 +133,18 @@ def get_retriever(retriever: str):
             return GetXAPISearch
 
         case _:
+            return _load_plugin_retriever(retriever)
+
+
+def _load_plugin_retriever(name: str):
+    """Load a retriever class that an installed package registered by name."""
+    for entry_point in entry_points(group=RETRIEVER_ENTRY_POINT_GROUP, name=name):
+        try:
+            return entry_point.load()
+        except Exception as exc:
+            logger.warning(f"Failed to load retriever plugin '{name}' ({entry_point.value}): {exc}")
             return None
+    return None
 
 
 def get_retrievers(headers: dict[str, str], cfg):
@@ -160,6 +182,9 @@ def get_retrievers(headers: dict[str, str], cfg):
     # spaces (e.g. "tavily, exa" from a header or config) resolve correctly
     # instead of silently falling back to the default retriever.
     retrievers = [r.strip() for r in retrievers if r and r.strip()]
+
+    if not retrievers:
+        return [get_default_retriever()]
 
     # Convert retriever names to actual retriever classes
     # Use get_default_retriever() as a fallback for any invalid retriever names

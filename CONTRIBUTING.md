@@ -12,8 +12,8 @@ If you come across any issue or have an idea for an improvement, don't hesitate 
 
 ## Contributing Code
 
-1. **Fork the repository and create your branch from `master`.**  
-   If it’s not an urgent bug fix, branch from `master` and work on the feature or fix there.
+1. **Fork the repository and create your branch from `main`.**  
+   `main` is the default branch; open your pull request against it.
 
 2. **Make your changes.**  
    Implement your changes following best practices for coding in the project's language.
@@ -32,6 +32,10 @@ If you come across any issue or have an idea for an improvement, don't hesitate 
 
 7. **Pat yourself on the back and wait for review.**  
    Your work is done, congratulations! Now sit tight. The project maintainers will review your submission as soon as possible. They might suggest changes or ask for improvements. Both constructive conversation and patience are key to the collaboration process.
+
+## Adding a Search Provider
+
+New search providers should be published as a separate package that registers a retriever plugin, rather than added to this repository. Users install it and set `RETRIEVER=<name>`. See [Retriever Plugins](https://docs.gptr.dev/docs/gpt-researcher/search-engines/retriever-plugins) for the contract and a complete example. Fixes to the built-in retrievers are always welcome here.
 
 ## Documentation
 

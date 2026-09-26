@@ -2,12 +2,75 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DevAgent - AI GitHub Developer Agent</title>
-    <!-- Tailwind CSS for modern styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="/site/styles.css">
+    <title>GPT Researcher</title>
+    <meta name="description" content="A research assistant powered by GPT-4">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="./static/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/site/styles.css" />
+    <style>
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+        }
+
+        .agent-name {
+            text-align: center;
+        }
+
+        .agent-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .agent-choices {
+            display: none;
+        }
+
+        .btn-show {
+            display: none;
+        }
+
+        /* Icon button style for inline buttons */
+        .icon-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+            margin-left: 5px;
+            border-radius: 4px;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        .icon-button:hover {
+            background-color: rgba(123, 104, 238, 0.1); /* Placeholder, adjust in styles.css */
+        }
+
+        .icon-button:active {
+        }
+
+        /* Ensure buttons are properly aligned in headings */
+        h2 .icon-button, h2 .expand-button {
+            vertical-align: middle;
+            font-size: 0.8em;
+        }
+        
+        /* New navigation buttons in the top-right corner */
+        .nav-buttons {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+    </style>
 </head>
 
 <body class="bg-[#070b14] text-slate-200 font-sans h-screen overflow-hidden flex text-xs">
@@ -109,8 +172,60 @@
                 <p>✓ Connected to backend WebSocket</p>
             </div>
         </div>
-    </aside>
+        <div class="history-panel-search">
+            <input type="text" id="historySearch" placeholder="Search research history...">
+            <button id="historySearchBtn" class="history-action-btn" title="Search">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+        <div class="history-panel-filters">
+            <select id="historySortOrder">
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+            </select>
+            <!-- JS will add Import/Export/Debug buttons here -->
+            <button id="historyClearBtn" class="history-action-btn" title="Clear all history">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        </div>
+        <div class="history-panel-entries" id="historyEntries">
+            <!-- Entries will be populated dynamically -->
+        </div>
+    </div>
+    
+    <!-- Sticky Downloads Bar -->
+    <div class="sticky-downloads-bar" id="stickyDownloadsBar" style="display: none;"> <!-- Initially hidden -->
+        <div class="download-buttons-container">
+            <a id="copyToClipboard" class="download-option-btn disabled">
+                <i class="fas fa-copy"></i> Copy (Markdown)
+            </a>
+            <a id="downloadLinkMd" href="#" class="download-option-btn disabled" target="_blank" rel="noopener noreferrer">
+                <i class="fas fa-file-lines"></i> Markdown
+            </a>
+            <a id="downloadLink" href="#" class="download-option-btn disabled" target="_blank" rel="noopener noreferrer">
+                <i class="fas fa-file-pdf"></i> PDF
+            </a>
+            <a id="downloadLinkWord" href="#" class="download-option-btn disabled" target="_blank" rel="noopener noreferrer">
+                <i class="fas fa-file-word"></i> Word
+            </a>
+            <a id="downloadLinkJson" href="#" class="download-option-btn disabled" target="_blank" rel="noopener noreferrer">
+                <i class="fas fa-file-code"></i> Log (JSON)
+            </a>
+        </div>
+    </div>
 
+    <footer>
+        <p>
+            <a target="_blank" href="https://gptr.dev">Homepage</a> |
+            <a target="_blank" href="https://github.com/assafelovic/gpt-researcher">GitHub</a> |
+            <a target="_blank" href="https://discord.gg/spBgZmm3Xe">Discord</a>
+        </p>
+        <p>GPT Researcher &copy; 2024</p>
+    </footer>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/1.9.1/showdown.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.2.6/purify.min.js"
+            integrity="sha512-YlctBG9PGZIhh9keoqI3eZkQM9T8QUbiBi7qNYAO/TUEo8jqWX5pLp5+x1cKRQDRzJ/lyGyJ9WUVNIRduxIIFw=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="/site/scripts.js"></script>
 </body>
 
