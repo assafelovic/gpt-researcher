@@ -158,7 +158,7 @@ class GPTResearcher:
         self.role = role
         self.parent_query = parent_query
         self.subtopics = subtopics or []
-        self.visited_urls = visited_urls or set()
+        self.visited_urls = visited_urls if visited_urls is not None else set()
         self.verbose = verbose
         self.context = context or []
         self.headers = headers or {}
