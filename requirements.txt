@@ -40,7 +40,7 @@ pandas>=2.0.0
 
 # Vector Store & Embeddings
 tiktoken>=0.7.0
-numpy>=2.0.0,<2.3.0
+numpy>=2.0.0,<2.5.0
 
 # Utilities
 aiofiles>=23.2.1
