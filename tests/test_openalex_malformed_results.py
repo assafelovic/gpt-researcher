@@ -68,6 +68,15 @@ class OpenAlexMalformedTests(unittest.TestCase):
         requests_mod.get.return_value = resp
         self.assertEqual(mod.OpenAlexSearch("q").search(), [])
 
+    def test_malformed_json_returns_empty(self):
+        mod, requests_mod = _load()
+        resp = MagicMock()
+        resp.raise_for_status = MagicMock()
+        resp.json.side_effect = ValueError("invalid json")
+        requests_mod.get.return_value = resp
+
+        self.assertEqual(mod.OpenAlexSearch("q").search(), [])
+
 
 if __name__ == "__main__":
     unittest.main()
