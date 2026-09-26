@@ -2,6 +2,11 @@ from dotenv import load_dotenv
 import sys
 import os
 import uuid
+
+# Load project-local environment configuration before evaluating any optional
+# tracing/instrumentation gates below.
+load_dotenv()
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Optional Monocle observability, gated by MONOCLE_TRACING (mirrors the LangSmith
@@ -37,7 +42,6 @@ from gpt_researcher.utils.enum import Tone
 # Run with LangSmith if API key is set
 if os.environ.get("LANGCHAIN_API_KEY"):
     os.environ["LANGCHAIN_TRACING_V2"] = "true"
-load_dotenv()
 
 def open_task():
     # Get the directory of the current script
