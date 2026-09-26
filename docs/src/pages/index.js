@@ -6,9 +6,9 @@ import styles from './index.module.css';
 const INSTALL = 'pip install gpt-researcher';
 
 const STATS = [
-  {value: '29k+', label: 'GitHub stars'},
+  {value: '30k+', label: 'GitHub stars'},
   {value: '250+', label: 'Contributors'},
-  {value: '27', label: 'LLM providers'},
+  {value: '100s', label: 'Supported LLMs'},
   {value: '20+', label: 'Search engines'},
 ];
 
@@ -117,7 +117,6 @@ export default function Home() {
         <section className={styles.hero}>
           <div className={styles.heroGrid}>
             <div>
-              <div className={styles.eyebrow}>Open source · Apache-2.0 · v0.16</div>
               <h1 className={styles.title}>The open-source deep research agent</h1>
               <p className={styles.lede}>
                 GPT Researcher plans, searches, reads and cites. Ask a question and get a detailed,
@@ -126,7 +125,7 @@ export default function Home() {
               <div className={styles.ctas}>
                 <Link className={styles.primary} to="/docs/gpt-researcher/getting-started">Get started</Link>
                 <Link className={styles.secondary} href="https://github.com/assafelovic/gpt-researcher">
-                  GitHub <span className={styles.stars}>★ 29.6k</span>
+                  GitHub <span className={styles.stars}>★ 30k</span>
                 </Link>
               </div>
               <CopyInstall />

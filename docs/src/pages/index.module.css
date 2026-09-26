@@ -58,17 +58,6 @@
   gap: 56px;
   align-items: center;
 }
-.eyebrow {
-  display: inline-block;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--ink-2);
-  border: 1px solid var(--line);
-  background: var(--surface);
-  border-radius: 999px;
-  padding: 5px 12px;
-  margin-bottom: 22px;
-}
 .title {
   font-size: clamp(40px, 5.2vw, 64px);
   line-height: 1.04;
