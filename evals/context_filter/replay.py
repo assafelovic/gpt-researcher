@@ -13,6 +13,12 @@ Strategies (all see the same recorded pages):
               precision on a larger budget when enough relevant chunks exist
   jev_broad   Jev on 3000-char chunks, looser threshold (1.0), up to 12:
               a larger budget for broad questions, still ranked
+  bm25        keyword (BM25) ranking of the same chunks, top 10; no API, no
+              model, no embeddings
+  bm25_rel    BM25, keeping chunks scoring >= 50% of the best one, top 10
+  bm25_wide   BM25 with the same relative threshold, up to 25 chunks
+  none_capped no ranking: pages in search order, capped at ~12k tokens
+              (48k chars) per sub-query
   none        no filtering: every page, in full, goes to the writer
   truncate    control: the same 10-chunk budget, taken round-robin across
               pages with no relevance ranking at all
@@ -36,6 +42,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from gpt_researcher import GPTResearcher
 from gpt_researcher.context.compression import ContextCompressor
 from gpt_researcher.context.jev_filter import JevContextCompressor
+from gpt_researcher.context.lexical import LexicalContextCompressor
 from gpt_researcher.context.retriever import SearchAPIRetriever
 from gpt_researcher.prompts import PromptFamily
 
@@ -82,6 +89,20 @@ async def build_context(strategy: str, query: str, pages: list[dict], researcher
     elif strategy == "jev_broad":
         text = await JevContextCompressor(documents=pages, chunk_size=3000, min_score=1.0).async_get_context(
             query=query, max_results=12, cost_callback=costs.append)
+    elif strategy == "bm25":
+        text = await LexicalContextCompressor(documents=pages).async_get_context(query, MAX_RESULTS)
+    elif strategy == "bm25_rel":
+        text = await LexicalContextCompressor(documents=pages, relative_threshold=0.5).async_get_context(query, MAX_RESULTS)
+    elif strategy == "bm25_wide":
+        text = await LexicalContextCompressor(documents=pages, relative_threshold=0.5).async_get_context(query, 25)
+    elif strategy == "none_capped":
+        docs, budget = [], 48_000
+        for d in _pages_as_docs(pages):
+            if budget <= 0:
+                break
+            docs.append(Document(page_content=d.page_content[:budget], metadata=d.metadata))
+            budget -= len(docs[-1].page_content)
+        text = PromptFamily.pretty_print_docs(docs)
     elif strategy == "none":
         text = PromptFamily.pretty_print_docs(_pages_as_docs(pages))
     elif strategy == "truncate":

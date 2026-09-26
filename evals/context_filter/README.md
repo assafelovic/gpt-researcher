@@ -1,5 +1,7 @@
 # Context filter benchmark: embeddings vs Jev vs no filter
 
+![Context filter benchmark results](results.png)
+
 Every scraped page reaches a GPT Researcher report through one step: for each
 sub-query, the scraped pages are cut into chunks and a filter decides which
 chunks become the writer's context. Until now that filter was embedding
@@ -30,6 +32,10 @@ constant, so the filter is the only thing that differs.
 | `jev_large` | Jev on 3000-char chunks, top 4 (≈ same characters, a third of the calls) |
 | `jev_wide` | Jev threshold 1.5, up to 30 chunks |
 | `jev_broad` | Jev on 3000-char chunks, threshold 1.0, up to 12 (open-ended only) |
+| `bm25` | keyword (BM25) ranking of the same chunks, top 10; runs locally, no API or model |
+| `bm25_rel` | BM25, keeping chunks scoring ≥ 50% of the best chunk, top 10 |
+| `bm25_wide` | BM25 with the same relative threshold, up to 25 chunks (shipped as `keyword`) |
+| `none_capped` | no ranking: pages in search order, capped at 48k characters per sub-query |
 | `none` | no filter: every page in full (capped at 50k chars per page, as today) |
 | `truncate` | control: 10 chunks round-robin across pages, no relevance ranking |
 
@@ -88,6 +94,29 @@ The `none` reports on open-ended questions were *shorter* than the embeddings
 reports (2,099 vs 2,416 median words) and still preferred, so the judge is not
 rewarding length.
 
+### Filters that need nothing: keyword (BM25)
+
+Without a Jev key, GPT Researcher needs a filter with no API, model or
+embeddings. The candidates, on the same 28 runs:
+
+| strategy | SimpleQA | context precision | vs embeddings (W/T/L) | vs none (W/T/L) | filter p50 | context p50 | total $ |
+|---|---|---|---|---|---|---|---|
+| bm25 | 18/20 | 0.40 | 7 / 9 / 12 | 3 / 12 / 13 | 0.02s | 8.1k | 0.118 |
+| bm25_rel | 19/20 | 0.53 | 7 / 13 / 8 | 5 / 10 / 13 | 0.02s | 4.7k | **0.107** |
+| **bm25_wide** | 19/20 | 0.51 | **14 / 8 / 6** | 6 / 9 / 13 | 0.02s | 6.4k | 0.116 |
+| none_capped | 20/20 | 0.54 | 11 / 13 / 4 | 6 / 10 / 12 | 0.00s | 23.8k | 0.152 |
+| *embeddings* | *18/20* | *0.46* | — | *3 / 12 / 13* | *1.04s* | *7.6k* | *0.117* |
+
+`bm25_wide` ships as the `keyword` fallback: at least as good as embeddings on
+every measure, at the same cost, about 50× faster to filter, and with nothing
+to set up. Its 14–6 head-to-head is directional (sign test p ≈ 0.12), not as
+strong as Jev's 15–3. As with Jev, the relative threshold is what does the
+work: plain top-10 BM25 loses to embeddings 7–12.
+
+GPT Researcher removes duplicate URLs across sub-queries before scraping
+(0 of 300 pages recurred), so "sources that came back most often" isn't a
+signal available at this step.
+
 ## What this shows
 
 1. **Jev is a better filter than embeddings at the same cost.** 73% of the
@@ -105,7 +134,11 @@ rewarding length.
    research run many more sub-queries and would overflow context windows and
    budgets. For fact-finding questions it adds nothing: SimpleQA is at
    ceiling for every strategy, and Jev vs none is 6–10–4.
-4. **SimpleQA is saturated.** 18–20 of 20 for every strategy: when search
+4. **No integration is needed for a good filter.** Keyword ranking with a
+   relative threshold matches or beats embeddings at the same cost (above),
+   so the default without a Jev key is `keyword`, and nothing requires an
+   embeddings provider.
+5. **SimpleQA is saturated.** 18–20 of 20 for every strategy: when search
    finds the fact, any reasonable filter keeps it. Differences of one question
    are noise.
 
@@ -127,11 +160,13 @@ python -m evals.context_filter.collect --out runs/            # ~$0.40, ~20 min
 python -m evals.context_filter.replay  --runs runs/ --out results/
 python -m evals.context_filter.judge   --results results/
 python -m evals.context_filter.judge   --results results/ --baseline none --only jev embeddings
+python -m evals.context_filter.replay  --runs runs/ --out results/ --strategies bm25 bm25_rel bm25_wide none_capped
 ```
 
 `results/` in this folder holds the scores and per-run metrics from the run
 above (`runs.json`, `scored_*.json`, `summary_*.json`). Scraped pages and
 generated reports are not committed.
 
-Total spend for the run above: $27 in tracked writing and filtering (of which
-$0.59 was Jev), plus an estimated $5–10 for judging.
+Total spend: about $40 in tracked writing and filtering across all strategies
+(of which $0.59 was Jev; keyword and none cost nothing to filter), plus an
+estimated $8–15 for judging.

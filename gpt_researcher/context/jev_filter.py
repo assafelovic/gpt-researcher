@@ -53,20 +53,6 @@ def _concurrency() -> asyncio.Semaphore:
     return _SEMAPHORES[loop]
 
 
-CONTEXT_FILTERS = ("auto", "jev", "embeddings", "none")
-
-
-def resolve_context_filter(setting: str | None) -> str:
-    """The filter to use: ``auto`` means Jev when a TypeSafe key is set."""
-    mode = (setting or "auto").strip().lower()
-    if mode not in CONTEXT_FILTERS:
-        logger.warning(f"Unknown CONTEXT_FILTER {setting!r}; expected one of {CONTEXT_FILTERS}. Using 'auto'.")
-        mode = "auto"
-    if mode == "auto":
-        return "jev" if os.environ.get("TYPESAFE_API_KEY") else "embeddings"
-    return mode
-
-
 class JevError(RuntimeError):
     """Jev could not score the chunks (missing key, API or network failure)."""
 
