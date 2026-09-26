@@ -7,11 +7,41 @@ In addition, GPT Researcher can be tailored to various report formats (such as A
 
 GPT Researcher defaults to our recommended suite of integrations: [OpenAI](https://platform.openai.com/docs/overview) for LLM calls and [Tavily API](https://app.tavily.com) for retrieving real-time web information.
 
-As seen below, OpenAI still stands as the superior LLM. We assume it will stay this way for some time, and that prices will only continue to decrease, while performance and speed increase over time.
+## Choosing an LLM
 
-<div style={{ marginBottom: '10px' }}>
-<img align="center" height="350" src="/img/leaderboard.png" />
-</div>
+GPT Researcher's writer turns scraped sources into a report, so how faithfully a model sticks to its sources matters more than general benchmark scores. The table below comes from Vectara's [Hallucination Leaderboard](https://github.com/vectara/hallucination-leaderboard), which has each model summarize 7,700+ articles (news, science, medicine, law, business and more) using only the source text, then checks every summary for claims the source doesn't support with the HHEM-2.3 evaluation model.
+
+A selection of models you can configure in GPT Researcher, ordered by hallucination rate (lower is better). Data as of September 22, 2026; see the leaderboard for all 100+ models.
+
+| Model | Provider | Hallucination rate | Factual consistency | Answer rate |
+|---|---|---:|---:|---:|
+| GPT-5.4 nano | OpenAI | 3.1% | 96.9% | 100.0% |
+| Gemini 2.5 Flash-Lite | Google | 3.3% | 96.7% | 99.5% |
+| Llama 3.3 70B | Meta | 4.1% | 95.9% | 99.5% |
+| Mistral Large (24.11) | Mistral | 4.5% | 95.5% | 99.9% |
+| GPT-5.4 mini | OpenAI | 5.5% | 94.5% | 100.0% |
+| GPT-4.1 | OpenAI | 5.6% | 94.4% | 99.9% |
+| DeepSeek V3.2 | DeepSeek | 6.3% | 93.7% | 92.6% |
+| GPT-6 Sol | OpenAI | 6.5% | 93.5% | 100.0% |
+| GPT-5.4 | OpenAI | 7.0% | 93.0% | 99.9% |
+| Gemini 2.5 Pro | Google | 7.0% | 93.0% | 99.1% |
+| Gemini 2.5 Flash | Google | 7.8% | 92.2% | 99.0% |
+| Llama 4 Maverick | Meta | 8.2% | 91.8% | 100.0% |
+| DeepSeek V4 Pro | DeepSeek | 8.6% | 91.4% | 97.2% |
+| GPT-5.5 | OpenAI | 9.3% | 90.7% | 100.0% |
+| Claude Haiku 4.5 | Anthropic | 9.8% | 90.2% | 99.5% |
+| Gemini 3.1 Pro (preview) | Google | 10.4% | 89.6% | 99.4% |
+| Claude Sonnet 4.6 | Anthropic | 10.6% | 89.4% | 99.9% |
+| Qwen 3.5 Plus | Alibaba | 10.7% | 89.3% | 99.8% |
+| Kimi K2.6 | Moonshot | 10.8% | 89.2% | 99.7% |
+| Claude Opus 4.7 | Anthropic | 12.0% | 88.0% | 98.0% |
+| gpt-oss-120b | OpenAI | 14.2% | 85.8% | 99.9% |
+| Grok 4.1 Fast | xAI | 17.8% | 82.2% | 98.5% |
+
+- **Hallucination rate**: share of summaries containing a claim not supported by the source.
+- **Answer rate**: share of articles the model agreed to summarize.
+
+GPT Researcher defaults to `gpt-5.4` for `SMART_LLM` and `STRATEGIC_LLM`, and `gpt-5.4-mini` for `FAST_LLM`. This benchmark measures faithfulness to sources, not reasoning or writing quality: smaller models often rank well here partly because their summaries add less. Use it to narrow your choice, then compare reports on your own queries (see [Testing your LLM](../llms/testing-your-llm.md)).
 
 The default config.py file can be found in `/gpt_researcher/config/`. It supports various options for customizing GPT Researcher to your needs.
 You can also include your own external JSON file `config.json` by adding the path in the `config_path` param.
