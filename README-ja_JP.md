@@ -83,7 +83,7 @@ https://github.com/assafelovic/gpt-researcher/assets/13554167/a00c89a6-a295-4dd0
 - Tavilyアプリケーションインターフェースの統合（コア概念の高度な説明）
 
 ## クイックスタート
-> **ステップ 0** - Python 3.11 以降をインストールします。[こちら](https://www.tutorialsteacher.com/python/install-python)を参照して、ステップバイステップのガイドを確認してください。
+> **ステップ 0** - Python 3.12 以降をインストールします。[こちら](https://www.tutorialsteacher.com/python/install-python)を参照して、ステップバイステップのガイドを確認してください。
 
 <br />
 

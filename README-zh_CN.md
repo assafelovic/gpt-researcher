@@ -82,7 +82,7 @@ https://github.com/assafelovic/gpt-researcher/assets/13554167/a00c89a6-a295-4dd0
 - Tavily 应用程序接口集成（核心概念的高级解释）
 
 ## 快速开始
-> **步骤 0** - 安装 Python 3.11 或更高版本。[参见此处](https://www.tutorialsteacher.com/python/install-python) 获取详细指南。
+> **步骤 0** - 安装 Python 3.12 或更高版本。[参见此处](https://www.tutorialsteacher.com/python/install-python) 获取详细指南。
 
 <br />
 
