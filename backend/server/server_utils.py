@@ -20,7 +20,7 @@ except ImportError:  # pragma: no cover - legacy sys.path-shimmed import
     from utils import write_md_to_pdf, write_md_to_word, write_text_to_md
 from pathlib import Path
 from datetime import datetime
-from fastapi import HTTPException
+from fastapi import HTTPException, WebSocketDisconnect
 import logging
 import hashlib
 
@@ -395,6 +395,10 @@ async def handle_websocket_communication(websocket, manager):
                         "content": "error",
                         "output": "Unknown command received by server"
                     })
+            except WebSocketDisconnect:
+                # A closed tab or a new research run closing the old socket is a
+                # normal disconnect, not an error. Let the endpoint clean it up.
+                raise
             except Exception as e:
                 logger.error(f"WebSocket error: {str(e)}\n{traceback.format_exc()}")
                 print(f"WebSocket error: {e}")
