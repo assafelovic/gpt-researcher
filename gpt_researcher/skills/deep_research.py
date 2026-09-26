@@ -81,14 +81,20 @@ def parse_search_queries_response(response: str, num_queries: int) -> List[Dict[
         candidate_queries = parsed.get("queries") or parsed.get("searchQueries") or parsed.get("items")
 
     if isinstance(candidate_queries, list):
-        queries = [
-            {
-                "query": item["query"].strip(),
-                "researchGoal": item["researchGoal"].strip(),
-            }
-            for item in candidate_queries
-            if isinstance(item, dict) and item.get("query") and item.get("researchGoal")
-        ]
+        queries = []
+        for item in candidate_queries:
+            if not isinstance(item, dict):
+                continue
+            query = item.get("query")
+            research_goal = item.get("researchGoal")
+            if not isinstance(query, str) or not isinstance(research_goal, str):
+                continue
+            # Normalize before validating so whitespace-only values are rejected
+            # instead of being accepted and then stripped down to "".
+            query = query.strip()
+            research_goal = research_goal.strip()
+            if query and research_goal:
+                queries.append({"query": query, "researchGoal": research_goal})
         if queries:
             return queries[:num_queries]
 
