@@ -308,6 +308,7 @@ Please follow all of the following guidelines in your report:
 - You MUST NOT include a table of contents, but DO include proper markdown headers (# ## ###) to structure your report clearly.
 - Use in-text citation references in {report_format} format and make it with markdown hyperlink placed at the end of the sentence or paragraph that references them like this: ([in-text citation](url)).
 - Every substantive claim, figure or quote MUST carry an in-text citation to the source it came from. Do NOT cite sources that do not appear in the provided information.
+- Before citing a source for a specific claim, confirm that source's actual content supports that claim. If a source is unreadable, off-topic, or its content does not support the claim you want to make, do NOT present the claim as fact attributed to that source -- omit the claim, or state explicitly that it does not support that claim or could not be verified from the retrieved sources.
 - Don't forget to add a reference list at the end of the report in {report_format} format.
 - {reference_prompt}
 - {tone_prompt}
