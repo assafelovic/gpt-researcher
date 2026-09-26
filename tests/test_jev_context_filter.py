@@ -132,44 +132,42 @@ def test_missing_key_is_a_jev_error(monkeypatch):
         JevClient()
 
 
-def test_context_manager_falls_back_to_embeddings_without_a_key(monkeypatch):
+def test_jev_without_a_key_falls_back_to_keyword_ranking_not_embeddings(monkeypatch):
+    from gpt_researcher.prompts import PromptFamily
     from gpt_researcher.skills import context_manager as cm
 
     monkeypatch.delenv("TYPESAFE_API_KEY", raising=False)
-    used = []
 
-    class FakeCompressor:
-        def __init__(self, **kwargs):
-            used.append("embeddings")
+    def no_embeddings():
+        raise AssertionError("the fallback must not build embeddings")
 
-        async def async_get_context(self, **kwargs):
-            return "embedded context"
-
-    monkeypatch.setattr(cm, "ContextCompressor", FakeCompressor)
     researcher = SimpleNamespace(
-        verbose=False, websocket=None, kwargs={}, prompt_family=None, add_costs=lambda c: None,
-        cfg=SimpleNamespace(context_filter="jev", similarity_threshold=0.42),
-        memory=SimpleNamespace(get_embeddings=lambda: None),
+        verbose=False, websocket=None, kwargs={}, prompt_family=PromptFamily, add_costs=lambda c: None,
+        cfg=SimpleNamespace(context_filter="jev"), memory=SimpleNamespace(get_embeddings=no_embeddings),
     )
-    result = _run(cm.ContextManager(researcher).get_similar_content_by_query("q", [_page("a", _long("x"))]))
-    assert result == "embedded context" and used == ["embeddings"]
+    pages = [_page("a", _long("filler")), _page("b", _long("answer"))]
+    context = _run(cm.ContextManager(researcher).get_similar_content_by_query("answer", pages))
+    assert "Source: b" in context and "Source: a" not in context
 
 
 @pytest.mark.parametrize("setting,key,expected", [
     ("auto", "k", "jev"),
-    ("auto", None, "embeddings"),
+    ("auto", None, "keyword"),
     (None, "k", "jev"),
     ("JEV", None, "jev"),
     ("embeddings", "k", "embeddings"),
     ("none", None, "none"),
-    ("bogus", None, "embeddings"),
+    ("bogus", None, "keyword"),
+    ("keyword", "k", "keyword"),
 ])
 def test_resolve_context_filter(monkeypatch, setting, key, expected):
     if key:
         monkeypatch.setenv("TYPESAFE_API_KEY", key)
     else:
         monkeypatch.delenv("TYPESAFE_API_KEY", raising=False)
-    assert jev_filter.resolve_context_filter(setting) == expected
+    from gpt_researcher.context.select import resolve_context_filter
+
+    assert resolve_context_filter(setting) == expected
 
 
 def test_none_filter_passes_every_page_without_embeddings():

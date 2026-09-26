@@ -28,7 +28,7 @@ from openai import AsyncOpenAI
 
 from evals.simple_evals.simpleqa_eval import GRADER_TEMPLATE
 
-client = AsyncOpenAI()
+client = AsyncOpenAI(max_retries=6, timeout=300)
 SEM = asyncio.Semaphore(8)
 
 
