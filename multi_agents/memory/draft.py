@@ -5,6 +5,7 @@ import operator
 class DraftState(TypedDict):
     task: dict
     topic: str
+    sibling_sections: List[str]
     draft: dict
     review: str
     revision_notes: str
