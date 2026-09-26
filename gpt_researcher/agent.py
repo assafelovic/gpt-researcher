@@ -174,9 +174,9 @@ class GPTResearcher:
             self._process_mcp_configs(mcp_configs)
         
         self.retrievers = get_retrievers(self.headers, self.cfg)
-        self.memory = Memory(
-            self.cfg.embedding_provider, self.cfg.embedding_model, **self.cfg.embedding_kwargs
-        )
+        # Built on first use: with the Jev or no-op context filter a standard
+        # research run never needs an embedding model, or its credentials.
+        self._memory = None
         
         # Set default encoding to utf-8
         self.encoding = kwargs.get('encoding', 'utf-8')
@@ -279,6 +279,18 @@ class GPTResearcher:
             
         # Priority 4: Default to fast
         return "fast"
+
+    @property
+    def memory(self) -> Memory:
+        if self._memory is None:
+            self._memory = Memory(
+                self.cfg.embedding_provider, self.cfg.embedding_model, **self.cfg.embedding_kwargs
+            )
+        return self._memory
+
+    @memory.setter
+    def memory(self, value: Memory) -> None:
+        self._memory = value
 
     def _process_mcp_configs(self, mcp_configs: list[dict]) -> None:
         """

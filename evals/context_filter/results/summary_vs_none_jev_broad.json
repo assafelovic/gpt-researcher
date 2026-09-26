@@ -1,0 +1,22 @@
+[
+ {
+  "strategy": "jev_broad",
+  "runs": 8,
+  "errors": 0,
+  "simpleqa_correct": 0,
+  "simpleqa_incorrect": 0,
+  "simpleqa_not_attempted": 0,
+  "simpleqa_n": 0,
+  "precision": 0.757,
+  "pairwise_vs_none": {
+   "win": 0,
+   "tie": 3,
+   "loss": 5
+  },
+  "median_filter_seconds": 6.545,
+  "median_context_tokens": 26929.0,
+  "median_write_seconds": 58.504999999999995,
+  "mean_filter_cost": 0.00529,
+  "mean_write_cost": 0.1858
+ }
+]

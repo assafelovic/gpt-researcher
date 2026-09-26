@@ -4,6 +4,7 @@ DEFAULT_CONFIG: BaseConfig = {
     "RETRIEVER": "tavily",
     "EMBEDDING": "openai:text-embedding-3-small",
     "SIMILARITY_THRESHOLD": 0.42,
+    "CONTEXT_FILTER": "auto",  # auto | jev | embeddings | none; auto = jev when TYPESAFE_API_KEY is set
     "FAST_LLM": "openai:gpt-5.4-mini",
     "SMART_LLM": "openai:gpt-5.4",  # Has support for long responses (2k+ words).
     "STRATEGIC_LLM": "openai:gpt-5.4",  # Reasoning model used for planning; tune REASONING_EFFORT for speed vs. depth.

@@ -21,6 +21,7 @@ The config JSON should follow the format/keys in the default config. Below is a 
   "RETRIEVER": "tavily",
   "EMBEDDING": "openai:text-embedding-3-small",
   "SIMILARITY_THRESHOLD": 0.42,
+  "CONTEXT_FILTER": "auto",
   "FAST_LLM": "openai:gpt-5.4-mini",
   "SMART_LLM": "openai:gpt-5.4",
   "STRATEGIC_LLM": "openai:gpt-5.4",
@@ -53,6 +54,7 @@ Below is a list of current supported options:
 - **`RETRIEVER`**: Search engine or research retriever used for retrieving sources. Defaults to `tavily`. Options include `tavily`, `duckduckgo`, `bing`, `brave`, `google`, `searchapi`, `serper`, `serpapi`, `searx`, `arxiv`, `openalex`, `semantic_scholar`, `pubmed_central`, `exa`, `crw`, `groundroute`, `bocha`, `xquik`, `custom`, and `mcp`. You can also combine retrievers with commas, such as `tavily,openalex,semantic_scholar`. [Check here](https://github.com/assafelovic/gpt-researcher/tree/master/gpt_researcher/retrievers) for supported retrievers
 - **`EMBEDDING`**: Embedding model. Defaults to `openai:text-embedding-3-small`. Options: `ollama`, `huggingface`, `azure_openai`, `custom`.
 - **`SIMILARITY_THRESHOLD`**: Threshold value for similarity comparison when processing documents. Defaults to `0.42`.
+- **`CONTEXT_FILTER`**: How scraped content is filtered before it reaches the writer: `auto` (default; Jev when `TYPESAFE_API_KEY` is set, otherwise embeddings), `jev`, `embeddings` or `none`. See [Context Filter](./context-filter.md).
 - **`FAST_LLM`**: Model name for fast LLM operations such summaries. Defaults to `openai:gpt-5.4-mini`.
 - **`SMART_LLM`**: Model name for smart operations like generating research reports and reasoning. Defaults to `openai:gpt-5.4`.
 - **`STRATEGIC_LLM`**: Model name for strategic operations like generating research plans and strategies. Defaults to `openai:gpt-5.4`.

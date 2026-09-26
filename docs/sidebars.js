@@ -40,6 +40,7 @@
         'gpt-researcher/gptr/image_generation',
         'gpt-researcher/gptr/ai-development',
         'gpt-researcher/gptr/config',
+        'gpt-researcher/gptr/context-filter',
         'gpt-researcher/gptr/scraping',
         'gpt-researcher/gptr/querying-the-backend',
         'gpt-researcher/gptr/automated-tests',
