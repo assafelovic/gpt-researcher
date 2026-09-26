@@ -52,6 +52,28 @@ class GetRetrieversWhitespaceTests(unittest.TestCase):
         result = get_retrievers(headers, _cfg())
         self.assertEqual(result, [get_retriever("tavily"), get_retriever("exa")])
 
+    def test_blank_selections_fall_back_to_default(self):
+        cases = [
+            ({"retrievers": " , , "}, _cfg()),
+            ({"retriever": "   "}, _cfg()),
+            ({}, _cfg(retrievers=" , ")),
+            ({}, _cfg(retriever="   ")),
+        ]
+
+        for headers, cfg in cases:
+            with self.subTest(headers=headers, cfg=cfg):
+                self.assertEqual(
+                    get_retrievers(headers, cfg),
+                    [get_default_retriever()],
+                )
+
+    def test_absent_selection_still_uses_default(self):
+        self.assertEqual(get_retrievers({}, _cfg()), [get_default_retriever()])
+
+    def test_invalid_name_still_uses_default(self):
+        result = get_retrievers({"retriever": "invalid"}, _cfg())
+        self.assertEqual(result, [get_default_retriever()])
+
     def test_config_string_path_still_strips(self):
         result = get_retrievers({}, _cfg(retrievers="tavily, exa"))
         self.assertEqual(result, [get_retriever("tavily"), get_retriever("exa")])

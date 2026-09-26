@@ -161,6 +161,9 @@ def get_retrievers(headers: dict[str, str], cfg):
     # instead of silently falling back to the default retriever.
     retrievers = [r.strip() for r in retrievers if r and r.strip()]
 
+    if not retrievers:
+        return [get_default_retriever()]
+
     # Convert retriever names to actual retriever classes
     # Use get_default_retriever() as a fallback for any invalid retriever names
     retriever_classes = [get_retriever(r) or get_default_retriever() for r in retrievers]
