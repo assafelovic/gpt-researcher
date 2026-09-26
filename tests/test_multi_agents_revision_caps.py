@@ -11,6 +11,7 @@ LangGraph's recursion_limit, so each binding method is checked for both halves:
 it delegates below the ceiling, and it force-accepts above it.
 """
 from multi_agents.agents.editor import EditorAgent
+from multi_agents.agents.human import HumanAgent
 from multi_agents.agents.orchestrator import ChiefEditorAgent
 
 
@@ -52,6 +53,17 @@ def test_plan_loop_reads_the_key_human_agent_writes():
     chief = _chief({"max_plan_revisions": 1})
     ignored = {"human_feedback": "x", "revisions_count": 99}
     assert chief._route_human_feedback(ignored) == "revise"
+
+
+async def test_plan_loop_empty_console_reply_approves(monkeypatch):
+    # The regression: Enter at the console gave "", which re-planned without
+    # advancing plan_revision_count, so max_plan_revisions never ended it.
+    monkeypatch.setattr("builtins.input", lambda *_: "")
+    state = {"task": {"include_human_feedback": True}, "sections": ["a"],
+             "plan_revision_count": 0}
+    review = await HumanAgent().review_plan(state)
+    assert review == {"human_feedback": None, "plan_revision_count": 0}
+    assert _chief({"max_plan_revisions": 3})._route_human_feedback(review) == "accept"
 
 
 # --- fact-check loop ---------------------------------------------------
