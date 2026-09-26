@@ -227,7 +227,7 @@ GPT Researcher now includes Deep Research - an advanced recursive research workf
 
 Every research run scrapes dozens of pages, and only some of each page helps answer the question. Before anything reaches the LLM, GPT Researcher decides which passages to keep. By default it uses **[Jev](https://typesafe.ai/blog/introducing-system-one-models-and-jev)** by TypeSafe, a model that scores how useful each passage is for the question, rather than how similar its words or embedding are.
 
-We benchmarked every option on 28 research tasks, replaying the same scraped sources so that only the filter changed:
+**Jev's context is 59% more relevant than embeddings, at the same cost** (73% of kept passages relevant vs 46%). We benchmarked every option on 28 research tasks, replaying the same scraped sources so that only the filter changed:
 
 | Context filter | Relevant passages kept | Head-to-head vs embeddings | Filter time | Cost per report | Needs |
 |---|---|---|---|---|---|
