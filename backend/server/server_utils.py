@@ -373,11 +373,11 @@ async def handle_websocket_communication(websocket, manager):
                             "output": "Task already running. Please wait.",
                         }
                     )
-                # Normalize command detection by checking startswith after stripping whitespace
-                elif data.strip().startswith("start"):
+                elif data.strip().startswith("start") or (data.strip().startswith("{") and "task" in data):
                     logger.info(f"Processing start command")
+                    raw_data = data if data.strip().startswith("start") else "start " + data
                     running_task = run_long_running_task(
-                        handle_start_command(websocket, data, manager)
+                        handle_start_command(websocket, raw_data, manager)
                     )
                 elif data.strip().startswith("human_feedback"):
                     logger.info(f"Processing human_feedback command")

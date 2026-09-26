@@ -162,7 +162,10 @@ class Memory:
 
                 _embeddings = MistralAIEmbeddings(model=model, **embedding_kwargs)
             case "huggingface":
-                from langchain_huggingface import HuggingFaceEmbeddings
+                try:
+                    from langchain_huggingface import HuggingFaceEmbeddings
+                except ImportError:
+                    from langchain_community.embeddings import HuggingFaceEmbeddings
 
                 _embeddings = HuggingFaceEmbeddings(model_name=model, **embedding_kwargs)
             case "nomic":
