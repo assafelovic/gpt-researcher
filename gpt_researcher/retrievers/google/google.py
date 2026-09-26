@@ -101,7 +101,7 @@ class GoogleSearch:
             if not isinstance(result, dict):
                 continue
             link = result.get("link") or ""
-            if not link or "youtube.com" in link:
+            if not link or "youtube.com" in link.lower():
                 continue
             search_response.append(
                 {
