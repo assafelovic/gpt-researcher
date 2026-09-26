@@ -160,29 +160,50 @@ class ChatAgentWithMemory:
             results = self.tavily_client.search(query=query, max_results=5)
             
             # Store search metadata for frontend
-            self.search_metadata = {
-                "query": query,
-                "sources": [
-                    {"title": result.get("title", ""), 
-                     "url": result.get("url", ""),
-                     "content": result.get("content", "")[:200] + "..." if len(result.get("content", "")) > 200 else result.get("content", "")}
-                    for result in results.get("results", [])
-                ]
-            }
+            self.search_metadata = self._build_search_metadata(query, results)
             
             return results
         except Exception as e:
             logger.error(f"Error performing web search: {str(e)}", exc_info=True)
-            return {
+            results = {
                 "error": str(e),
                 "results": []
             }
+            self.search_metadata = self._build_search_metadata(query, results)
+            return results
+
+    @staticmethod
+    def _build_search_metadata(query, results):
+        """Describe one search result without making another provider request."""
+        metadata = {"query": query, "sources": []}
+        for result in results.get("results", []):
+            content = result.get("content", "")
+            metadata["sources"].append({
+                "title": result.get("title", ""),
+                "url": result.get("url", ""),
+                "content": content[:200] + "..." if len(content) > 200 else content,
+            })
+        if "error" in results:
+            metadata["error"] = results["error"]
+        return metadata
 
 
     async def process_chat_completion(self, messages: List[Dict[str, str]]):
         """Process chat completion using configured LLM provider with tool calling support"""
-        # Create a search tool using the utility function
-        search_tool = create_search_tool(self.quick_search)
+        processed_metadata = []
+
+        def search_with_metadata(query):
+            results = self.quick_search(query)
+            # Keep sources local to this completion and tied to the evidence
+            # returned to the model, including repeated queries and failures.
+            processed_metadata.append({
+                "tool": "quick_search",
+                "query": query,
+                "search_metadata": self._build_search_metadata(query, results),
+            })
+            return results
+
+        search_tool = create_search_tool(search_with_metadata)
         
         # Use the tool-enabled chat completion utility
         response, tool_calls_metadata = await create_chat_completion_with_tools(
@@ -193,24 +214,9 @@ class ChatAgentWithMemory:
             llm_kwargs=self.config.llm_kwargs,
         )
         
-        # Process metadata to match the expected format for the chat system
-        processed_metadata = []
-        for metadata in tool_calls_metadata:
-            if metadata.get("tool") == "search_tool":
-                # Extract query from args
-                query = metadata.get("args", {}).get("query", "")
-                
-                # Trigger search again to get metadata (the search was already executed by LangChain)
-                if query:
-                    self.quick_search(query)  # This populates self.search_metadata
-                    
-                processed_metadata.append({
-                    "tool": "quick_search",
-                    "query": query,
-                    "search_metadata": self.search_metadata
-                })
-        
-        return response, processed_metadata
+        # The utility returns no tool metadata when it falls back to a plain
+        # completion; that answer was not generated from these search results.
+        return response, processed_metadata if tool_calls_metadata else []
 
 
 
