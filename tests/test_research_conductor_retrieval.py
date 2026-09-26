@@ -78,5 +78,60 @@ class ResearchConductorRetrievalTests(unittest.IsolatedAsyncioTestCase):
         )
 
 
+class FakeDeclaredPrefetchRetriever:
+    """Retriever that fetches content itself (no scraping needed)."""
+
+    requires_scraping = False
+
+    def __init__(self, query, query_domains=None):
+        self.query = query
+        self.query_domains = query_domains or []
+
+    def search(self, max_results=10):
+        return [
+            {
+                "href": "https://example.com/prefetched",
+                "raw_content": "D" * 500,
+            }
+        ]
+
+
+class ResearchConductorVisitedUrlsTests(unittest.IsolatedAsyncioTestCase):
+    """#2100: prefetched URLs must join visited_urls like scraped ones do."""
+
+    def make_researcher(self, retriever_class):
+        class FakeResearcher:
+            def __init__(self):
+                self.retrievers = [retriever_class]
+                self.cfg = SimpleNamespace(max_search_results_per_query=5)
+                self.verbose = False
+                self.websocket = None
+                self.visited_urls = set()
+                self.research_sources = []
+
+            def add_research_sources(self, sources):
+                self.research_sources.extend(sources)
+
+        return FakeResearcher()
+
+    async def test_declared_prefetch_marks_visited(self):
+        researcher = self.make_researcher(FakeDeclaredPrefetchRetriever)
+        conductor = ResearchConductor(researcher)
+
+        await conductor._search_relevant_source_urls("sub-query one")
+        _, prefetched = await conductor._search_relevant_source_urls("sub-query two")
+
+        self.assertEqual(researcher.visited_urls, {"https://example.com/prefetched"})
+        self.assertEqual(len(prefetched), 1)
+
+    async def test_legacy_heuristic_prefetch_marks_visited(self):
+        researcher = self.make_researcher(FakeFullContentRetriever)
+        conductor = ResearchConductor(researcher)
+
+        await conductor._search_relevant_source_urls("pubmed article")
+
+        self.assertEqual(researcher.visited_urls, {"https://example.com/full"})
+
+
 if __name__ == "__main__":
     unittest.main()
