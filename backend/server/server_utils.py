@@ -9,6 +9,7 @@ from typing import Awaitable, Dict, List, Any
 from fastapi.responses import JSONResponse, FileResponse
 from gpt_researcher.document.document import DocumentLoader
 from gpt_researcher import GPTResearcher
+from gpt_researcher.actions import stream_output
 # This module is imported under two different package names: as
 # `backend.server.server_utils` (main.py / the Procfile entrypoint) and as
 # `server.server_utils` (backend/server/app.py prepends backend/ to sys.path).
