@@ -64,6 +64,7 @@
   letter-spacing: -0.035em;
   font-weight: 650;
   margin: 0 0 20px;
+  text-wrap: balance;
 }
 .lede {
   font-size: 19px;
@@ -250,6 +251,7 @@
   padding: 96px 24px 0;
 }
 .h2 {
+  text-wrap: balance;
   font-size: clamp(28px, 3vw, 38px);
   letter-spacing: -0.025em;
   font-weight: 600;
@@ -409,6 +411,59 @@
   text-align: right;
 }
 
+/* Research citations */
+.papersHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.scholar {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink) !important;
+  margin-bottom: 36px;
+  white-space: nowrap;
+}
+.papers {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 48px;
+  border-top: 1px solid var(--ink);
+}
+.papers li {
+  font-size: inherit;
+  border-bottom: 1px solid var(--line);
+}
+.paper {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 20px;
+  padding: 18px 0;
+  color: var(--ink) !important;
+  text-decoration: none !important;
+}
+.paper:hover .paperTitle {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.paperTitle {
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.45;
+}
+.paperVenue {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
 /* Closing CTA */
 .cta {
   max-width: 1180px;
@@ -446,6 +501,9 @@
   }
   .features {
     grid-template-columns: 1fr 1fr;
+  }
+  .papers {
+    grid-template-columns: 1fr;
   }
   .stats,
   .steps {

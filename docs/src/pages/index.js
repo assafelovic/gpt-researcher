@@ -58,6 +58,17 @@ const FEATURES = [
   },
 ];
 
+const PAPERS = [
+  {title: 'DeepResearchGym: A Free, Transparent, and Reproducible Evaluation Sandbox for Deep Research', venue: 'arXiv 2025', href: 'https://arxiv.org/abs/2505.19253'},
+  {title: 'Dolphin: Moving Towards Closed-loop Auto-research through Thinking, Practice, and Feedback', venue: 'ACL 2025', href: 'https://aclanthology.org/2025.acl-long.1056/'},
+  {title: 'AI for Auto-Research: Roadmap & User Guide', venue: 'arXiv 2026', href: 'https://arxiv.org/abs/2605.18661'},
+  {title: 'AutoResearch AI: Towards AI-Powered Research Automation for Scientific Discovery', venue: 'arXiv 2026', href: 'https://arxiv.org/abs/2605.23204'},
+  {title: 'Deep Research Comparator: A Platform for Fine-grained Human Annotations of Deep Research Agents', venue: 'ACM 2026', href: 'https://dl.acm.org/doi/abs/10.1145/3774905.3793116'},
+  {title: 'Deep Researcher with Test-Time Diffusion', venue: 'arXiv 2025', href: 'https://arxiv.org/abs/2507.16075'},
+];
+
+const SCHOLAR_URL = 'https://scholar.google.com/scholar?q=%22gpt+researcher%22';
+
 const STEPS = [
   {title: 'Plan', body: 'Breaks your question into focused sub-questions.'},
   {title: 'Search', body: 'Queries the web or your documents for each one, in parallel.'},
@@ -117,10 +128,11 @@ export default function Home() {
         <section className={styles.hero}>
           <div className={styles.heroGrid}>
             <div>
-              <h1 className={styles.title}>The open-source deep research agent</h1>
+              <h1 className={styles.title}>The #1 deep research agent</h1>
               <p className={styles.lede}>
                 GPT Researcher plans, searches, reads and cites. Ask a question and get a detailed,
-                source-backed report, from the web or your own documents, with any LLM.
+                source-backed report, from the web or your own documents, with any LLM. Fully open
+                source under the Apache 2.0 license.
               </p>
               <div className={styles.ctas}>
                 <Link className={styles.primary} to="/docs/gpt-researcher/getting-started">Get started</Link>
@@ -190,6 +202,26 @@ export default function Home() {
               ))}
             </div>
           </Link>
+        </section>
+
+        <section className={styles.section}>
+          <div className={styles.papersHead}>
+            <div>
+              <h2 className={styles.h2}>Cited in 150+ research papers</h2>
+              <p className={styles.sub}>Researchers use GPT Researcher as a baseline, a building block and a subject of study.</p>
+            </div>
+            <Link className={styles.scholar} href={SCHOLAR_URL}>All papers on Google Scholar ↗</Link>
+          </div>
+          <ul className={styles.papers}>
+            {PAPERS.map((p) => (
+              <li key={p.href}>
+                <Link className={styles.paper} href={p.href}>
+                  <span className={styles.paperTitle}>{p.title}</span>
+                  <span className={styles.paperVenue}>{p.venue}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
         </section>
 
         <section className={styles.cta}>
