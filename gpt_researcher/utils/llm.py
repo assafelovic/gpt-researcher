@@ -59,7 +59,7 @@ async def create_chat_completion(
         max_tokens (int, optional): The max tokens to use. Defaults to 4000.
         llm_provider (str, optional): The LLM Provider to use.
         stream (bool): Whether to stream the response. Defaults to False.
-        webocket (WebSocket): The websocket used in the currect request,
+        websocket (WebSocket): The websocket used in the current request,
         llm_kwargs (dict[str, Any], optional): Additional LLM keyword arguments. Defaults to None.
         cost_callback: Callback function for updating cost.
         reasoning_effort (str, optional): Reasoning effort for OpenAI's reasoning models. Defaults to 'low'.
