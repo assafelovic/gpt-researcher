@@ -157,7 +157,9 @@ class ResearchConductor:
             if self.researcher.complement_source_urls:
                 self.logger.info("Complementing with web search")
                 additional_research = await self._get_context_by_web_search(self.researcher.query, [], self.researcher.query_domains)
-                research_data += ' '.join(additional_research)
+                research_data = " ".join(
+                    part for part in (research_data, additional_research) if part
+                )
         elif self.researcher.report_source == ReportSource.Web.value:
             self.logger.info("Using web search with all configured retrievers")
             research_data = await self._get_context_by_web_search(self.researcher.query, [], self.researcher.query_domains)
