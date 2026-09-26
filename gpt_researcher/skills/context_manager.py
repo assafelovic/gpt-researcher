@@ -5,6 +5,7 @@ retrieval, compression, and similarity matching for research queries.
 """
 
 import asyncio
+import logging
 from typing import Dict, List, Optional, Set
 
 from ..actions.utils import stream_output
@@ -13,6 +14,10 @@ from ..context.compression import (
     VectorstoreCompressor,
     WrittenContentCompressor,
 )
+from ..context.jev_filter import JevContextCompressor, JevError, resolve_context_filter
+from ..context.retriever import SearchAPIRetriever
+
+logger = logging.getLogger(__name__)
 
 
 class ContextManager:
@@ -51,6 +56,20 @@ class ContextManager:
                 f"📚 Getting relevant content based on query: {query}...",
                 self.researcher.websocket,
             )
+
+        mode = resolve_context_filter(getattr(self.researcher.cfg, "context_filter", "auto"))
+        if mode == "none":
+            return self.researcher.prompt_family.pretty_print_docs(
+                SearchAPIRetriever(pages=pages).invoke(query)
+            )
+        if mode == "jev":
+            try:
+                return await JevContextCompressor(
+                    documents=pages,
+                    prompt_family=self.researcher.prompt_family,
+                ).async_get_context(query=query, max_results=10, cost_callback=self.researcher.add_costs)
+            except JevError as e:
+                logger.warning(f"Jev context filter unavailable ({e}); falling back to embeddings")
 
         context_compressor = ContextCompressor(
             documents=pages,
