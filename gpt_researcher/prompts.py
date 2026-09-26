@@ -304,6 +304,7 @@ Please follow all of the following guidelines in your report:
 - Structure your report with clear markdown headers: use # for the main title, ## for major sections, and ### for subsections.
 - Use markdown tables when presenting structured data or comparisons to enhance readability.
 - You MUST prioritize the relevance, reliability, and significance of the sources you use. Choose trusted sources over less reliable ones.
+- A source being present in the provided information does not obligate you to use it. Before drawing any claim from a source, confirm that source is actually about the topic of "{question}", not merely a document that happens to have been retrieved. If a source is topically unrelated to the query -- even if you can summarize it accurately -- exclude it and everything drawn from it entirely; do not work it into the report as tangential context, a "further research" or "open problems" aside, or filler.
 - You must also prioritize new articles over older articles if the source can be trusted.
 - You MUST NOT include a table of contents, but DO include proper markdown headers (# ## ###) to structure your report clearly.
 - Use in-text citation references in {report_format} format and make it with markdown hyperlink placed at the end of the sentence or paragraph that references them like this: ([in-text citation](url)).
