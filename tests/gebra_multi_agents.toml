@@ -1,0 +1,8 @@
+# Loop-variant declarations for tests/test_multi_agents_gebra_structure.py; gebra checks that each key is in ResearchState and trusts the rest: it never checks that a node moves its counter.
+schema = "gebra-sidecar-v1"
+
+[nodes.fact_checker]
+variant = { key = "fact_check_revision_count", measure = "max_fact_check_revisions + 1 - fact_check_revision_count: fact_checker adds 1 on each lap that returns notes; _route_fact_check accepts once it exceeds max_fact_check_revisions (default 3)" }
+
+[nodes.human]
+variant = { key = "plan_revision_count", measure = "max_plan_revisions + 1 - plan_revision_count: human adds 1 on each non-empty revision reply; _route_human_feedback accepts once it exceeds max_plan_revisions (3 in agent.py); an empty console reply currently re-plans without adding 1" }
