@@ -5,13 +5,6 @@ import styles from './index.module.css';
 
 const INSTALL = 'pip install gpt-researcher';
 
-const STATS = [
-  {value: '30k+', label: 'GitHub stars'},
-  {value: '250+', label: 'Contributors'},
-  {value: '100s', label: 'Supported LLMs'},
-  {value: '20+', label: 'Search engines'},
-];
-
 const Icon = ({children}) => (
   <svg className={styles.icon} viewBox="0 0 24 24" fill="none" stroke="currentColor"
        strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -96,29 +89,6 @@ function CopyInstall() {
   );
 }
 
-function CodeCard() {
-  return (
-    <div className={styles.codeCard} aria-label="Example usage">
-      <div className={styles.codeBar}>
-        <span className={styles.dot} /><span className={styles.dot} /><span className={styles.dot} />
-        <span className={styles.fileName}>research.py</span>
-      </div>
-      <pre className={styles.code}><code>
-<span className={styles.kw}>from</span> gpt_researcher <span className={styles.kw}>import</span> GPTResearcher{'\n\n'}
-researcher = GPTResearcher({'\n'}
-{'    '}query=<span className={styles.str}>"Are solid-state batteries ready for EVs?"</span>,{'\n'}
-{'    '}report_type=<span className={styles.str}>"research_report"</span>,{'\n'}
-){'\n\n'}
-<span className={styles.kw}>await</span> researcher.conduct_research(){'\n'}
-report = <span className={styles.kw}>await</span> researcher.write_report()
-      </code></pre>
-      <div className={styles.codeFoot}>
-        <span className={styles.ok} /> Report ready · 18 sources · 57 citations
-      </div>
-    </div>
-  );
-}
-
 export default function Home() {
   return (
     <Layout
@@ -126,7 +96,7 @@ export default function Home() {
       description="GPT Researcher is an open-source deep research agent that turns any question into a detailed, cited report from the web or your own documents.">
       <main className={styles.page}>
         <section className={styles.hero}>
-          <div className={styles.heroGrid}>
+          <div className={styles.heroInner}>
             <div>
               <h1 className={styles.title}>The #1 deep research agent</h1>
               <p className={styles.lede}>
@@ -142,17 +112,7 @@ export default function Home() {
               </div>
               <CopyInstall />
             </div>
-            <CodeCard />
           </div>
-        </section>
-
-        <section className={styles.stats}>
-          {STATS.map((s) => (
-            <div key={s.label} className={styles.stat}>
-              <div className={styles.statValue}>{s.value}</div>
-              <div className={styles.statLabel}>{s.label}</div>
-            </div>
-          ))}
         </section>
 
         <section className={styles.section}>
