@@ -41,6 +41,8 @@ const GPTResearcher = (() => {
       return false;
     });
 
+    document.getElementById('stopResearchButton').addEventListener('click', stopResearch);
+
     document
       .getElementById('copyToClipboard')
       .addEventListener('click', copyToClipboard)
@@ -820,6 +822,20 @@ const GPTResearcher = (() => {
     dispose_socket = listenToSockEvents() // Assign the new dispose function
   }
 
+  const stopResearch = () => {
+    if (!isResearchActive) return;
+
+    clearTimeout(connectionTimeout);
+    dispose_socket?.();
+    dispose_socket = null;
+    lastRequestData = null;
+    updateState('stopped');
+    addAgentResponse({
+      output: 'Research stopped by you. Partial progress has been preserved.',
+    });
+    updateWebSocketStatus();
+  }
+
   const listenToSockEvents = () => {
     const { protocol, host, pathname } = window.location
     const ws_uri = `${protocol === 'https:' ? 'wss:' : 'ws:'
@@ -1267,6 +1283,12 @@ const GPTResearcher = (() => {
         // Stop the research icon spinning
         updateResearchIcon(false);
         break
+      case 'stopped':
+        status = 'Research stopped. Partial progress is preserved.'
+        setReportActionsStatus('disabled')
+        isResearchActive = false;
+        updateResearchIcon(false);
+        break
       case 'initial':
         status = ''
         setReportActionsStatus('hidden')
@@ -1286,6 +1308,10 @@ const GPTResearcher = (() => {
         break
       default:
         setReportActionsStatus('disabled')
+    }
+    const stopResearchButton = document.getElementById('stopResearchButton')
+    if (stopResearchButton) {
+      stopResearchButton.hidden = state !== 'in_progress'
     }
     document.getElementById('status').innerHTML = status
     if (document.getElementById('status').innerHTML == '') {

@@ -8,7 +8,7 @@
     <link rel="icon" href="./static/favicon.ico">
     <link href="/site/vendor/css/bootstrap.min.css" rel="stylesheet">
     <link href="/site/vendor/css/fontawesome.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/site/styles.css" />
+    <link rel="stylesheet" href="/site/styles.css?v=agency-stop-1" />
     <style>
         .avatar {
             width: 80px;
@@ -291,7 +291,12 @@
 
         <div class="margin-div research-output-container">
             <!-- Move spinner to the left side of the text -->
-            <h2><div id="modernSpinner" class="modern-spinner"></div> Research Progress <button id="expandOutputBtn" class="expand-button" title="Expand"><i class="fas fa-expand-alt"></i></button></h2>
+            <h2><div id="modernSpinner" class="modern-spinner"></div> Research Progress
+                <button type="button" id="stopResearchButton" class="stop-research-button" hidden>
+                    <i class="fas fa-stop" aria-hidden="true"></i> Stop research
+                </button>
+                <button id="expandOutputBtn" class="expand-button" title="Expand"><i class="fas fa-expand-alt"></i></button>
+            </h2>
             <p class="mt-2 text-left" style="font-size: 0.8rem;">
                 Watch as the AI works to gather information and analyze your topic in real-time.</p>
             <div id="output"></div>
@@ -407,7 +412,7 @@
     </footer>
     <script src="/site/vendor/js/showdown.min.js"></script>
     <script src="/site/vendor/js/purify.min.js"></script>
-    <script src="/site/scripts.js"></script>
+    <script src="/site/scripts.js?v=agency-stop-1"></script>
     <script>
         // Auto-resize textarea as content grows
         const taskTextarea = document.getElementById('task');

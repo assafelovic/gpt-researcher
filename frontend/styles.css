@@ -213,6 +213,31 @@ footer a:hover {
     align-items: center;
 }
 
+.stop-research-button {
+    min-height: 44px;
+    margin-left: auto;
+    margin-right: 44px;
+    padding: 8px 16px;
+    border: 1px solid #f87171;
+    border-radius: 6px;
+    background: #991b1b;
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.stop-research-button:hover,
+.stop-research-button:focus-visible {
+    background: #b91c1c;
+    outline: 3px solid rgba(248, 113, 113, 0.4);
+    outline-offset: 2px;
+}
+
+.stop-research-button[hidden] {
+    display: none;
+}
+
 /* Explicitly override any icon that might be added before the h2 */
 .research-output-container h2::before {
     content: none !important;
