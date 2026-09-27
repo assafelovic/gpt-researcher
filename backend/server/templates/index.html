@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en" data-color-mode="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <title>DevAgent - AI GitHub Developer Agent</title>
+    <style>
+        :root {
+            --bg-color: #080b11;
+            --card-bg: rgba(22, 27, 34, 0.75);
+            --border-color: rgba(48, 54, 61, 0.8);
+            --text-main: #f0f6fc;
+            --text-muted: #8b949e;
+            --accent-green: #238636;
+            --accent-green-hover: #2ea043;
+            --input-bg: #0d1117;
+            --glow-color: rgba(35, 134, 54, 0.15);
+        }
+
+        [data-color-mode="light"] {
+            --bg-color: #f6f8fa;
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --border-color: #d0d7de;
+            --text-main: #24292f;
+            --text-muted: #57606a;
+            --accent-green: #2da44e;
+            --accent-green-hover: #2c974b;
+            --input-bg: #ffffff;
+            --glow-color: rgba(45, 164, 78, 0.15);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-sizing: border-box;
+            overflow: hidden;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+            font-size: 18px;
+            letter-spacing: -0.3px;
+        }
+
+        .logo-area svg {
+            fill: var(--text-main);
+            width: 28px;
+            height: 28px;
+        }
+
+        /* Theme Toggle Pill */
+        .theme-pill {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 6px;
+            border-radius: 20px;
+            display: flex;
+            cursor: pointer;
+            gap: 4px;
+        }
+
+        .theme-pill span {
+            padding: 4px 10px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        [data-color-mode="dark"] .dark-opt,
+        [data-color-mode="light"] .light-opt {
+            background: var(--accent-green);
+            color: white;
+        }
+
+        /* Main Wrapper */
+        .main-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 60px;
+            flex: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* Left Hero */
+        .hero-section {
+            flex: 1;
+            padding-right: 40px;
+        }
+
+        .hero-section h1 {
+            font-size: 42px;
+            font-weight: 700;
+            line-height: 1.15;
+            margin: 0 0 15px 0;
+            letter-spacing: -1px;
+        }
+
+        .hero-section h1 span {
+            color: #3fb950;
+        }
+
+        .hero-section p {
+            color: var(--text-muted);
+            font-size: 15px;
+            line-height: 1.5;
+            margin-bottom: 30px;
+        }
+
+        .mascot-box {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            border-radius: 12px;
+            width: fit-content;
+        }
+
+        /* Center Login Card */
+        .login-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(12px);
+            padding: 30px;
+            border-radius: 16px;
+            width: 380px;
+            box-shadow: 0 16px 32px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            position: relative;
+        }
+
+        .login-card h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-top: 0;
+            margin-bottom: 5px;
+        }
+
+        .login-card p {
+            color: var(--text-muted);
+            font-size: 12px;
+            margin-bottom: 25px;
+        }
+
+        .input-group {
+            text-align: left;
+            margin-bottom: 18px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrapper svg {
+            position: absolute;
+            left: 12px;
+            fill: var(--text-muted);
+            width: 16px;
+            height: 16px;
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            padding: 10px 12px 10px 38px;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            border-radius: 8px;
+            font-size: 13px;
+            box-sizing: border-box;
+        }
+
+        .input-wrapper input:focus {
+            border-color: #3fb950;
+            outline: none;
+            box-shadow: 0 0 0 3px var(--glow-color);
+        }
+
+        .hint-text {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 5px;
+            text-align: left;
+        }
+
+        .btn-primary {
+            background: var(--accent-green);
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 11px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 5px;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-green-hover);
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 11px;
+            margin: 20px 0;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .divider::before {
+            margin-right: .75em;
+        }
+
+        .divider::after {
+            margin-left: .75em;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            width: 100%;
+            padding: 11px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(110, 118, 129, 0.1);
+        }
+
+        .token-footer {
+            margin-top: 18px;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .token-footer a {
+            color: #58a6ff;
+            text-decoration: none;
+        }
+
+        .token-footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Right Features */
+        .features-section {
+            flex: 0.8;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding-left: 40px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+        }
+
+        .feature-icon {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #3fb950;
+        }
+
+        .feature-text h4 {
+            margin: 0 0 4px 0;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .feature-text p {
+            margin: 0;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .error {
+            background: rgba(248, 81, 73, 0.1);
+            border: 1px solid rgba(248, 81, 73, 0.4);
+            color: #f85149;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            margin-bottom: 15px;
+            text-align: left;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="logo-area">
+            <svg height="28" viewBox="0 0 16 16" version="1.1" width="28">
+                <path
+                    d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z">
+                </path>
+            </svg>
+            DevAgent
+        </div>
+        <div class="theme-pill" onclick="toggleTheme()">
+            <span class="light-opt">Light</span>
+            <span class="dark-opt">Dark</span>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="main-wrapper">
+        <!-- Left Hero -->
+        <div class="hero-section">
+            <h1>Welcome back, <br><span>Developer +</span></h1>
+            <p>Your AI-powered coding companion.<br>Build, debug, and create — faster.</p>
+            <div class="mascot-box">
+                <svg width="32" height="32" viewBox="0 0 16 16" fill="currentColor">
+                    <path
+                        d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z">
+                    </path>
+                </svg>
+                <div style="font-size: 13px; font-weight: 500;">Connected to GitHub API v4</div>
+            </div>
+        </div>
+
+        <!-- Center Card -->
+        <div class="login-card">
+            <h2>Sign in to DevAgent</h2>
+            <p>Access your workspace and continue building.</p>
+
+            {% if error %}
+            <div class="error">{{ error }}</div>
+            {% endif %}
+
+            <form action="/login" method="POST">
+                <div class="input-group">
+                    <label for="token">Personal Access Token</label>
+                    <div class="input-wrapper">
+                        <svg viewBox="0 0 16 16" width="16" height="16">
+                            <path
+                                d="M10.5 3.5a2.5 2.5 0 0 0-5 0V4H5v-.5A3.5 3.5 0 1 1 12 3.5V4h-1.5ZM3 5h10a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Zm1 2v5h8V7H4Z" />
+                        </svg>
+                        <input type="password" id="token" name="token" placeholder="ghp_xxxxxxxxxxxx" required
+                            autocomplete="off">
+                    </div>
+                    <div class="hint-text">Your token is secure and only used to access your account.</div>
+                </div>
+                <button type="submit" class="btn-primary">→ Sign in</button>
+            </form>
+
+            <div class="divider">OR</div>
+
+            <a href="https://github.com/settings/tokens" target="_blank" class="btn-secondary">
+                <svg height="16" viewBox="0 0 16 16" width="16" fill="currentColor">
+                    <path
+                        d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z">
+                    </path>
+                </svg>
+                Generate Token on GitHub
+            </a>
+
+            <div class="token-footer">
+                Need a token? <a href="https://github.com/settings/tokens/new" target="_blank">Click here</a>
+            </div>
+        </div>
+
+        <!-- Right Features -->
+        <div class="features-section">
+            <div class="feature-item">
+                <div class="feature-icon">⚡</div>
+                <div class="feature-text">
+                    <h4>AI-Powered</h4>
+                    <p>Get intelligent suggestions and faster solutions.</p>
+                </div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">&lt;/&gt;</div>
+                <div class="feature-text">
+                    <h4>Developer Friendly</h4>
+                    <p>Works with your GitHub repos and workflows.</p>
+                </div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">🛡️</div>
+                <div class="feature-text">
+                    <h4>Secure & Private</h4>
+                    <p>Your data stays with you.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const current = html.getAttribute("data-color-mode");
+            html.setAttribute("data-color-mode", current === "dark" ? "light" : "dark");
+        }
+    </script>
+</body>
+
+</html>

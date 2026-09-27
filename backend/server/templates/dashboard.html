@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>DevAgent - Dashboard</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #0d1117;
+            color: #c9d1d9;
+            margin: 0;
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+        }
+
+        h1 {
+            color: #f0f6fc;
+            margin-bottom: 5px;
+        }
+
+        .repo-card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            padding: 20px;
+            border-radius: 6px;
+            margin-top: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        button {
+            background: #238636;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 13px;
+        }
+
+        button:hover {
+            background: #2ea043;
+        }
+
+        #log-container {
+            background: #010409;
+            border: 1px solid #30363d;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: monospace;
+            height: 140px;
+            overflow-y: auto;
+            margin-top: 20px;
+            color: #58a6ff;
+            font-size: 13px;
+        }
+
+        #result-container {
+            background: #1f6feb15;
+            border: 1px solid #1f6feb;
+            padding: 20px;
+            border-radius: 6px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .badge {
+            font-size: 11px;
+            color: #8b949e;
+            border: 1px solid #30363d;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-left: 8px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>DevAgent Dashboard</h1>
+        <p style="color: #8b949e;">Your Live GitHub Repositories & Commits</p>
+
+        <div id="repo-list">Loading your repositories...</div>
+
+        <h3 style="margin-top: 30px; font-size: 15px;">Live Execution Logs</h3>
+        <div id="log-container">> Ready. Click "Analyze Repo" to inspect code and commits.</div>
+
+        <div id="result-container">
+            <h3 style="margin-top: 0; color: #58a6ff;">Repository Details</h3>
+            <div id="report-content"></div>
+        </div>
+    </div>
+
+    <script>
+        const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+        const socket = new WebSocket(`${protocol}//${window.location.host}/ws`);
+
+        const logContainer = document.getElementById("log-container");
+        const resultContainer = document.getElementById("result-container");
+        const reportContent = document.getElementById("report-content");
+        const repoListDiv = document.getElementById("repo-list");
+
+        socket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.type === "logs") {
+                logContainer.innerHTML += `> ${data.content}<br>`;
+                logContainer.scrollTop = logContainer.scrollHeight;
+            } else if (data.type === "report") {
+                resultContainer.style.display = "block";
+                reportContent.innerHTML = data.content;
+                logContainer.innerHTML += `> Analysis complete!<br>`;
+                logContainer.scrollTop = logContainer.scrollHeight;
+            }
+        };
+
+        fetch('/api/repos')
+            .then(res => res.json())
+            .then(data => {
+                if (data.repositories && data.repositories.length > 0) {
+                    repoListDiv.innerHTML = "";
+                    data.repositories.forEach(repo => {
+                        const card = document.createElement("div");
+                        card.className = "repo-card";
+                        card.innerHTML = `
+                            <div>
+                                <h3 style="margin: 0; color: #f0f6fc;">${repo.name} <span class="badge">${repo.private ? "Private" : "Public"}</span></h3>
+                                <p style="margin: 5px 0 0; color: #8b949e; font-size: 13px;">${repo.description || "No description provided."} (${repo.language || "Mixed"})</p>
+                            </div>
+                            <button onclick="analyzeRepo('${repo.full_name}')">Analyze Repo</button>
+                        `;
+                        repoListDiv.appendChild(card);
+                    });
+                } else {
+                    repoListDiv.innerHTML = "<p>No repositories found.</p>";
+                }
+            })
+            .catch(err => {
+                repoListDiv.innerHTML = "<p style='color: #f85149;'>Failed to load repositories. Please log in again.</p>";
+            });
+
+        function analyzeRepo(fullName) {
+            resultContainer.style.display = "none";
+            logContainer.innerHTML = `> Requesting data for ${fullName}...<br>`;
+            socket.send(JSON.stringify({ repo_name: fullName }));
+        }
+    </script>
+</body>
+
+</html>

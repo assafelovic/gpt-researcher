@@ -1,100 +1,77 @@
-// Establish WebSocket connection to the FastAPI backend
-const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-const wsUrl = `${protocol}//${window.location.host}/ws`;
-let ws = null;
+document.addEventListener("DOMContentLoaded", () => {
+    // Check if user is authenticated via local storage or prompt for username
+    const storedUser = localStorage.getItem("github_user");
+    let currentUser = "PradnyaDange"; // Default fallback handle
 
-function connectWebSocket() {
-    ws = new WebSocket(wsUrl);
-
-    ws.onopen = function() {
-        console.log("Connected to DevAgent backend server via WebSocket.");
-        updateActivityLog("✓ Connected to backend WebSocket");
-    };
-
-    ws.onmessage = function(event) {
+    if (storedUser) {
         try {
-            const data = JSON.parse(event.data);
-            handleIncomingMessage(data);
+            const userData = JSON.parse(storedUser);
+            currentUser = userData.username || currentUser;
         } catch (e) {
-            console.log("Raw message received:", event.data);
+            console.error("Error parsing stored user data:", e);
         }
-    };
+    }
 
-    ws.onclose = function() {
-        console.log("WebSocket connection closed. Reconnecting in 3 seconds...");
-        updateActivityLog("⚠ Connection lost. Reconnecting...");
-        setTimeout(connectWebSocket, 3000);
-    };
+    // Load repositories automatically on startup
+    loadUserRepositories(currentUser);
+});
 
-    ws.onerror = function(error) {
-        console.error("WebSocket error:", error);
-        updateActivityLog("❌ WebSocket error encountered");
-    };
-}
+async function loadUserRepositories(username) {
+    const container = document.getElementById("my-repositories-container");
+    if (!container) return;
 
-// Triggered when clicking 'Analyze Repository'
-function startAnalysis() {
-    const statusText = document.getElementById("status-text");
-    statusText.innerText = "Initializing agent loop... Indexing codebase structure.";
-    updateActivityLog("✓ Started repository analysis task");
+    container.innerHTML = `<div class="text-xs text-slate-400 p-4">Loading repositories for @${username}...</div>`;
 
-    if (ws && ws.readyState === WebSocket.OPEN) {
-        const payload = {
-            task: "Analyze github-developer-agent codebase structure, architecture, and security.",
-            report_type: "research_report",
-            report_source: "web"
-        };
-        
-        ws.send("start " + JSON.stringify(payload));
-    } else {
-        alert("WebSocket connection is not active. Please ensure your backend server is running.");
+    try {
+        const response = await fetch(`/api/github/user/${username}/repos`);
+        const data = await response.json();
+
+        if (response.ok && data.repositories && data.repositories.length > 0) {
+            container.innerHTML = "";
+            data.repositories.forEach(repo => {
+                const repoCard = document.createElement("div");
+                repoCard.className = "bg-[#121826] border border-slate-800 p-4 rounded-xl hover:border-indigo-500 transition-all cursor-pointer space-y-2";
+                repoCard.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm font-semibold text-white">${repo.name}</span>
+                        <span class="text-[10px] px-2 py-0.5 rounded-full ${repo.private ? 'bg-amber-950 text-amber-400 border border-amber-900' : 'bg-emerald-950 text-emerald-400 border border-emerald-900'}">${repo.private ? 'Private' : 'Public'}</span>
+                    </div>
+                    <p class="text-xs text-slate-400 line-clamp-2">${repo.description || 'No description provided.'}</p>
+                    <div class="flex items-center justify-between text-[11px] text-slate-500 pt-2 border-t border-slate-800/60">
+                        <span>⭐ ${repo.stars || 0}</span>
+                        <span>💻 ${repo.language || 'Mixed'}</span>
+                    </div>
+                `;
+                repoCard.onclick = () => selectAndAnalyzeRepository(username, repo.name);
+                container.appendChild(repoCard);
+            });
+        } else {
+            container.innerHTML = `<div class="text-xs text-rose-400 p-4">No repositories found for @${username}.</div>`;
+        }
+    } catch (err) {
+        container.innerHTML = `<div class="text-xs text-rose-400 p-4">Error connecting to GitHub API backend.</div>`;
     }
 }
 
-// Handle incoming messages streamed from the Python agent
-function handleIncomingMessage(data) {
-    const statusText = document.getElementById("status-text");
-    
-    if (data.type === "logs" || data.output) {
-        statusText.innerText = data.output;
-        updateActivityLog(`✓ ${data.output}`);
-    } else if (data.type === "report") {
-        renderReportOutput(data.output);
-        updateActivityLog("✓ Final report generated successfully");
+async function selectAndAnalyzeRepository(username, repoName) {
+    const titleElement = document.getElementById("selected-repo-title");
+    const linkElement = document.getElementById("selected-repo-link");
+
+    if (titleElement) titleElement.innerText = repoName;
+    if (linkElement) {
+        linkElement.innerText = `github.com/${username}/${repoName}`;
+        linkElement.href = `https://github.com/${username}/${repoName}`;
+    }
+
+    // Trigger details fetch
+    try {
+        const response = await fetch(`/api/github/repo/${username}/${repoName}/details`);
+        const data = await response.json();
+
+        if (response.ok && data.commits) {
+            console.log("Fetched commit history:", data.commits);
+        }
+    } catch (err) {
+        console.error("Failed to load repo commits:", err);
     }
 }
-
-// Helper to update the right sidebar activity feed dynamically
-function updateActivityLog(message) {
-    const activityLog = document.getElementById("activity-log");
-    if (activityLog) {
-        const p = document.createElement("p");
-        p.className = "text-slate-300 flex items-center gap-1.5 mt-1";
-        p.innerHTML = `<span class="w-1.5 h-1.5 bg-emerald-400 rounded-full"></span> ${message}`;
-        activityLog.appendChild(p);
-        activityLog.scrollTop = activityLog.scrollHeight;
-    }
-}
-
-// Render final AI agent output in the center chat panel
-function renderReportOutput(reportText) {
-    const chatContainer = document.getElementById("chat-container");
-    const reportBox = document.createElement("div");
-    reportBox.className = "bg-[#0b101c] border border-slate-800 rounded-2xl p-5 space-y-4 mt-4 animate-fade-in";
-    
-    reportBox.innerHTML = `
-        <div class="flex items-center gap-2 text-indigo-400 font-semibold">
-            <span>🤖 DevAgent Final Analysis Report</span>
-        </div>
-        <div class="text-slate-300 leading-relaxed whitespace-pre-wrap text-xs">
-            ${reportText}
-        </div>
-    `;
-    chatContainer.appendChild(reportBox);
-    chatContainer.scrollTop = chatContainer.scrollHeight;
-}
-
-// Initialize connection on page load
-window.onload = function() {
-    connectWebSocket();
-};

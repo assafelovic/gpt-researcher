@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-[#0d1117]">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign in to GitHub - DevAgent</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body
+    class="h-full flex flex-col items-center justify-center font-sans text-slate-200 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-[#0d1117] to-black">
+
+    <!-- GitHub Branding Header -->
+    <div class="sm:mx-auto sm:w-full sm:max-w-md text-center mb-6 space-y-3">
+        <i class="fab fa-github text-5xl text-white"></i>
+        <h2 class="text-2xl font-light tracking-tight text-white">Sign in to DevAgent</h2>
+    </div>
+
+    <!-- Login Card -->
+    <div class="sm:mx-auto sm:w-full sm:max-w-md">
+        <div class="bg-[#161b22] py-8 px-6 shadow-2xl border border-slate-800 rounded-xl sm:px-10 space-y-6">
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-2">GitHub Username</label>
+                    <input id="username-input" type="text" placeholder="e.g. PradnyaDange"
+                        class="w-full bg-[#0d1117] border border-slate-700 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-2">GitHub Personal Access Token (Optional
+                        for private repos)</label>
+                    <input id="token-input" type="password" placeholder="ghp_xxxxxxxxxxxx"
+                        class="w-full bg-[#0d1117] border border-slate-700 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                </div>
+
+                <div id="error-message"
+                    class="hidden text-xs text-rose-400 bg-rose-950/40 border border-rose-900/50 p-3 rounded-md"></div>
+
+                <button onclick="handleGitHubLogin()" id="login-btn"
+                    class="w-full bg-[#238636] hover:bg-[#2ea043] text-white font-medium text-sm py-2 px-4 rounded-md transition-all shadow-sm">
+                    Sign in
+                </button>
+            </div>
+        </div>
+
+        <p class="text-center text-xs text-slate-500 mt-6">
+            New to DevAgent? <span class="text-blue-400 cursor-pointer hover:underline">Create an account</span>
+        </p>
+    </div>
+
+    <script>
+        async function handleGitHubLogin() {
+            const username = document.getElementById("username-input").value.trim();
+            const token = document.getElementById("token-input").value.trim();
+            const errorDiv = document.getElementById("error-message");
+            const btn = document.getElementById("login-btn");
+
+            errorDiv.classList.add("hidden");
+            if (!username) {
+                errorDiv.innerText = "Please enter your GitHub username.";
+                errorDiv.classList.remove("hidden");
+                return;
+            }
+
+            btn.innerText = "Verifying account...";
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(`/api/verify-github-user/${username}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Save user session and token locally
+                    localStorage.setItem("github_user", JSON.stringify(data));
+                    if (token) localStorage.setItem("github_token", token);
+
+                    // Redirect to main dashboard
+                    window.location.href = "/";
+                } else {
+                    throw new Error(data.detail || "GitHub username not found.");
+                }
+            } catch (err) {
+                errorDiv.innerText = err.message;
+                errorDiv.classList.remove("hidden");
+                btn.innerText = "Sign in";
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+
+</html>
