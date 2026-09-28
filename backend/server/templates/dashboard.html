@@ -1,104 +1,541 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-color-mode="dark">
 
 <head>
     <meta charset="UTF-8">
-    <title>DevAgent - Dashboard</title>
+    <title>DevAgent - Smart GitHub Development</title>
     <style>
+        :root {
+            --bg-color: #07090e;
+            --card-bg: #0d1117;
+            --border-color: #21262d;
+            --text-main: #f0f6fc;
+            --text-muted: #8b949e;
+            --accent-green: #238636;
+            --accent-green-hover: #2ea043;
+            --code-bg: #010409;
+            --badge-bg: rgba(110, 118, 129, 0.1);
+            --dropdown-bg: #161b22;
+        }
+
+        [data-color-mode="light"] {
+            --bg-color: #f6f8fa;
+            --card-bg: #ffffff;
+            --border-color: #d0d7de;
+            --text-main: #24292f;
+            --text-muted: #57606a;
+            --accent-green: #2da44e;
+            --accent-green-hover: #2c974b;
+            --code-bg: #f6f8fa;
+            --badge-bg: rgba(175, 184, 193, 0.2);
+            --dropdown-bg: #ffffff;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: #0d1117;
-            color: #c9d1d9;
+            background-color: var(--bg-color);
+            color: var(--text-main);
             margin: 0;
-            padding: 30px;
+            padding: 0;
+            transition: background 0.3s ease;
         }
 
-        .container {
-            max-width: 900px;
-            margin: auto;
-        }
-
-        h1 {
-            color: #f0f6fc;
-            margin-bottom: 5px;
-        }
-
-        .repo-card {
-            background: #161b22;
-            border: 1px solid #30363d;
-            padding: 20px;
-            border-radius: 6px;
-            margin-top: 15px;
+        /* Top Navbar */
+        nav {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            padding: 16px 40px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--card-bg);
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
 
-        button {
-            background: #238636;
+        .nav-left,
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logo {
+            font-weight: 700;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-main);
+        }
+
+        .logo svg {
+            fill: var(--text-main);
+            width: 24px;
+            height: 24px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 16px;
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+        }
+
+        .nav-links a.active,
+        .nav-links a:hover {
+            color: var(--text-main);
+            background: var(--badge-bg);
+        }
+
+        /* Theme Pill */
+        .theme-pill {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            padding: 4px;
+            border-radius: 20px;
+            display: flex;
+            cursor: pointer;
+            gap: 4px;
+        }
+
+        .theme-pill span {
+            padding: 3px 8px;
+            border-radius: 50px;
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        [data-color-mode="dark"] .dark-opt,
+        [data-color-mode="light"] .light-opt {
+            background: var(--accent-green);
+            color: white;
+        }
+
+        /* Account Dropdown Menu */
+        .account-menu-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .account-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            color: var(--text-main);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .account-avatar {
+            width: 24px;
+            height: 24px;
+            background: #8957e5;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 45px;
+            background-color: var(--dropdown-bg);
+            min-width: 200px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            overflow: hidden;
+        }
+
+        .dropdown-content.show {
+            display: block;
+        }
+
+        .dropdown-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .dropdown-item {
+            padding: 10px 16px;
+            display: block;
+            color: var(--text-main);
+            text-decoration: none;
+            font-size: 13px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .dropdown-item:hover {
+            background: var(--badge-bg);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            padding: 40px 20px;
+        }
+
+        /* Hero Section */
+        .hero {
+            display: grid;
+            grid-template-columns: 1fr 1.1fr;
+            gap: 40px;
+            align-items: center;
+            margin-bottom: 50px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        .hero-tag {
+            font-size: 12px;
+            color: #3fb950;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+
+        .hero h1 {
+            font-size: 36px;
+            line-height: 1.15;
+            font-weight: 700;
+            margin: 0 0 15px 0;
+        }
+
+        .hero h1 span {
+            color: #3fb950;
+        }
+
+        .hero p {
+            color: var(--text-muted);
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+
+        .btn-main {
+            background: var(--accent-green);
             color: white;
             border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 13px;
             cursor: pointer;
-            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        .btn-main:hover {
+            background: var(--accent-green-hover);
+        }
+
+        /* Graphic Container for hero-graphic.png */
+        .hero-graphic-container {
+            width: 100%;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            background: var(--bg-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hero-graphic-container img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* Repositories Grid */
+        .section-heading {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .section-sub {
+            color: var(--text-muted);
             font-size: 13px;
+            margin-bottom: 20px;
         }
 
-        button:hover {
-            background: #2ea043;
+        .repos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px;
+            margin-bottom: 40px;
         }
 
-        #log-container {
-            background: #010409;
-            border: 1px solid #30363d;
-            padding: 15px;
-            border-radius: 6px;
-            font-family: monospace;
-            height: 140px;
-            overflow-y: auto;
-            margin-top: 20px;
-            color: #58a6ff;
-            font-size: 13px;
-        }
-
-        #result-container {
-            background: #1f6feb15;
-            border: 1px solid #1f6feb;
+        .repo-box {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
             padding: 20px;
-            border-radius: 6px;
-            margin-top: 20px;
-            display: none;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: border-color 0.2s;
+        }
+
+        .repo-box:hover {
+            border-color: #3fb950;
+        }
+
+        .repo-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .repo-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: #58a6ff;
+            margin: 0;
         }
 
         .badge {
+            font-size: 10px;
+            color: var(--text-muted);
+            background: var(--badge-bg);
+            border: 1px solid var(--border-color);
+            padding: 2px 6px;
+            border-radius: 10px;
+        }
+
+        .repo-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin: 0 0 15px 0;
+            line-height: 1.5;
+            min-height: 36px;
+        }
+
+        .repo-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--border-color);
+            padding-top: 12px;
+        }
+
+        .repo-lang {
             font-size: 11px;
-            color: #8b949e;
-            border: 1px solid #30363d;
-            padding: 2px 8px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .lang-dot {
+            width: 7px;
+            height: 7px;
+            background: #3fb950;
+            border-radius: 50%;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 20px;
             border-radius: 12px;
-            margin-left: 8px;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .stat-item h2 {
+            margin: 0 0 4px 0;
+            font-size: 22px;
+            color: #3fb950;
+        }
+
+        .stat-item p {
+            margin: 0;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* Console & Results */
+        #log-container {
+            background: var(--code-bg);
+            border: 1px solid var(--border-color);
+            padding: 16px;
+            border-radius: 8px;
+            font-family: monospace;
+            height: 130px;
+            overflow-y: auto;
+            color: #58a6ff;
+            font-size: 12px;
+            margin-bottom: 20px;
+        }
+
+        #result-container {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-left: 4px solid #3fb950;
+            padding: 24px;
+            border-radius: 8px;
+            display: none;
         }
     </style>
 </head>
 
 <body>
+
+    <!-- Navbar -->
+    <nav>
+        <div class="nav-left">
+            <div class="logo">
+                <svg height="24" viewBox="0 0 16 16" width="24">
+                    <path
+                        d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z">
+                    </path>
+                </svg>
+                DevAgent
+            </div>
+            <div class="nav-links">
+                <a href="#" class="active">Home</a>
+                <a href="#repos">Repositories</a>
+                <a href="https://github.com/settings/tokens" target="_blank">Settings</a>
+            </div>
+        </div>
+        <div class="nav-right">
+            <div class="theme-pill" onclick="toggleTheme()">
+                <span class="light-opt">Light</span>
+                <span class="dark-opt">Dark</span>
+            </div>
+
+            <!-- Account Dropdown Menu -->
+            <div class="account-menu-container">
+                <div class="account-btn" onclick="toggleAccountMenu()">
+                    <div class="account-avatar">PD</div>
+                    <span>Pradnyadange</span> ▾
+                </div>
+                <div id="accountDropdown" class="dropdown-content">
+                    <div class="dropdown-header">Signed in as<br><b>Pradnyadange</b></div>
+                    <a href="#" class="dropdown-item">😊 Set status</a>
+                    <a href="https://github.com/Pradnyadange" target="_blank" class="dropdown-item">👤 Profile</a>
+                    <a href="#repos" class="dropdown-item">📖 Repositories</a>
+                    <a href="/" class="dropdown-item" style="color: #f85149;">🚪 Sign out</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
     <div class="container">
-        <h1>DevAgent Dashboard</h1>
-        <p style="color: #8b949e;">Your Live GitHub Repositories & Commits</p>
+        <!-- Hero Section featuring your hero-graphic.png -->
+        <div class="hero">
+            <div>
+                <span class="hero-tag">AI + GitHub</span>
+                <h1>Your AI Agent for <br><span>Smarter GitHub Development</span></h1>
+                <p>Analyze repositories, understand codebases, find issues, and get actionable insights — all with the
+                    power of AI.</p>
+                <div class="hero-buttons">
+                    <button class="btn-main"
+                        onclick="document.getElementById('repos').scrollIntoView({behavior: 'smooth'})">Explore
+                        Repositories →</button>
+                </div>
+            </div>
 
-        <div id="repo-list">Loading your repositories...</div>
+            <div class="hero-graphic-container">
+                <img src="/templates/hero-graphic.png" alt="DevAgent Architecture Graphic"
+                    onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'400\' height=\'250\'><rect width=\'100%\' height=\'100%\' fill=\'%230d1117\'/><text x=\'50%\' y=\'50%\' fill=\'%238b949e\' font-family=\'sans-serif\' font-size=\'14\' dominant-baseline=\'middle\' text-anchor=\'middle\'>hero-graphic.png</text></svg>';">
+            </div>
+        </div>
 
-        <h3 style="margin-top: 30px; font-size: 15px;">Live Execution Logs</h3>
-        <div id="log-container">> Ready. Click "Analyze Repo" to inspect code and commits.</div>
+        <!-- Repositories Section -->
+        <div id="repos">
+            <div class="section-heading">Your Repositories</div>
+            <div class="section-sub">Select a repository to analyze or explore insights.</div>
+            <div id="repo-list" class="repos-grid">
+                <div style="grid-column: 1/-1; color: var(--text-muted); text-align: center; padding: 30px;">Loading
+                    your repositories from GitHub...</div>
+            </div>
+        </div>
 
+        <!-- DevAgent in Numbers -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <h2>100%</h2>
+                <p>Real-time GitHub Sync</p>
+            </div>
+            <div class="stat-item">
+                <h2>Live</h2>
+                <p>WebSocket Log Streaming</p>
+            </div>
+            <div class="stat-item">
+                <h2>AI</h2>
+                <p>Automated Commit Analysis</p>
+            </div>
+        </div>
+
+        <!-- Execution Logs -->
+        <div class="section-heading">Live Execution Logs</div>
+        <div id="log-container">> System initialized. Select any repository above to start agent analysis.</div>
+
+        <!-- Analysis Results -->
         <div id="result-container">
-            <h3 style="margin-top: 0; color: #58a6ff;">Repository Details</h3>
             <div id="report-content"></div>
         </div>
     </div>
 
     <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const current = html.getAttribute("data-color-mode");
+            html.setAttribute("data-color-mode", current === "dark" ? "light" : "dark");
+        }
+
+        function toggleAccountMenu() {
+            document.getElementById("accountDropdown").classList.toggle("show");
+        }
+
+        window.onclick = function (event) {
+            if (!event.target.closest('.account-menu-container')) {
+                const dropdowns = document.getElementsByClassName("dropdown-content");
+                for (let i = 0; i < dropdowns.length; i++) {
+                    const openDropdown = dropdowns[i];
+                    if (openDropdown.classList.contains('show')) {
+                        openDropdown.classList.remove('show');
+                    }
+                }
+            }
+        }
+
         const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
         const socket = new WebSocket(`${protocol}//${window.location.host}/ws`);
 
@@ -115,7 +552,7 @@
             } else if (data.type === "report") {
                 resultContainer.style.display = "block";
                 reportContent.innerHTML = data.content;
-                logContainer.innerHTML += `> Analysis complete!<br>`;
+                logContainer.innerHTML += `> Analysis completed successfully!<br>`;
                 logContainer.scrollTop = logContainer.scrollHeight;
             }
         };
@@ -126,28 +563,34 @@
                 if (data.repositories && data.repositories.length > 0) {
                     repoListDiv.innerHTML = "";
                     data.repositories.forEach(repo => {
-                        const card = document.createElement("div");
-                        card.className = "repo-card";
-                        card.innerHTML = `
+                        const box = document.createElement("div");
+                        box.className = "repo-box";
+                        box.innerHTML = `
                             <div>
-                                <h3 style="margin: 0; color: #f0f6fc;">${repo.name} <span class="badge">${repo.private ? "Private" : "Public"}</span></h3>
-                                <p style="margin: 5px 0 0; color: #8b949e; font-size: 13px;">${repo.description || "No description provided."} (${repo.language || "Mixed"})</p>
+                                <div class="repo-top">
+                                    <h3 class="repo-name">${repo.name}</h3>
+                                    <span class="badge">${repo.private ? "Private" : "Public"}</span>
+                                </div>
+                                <p class="repo-desc">${repo.description || "No description provided."}</p>
                             </div>
-                            <button onclick="analyzeRepo('${repo.full_name}')">Analyze Repo</button>
+                            <div class="repo-footer">
+                                <span class="repo-lang"><span class="lang-dot"></span> ${repo.language || "Mixed"}</span>
+                                <button class="btn-main" style="padding: 6px 12px; font-size: 12px;" onclick="analyzeRepo('${repo.full_name}')">Analyze Repo</button>
+                            </div>
                         `;
-                        repoListDiv.appendChild(card);
+                        repoListDiv.appendChild(box);
                     });
                 } else {
-                    repoListDiv.innerHTML = "<p>No repositories found.</p>";
+                    repoListDiv.innerHTML = "<p style='color: var(--text-muted);'>No repositories found.</p>";
                 }
             })
             .catch(err => {
-                repoListDiv.innerHTML = "<p style='color: #f85149;'>Failed to load repositories. Please log in again.</p>";
+                repoListDiv.innerHTML = "<p style='color: #f85149;'>Failed to load repositories.</p>";
             });
 
         function analyzeRepo(fullName) {
             resultContainer.style.display = "none";
-            logContainer.innerHTML = `> Requesting data for ${fullName}...<br>`;
+            logContainer.innerHTML = `> Triggering AI agent for ${fullName}...<br>`;
             socket.send(JSON.stringify({ repo_name: fullName }));
         }
     </script>
