@@ -1,0 +1,42 @@
+[
+ {
+  "strategy": "jev_large",
+  "runs": 28,
+  "errors": 0,
+  "simpleqa_correct": 19,
+  "simpleqa_incorrect": 1,
+  "simpleqa_not_attempted": 0,
+  "simpleqa_n": 20,
+  "precision": 0.717,
+  "pairwise_vs_embeddings": {
+   "win": 11,
+   "tie": 10,
+   "loss": 7
+  },
+  "median_filter_seconds": 1.1749999999999998,
+  "median_context_tokens": 6529.0,
+  "median_write_seconds": 46.71,
+  "mean_filter_cost": 0.00312,
+  "mean_write_cost": 0.1111
+ },
+ {
+  "strategy": "jev_wide",
+  "runs": 28,
+  "errors": 0,
+  "simpleqa_correct": 20,
+  "simpleqa_incorrect": 0,
+  "simpleqa_not_attempted": 0,
+  "simpleqa_n": 20,
+  "precision": 0.74,
+  "pairwise_vs_embeddings": {
+   "win": 13,
+   "tie": 8,
+   "loss": 7
+  },
+  "median_filter_seconds": 3.075,
+  "median_context_tokens": 4853.5,
+  "median_write_seconds": 39.400000000000006,
+  "mean_filter_cost": 0.00542,
+  "mean_write_cost": 0.116
+ }
+]

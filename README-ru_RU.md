@@ -95,7 +95,7 @@ npx skills add assafelovic/gpt-researcher
 
 ### Установка
 
-1. Установите Python 3.11 или новее. [Гайд](https://www.tutorialsteacher.com/python/install-python).
+1. Установите Python 3.12 или новее. [Гайд](https://www.tutorialsteacher.com/python/install-python).
 2. Клонируйте проект и перейдите в каталог:
 
     ```bash

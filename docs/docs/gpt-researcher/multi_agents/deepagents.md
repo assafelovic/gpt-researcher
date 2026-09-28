@@ -108,7 +108,7 @@ The agent runs on a `FilesystemBackend`, so section drafts and the final `report
 
 ## How to run
 
-Requires Python 3.11+.
+Requires Python 3.12+.
 
 1. Install dependencies from the repository root:
 

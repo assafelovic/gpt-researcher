@@ -86,7 +86,7 @@ https://github.com/user-attachments/assets/092e9e71-7e27-475d-8c4f-9dddd28934a3
 
 ## ⚙️ 시작하기
 ### 설치
-> **1단계** - Python 3.11 또는 그 이상의 버전을 설치하세요. [여기](https://www.tutorialsteacher.com/python/install-python)를 참조하여 단계별 가이드를 확인하세요.
+> **1단계** - Python 3.12 또는 그 이상의 버전을 설치하세요. [여기](https://www.tutorialsteacher.com/python/install-python)를 참조하여 단계별 가이드를 확인하세요.
 
 > **2단계** - 프로젝트를 다운로드하고 해당 디렉토리로 이동하세요.
 

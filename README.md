@@ -78,6 +78,7 @@ Steps:
 - 🍌 **AI-generated inline images** using Google Gemini (Nano Banana) for visual illustrations.
 - 📜 Generate detailed reports exceeding 2,000 words.
 - 🌐 Aggregate over 20 sources for objective conclusions.
+- 🎯 Smart context filtering with [Jev](#-smart-context-filtering-with-jev), with no API key or embeddings required by default.
 - 🖥️ Frontend available in lightweight (HTML/CSS/JS) and production-ready (NextJS + Tailwind) versions.
 - 🔍 JavaScript-enabled web scraping.
 - 📂 Maintains memory and context throughout research.
@@ -95,7 +96,7 @@ See the [Documentation](https://docs.gptr.dev/docs/gpt-researcher/getting-starte
 
 ### Installation
 
-1. Install Python 3.11 or later. [Guide](https://www.tutorialsteacher.com/python/install-python).
+1. Install Python 3.12 or later. [Guide](https://www.tutorialsteacher.com/python/install-python).
 2. Clone the project and navigate to the directory:
 
     ```bash
@@ -222,6 +223,30 @@ GPT Researcher now includes Deep Research - an advanced recursive research workf
 
 [Learn more about Deep Research](https://docs.gptr.dev/docs/gpt-researcher/gptr/deep_research) in our documentation.
 
+## 🎯 Smart Context Filtering with Jev
+
+Every research run scrapes dozens of pages, and only some of each page helps answer the question. Before anything reaches the LLM, GPT Researcher decides which passages to keep. By default it uses **[Jev](https://typesafe.ai/blog/introducing-system-one-models-and-jev)** by TypeSafe, a model that scores how useful each passage is for the question, rather than how similar its words or embedding are.
+
+**Jev's context is 59% more relevant than embeddings, at the same cost** (73% of kept passages relevant vs 46%). We benchmarked every option on 28 research tasks, replaying the same scraped sources so that only the filter changed:
+
+| Context filter | Relevant passages kept | Head-to-head vs embeddings | Filter time | Cost per report | Needs |
+|---|---|---|---|---|---|
+| **Jev** (default) | **73%** | **15 wins · 10 ties · 3 losses** | 1.7s | $0.115 | `TYPESAFE_API_KEY` |
+| Keyword (fallback) | 51% | 14 wins · 8 ties · 6 losses | 0.02s | $0.116 | nothing |
+| Embeddings | 46% | — | 1.0s | $0.117 | an embedding provider |
+| No filter | — | 13 wins · 11 ties · 4 losses | — | $0.192 | nothing |
+
+Writing the report takes ~45s whichever filter you use, so a run's total time moves only by the filter step. Passing every page unfiltered writes the broadest reports on open-ended questions, but costs 65% more.
+
+**Nothing is required.** With a `TYPESAFE_API_KEY`, Jev is used. Without one, or if a Jev call fails, GPT Researcher falls back to keyword (BM25) ranking, which runs locally with no API key, model or embeddings. Embeddings remain available as an option.
+
+```bash
+export TYPESAFE_API_KEY=...   # use Jev (the default when a key is set)
+export CONTEXT_FILTER=auto    # auto | jev | keyword | embeddings | none
+```
+
+See the [Context Filter docs](https://docs.gptr.dev/docs/gpt-researcher/gptr/context-filter) and the [full benchmark](evals/context_filter) for method, caveats and how to reproduce it.
+
 ## Run with Docker
 
 > **Step 1** - [Install Docker](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started-with-docker)
@@ -297,24 +322,6 @@ To enable tracing:
    export LANGCHAIN_PROJECT="gpt-researcher"
    ```
 2. Run your research tasks as usual. All LangGraph-based agent interactions will be automatically traced and visualized in your LangSmith dashboard.
-
-#### Monocle Tracing
-
-GPT Researcher also supports [Monocle](https://github.com/monocle2ai/monocle), an OpenTelemetry-based tracer for agentic applications. It records each run end-to-end: LLM calls, agent steps, and tool invocations, with their inputs, outputs, timings, and token counts.
-
-Monocle is an opt-in extra and is off by default. Install it, then add the following to your `.env` file:
-
-```bash
-pip install "gpt-researcher[monocle]"
-```
-
-```bash
-MONOCLE_TRACING=true
-MONOCLE_EXPORTERS=file          # file, console, okahu, s3, blob, gcs (default: file)
-OKAHU_API_KEY=okh_xxxxxxxx      # required only for the `okahu` exporter
-```
-
-Each run writes one trace file to `.monocle/`; open it in the [Monocle VS Code extension](https://marketplace.visualstudio.com/items?itemName=OkahuAI.monocle-apptrace). Connect to [Okahu](https://www.okahu.ai) to analyze traces across runs (via the `okahu` exporter).
 
 ## 🖥️ Frontend Applications
 

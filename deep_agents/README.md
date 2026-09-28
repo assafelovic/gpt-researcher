@@ -109,7 +109,7 @@ More specifically (as seen in the architecture diagram) the process is as follow
 
 ## How to run
 
-Requires Python 3.11+.
+Requires Python 3.12+.
 
 1. Install required packages from the repository root:
   ```bash

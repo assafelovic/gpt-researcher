@@ -7,7 +7,7 @@ This frontend project aims to enhance the user experience of GPT-Researcher, pro
 A lightweight solution using FastAPI to serve static files.
 
 #### Prerequisites
-- Python 3.11+
+- Python 3.12+
 - pip
 
 #### Setup and Running
