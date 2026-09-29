@@ -86,12 +86,24 @@ class ExaSearch:
         Returns:
             A list of similar documents.
         """
-        results = self.client.find_similar(
-            url, exclude_source_domain=exclude_source_domain, **filters
-        )
+        # Mirror search()'s hardening: any failure here previously propagated
+        # into the research run, and a client that returned ``None`` instead of
+        # a results object raised AttributeError on the ``.results`` access.
+        try:
+            results = self.client.find_similar(
+                url, exclude_source_domain=exclude_source_domain, **filters
+            )
+        except Exception as e:
+            print(
+                f"Error: {e}. Failed fetching similar sources from Exa. Empty response."
+            )
+            return []
 
         similar_response = []
-        for result in results.results or []:
+        rows = getattr(results, "results", None) or []
+        if not isinstance(rows, list):
+            return []
+        for result in rows:
             href = getattr(result, "url", None)
             if not href:
                 continue
@@ -108,10 +120,19 @@ class ExaSearch:
         Returns:
             A list of document contents.
         """
-        results = self.client.get_contents(ids, **options)
+        try:
+            results = self.client.get_contents(ids, **options)
+        except Exception as e:
+            print(
+                f"Error: {e}. Failed fetching contents from Exa. Empty response."
+            )
+            return []
 
         contents_response = []
-        for result in results.results or []:
+        rows = getattr(results, "results", None) or []
+        if not isinstance(rows, list):
+            return []
+        for result in rows:
             result_id = getattr(result, "id", None)
             if result_id is None:
                 continue
