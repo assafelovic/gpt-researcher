@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>DevAgent - Smart GitHub Development</title>
+    <title>DevAgent - Codebase Intelligence & AI Chat</title>
     <style>
         :root {
             --bg-color: #07090e;
@@ -96,7 +96,6 @@
             background: var(--badge-bg);
         }
 
-        /* Theme Pill */
         .theme-pill {
             background: var(--bg-color);
             border: 1px solid var(--border-color);
@@ -121,7 +120,6 @@
             color: white;
         }
 
-        /* Account Dropdown Menu */
         .account-menu-container {
             position: relative;
             display: inline-block;
@@ -192,22 +190,27 @@
             background: var(--badge-bg);
         }
 
-        .container {
-            max-width: 1200px;
+        /* Main Workspace Layout with AI Chat Sidebar */
+        .workspace {
+            max-width: 1400px;
             margin: auto;
-            padding: 40px 20px;
+            padding: 30px 20px;
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 30px;
+            align-items: start;
         }
 
-        /* Hero Section */
+        /* Hero */
         .hero {
             display: grid;
             grid-template-columns: 1fr 1.1fr;
-            gap: 40px;
+            gap: 30px;
             align-items: center;
-            margin-bottom: 50px;
+            margin-bottom: 30px;
             background: var(--card-bg);
             border: 1px solid var(--border-color);
-            padding: 40px;
+            padding: 30px;
             border-radius: 16px;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
         }
@@ -218,15 +221,15 @@
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             display: inline-block;
         }
 
         .hero h1 {
-            font-size: 36px;
+            font-size: 30px;
             line-height: 1.15;
             font-weight: 700;
-            margin: 0 0 15px 0;
+            margin: 0 0 12px 0;
         }
 
         .hero h1 span {
@@ -235,9 +238,9 @@
 
         .hero p {
             color: var(--text-muted);
-            font-size: 14px;
-            line-height: 1.6;
-            margin-bottom: 25px;
+            font-size: 13px;
+            line-height: 1.5;
+            margin-bottom: 20px;
         }
 
         .btn-main {
@@ -256,17 +259,12 @@
             background: var(--accent-green-hover);
         }
 
-        /* Graphic Container for hero-graphic.png */
         .hero-graphic-container {
             width: 100%;
             border-radius: 10px;
             overflow: hidden;
             border: 1px solid var(--border-color);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
             background: var(--bg-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
         .hero-graphic-container img {
@@ -275,35 +273,36 @@
             display: block;
         }
 
-        /* Repositories Grid */
+        /* Repos Grid */
         .section-heading {
-            font-size: 18px;
+            font-size: 17px;
             font-weight: 600;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
 
         .section-sub {
             color: var(--text-muted);
-            font-size: 13px;
-            margin-bottom: 20px;
+            font-size: 12px;
+            margin-bottom: 16px;
         }
 
         .repos-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 16px;
-            margin-bottom: 40px;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 14px;
+            margin-bottom: 30px;
         }
 
         .repo-box {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
-            padding: 20px;
+            padding: 18px;
             border-radius: 12px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             transition: border-color 0.2s;
+            cursor: pointer;
         }
 
         .repo-box:hover {
@@ -314,11 +313,11 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .repo-name {
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 600;
             color: #58a6ff;
             margin: 0;
@@ -334,11 +333,11 @@
         }
 
         .repo-desc {
-            font-size: 12px;
+            font-size: 11px;
             color: var(--text-muted);
-            margin: 0 0 15px 0;
-            line-height: 1.5;
-            min-height: 36px;
+            margin: 0 0 12px 0;
+            line-height: 1.4;
+            min-height: 32px;
         }
 
         .repo-footer {
@@ -346,7 +345,7 @@
             justify-content: space-between;
             align-items: center;
             border-top: 1px solid var(--border-color);
-            padding-top: 12px;
+            padding-top: 10px;
         }
 
         .repo-lang {
@@ -364,39 +363,205 @@
             border-radius: 50%;
         }
 
-        /* Stats Bar */
-        .stats-bar {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
+        /* Codebase Intelligence Chat Sidebar */
+        .chat-sidebar {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 40px;
-            text-align: center;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            height: 680px;
+            position: sticky;
+            top: 90px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+            overflow: hidden;
         }
 
-        .stat-item h2 {
-            margin: 0 0 4px 0;
-            font-size: 22px;
+        .chat-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header h3 {
+            margin: 0;
+            font-size: 14px;
+            color: #3fb950;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .chat-body {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            font-size: 13px;
+        }
+
+        .chat-msg {
+            padding: 10px 14px;
+            border-radius: 10px;
+            max-width: 88%;
+            line-height: 1.5;
+        }
+
+        .chat-msg.user {
+            background: #238636;
+            color: white;
+            align-self: flex-end;
+        }
+
+        .chat-msg.assistant {
+            background: var(--badge-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            align-self: flex-start;
+        }
+
+        .chat-footer {
+            padding: 14px;
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-color);
+            display: flex;
+            gap: 8px;
+        }
+
+        .chat-input {
+            flex: 1;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 10px 14px;
+            border-radius: 8px;
+            color: var(--text-main);
+            font-size: 13px;
+            outline: none;
+        }
+
+        .chat-input:focus {
+            border-color: #3fb950;
+        }
+
+        .chat-send {
+            background: var(--accent-green);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .chat-send:hover {
+            background: var(--accent-green-hover);
+        }
+
+        /* AI Overview Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(6px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            width: 650px;
+            max-width: 92%;
+            border-radius: 14px;
+            padding: 30px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+            position: relative;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 18px;
+            right: 22px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .overview-section {
+            margin-bottom: 20px;
+        }
+
+        .overview-section h3 {
+            margin: 0 0 8px 0;
+            font-size: 14px;
             color: #3fb950;
         }
 
-        .stat-item p {
+        .overview-section p {
             margin: 0;
-            font-size: 12px;
-            color: var(--text-muted);
+            font-size: 13px;
+            color: var(--text-main);
+            line-height: 1.6;
         }
 
-        /* Console & Results */
+        .overview-tag {
+            display: inline-block;
+            background: var(--badge-bg);
+            border: 1px solid var(--border-color);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            margin-right: 6px;
+            margin-top: 6px;
+            color: var(--text-main);
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--border-color);
+            padding-top: 18px;
+            margin-top: 20px;
+        }
+
+        .btn-secondary {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .btn-secondary:hover {
+            background: var(--badge-bg);
+        }
+
         #log-container {
             background: var(--code-bg);
             border: 1px solid var(--border-color);
             padding: 16px;
             border-radius: 8px;
             font-family: monospace;
-            height: 130px;
+            height: 120px;
             overflow-y: auto;
             color: #58a6ff;
             font-size: 12px;
@@ -438,8 +603,6 @@
                 <span class="light-opt">Light</span>
                 <span class="dark-opt">Dark</span>
             </div>
-
-            <!-- Account Dropdown Menu -->
             <div class="account-menu-container">
                 <div class="account-btn" onclick="toggleAccountMenu()">
                     <div class="account-avatar">PD</div>
@@ -447,7 +610,6 @@
                 </div>
                 <div id="accountDropdown" class="dropdown-content">
                     <div class="dropdown-header">Signed in as<br><b>Pradnyadange</b></div>
-                    <a href="#" class="dropdown-item">😊 Set status</a>
                     <a href="https://github.com/Pradnyadange" target="_blank" class="dropdown-item">👤 Profile</a>
                     <a href="#repos" class="dropdown-item">📖 Repositories</a>
                     <a href="/" class="dropdown-item" style="color: #f85149;">🚪 Sign out</a>
@@ -456,60 +618,105 @@
         </div>
     </nav>
 
-    <div class="container">
-        <!-- Hero Section featuring your hero-graphic.png -->
-        <div class="hero">
-            <div>
-                <span class="hero-tag">AI + GitHub</span>
-                <h1>Your AI Agent for <br><span>Smarter GitHub Development</span></h1>
-                <p>Analyze repositories, understand codebases, find issues, and get actionable insights — all with the
-                    power of AI.</p>
-                <div class="hero-buttons">
-                    <button class="btn-main"
-                        onclick="document.getElementById('repos').scrollIntoView({behavior: 'smooth'})">Explore
-                        Repositories →</button>
+    <!-- AI Overview Modal -->
+    <div id="overviewModal" class="modal-overlay">
+        <div class="modal-card">
+            <button class="modal-close" onclick="closeOverviewModal()">✕</button>
+            <h2 id="modalRepoTitle" style="margin-top: 0; color: #58a6ff; font-size: 18px; margin-bottom: 20px;">
+                Repository AI Overview</h2>
+
+            <div class="overview-section">
+                <h3>1. What the project does</h3>
+                <p id="modalWhatItDoes">Analyzing...</p>
+            </div>
+            <div class="overview-section">
+                <h3>2. Tech Stack</h3>
+                <div id="modalTechStack"></div>
+            </div>
+            <div class="overview-section">
+                <h3>3. Languages</h3>
+                <div id="modalLanguages"></div>
+            </div>
+            <div class="overview-section">
+                <h3>4. Frameworks</h3>
+                <div id="modalFrameworks"></div>
+            </div>
+            <div class="overview-section">
+                <h3>5. Dependencies</h3>
+                <div id="modalDependencies"></div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeOverviewModal()">Close</button>
+                <div style="display: flex; gap: 10px;">
+                    <a id="modalGithubLink" href="#" target="_blank" class="btn-secondary">View on GitHub</a>
+                    <button class="btn-main" onclick="triggerDeepAnalysis()">Run Deep Analysis</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Workspace Layout -->
+    <div class="workspace">
+        <div class="main-content">
+            <!-- Hero -->
+            <div class="hero">
+                <div>
+                    <span class="hero-tag">Codebase Intelligence</span>
+                    <h1>Ask, Explain & Trace <br><span>Your GitHub Repositories</span></h1>
+                    <p>Use the AI Assistant sidebar on the right to ask questions about your codebase, explain
+                        functions, or locate implementations instantly.</p>
+                    <div class="hero-buttons">
+                        <button class="btn-main"
+                            onclick="document.getElementById('repos').scrollIntoView({behavior: 'smooth'})">Select
+                            Repository →</button>
+                    </div>
+                </div>
+                <div class="hero-graphic-container">
+                    <img src="/templates/hero-graphic.png" alt="DevAgent Architecture Graphic">
                 </div>
             </div>
 
-            <div class="hero-graphic-container">
-                <img src="/templates/hero-graphic.png" alt="DevAgent Architecture Graphic"
-                    onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'400\' height=\'250\'><rect width=\'100%\' height=\'100%\' fill=\'%230d1117\'/><text x=\'50%\' y=\'50%\' fill=\'%238b949e\' font-family=\'sans-serif\' font-size=\'14\' dominant-baseline=\'middle\' text-anchor=\'middle\'>hero-graphic.png</text></svg>';">
+            <!-- Repositories Section -->
+            <div id="repos">
+                <div class="section-heading">Connected Repositories</div>
+                <div class="section-sub">Select any repository to active-context the AI Chat assistant.</div>
+                <div id="repo-list" class="repos-grid">
+                    <div style="grid-column: 1/-1; color: var(--text-muted); text-align: center; padding: 20px;">Loading
+                        repositories...</div>
+                </div>
+            </div>
+
+            <!-- Execution Logs -->
+            <div class="section-heading">Live Execution Logs</div>
+            <div id="log-container">> System ready. Select a repository and chat with your codebase.</div>
+
+            <!-- Analysis Results -->
+            <div id="result-container">
+                <div id="report-content"></div>
             </div>
         </div>
 
-        <!-- Repositories Section -->
-        <div id="repos">
-            <div class="section-heading">Your Repositories</div>
-            <div class="section-sub">Select a repository to analyze or explore insights.</div>
-            <div id="repo-list" class="repos-grid">
-                <div style="grid-column: 1/-1; color: var(--text-muted); text-align: center; padding: 30px;">Loading
-                    your repositories from GitHub...</div>
+        <!-- Codebase AI Chat Sidebar -->
+        <div class="chat-sidebar">
+            <div class="chat-header">
+                <h3>⚡ Codebase Intelligence</h3>
+                <span id="activeContextBadge"
+                    style="font-size: 10px; background: rgba(35,134,54,0.2); color: #3fb950; padding: 2px 6px; border-radius: 6px;">No
+                    repo selected</span>
             </div>
-        </div>
-
-        <!-- DevAgent in Numbers -->
-        <div class="stats-bar">
-            <div class="stat-item">
-                <h2>100%</h2>
-                <p>Real-time GitHub Sync</p>
+            <div id="chatBody" class="chat-body">
+                <div class="chat-msg assistant">Hello Pradnya! Select a repository above, then ask me questions like:
+                    <br><br>• <i>"Where is OAuth implemented?"</i>
+                    <br>• <i>"Explain the app.py routes"</i>
+                    <br>• <i>"Find database connection logic"</i>
+                </div>
             </div>
-            <div class="stat-item">
-                <h2>Live</h2>
-                <p>WebSocket Log Streaming</p>
+            <div class="chat-footer">
+                <input type="text" id="chatInput" class="chat-input" placeholder="Ask about this codebase..."
+                    onkeypress="handleChatKey(event)">
+                <button class="chat-send" onclick="sendChatMessage()">Send</button>
             </div>
-            <div class="stat-item">
-                <h2>AI</h2>
-                <p>Automated Commit Analysis</p>
-            </div>
-        </div>
-
-        <!-- Execution Logs -->
-        <div class="section-heading">Live Execution Logs</div>
-        <div id="log-container">> System initialized. Select any repository above to start agent analysis.</div>
-
-        <!-- Analysis Results -->
-        <div id="result-container">
-            <div id="report-content"></div>
         </div>
     </div>
 
@@ -524,16 +731,18 @@
             document.getElementById("accountDropdown").classList.toggle("show");
         }
 
+        function closeOverviewModal() {
+            document.getElementById("overviewModal").style.display = "none";
+        }
+
+        let selectedRepoFullName = "";
+
         window.onclick = function (event) {
             if (!event.target.closest('.account-menu-container')) {
                 const dropdowns = document.getElementsByClassName("dropdown-content");
-                for (let i = 0; i < dropdowns.length; i++) {
-                    const openDropdown = dropdowns[i];
-                    if (openDropdown.classList.contains('show')) {
-                        openDropdown.classList.remove('show');
-                    }
-                }
+                for (let i = 0; i < dropdowns.length; i++) dropdowns[i].classList.remove('show');
             }
+            if (event.target == document.getElementById("overviewModal")) closeOverviewModal();
         }
 
         const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
@@ -557,6 +766,7 @@
             }
         };
 
+        // Fetch Repositories
         fetch('/api/repos')
             .then(res => res.json())
             .then(data => {
@@ -565,17 +775,18 @@
                     data.repositories.forEach(repo => {
                         const box = document.createElement("div");
                         box.className = "repo-box";
+                        box.onclick = () => setActiveRepo(repo.full_name);
                         box.innerHTML = `
                             <div>
                                 <div class="repo-top">
                                     <h3 class="repo-name">${repo.name}</h3>
-                                    <span class="badge">${repo.private ? "Private" : "Public"}</span>
+                                    <span class="badge">${repo.private ? "🔒" : "🌐"}</span>
                                 </div>
-                                <p class="repo-desc">${repo.description || "No description provided."}</p>
+                                <p class="repo-desc">${repo.description || "No description."}</p>
                             </div>
                             <div class="repo-footer">
                                 <span class="repo-lang"><span class="lang-dot"></span> ${repo.language || "Mixed"}</span>
-                                <button class="btn-main" style="padding: 6px 12px; font-size: 12px;" onclick="analyzeRepo('${repo.full_name}')">Analyze Repo</button>
+                                <button class="btn-main" style="padding: 4px 10px; font-size: 11px;" onclick="event.stopPropagation(); openRepoOverview('${repo.full_name}')">AI Overview</button>
                             </div>
                         `;
                         repoListDiv.appendChild(box);
@@ -583,15 +794,85 @@
                 } else {
                     repoListDiv.innerHTML = "<p style='color: var(--text-muted);'>No repositories found.</p>";
                 }
-            })
-            .catch(err => {
-                repoListDiv.innerHTML = "<p style='color: #f85149;'>Failed to load repositories.</p>";
             });
 
-        function analyzeRepo(fullName) {
+        function setActiveRepo(fullName) {
+            selectedRepoFullName = fullName;
+            document.getElementById("activeContextBadge").innerText = fullName;
+            appendChatMessage(`Selected active repository context: ${fullName}`, 'assistant');
+        }
+
+        function handleChatKey(event) {
+            if (event.key === "Enter") sendChatMessage();
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById("chatInput");
+            const query = input.value.trim();
+            if (!query) return;
+
+            if (!selectedRepoFullName) {
+                alert("Please select a repository card first to set the active context!");
+                return;
+            }
+
+            appendChatMessage(query, 'user');
+            input.value = "";
+
+            const [owner, repo] = selectedRepoFullName.split("/");
+
+            fetch('/api/codebase/query', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: query, owner: owner, repo: repo })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    appendChatMessage(data.answer, 'assistant');
+                })
+                .catch(err => {
+                    appendChatMessage("Failed to query codebase intelligence.", 'assistant');
+                });
+        }
+
+        function appendChatMessage(text, sender) {
+            const chatBody = document.getElementById("chatBody");
+            const msgDiv = document.createElement("div");
+            msgDiv.className = `chat-msg ${sender}`;
+            msgDiv.innerHTML = text.replace(/\n/g, '<br>');
+            chatBody.appendChild(msgDiv);
+            chatBody.scrollTop = chatBody.scrollHeight;
+        }
+
+        function openRepoOverview(fullName) {
+            selectedRepoFullName = fullName;
+            setActiveRepo(fullName);
+            const [owner, repo] = fullName.split("/");
+            document.getElementById("modalRepoTitle").innerText = `Repository AI Overview: ${fullName}`;
+            document.getElementById("modalWhatItDoes").innerText = "Analyzing project files and structure...";
+            document.getElementById("modalTechStack").innerHTML = "<span class='overview-tag'>Loading...</span>";
+            document.getElementById("modalLanguages").innerHTML = "<span class='overview-tag'>Loading...</span>";
+            document.getElementById("modalFrameworks").innerHTML = "<span class='overview-tag'>Loading...</span>";
+            document.getElementById("modalDependencies").innerHTML = "<span class='overview-tag'>Loading...</span>";
+            document.getElementById("modalGithubLink").href = `https://github.com/${fullName}`;
+            document.getElementById("overviewModal").style.display = "flex";
+
+            fetch(`/api/repo/overview?owner=${owner}&repo=${repo}`)
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById("modalWhatItDoes").innerText = data.what_it_does;
+                    document.getElementById("modalTechStack").innerHTML = data.tech_stack.map(t => `<span class="overview-tag">${t}</span>`).join("");
+                    document.getElementById("modalLanguages").innerHTML = Object.entries(data.languages).map(([l, b]) => `<span class="overview-tag">${l} (${b}b)</span>`).join("");
+                    document.getElementById("modalFrameworks").innerHTML = data.frameworks.map(f => `<span class="overview-tag" style="color: #3fb950;">${f}</span>`).join("");
+                    document.getElementById("modalDependencies").innerHTML = data.dependencies.map(d => `<span class="overview-tag">${d}</span>`).join("");
+                });
+        }
+
+        function triggerDeepAnalysis() {
+            closeOverviewModal();
             resultContainer.style.display = "none";
-            logContainer.innerHTML = `> Triggering AI agent for ${fullName}...<br>`;
-            socket.send(JSON.stringify({ repo_name: fullName }));
+            logContainer.innerHTML = `> Triggering deep AI agent analysis for ${selectedRepoFullName}...<br>`;
+            socket.send(JSON.stringify({ repo_name: selectedRepoFullName }));
         }
     </script>
 </body>
