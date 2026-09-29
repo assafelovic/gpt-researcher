@@ -21,5 +21,6 @@ To add more settings, such as a different LLM provider or retriever, go to the s
 
 ## Notes
 
-- The native Python runtime does not include a browser. Use the default Tavily retriever and the default `bs` scraper. Do not set `SCRAPER=selenium`.
+- The native Python runtime does not include a browser. Use the default `bs` scraper. Do not set `SCRAPER=browser` or `SCRAPER=nodriver`, because both need Chrome.
+- The default retriever is Tavily, so research queries fail until you set `TAVILY_API_KEY`.
 - The Blueprint uses the `starter` instance type. For memory-heavy work, such as Deep Research, change the instance type to `standard` in the Render Dashboard.
