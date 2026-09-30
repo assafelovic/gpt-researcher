@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>DevAgent - Codebase Intelligence & AI Chat</title>
+    <title>DevAgent - Code Explorer & Intelligence</title>
     <style>
         :root {
             --bg-color: #07090e;
@@ -40,7 +40,7 @@
             transition: background 0.3s ease;
         }
 
-        /* Top Navbar */
+        /* Navbar */
         nav {
             display: flex;
             justify-content: space-between;
@@ -190,7 +190,7 @@
             background: var(--badge-bg);
         }
 
-        /* Main Workspace Layout with AI Chat Sidebar */
+        /* Workspace Grid */
         .workspace {
             max-width: 1400px;
             margin: auto;
@@ -201,79 +201,6 @@
             align-items: start;
         }
 
-        /* Hero */
-        .hero {
-            display: grid;
-            grid-template-columns: 1fr 1.1fr;
-            gap: 30px;
-            align-items: center;
-            margin-bottom: 30px;
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            padding: 30px;
-            border-radius: 16px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-        }
-
-        .hero-tag {
-            font-size: 12px;
-            color: #3fb950;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 8px;
-            display: inline-block;
-        }
-
-        .hero h1 {
-            font-size: 30px;
-            line-height: 1.15;
-            font-weight: 700;
-            margin: 0 0 12px 0;
-        }
-
-        .hero h1 span {
-            color: #3fb950;
-        }
-
-        .hero p {
-            color: var(--text-muted);
-            font-size: 13px;
-            line-height: 1.5;
-            margin-bottom: 20px;
-        }
-
-        .btn-main {
-            background: var(--accent-green);
-            color: white;
-            border: none;
-            padding: 10px 18px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 13px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .btn-main:hover {
-            background: var(--accent-green-hover);
-        }
-
-        .hero-graphic-container {
-            width: 100%;
-            border-radius: 10px;
-            overflow: hidden;
-            border: 1px solid var(--border-color);
-            background: var(--bg-color);
-        }
-
-        .hero-graphic-container img {
-            width: 100%;
-            height: auto;
-            display: block;
-        }
-
-        /* Repos Grid */
         .section-heading {
             font-size: 17px;
             font-weight: 600;
@@ -286,11 +213,12 @@
             margin-bottom: 16px;
         }
 
+        /* Repos Grid */
         .repos-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
             gap: 14px;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
         }
 
         .repo-box {
@@ -363,7 +291,144 @@
             border-radius: 50%;
         }
 
-        /* Codebase Intelligence Chat Sidebar */
+        .btn-main {
+            background: var(--accent-green);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .btn-main:hover {
+            background: var(--accent-green-hover);
+        }
+
+        /* Code Explorer Component */
+        .explorer-container {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 30px;
+            display: none;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .explorer-header {
+            padding: 14px 20px;
+            background: var(--bg-color);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: #58a6ff;
+        }
+
+        .explorer-body {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            height: 500px;
+        }
+
+        .file-tree {
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+            padding: 12px;
+            background: var(--bg-color);
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .tree-folder {
+            margin-bottom: 4px;
+        }
+
+        .tree-folder-title {
+            padding: 6px 8px;
+            cursor: pointer;
+            border-radius: 6px;
+            color: var(--text-main);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tree-folder-title:hover {
+            background: var(--badge-bg);
+        }
+
+        .tree-folder-content {
+            padding-left: 16px;
+            display: none;
+            border-left: 1px dashed var(--border-color);
+            margin-left: 8px;
+            margin-top: 2px;
+        }
+
+        .tree-folder.open>.tree-folder-content {
+            display: block;
+        }
+
+        .tree-file {
+            padding: 5px 8px;
+            cursor: pointer;
+            border-radius: 6px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tree-file:hover {
+            background: var(--badge-bg);
+            color: var(--text-main);
+        }
+
+        .tree-file.active {
+            background: rgba(35, 134, 54, 0.15);
+            color: #3fb950;
+            font-weight: 600;
+        }
+
+        .code-viewer {
+            display: flex;
+            flex-direction: column;
+            background: var(--code-bg);
+            overflow: hidden;
+        }
+
+        .code-viewer-header {
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            color: var(--text-muted);
+        }
+
+        .code-viewer pre {
+            margin: 0;
+            padding: 16px;
+            font-family: monospace;
+            font-size: 12px;
+            color: #f0f6fc;
+            overflow: auto;
+            flex: 1;
+            user-select: text;
+        }
+
+        /* AI Chat Sidebar */
         .chat-sidebar {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -543,10 +608,10 @@
             background: var(--bg-color);
             border: 1px solid var(--border-color);
             color: var(--text-main);
-            padding: 8px 16px;
-            border-radius: 8px;
+            padding: 6px 12px;
+            border-radius: 6px;
             font-weight: 600;
-            font-size: 13px;
+            font-size: 11px;
             cursor: pointer;
             text-decoration: none;
         }
@@ -561,7 +626,7 @@
             padding: 16px;
             border-radius: 8px;
             font-family: monospace;
-            height: 120px;
+            height: 110px;
             overflow-y: auto;
             color: #58a6ff;
             font-size: 12px;
@@ -572,7 +637,7 @@
             background: var(--card-bg);
             border: 1px solid var(--border-color);
             border-left: 4px solid #3fb950;
-            padding: 24px;
+            padding: 20px;
             border-radius: 8px;
             display: none;
         }
@@ -595,7 +660,6 @@
             <div class="nav-links">
                 <a href="#" class="active">Home</a>
                 <a href="#repos">Repositories</a>
-                <a href="https://github.com/settings/tokens" target="_blank">Settings</a>
             </div>
         </div>
         <div class="nav-right">
@@ -610,8 +674,6 @@
                 </div>
                 <div id="accountDropdown" class="dropdown-content">
                     <div class="dropdown-header">Signed in as<br><b>Pradnyadange</b></div>
-                    <a href="https://github.com/Pradnyadange" target="_blank" class="dropdown-item">👤 Profile</a>
-                    <a href="#repos" class="dropdown-item">📖 Repositories</a>
                     <a href="/" class="dropdown-item" style="color: #f85149;">🚪 Sign out</a>
                 </div>
             </div>
@@ -656,48 +718,49 @@
         </div>
     </div>
 
-    <!-- Main Workspace Layout -->
+    <!-- Workspace Layout -->
     <div class="workspace">
         <div class="main-content">
-            <!-- Hero -->
-            <div class="hero">
-                <div>
-                    <span class="hero-tag">Codebase Intelligence</span>
-                    <h1>Ask, Explain & Trace <br><span>Your GitHub Repositories</span></h1>
-                    <p>Use the AI Assistant sidebar on the right to ask questions about your codebase, explain
-                        functions, or locate implementations instantly.</p>
-                    <div class="hero-buttons">
-                        <button class="btn-main"
-                            onclick="document.getElementById('repos').scrollIntoView({behavior: 'smooth'})">Select
-                            Repository →</button>
-                    </div>
-                </div>
-                <div class="hero-graphic-container">
-                    <img src="/templates/hero-graphic.png" alt="DevAgent Architecture Graphic">
-                </div>
+            <div class="section-heading">Connected Repositories</div>
+            <div class="section-sub">Click "Browse Files" on any repository to open the folder tree explorer below.
+            </div>
+            <div id="repo-list" class="repos-grid">
+                <div style="grid-column: 1/-1; color: var(--text-muted); text-align: center; padding: 20px;">Loading
+                    repositories...</div>
             </div>
 
-            <!-- Repositories Section -->
-            <div id="repos">
-                <div class="section-heading">Connected Repositories</div>
-                <div class="section-sub">Select any repository to active-context the AI Chat assistant.</div>
-                <div id="repo-list" class="repos-grid">
-                    <div style="grid-column: 1/-1; color: var(--text-muted); text-align: center; padding: 20px;">Loading
-                        repositories...</div>
+            <!-- Code Explorer Component -->
+            <div id="codeExplorer" class="explorer-container">
+                <div class="explorer-header">
+                    <span id="explorerTitle">📂 Folder Tree Explorer</span>
+                    <button class="btn-secondary" onclick="closeExplorer()">Close Explorer</button>
+                </div>
+                <div class="explorer-body">
+                    <div id="fileTree" class="file-tree">
+                        <div style="color: var(--text-muted); padding: 10px;">Select a repository...</div>
+                    </div>
+                    <div class="code-viewer">
+                        <div class="code-viewer-header">
+                            <span id="currentFilePath">No file selected</span>
+                            <button class="btn-main" style="padding: 4px 10px; font-size: 11px;"
+                                onclick="askAiAboutSelectedCode()">Ask AI about selected code</button>
+                        </div>
+                        <pre
+                            id="codeContent">Select a folder, expand it, and click a file to view its complete codebase.</pre>
+                    </div>
                 </div>
             </div>
 
             <!-- Execution Logs -->
             <div class="section-heading">Live Execution Logs</div>
-            <div id="log-container">> System ready. Select a repository and chat with your codebase.</div>
+            <div id="log-container">> System ready. Browse repository files to view code.</div>
 
-            <!-- Analysis Results -->
             <div id="result-container">
                 <div id="report-content"></div>
             </div>
         </div>
 
-        <!-- Codebase AI Chat Sidebar -->
+        <!-- AI Chat Sidebar -->
         <div class="chat-sidebar">
             <div class="chat-header">
                 <h3>⚡ Codebase Intelligence</h3>
@@ -706,11 +769,8 @@
                     repo selected</span>
             </div>
             <div id="chatBody" class="chat-body">
-                <div class="chat-msg assistant">Hello Pradnya! Select a repository above, then ask me questions like:
-                    <br><br>• <i>"Where is OAuth implemented?"</i>
-                    <br>• <i>"Explain the app.py routes"</i>
-                    <br>• <i>"Find database connection logic"</i>
-                </div>
+                <div class="chat-msg assistant">Hello Pradnya! Browse repository files on the left, highlight any code
+                    snippet, and click "Ask AI about selected code".</div>
             </div>
             <div class="chat-footer">
                 <input type="text" id="chatInput" class="chat-input" placeholder="Ask about this codebase..."
@@ -736,6 +796,7 @@
         }
 
         let selectedRepoFullName = "";
+        let currentFileContent = "";
 
         window.onclick = function (event) {
             if (!event.target.closest('.account-menu-container')) {
@@ -775,7 +836,7 @@
                     data.repositories.forEach(repo => {
                         const box = document.createElement("div");
                         box.className = "repo-box";
-                        box.onclick = () => setActiveRepo(repo.full_name);
+                        box.onclick = () => loadRepositoryExplorer(repo.full_name);
                         box.innerHTML = `
                             <div>
                                 <div class="repo-top">
@@ -786,7 +847,10 @@
                             </div>
                             <div class="repo-footer">
                                 <span class="repo-lang"><span class="lang-dot"></span> ${repo.language || "Mixed"}</span>
-                                <button class="btn-main" style="padding: 4px 10px; font-size: 11px;" onclick="event.stopPropagation(); openRepoOverview('${repo.full_name}')">AI Overview</button>
+                                <div style="display: flex; gap: 6px;">
+                                    <button class="btn-main" style="padding: 4px 8px; font-size: 11px;" onclick="event.stopPropagation(); openRepoOverview('${repo.full_name}')">AI Overview</button>
+                                    <button class="btn-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="event.stopPropagation(); loadRepositoryExplorer('${repo.full_name}')">Browse Files</button>
+                                </div>
                             </div>
                         `;
                         repoListDiv.appendChild(box);
@@ -796,10 +860,139 @@
                 }
             });
 
-        function setActiveRepo(fullName) {
+        function loadRepositoryExplorer(fullName) {
             selectedRepoFullName = fullName;
             document.getElementById("activeContextBadge").innerText = fullName;
-            appendChatMessage(`Selected active repository context: ${fullName}`, 'assistant');
+            const explorer = document.getElementById("codeExplorer");
+            explorer.style.display = "block";
+            explorer.scrollIntoView({ behavior: 'smooth' });
+
+            document.getElementById("explorerTitle").innerText = `📂 Folder Explorer: ${fullName}`;
+            document.getElementById("fileTree").innerHTML = "<div style='padding: 10px; color: var(--text-muted);'>Building folder tree...</div>";
+            document.getElementById("currentFilePath").innerText = "No file selected";
+            document.getElementById("codeContent").innerText = "Select a folder and click a file to view its complete codebase.";
+
+            const [owner, repo] = fullName.split("/");
+            fetch(`/api/repo/tree?owner=${owner}&repo=${repo}`)
+                .then(res => res.json())
+                .then(data => {
+                    const treeDiv = document.getElementById("fileTree");
+                    if (data.files && data.files.length > 0) {
+                        treeDiv.innerHTML = "";
+
+                        const root = {};
+                        data.files.forEach(item => {
+                            const parts = item.path.split("/");
+                            let curr = root;
+                            parts.forEach((part, idx) => {
+                                if (!curr[part]) {
+                                    curr[part] = (idx === parts.length - 1 && item.type === "blob") ? null : {};
+                                }
+                                curr = curr[part];
+                            });
+                        });
+
+                        renderTree(root, treeDiv, owner, repo, "");
+                    } else {
+                        treeDiv.innerHTML = "<div style='padding: 10px; color: var(--text-muted);'>No files found.</div>";
+                    }
+                });
+        }
+
+        function renderTree(node, container, owner, repo, currentPath) {
+            const keys = Object.keys(node).sort((a, b) => {
+                const aIsFolder = node[a] !== null;
+                const bIsFolder = node[b] !== null;
+                return bIsFolder - aIsFolder || a.localeCompare(b);
+            });
+
+            keys.forEach(key => {
+                const fullPath = currentPath ? `${currentPath}/${key}` : key;
+                if (node[key] === null) {
+                    const fileEl = document.createElement("div");
+                    fileEl.className = "tree-file";
+                    fileEl.innerHTML = `📄 ${key}`;
+                    fileEl.onclick = (e) => {
+                        e.stopPropagation();
+                        loadFileContent(owner, repo, fullPath, fileEl);
+                    };
+                    container.appendChild(fileEl);
+                } else {
+                    const folderEl = document.createElement("div");
+                    folderEl.className = "tree-folder";
+
+                    const titleEl = document.createElement("div");
+                    titleEl.className = "tree-folder-title";
+                    titleEl.innerHTML = `📁 <b>${key}</b>`;
+
+                    const contentEl = document.createElement("div");
+                    contentEl.className = "tree-folder-content";
+
+                    titleEl.onclick = (e) => {
+                        e.stopPropagation();
+                        folderEl.classList.toggle("open");
+                    };
+
+                    folderEl.appendChild(titleEl);
+                    folderEl.appendChild(contentEl);
+                    container.appendChild(folderEl);
+
+                    renderTree(node[key], contentEl, owner, repo, fullPath);
+                }
+            });
+        }
+
+        function loadFileContent(owner, repo, path, element) {
+            document.querySelectorAll('.tree-file').forEach(el => el.classList.remove('active'));
+            if (element) element.classList.add('active');
+
+            document.getElementById("currentFilePath").innerText = path;
+            document.getElementById("codeContent").innerText = "Loading complete codebase...";
+
+            fetch(`/api/repo/file?owner=${owner}&repo=${repo}&path=${path}`)
+                .then(res => res.json())
+                .then(data => {
+                    currentFileContent = data.content;
+                    document.getElementById("codeContent").innerText = data.content;
+                })
+                .catch(err => {
+                    document.getElementById("codeContent").innerText = "Failed to load file content.";
+                });
+        }
+
+        function askAiAboutSelectedCode() {
+            const selection = window.getSelection().toString().trim();
+            const textToAnalyze = selection || currentFileContent;
+
+            if (!textToAnalyze) {
+                alert("Please select a file or highlight a specific code snippet first!");
+                return;
+            }
+
+            const filePath = document.getElementById("currentFilePath").innerText;
+            const prompt = selection
+                ? `Explain this specific selected code snippet from ${filePath} in plain English:\n\n${selection}`
+                : `Explain what this code in ${filePath} does in plain English:\n\n${currentFileContent.substring(0, 800)}`;
+
+            appendChatMessage(selection ? `Explain highlighted snippet in ${filePath}` : `Explain code in ${filePath}`, 'user');
+
+            const [owner, repo] = selectedRepoFullName.split("/");
+            fetch('/api/codebase/query', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: prompt, owner: owner, repo: repo })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    appendChatMessage(`💡 **AI Code Explanation (${filePath}):**\n${data.answer}`, 'assistant');
+                })
+                .catch(err => {
+                    appendChatMessage("Failed to query code explanation.", 'assistant');
+                });
+        }
+
+        function closeExplorer() {
+            document.getElementById("codeExplorer").style.display = "none";
         }
 
         function handleChatKey(event) {
@@ -812,7 +1005,7 @@
             if (!query) return;
 
             if (!selectedRepoFullName) {
-                alert("Please select a repository card first to set the active context!");
+                alert("Please select a repository first!");
                 return;
             }
 
@@ -820,7 +1013,6 @@
             input.value = "";
 
             const [owner, repo] = selectedRepoFullName.split("/");
-
             fetch('/api/codebase/query', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -829,9 +1021,6 @@
                 .then(res => res.json())
                 .then(data => {
                     appendChatMessage(data.answer, 'assistant');
-                })
-                .catch(err => {
-                    appendChatMessage("Failed to query codebase intelligence.", 'assistant');
                 });
         }
 
@@ -846,10 +1035,9 @@
 
         function openRepoOverview(fullName) {
             selectedRepoFullName = fullName;
-            setActiveRepo(fullName);
             const [owner, repo] = fullName.split("/");
             document.getElementById("modalRepoTitle").innerText = `Repository AI Overview: ${fullName}`;
-            document.getElementById("modalWhatItDoes").innerText = "Analyzing project files and structure...";
+            document.getElementById("modalWhatItDoes").innerText = "Analyzing project files...";
             document.getElementById("modalTechStack").innerHTML = "<span class='overview-tag'>Loading...</span>";
             document.getElementById("modalLanguages").innerHTML = "<span class='overview-tag'>Loading...</span>";
             document.getElementById("modalFrameworks").innerHTML = "<span class='overview-tag'>Loading...</span>";

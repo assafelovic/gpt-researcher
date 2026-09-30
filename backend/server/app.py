@@ -6,6 +6,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 import httpx
+from google import genai
 
 app = FastAPI(title="DevAgent - AI GitHub Developer Agent")
 
@@ -18,6 +19,9 @@ templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
 
 # GitHub API Base URL
 GITHUB_API_URL = "https://api.github.com"
+
+# Initialize Gemini Client using environment variable GEMINI_API_KEY
+client_ai = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
 # Route to serve the hero graphic image directly
 @app.get("/templates/hero-graphic.png")
@@ -150,6 +154,48 @@ async def get_repo_overview(request: Request, owner: str, repo: str):
     
     return overview
 
+@app.get("/api/repo/tree")
+async def get_repo_tree(request: Request, owner: str, repo: str):
+    token = request.session.get("github_token")
+    if not token:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    
+    headers = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"}
+    
+    async with httpx.AsyncClient() as client:
+        tree_res = await client.get(f"{GITHUB_API_URL}/repos/{owner}/{repo}/git/trees/main?recursive=1", headers=headers)
+        if tree_res.status_code != 200:
+            tree_res = await client.get(f"{GITHUB_API_URL}/repos/{owner}/{repo}/git/trees/master?recursive=1", headers=headers)
+        
+        if tree_res.status_code != 200:
+            return {"files": []}
+            
+        tree_data = tree_res.json()
+        files = [{"path": item["path"], "type": item["type"]} for item in tree_data.get("tree", []) if item["type"] in ["blob", "tree"]]
+    
+    return {"files": files}
+
+@app.get("/api/repo/file")
+async def get_repo_file_content(request: Request, owner: str, repo: str, path: str):
+    token = request.session.get("github_token")
+    if not token:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    
+    headers = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"}
+    
+    async with httpx.AsyncClient() as client:
+        file_res = await client.get(f"{GITHUB_API_URL}/repos/{owner}/{repo}/contents/{path}", headers=headers)
+        if file_res.status_code != 200:
+            raise HTTPException(status_code=404, detail="File not found")
+            
+        file_info = file_res.json()
+        try:
+            content = base64.b64decode(file_info.get("content", "")).decode("utf-8")
+        except Exception:
+            content = "Binary or unreadable file content."
+            
+    return {"path": path, "content": content}
+
 @app.post("/api/codebase/query")
 async def codebase_query(request: Request):
     token = request.session.get("github_token")
@@ -157,7 +203,7 @@ async def codebase_query(request: Request):
         raise HTTPException(status_code=401, detail="Unauthorized")
     
     body = await request.json()
-    query = body.get("query", "").lower()
+    query = body.get("query", "")
     owner = body.get("owner")
     repo = body.get("repo")
     
@@ -171,25 +217,46 @@ async def codebase_query(request: Request):
         tree_data = tree_res.json() if tree_res.status_code == 200 else {}
         files = [item["path"] for item in tree_data.get("tree", []) if item["type"] == "blob"]
 
-        query_terms = [t for t in query.split() if len(t) > 2]
-        matched_files = [f for f in files if any(term in f.lower() for term in query_terms)]
-        if not matched_files:
-            matched_files = [f for f in files if f.endswith(('.py', '.js', '.ts', '.cpp', '.java', '.md'))][:5]
-
-    if matched_files:
-        response_text = f"🌐 **Plain English Explanation for '{query}':**\n\n"
-        response_text += f"I analyzed your project (`{repo}`) and found that this feature is handled primarily in **{matched_files[0]}**.\n\n"
+        # Fetch contents of key code files to provide true context to Gemini
+        code_context = ""
+        key_files = [f for f in files if f.endswith(('.py', '.js', '.ts', '.java', '.cpp', '.json', '.md'))][:6]
         
-        if "database" in query or "connection" in query or "sql" in query:
-            response_text += "💡 **What this means in simple terms:** This part of your app acts as the secure bridge that connects your software to a storage database, ensuring that user records, items, and settings are saved and loaded correctly."
-        elif "login" in query or "auth" in query or "user" in query:
-            response_text += "💡 **What this means in simple terms:** This section manages user verification and security, ensuring that only authenticated individuals can access sensitive account features."
-        else:
-            response_text += f"💡 **What this means in simple terms:** The code in `{matched_files[0]}` manages the layout, user interactions, and core workflows for this feature so everything operates seamlessly."
-    else:
-        response_text = f"🌐 I checked your repository, but couldn't find a direct match for that specific question. Try asking about login screens, database setup, or specific features!"
+        for kf in key_files:
+            file_res = await client.get(f"{GITHUB_API_URL}/repos/{owner}/{repo}/contents/{kf}", headers=headers)
+            if file_res.status_code == 200:
+                try:
+                    content = base64.b64decode(file_res.json().get("content", "")).decode("utf-8")
+                    code_context += f"\n--- FILE: {kf} ---\n{content[:1200]}\n"
+                except Exception:
+                    pass
 
-    return {"answer": response_text, "indexed_files_count": len(files)}
+    # Prompt Gemini to explain the codebase in simple, non-technical terms
+    prompt = f"""
+    You are DevAgent, an expert AI assistant that explains codebases to non-technical users and developers in crystal-clear plain English.
+    Repository: {owner}/{repo}
+    Total files in project: {len(files)} files
+    
+    Repository Code Context:
+    {code_context}
+
+    User Question / Request: "{query}"
+
+    Instructions:
+    - Answer the user's question accurately based on the provided code context.
+    - Keep it simple, structured, friendly, and easy for any normal person or non-tech user to understand.
+    - Explain what the code does, where it is located, and how it works in everyday language.
+    """
+
+    try:
+        response = client_ai.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt,
+        )
+        answer_text = response.text
+    except Exception as e:
+        answer_text = f"⚠️ Error communicating with Gemini API: {str(e)}. Please ensure your GEMINI_API_KEY environment variable is set correctly."
+
+    return {"answer": answer_text, "indexed_files_count": len(files)}
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
