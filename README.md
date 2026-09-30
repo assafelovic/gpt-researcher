@@ -10,7 +10,7 @@
 
 </div>
 
-# 🔎 DevAgent & GPT Researcher
+# 🔎 DevAgent
 
 **DevAgent is an advanced AI-powered GitHub developer assistant and deep research agent designed for browsing, analyzing, and explaining codebases in plain English.**
 
