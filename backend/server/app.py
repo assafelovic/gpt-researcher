@@ -196,6 +196,64 @@ async def get_repo_file_content(request: Request, owner: str, repo: str, path: s
             
     return {"path": path, "content": content}
 
+@app.post("/api/repo/analyze-readme")
+async def analyze_readme(request: Request):
+    token = request.session.get("github_token")
+    if not token:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    
+    body = await request.json()
+    owner = body.get("owner")
+    repo = body.get("repo")
+    
+    headers = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"}
+    
+    async with httpx.AsyncClient() as client:
+        repo_res = await client.get(f"{GITHUB_API_URL}/repos/{owner}/{repo}", headers=headers)
+        repo_data = repo_res.json() if repo_res.status_code == 200 else {}
+        
+        readme_res = await client.get(f"{GITHUB_API_URL}/repos/{owner}/{repo}/readme", headers=headers)
+        readme_content = ""
+        if readme_res.status_code == 200:
+            try:
+                readme_content = base64.b64decode(readme_res.json().get("content", "")).decode("utf-8")
+            except Exception:
+                pass
+
+    prompt = f"""
+    You are an expert technical documentation writer and README Analyzer.
+    Repository Name: {owner}/{repo}
+    Repository Description: {repo_data.get('description', 'No description')}
+    Primary Language: {repo_data.get('language', 'Mixed')}
+
+    Current README Content:
+    {readme_content if readme_content else "No README.md found in this repository."}
+
+    Task:
+    1. **Analyze README Quality**: Give a brief assessment of the current README.
+    2. **Suggest Missing Sections**: Identify crucial sections missing from the README (e.g., Installation, Usage, Features, License).
+    3. **Generate Improved README**: Write a professional, beautifully formatted, comprehensive Markdown README.md tailored specifically for this repository.
+
+    Format your output clearly with Markdown headings:
+    ### 📊 Quality Analysis
+    ### 🔍 Missing Sections
+    ### 📝 Improved README
+    ```markdown
+    [Generated README content here]
+    ```
+    """
+
+    try:
+        response = client_ai.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt,
+        )
+        analysis_result = response.text
+    except Exception as e:
+        analysis_result = f"⚠️ Error generating README analysis: {str(e)}"
+
+    return {"analysis": analysis_result}
+
 @app.post("/api/codebase/query")
 async def codebase_query(request: Request):
     token = request.session.get("github_token")
@@ -217,7 +275,6 @@ async def codebase_query(request: Request):
         tree_data = tree_res.json() if tree_res.status_code == 200 else {}
         files = [item["path"] for item in tree_data.get("tree", []) if item["type"] == "blob"]
 
-        # Fetch contents of key code files to provide true context to Gemini
         code_context = ""
         key_files = [f for f in files if f.endswith(('.py', '.js', '.ts', '.java', '.cpp', '.json', '.md'))][:6]
         
@@ -230,7 +287,6 @@ async def codebase_query(request: Request):
                 except Exception:
                     pass
 
-    # Prompt Gemini to explain the codebase in simple, non-technical terms
     prompt = f"""
     You are DevAgent, an expert AI assistant that explains codebases to non-technical users and developers in crystal-clear plain English.
     Repository: {owner}/{repo}

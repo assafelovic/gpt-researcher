@@ -216,7 +216,7 @@
         /* Repos Grid */
         .repos-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
             gap: 14px;
             margin-bottom: 25px;
         }
@@ -527,7 +527,7 @@
             background: var(--accent-green-hover);
         }
 
-        /* AI Overview Modal */
+        /* Modals */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -545,7 +545,7 @@
         .modal-card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
-            width: 650px;
+            width: 700px;
             max-width: 92%;
             border-radius: 14px;
             padding: 30px;
@@ -718,11 +718,28 @@
         </div>
     </div>
 
+    <!-- README Analyzer Modal -->
+    <div id="readmeModal" class="modal-overlay">
+        <div class="modal-card" style="width: 800px;">
+            <button class="modal-close" onclick="closeReadmeModal()">✕</button>
+            <h2 id="readmeModalTitle" style="color: #58a6ff; font-size: 18px; margin-top: 0;">📖 README Analyzer &
+                Improver</h2>
+            <div id="readmeAnalysisContent"
+                style="font-size: 13px; line-height: 1.6; color: var(--text-main); max-height: 60vh; overflow-y: auto;">
+                Analyzing README quality and generating improvements...
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeReadmeModal()">Close</button>
+                <button class="btn-main" onclick="copyImprovedReadme()">Copy Improved README</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Workspace Layout -->
     <div class="workspace">
         <div class="main-content">
             <div class="section-heading">Connected Repositories</div>
-            <div class="section-sub">Click "Browse Files" on any repository to open the folder tree explorer below.
+            <div class="section-sub">Select any repository to browse files, run AI overview, or analyze documentation.
             </div>
             <div id="repo-list" class="repos-grid">
                 <div style="grid-column: 1/-1; color: var(--text-muted); text-align: center; padding: 20px;">Loading
@@ -795,8 +812,13 @@
             document.getElementById("overviewModal").style.display = "none";
         }
 
+        function closeReadmeModal() {
+            document.getElementById("readmeModal").style.display = "none";
+        }
+
         let selectedRepoFullName = "";
         let currentFileContent = "";
+        let latestImprovedReadme = "";
 
         window.onclick = function (event) {
             if (!event.target.closest('.account-menu-container')) {
@@ -804,6 +826,7 @@
                 for (let i = 0; i < dropdowns.length; i++) dropdowns[i].classList.remove('show');
             }
             if (event.target == document.getElementById("overviewModal")) closeOverviewModal();
+            if (event.target == document.getElementById("readmeModal")) closeReadmeModal();
         }
 
         const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
@@ -847,9 +870,10 @@
                             </div>
                             <div class="repo-footer">
                                 <span class="repo-lang"><span class="lang-dot"></span> ${repo.language || "Mixed"}</span>
-                                <div style="display: flex; gap: 6px;">
-                                    <button class="btn-main" style="padding: 4px 8px; font-size: 11px;" onclick="event.stopPropagation(); openRepoOverview('${repo.full_name}')">AI Overview</button>
-                                    <button class="btn-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="event.stopPropagation(); loadRepositoryExplorer('${repo.full_name}')">Browse Files</button>
+                                <div style="display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end;">
+                                    <button class="btn-main" style="padding: 4px 6px; font-size: 10px;" onclick="event.stopPropagation(); openRepoOverview('${repo.full_name}')">AI Overview</button>
+                                    <button class="btn-secondary" style="padding: 4px 6px; font-size: 10px;" onclick="event.stopPropagation(); loadRepositoryExplorer('${repo.full_name}')">Browse</button>
+                                    <button class="btn-secondary" style="padding: 4px 6px; font-size: 10px;" onclick="event.stopPropagation(); openReadmeAnalyzer('${repo.full_name}')">README Analyser</button>
                                 </div>
                             </div>
                         `;
@@ -989,6 +1013,33 @@
                 .catch(err => {
                     appendChatMessage("Failed to query code explanation.", 'assistant');
                 });
+        }
+
+        function openReadmeAnalyzer(fullName) {
+            selectedRepoFullName = fullName;
+            const [owner, repo] = fullName.split("/");
+            document.getElementById("readmeModalTitle").innerText = `📖 README Analyzer: ${fullName}`;
+            document.getElementById("readmeAnalysisContent").innerHTML = "<p style='color: var(--text-muted);'>Evaluating README quality, detecting missing sections, and drafting an improved version with Gemini AI...</p>";
+            document.getElementById("readmeModal").style.display = "flex";
+
+            fetch('/api/repo/analyze-readme', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ owner: owner, repo: repo })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById("readmeAnalysisContent").innerHTML = data.analysis.replace(/\n/g, '<br>');
+                    latestImprovedReadme = data.analysis;
+                })
+                .catch(err => {
+                    document.getElementById("readmeAnalysisContent").innerHTML = "<p style='color: #f85149;'>Failed to analyze README.</p>";
+                });
+        }
+
+        function copyImprovedReadme() {
+            navigator.clipboard.writeText(latestImprovedReadme);
+            alert("Improved README analysis copied to clipboard!");
         }
 
         function closeExplorer() {
