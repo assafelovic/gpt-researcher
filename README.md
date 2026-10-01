@@ -10,30 +10,31 @@
 
 </div>
 
-# 🔎 DevAgent
+# 🔎 DevAgent & GPT Researcher
 
-**DevAgent is an advanced AI-powered GitHub developer assistant and deep research agent designed for browsing, analyzing, and explaining codebases in plain English.**
+**DevAgent is an advanced AI-powered GitHub developer assistant and deep research agent designed for browsing, analyzing, and improving codebases and documentation in plain English.**
 
 ---
 
-## ⚡ New Features: Codebase Intelligence & Code Explorer
+## ⚡ Key Features & Capabilities
 
-We have significantly upgraded DevAgent with a modern, production-grade developer dashboard featuring:
-
-1. **GitHub OAuth & Token Sync:** Securely connect your GitHub account via Personal Access Token to list and manage all public and private repositories.
+1. **GitHub OAuth & Repository Sync:** Connect securely via Personal Access Token to list, view, and manage all your public and private repositories.
 2. **Interactive Folder Tree Code Explorer:** 
-   - Browse your entire repository file structure directly within the dashboard.
+   - Browse your entire repository file hierarchy directly inside the dashboard.
    - Expand and collapse nested directories intuitively.
-   - Click on any file to load and inspect its complete source code.
+   - Click any file to load and inspect its complete source code.
 3. **Gemini-Powered Codebase Intelligence:**
-   - Ask natural language questions about your codebase and receive instant, crystal-clear explanations tailored for both developers and non-technical users.
-   - **Ask AI About Selected Code:** Highlight any specific snippet or code block in the viewer, click the action button, and receive targeted, plain-English breakdowns.
-4. **AI Repository Overview Modal:** Instantly inspect project tech stacks, languages, frameworks, and configuration manifests.
-5. **Live WebSocket Execution Logs:** Real-time terminal feedback during deep code audits and architecture analysis.
+   - Ask natural language questions about your project and receive instant, crystal-clear explanations.
+   - **Ask AI About Selected Code:** Highlight any specific code snippet or block in the file viewer, click the action button, and get a targeted plain-English breakdown.
+4. **📖 AI-Powered README Analyser:**
+   - Evaluates documentation quality automatically.
+   - Identifies crucial missing sections (e.g., Installation, Usage, API reference, License).
+   - Generates a fully improved, professional Markdown README tailored specifically for your repository with a one-click copy option.
+5. **AI Repository Overview & Live Logs:** Inspect project tech stacks, languages, and frameworks instantly, backed by live WebSocket terminal execution logs.
 
 ---
 
-## 🚀 Getting Started with DevAgent Dashboard
+## 🚀 Getting Started
 
 ### Installation
 
