@@ -14,6 +14,8 @@ ROOT = Path(__file__).resolve().parents[1]
 MODULE_PATH = ROOT / "gpt_researcher" / "document" / "document.py"
 
 
+# Drop the stubs below once loaded, so they can't leak into later tests.
+@patch.dict(sys.modules)
 def _load():
     # Prevent gpt_researcher package __init__ from loading: load module via path.
     pkg = types.ModuleType("gpt_researcher")

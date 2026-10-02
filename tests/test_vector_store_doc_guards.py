@@ -7,13 +7,15 @@ import sys
 import types
 import unittest
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
 MODULE_PATH = ROOT / "gpt_researcher" / "vector_store" / "vector_store.py"
 
 
+# Drop the stubs below once loaded, so they can't leak into later tests.
+@patch.dict(sys.modules)
 def _load():
     # stub langchain pieces imported at module level
     lc_docs = types.ModuleType("langchain_core.documents")

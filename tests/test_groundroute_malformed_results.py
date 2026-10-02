@@ -11,6 +11,8 @@ ROOT = Path(__file__).resolve().parents[1]
 MODULE_PATH = ROOT / "gpt_researcher" / "retrievers" / "groundroute" / "groundroute.py"
 
 
+# Drop the stubs below once loaded, so they can't leak into later tests.
+@patch.dict(sys.modules)
 def _load():
     requests_mod = types.ModuleType("requests")
     requests_mod.post = MagicMock()

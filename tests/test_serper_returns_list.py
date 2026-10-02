@@ -4,16 +4,9 @@ Sibling retrievers (serpapi/brave/bing/searx) return [] on error; callers
 (`get_search_results` -> `len(search_results)`) crash on None.
 """
 
-import sys
-import types
 from unittest.mock import patch
 
-# serper.py only imports os, requests, json — stub requests so import works
-# without the dependency and so we can drive the error paths deterministically.
-if "requests" not in sys.modules:
-    sys.modules["requests"] = types.ModuleType("requests")
-
-from gpt_researcher.retrievers.serper.serper import SerperSearch  # noqa: E402
+from gpt_researcher.retrievers.serper.serper import SerperSearch
 
 
 def _make(monkeypatch_env):
