@@ -3,6 +3,7 @@ import sys
 import types
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 
 class _FakeBlobServiceClient:
@@ -18,14 +19,14 @@ azure_module = types.ModuleType("azure")
 azure_storage_module = types.ModuleType("azure.storage")
 azure_blob_module = types.ModuleType("azure.storage.blob")
 azure_blob_module.BlobServiceClient = _FakeBlobServiceClient
-sys.modules.setdefault("azure", azure_module)
-sys.modules.setdefault("azure.storage", azure_storage_module)
-sys.modules.setdefault("azure.storage.blob", azure_blob_module)
 
 module_path = Path(__file__).resolve().parents[1] / "gpt_researcher" / "document" / "azure_document_loader.py"
 spec = importlib.util.spec_from_file_location("azure_document_loader", module_path)
 azure_document_loader = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(azure_document_loader)
+# Only the load needs the stubs; don't leave them behind for later tests.
+stubs = (azure_module, azure_storage_module, azure_blob_module)
+with patch.dict(sys.modules, {m.__name__: m for m in stubs}):
+    spec.loader.exec_module(azure_document_loader)
 AzureDocumentLoader = azure_document_loader.AzureDocumentLoader
 
 
