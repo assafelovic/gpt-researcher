@@ -10,20 +10,14 @@ from google import genai
 
 app = FastAPI(title="DevAgent - AI GitHub Developer Agent")
 
-# Add Session Middleware for secure cookie storage
 app.add_middleware(SessionMiddleware, secret_key="devagent-super-secret-key-change-in-production")
 
-# Setup templates directory
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
 
-# GitHub API Base URL
 GITHUB_API_URL = "https://api.github.com"
-
-# Initialize Gemini Client using environment variable GEMINI_API_KEY
 client_ai = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
-# Route to serve the hero graphic image directly
 @app.get("/templates/hero-graphic.png")
 async def get_hero_graphic():
     image_path = os.path.join(BASE_DIR, "templates", "hero-graphic.png")
@@ -40,29 +34,20 @@ async def login(request: Request, token: str = Form(...)):
     async with httpx.AsyncClient() as client:
         response = await client.get(
             f"{GITHUB_API_URL}/user",
-            headers={
-                "Authorization": f"Bearer {token}",
-                "Accept": "application/vnd.github+json"
-            }
+            headers={"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"}
         )
     
     if response.status_code != 200:
-        return templates.TemplateResponse(
-            request, 
-            "index.html", 
-            {"request": request, "error": "Invalid Personal Access Token. Please check and try again."}
-        )
+        return templates.TemplateResponse(request, "index.html", {"request": request, "error": "Invalid Personal Access Token."})
     
     user_data = response.json()
     request.session["github_token"] = token
     request.session["github_user"] = user_data.get("login")
-    
     return RedirectResponse(url="/dashboard", status_code=303)
 
 @app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard(request: Request):
-    token = request.session.get("github_token")
-    if not token:
+    if not request.session.get("github_token"):
         return RedirectResponse(url="/", status_code=303)
     return templates.TemplateResponse(request, "dashboard.html", {"request": request, "user": request.session.get("github_user")})
 
@@ -75,10 +60,7 @@ async def get_user_repos(request: Request):
     async with httpx.AsyncClient() as client:
         response = await client.get(
             f"{GITHUB_API_URL}/user/repos",
-            headers={
-                "Authorization": f"Bearer {token}",
-                "Accept": "application/vnd.github+json"
-            },
+            headers={"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"},
             params={"sort": "updated", "per_page": 50, "affiliation": "owner,collaborator,organization_member"}
         )
     
@@ -86,17 +68,14 @@ async def get_user_repos(request: Request):
         return {"repositories": []}
     
     repos = response.json()
-    formatted_repos = [
-        {
-            "name": repo.get("name"),
-            "full_name": repo.get("full_name"),
-            "description": repo.get("description"),
-            "private": repo.get("private"),
-            "language": repo.get("language") or "Mixed",
-            "updated_at": repo.get("updated_at")
-        }
-        for repo in repos
-    ]
+    formatted_repos = [{
+        "name": repo.get("name"),
+        "full_name": repo.get("full_name"),
+        "description": repo.get("description"),
+        "private": repo.get("private"),
+        "language": repo.get("language") or "Mixed",
+        "updated_at": repo.get("updated_at")
+    } for repo in repos]
     
     return {"repositories": formatted_repos}
 
@@ -106,11 +85,7 @@ async def get_repo_overview(request: Request, owner: str, repo: str):
     if not token:
         raise HTTPException(status_code=401, detail="Unauthorized")
     
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Accept": "application/vnd.github+json"
-    }
-    
+    headers = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"}
     async with httpx.AsyncClient() as client:
         repo_res = await client.get(f"{GITHUB_API_URL}/repos/{owner}/{repo}", headers=headers)
         if repo_res.status_code != 200:
@@ -124,16 +99,14 @@ async def get_repo_overview(request: Request, owner: str, repo: str):
         for dep_file in ["package.json", "requirements.txt", "Cargo.toml", "pom.xml", "go.mod", "CMakeLists.txt"]:
             file_res = await client.get(f"{GITHUB_API_URL}/repos/{owner}/{repo}/contents/{dep_file}", headers=headers)
             if file_res.status_code == 200:
-                file_info = file_res.json()
                 try:
-                    content = base64.b64decode(file_info.get("content", "")).decode("utf-8")
+                    content = base64.b64decode(file_res.json().get("content", "")).decode("utf-8")
                     dependencies.append({"file": dep_file, "snippet": content[:400]})
                 except Exception:
                     pass
 
     description = repo_data.get("description") or "No description provided."
     dep_text = str(dependencies).lower()
-    
     frameworks = []
     if "fastapi" in dep_text: frameworks.append("FastAPI")
     if "flask" in dep_text: frameworks.append("Flask")
@@ -141,7 +114,7 @@ async def get_repo_overview(request: Request, owner: str, repo: str):
     if "express" in dep_text: frameworks.append("Node.js Express")
     if not frameworks: frameworks.append("Core Modular Architecture")
 
-    overview = {
+    return {
         "name": repo_data.get("name"),
         "full_name": repo_data.get("full_name"),
         "private": repo_data.get("private"),
@@ -151,8 +124,6 @@ async def get_repo_overview(request: Request, owner: str, repo: str):
         "frameworks": frameworks,
         "dependencies": [d["file"] for d in dependencies] if dependencies else ["None detected"]
     }
-    
-    return overview
 
 @app.get("/api/repo/tree")
 async def get_repo_tree(request: Request, owner: str, repo: str):
@@ -161,18 +132,14 @@ async def get_repo_tree(request: Request, owner: str, repo: str):
         raise HTTPException(status_code=401, detail="Unauthorized")
     
     headers = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"}
-    
     async with httpx.AsyncClient() as client:
         tree_res = await client.get(f"{GITHUB_API_URL}/repos/{owner}/{repo}/git/trees/main?recursive=1", headers=headers)
         if tree_res.status_code != 200:
             tree_res = await client.get(f"{GITHUB_API_URL}/repos/{owner}/{repo}/git/trees/master?recursive=1", headers=headers)
-        
         if tree_res.status_code != 200:
             return {"files": []}
-            
         tree_data = tree_res.json()
         files = [{"path": item["path"], "type": item["type"]} for item in tree_data.get("tree", []) if item["type"] in ["blob", "tree"]]
-    
     return {"files": files}
 
 @app.get("/api/repo/file")
@@ -182,18 +149,14 @@ async def get_repo_file_content(request: Request, owner: str, repo: str, path: s
         raise HTTPException(status_code=401, detail="Unauthorized")
     
     headers = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"}
-    
     async with httpx.AsyncClient() as client:
         file_res = await client.get(f"{GITHUB_API_URL}/repos/{owner}/{repo}/contents/{path}", headers=headers)
         if file_res.status_code != 200:
             raise HTTPException(status_code=404, detail="File not found")
-            
-        file_info = file_res.json()
         try:
-            content = base64.b64decode(file_info.get("content", "")).decode("utf-8")
+            content = base64.b64decode(file_res.json().get("content", "")).decode("utf-8")
         except Exception:
             content = "Binary or unreadable file content."
-            
     return {"path": path, "content": content}
 
 @app.post("/api/repo/analyze-readme")
@@ -203,9 +166,7 @@ async def analyze_readme(request: Request):
         raise HTTPException(status_code=401, detail="Unauthorized")
     
     body = await request.json()
-    owner = body.get("owner")
-    repo = body.get("repo")
-    
+    owner, repo = body.get("owner"), body.get("repo")
     headers = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"}
     
     async with httpx.AsyncClient() as client:
@@ -220,39 +181,74 @@ async def analyze_readme(request: Request):
             except Exception:
                 pass
 
-    prompt = f"""
-    You are an expert technical documentation writer and README Analyzer.
-    Repository Name: {owner}/{repo}
-    Repository Description: {repo_data.get('description', 'No description')}
-    Primary Language: {repo_data.get('language', 'Mixed')}
+    prompt = f"Analyze README quality, missing sections, and generate an improved README.md for {owner}/{repo}. Description: {repo_data.get('description')}. Current README: {readme_content}"
+    response = client_ai.models.generate_content(model='gemini-2.5-flash', contents=prompt)
+    return {"analysis": response.text}
 
-    Current README Content:
-    {readme_content if readme_content else "No README.md found in this repository."}
+@app.post("/api/repo/code-smells")
+async def analyze_code_smells(request: Request):
+    token = request.session.get("github_token")
+    if not token:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    
+    body = await request.json()
+    owner, repo = body.get("owner"), body.get("repo")
+    headers = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"}
+    
+    async with httpx.AsyncClient() as client:
+        tree_res = await client.get(f"{GITHUB_API_URL}/repos/{owner}/{repo}/git/trees/main?recursive=1", headers=headers)
+        if tree_res.status_code != 200:
+            tree_res = await client.get(f"{GITHUB_API_URL}/repos/{owner}/{repo}/git/trees/master?recursive=1", headers=headers)
+        tree_data = tree_res.json() if tree_res.status_code == 200 else {}
+        files = [item["path"] for item in tree_data.get("tree", []) if item["type"] == "blob"]
 
-    Task:
-    1. **Analyze README Quality**: Give a brief assessment of the current README.
-    2. **Suggest Missing Sections**: Identify crucial sections missing from the README (e.g., Installation, Usage, Features, License).
-    3. **Generate Improved README**: Write a professional, beautifully formatted, comprehensive Markdown README.md tailored specifically for this repository.
+        code_context = ""
+        for kf in [f for f in files if f.endswith(('.py', '.js', '.ts', '.java', '.cpp'))][:6]:
+            file_res = await client.get(f"{GITHUB_API_URL}/repos/{owner}/{repo}/contents/{kf}", headers=headers)
+            if file_res.status_code == 200:
+                try:
+                    code_context += f"\n--- FILE: {kf} ---\n{base64.b64decode(file_res.json().get('content', '')).decode('utf-8')[:1500]}\n"
+                except Exception:
+                    pass
 
-    Format your output clearly with Markdown headings:
-    ### 📊 Quality Analysis
-    ### 🔍 Missing Sections
-    ### 📝 Improved README
-    ```markdown
-    [Generated README content here]
-    ```
-    """
+    prompt = f"Analyze code smells (Long Functions, Duplicate Code, Naming Problems, Error Handling) for {owner}/{repo}:\n{code_context}"
+    response = client_ai.models.generate_content(model='gemini-2.5-flash', contents=prompt)
+    return {"analysis": response.text}
 
-    try:
-        response = client_ai.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=prompt,
-        )
-        analysis_result = response.text
-    except Exception as e:
-        analysis_result = f"⚠️ Error generating README analysis: {str(e)}"
+@app.post("/api/repo/semantic-search")
+async def semantic_search(request: Request):
+    token = request.session.get("github_token")
+    if not token:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    
+    body = await request.json()
+    owner, repo, query = body.get("owner"), body.get("repo"), body.get("query", "")
+    if not query:
+        return {"results": ""}
+    
+    headers = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"}
+    async with httpx.AsyncClient() as client:
+        tree_res = await client.get(f"{GITHUB_API_URL}/repos/{owner}/{repo}/git/trees/main?recursive=1", headers=headers)
+        if tree_res.status_code != 200:
+            tree_res = await client.get(f"{GITHUB_API_URL}/repos/{owner}/{repo}/git/trees/master?recursive=1", headers=headers)
+        tree_data = tree_res.json() if tree_res.status_code == 200 else {}
+        files = [item["path"] for item in tree_data.get("tree", []) if item["type"] == "blob"]
 
-    return {"analysis": analysis_result}
+        code_chunks = []
+        for kf in [f for f in files if f.endswith(('.py', '.js', '.ts', '.java', '.cpp', '.md'))][:15]:
+            file_res = await client.get(f"{GITHUB_API_URL}/repos/{owner}/{repo}/contents/{kf}", headers=headers)
+            if file_res.status_code == 200:
+                try:
+                    content = base64.b64decode(file_res.json().get("content", "")).decode("utf-8")
+                    for i in range(0, len(content), 800):
+                        if len(content[i:i+800].strip()) > 50:
+                            code_chunks.append({"path": kf, "snippet": content[i:i+800]})
+                except Exception:
+                    pass
+
+    prompt = f"Semantic RAG Search. Intent: '{query}'. Chunks: {str(code_chunks[:25])}. Select top matching code chunks by meaning."
+    response = client_ai.models.generate_content(model='gemini-2.5-flash', contents=prompt)
+    return {"results": response.text}
 
 @app.post("/api/codebase/query")
 async def codebase_query(request: Request):
@@ -261,83 +257,28 @@ async def codebase_query(request: Request):
         raise HTTPException(status_code=401, detail="Unauthorized")
     
     body = await request.json()
-    query = body.get("query", "")
-    owner = body.get("owner")
-    repo = body.get("repo")
-    
+    query, owner, repo = body.get("query", ""), body.get("owner"), body.get("repo")
     headers = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"}
     
     async with httpx.AsyncClient() as client:
         tree_res = await client.get(f"{GITHUB_API_URL}/repos/{owner}/{repo}/git/trees/main?recursive=1", headers=headers)
         if tree_res.status_code != 200:
             tree_res = await client.get(f"{GITHUB_API_URL}/repos/{owner}/{repo}/git/trees/master?recursive=1", headers=headers)
-        
         tree_data = tree_res.json() if tree_res.status_code == 200 else {}
         files = [item["path"] for item in tree_data.get("tree", []) if item["type"] == "blob"]
 
         code_context = ""
-        key_files = [f for f in files if f.endswith(('.py', '.js', '.ts', '.java', '.cpp', '.json', '.md'))][:6]
-        
-        for kf in key_files:
+        for kf in [f for f in files if f.endswith(('.py', '.js', '.ts', '.java', '.cpp', '.json', '.md'))][:6]:
             file_res = await client.get(f"{GITHUB_API_URL}/repos/{owner}/{repo}/contents/{kf}", headers=headers)
             if file_res.status_code == 200:
                 try:
-                    content = base64.b64decode(file_res.json().get("content", "")).decode("utf-8")
-                    code_context += f"\n--- FILE: {kf} ---\n{content[:1200]}\n"
+                    code_context += f"\n--- FILE: {kf} ---\n{base64.b64decode(file_res.json().get('content', '')).decode('utf-8')[:1200]}\n"
                 except Exception:
                     pass
 
-    prompt = f"""
-    You are DevAgent, an expert AI assistant that explains codebases to non-technical users and developers in crystal-clear plain English.
-    Repository: {owner}/{repo}
-    Total files in project: {len(files)} files
-    
-    Repository Code Context:
-    {code_context}
-
-    User Question / Request: "{query}"
-
-    Instructions:
-    - Answer the user's question accurately based on the provided code context.
-    - Keep it simple, structured, friendly, and easy for any normal person or non-tech user to understand.
-    - Explain what the code does, where it is located, and how it works in everyday language.
-    """
-
-    try:
-        response = client_ai.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=prompt,
-        )
-        answer_text = response.text
-    except Exception as e:
-        answer_text = f"⚠️ Error communicating with Gemini API: {str(e)}. Please ensure your GEMINI_API_KEY environment variable is set correctly."
-
-    return {"answer": answer_text, "indexed_files_count": len(files)}
-
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
-    await websocket.accept()
-    try:
-        while True:
-            data = await websocket.receive_json()
-            repo_name = data.get("repo_name")
-            
-            await websocket.send_json({"type": "logs", "content": f"Initializing analysis pipeline for {repo_name}..."})
-            await websocket.send_json({"type": "logs", "content": "Cloning repository structure and fetching metadata via GitHub REST API..."})
-            await websocket.send_json({"type": "logs", "content": "Indexing code files into ChromaDB vector store..."})
-            await websocket.send_json({"type": "logs", "content": "Running Groq LLM architecture audit and vulnerability scan..."})
-            
-            report_html = f"""
-                <h4>Analysis Report: {repo_name}</h4>
-                <p><b>Status:</b> Completed Successfully ✅</p>
-                <ul>
-                    <li><b>Code Quality:</b> Excellent modular structure and separation of concerns.</li>
-                    <li><b>Dependencies:</b> Up-to-date and secure. No critical CVE vulnerabilities detected.</li>
-                </ul>
-            """
-            await websocket.send_json({"type": "report", "content": report_html})
-    except WebSocketDisconnect:
-        print("WebSocket client disconnected")
+    prompt = f"Explain codebase for {owner}/{repo}. Question: {query}. Context: {code_context}"
+    response = client_ai.models.generate_content(model='gemini-2.5-flash', contents=prompt)
+    return {"answer": response.text, "indexed_files_count": len(files)}
 
 if __name__ == "__main__":
     import uvicorn

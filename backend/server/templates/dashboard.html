@@ -216,7 +216,7 @@
         /* Repos Grid */
         .repos-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 14px;
             margin-bottom: 25px;
         }
@@ -527,6 +527,35 @@
             background: var(--accent-green-hover);
         }
 
+        /* Formatted Report Styling */
+        .formatted-report h3 {
+            color: #58a6ff;
+            font-size: 15px;
+            margin-top: 18px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 6px;
+        }
+
+        .formatted-report p {
+            margin: 6px 0;
+            color: var(--text-main);
+        }
+
+        .formatted-report ul {
+            margin: 6px 0;
+            padding-left: 20px;
+        }
+
+        .formatted-report li {
+            margin-bottom: 6px;
+            color: var(--text-main);
+        }
+
+        .formatted-report strong {
+            color: #3fb950;
+        }
+
         /* Modals */
         .modal-overlay {
             display: none;
@@ -545,7 +574,7 @@
         .modal-card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
-            width: 700px;
+            width: 750px;
             max-width: 92%;
             border-radius: 14px;
             padding: 30px;
@@ -720,12 +749,12 @@
 
     <!-- README Analyzer Modal -->
     <div id="readmeModal" class="modal-overlay">
-        <div class="modal-card" style="width: 800px;">
+        <div class="modal-card" style="width: 850px;">
             <button class="modal-close" onclick="closeReadmeModal()">✕</button>
             <h2 id="readmeModalTitle" style="color: #58a6ff; font-size: 18px; margin-top: 0;">📖 README Analyzer &
                 Improver</h2>
-            <div id="readmeAnalysisContent"
-                style="font-size: 13px; line-height: 1.6; color: var(--text-main); max-height: 60vh; overflow-y: auto;">
+            <div id="readmeAnalysisContent" class="formatted-report"
+                style="font-size: 13px; line-height: 1.6; color: var(--text-main); max-height: 65vh; overflow-y: auto;">
                 Analyzing README quality and generating improvements...
             </div>
             <div class="modal-footer">
@@ -735,12 +764,51 @@
         </div>
     </div>
 
+    <!-- Code Smells Modal -->
+    <div id="codeSmellsModal" class="modal-overlay">
+        <div class="modal-card" style="width: 850px;">
+            <button class="modal-close" onclick="closeCodeSmellsModal()">✕</button>
+            <h2 id="codeSmellsModalTitle" style="color: #58a6ff; font-size: 18px; margin-top: 0;">🔍 Code Smells &
+                Quality Audit</h2>
+            <div id="codeSmellsContent" class="formatted-report"
+                style="font-size: 13px; line-height: 1.6; color: var(--text-main); max-height: 65vh; overflow-y: auto;">
+                Analyzing repository for code smells, long functions, and error handling issues...
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeCodeSmellsModal()">Close</button>
+                <button class="btn-main" onclick="copyCodeSmellsReport()">Copy Audit Report</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Semantic Search Modal -->
+    <div id="semanticSearchModal" class="modal-overlay">
+        <div class="modal-card" style="width: 850px;">
+            <button class="modal-close" onclick="closeSemanticSearchModal()">✕</button>
+            <h2 id="semanticSearchModalTitle" style="color: #58a6ff; font-size: 18px; margin-top: 0;">🧠 RAG Semantic
+                Code Search</h2>
+            <div style="display: flex; gap: 10px; margin-bottom: 16px;">
+                <input type="text" id="semanticQueryInput" class="chat-input"
+                    placeholder="Search code by meaning (e.g. 'Where is authentication configured?')..."
+                    onkeypress="handleSemanticKey(event)">
+                <button class="btn-main" onclick="executeSemanticSearch()">Search</button>
+            </div>
+            <div id="semanticSearchResults" class="formatted-report"
+                style="font-size: 13px; line-height: 1.6; color: var(--text-main); max-height: 55vh; overflow-y: auto;">
+                Enter a natural language query above to search code by meaning across the repository.
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeSemanticSearchModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Workspace Layout -->
     <div class="workspace">
         <div class="main-content">
             <div class="section-heading">Connected Repositories</div>
-            <div class="section-sub">Select any repository to browse files, run AI overview, or analyze documentation.
-            </div>
+            <div class="section-sub">Select any repository to browse files, run AI overview, analyze documentation,
+                audit code smells, or search semantically.</div>
             <div id="repo-list" class="repos-grid">
                 <div style="grid-column: 1/-1; color: var(--text-muted); text-align: center; padding: 20px;">Loading
                     repositories...</div>
@@ -816,9 +884,19 @@
             document.getElementById("readmeModal").style.display = "none";
         }
 
+        function closeCodeSmellsModal() {
+            document.getElementById("codeSmellsModal").style.display = "none";
+        }
+
+        function closeSemanticSearchModal() {
+            document.getElementById("semanticSearchModal").style.display = "none";
+        }
+
         let selectedRepoFullName = "";
+        let activeSemanticRepo = "";
         let currentFileContent = "";
         let latestImprovedReadme = "";
+        let latestCodeSmellsReport = "";
 
         window.onclick = function (event) {
             if (!event.target.closest('.account-menu-container')) {
@@ -827,6 +905,8 @@
             }
             if (event.target == document.getElementById("overviewModal")) closeOverviewModal();
             if (event.target == document.getElementById("readmeModal")) closeReadmeModal();
+            if (event.target == document.getElementById("codeSmellsModal")) closeCodeSmellsModal();
+            if (event.target == document.getElementById("semanticSearchModal")) closeSemanticSearchModal();
         }
 
         const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
@@ -849,6 +929,45 @@
                 logContainer.scrollTop = logContainer.scrollHeight;
             }
         };
+
+        // Utility to format raw markdown into clean HTML headings and lists
+        function formatMarkdownToHtml(markdownText) {
+            if (!markdownText) return "";
+            let html = markdownText
+                .replace(/###\s+(.*)/g, '<h3>$1</h3>')
+                .replace(/##\s+(.*)/g, '<h3>$1</h3>')
+                .replace(/#\s+(.*)/g, '<h3>$1</h3>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/`(.*?)`\s*/g, '<code style="background: var(--badge-bg); padding: 2px 5px; border-radius: 4px; font-family: monospace; font-size: 12px; color: #58a6ff;">$1</code>');
+
+            const lines = html.split('\n');
+            let inList = false;
+            let formattedLines = [];
+
+            lines.forEach(line => {
+                let trimmed = line.trim();
+                if (trimmed.startsWith('* ') || trimmed.startsWith('- ')) {
+                    if (!inList) {
+                        inList = true;
+                        formattedLines.push('<ul>');
+                    }
+                    formattedLines.push(`<li>${trimmed.substring(2)}</li>`);
+                } else {
+                    if (inList) {
+                        inList = false;
+                        formattedLines.push('</ul>');
+                    }
+                    if (trimmed.startsWith('<h3>')) {
+                        formattedLines.push(trimmed);
+                    } else if (trimmed !== '') {
+                        formattedLines.push(`<p>${trimmed}</p>`);
+                    }
+                }
+            });
+            if (inList) formattedLines.push('</ul>');
+            return formattedLines.join('');
+        }
 
         // Fetch Repositories
         fetch('/api/repos')
@@ -874,6 +993,8 @@
                                     <button class="btn-main" style="padding: 4px 6px; font-size: 10px;" onclick="event.stopPropagation(); openRepoOverview('${repo.full_name}')">AI Overview</button>
                                     <button class="btn-secondary" style="padding: 4px 6px; font-size: 10px;" onclick="event.stopPropagation(); loadRepositoryExplorer('${repo.full_name}')">Browse</button>
                                     <button class="btn-secondary" style="padding: 4px 6px; font-size: 10px;" onclick="event.stopPropagation(); openReadmeAnalyzer('${repo.full_name}')">README Analyser</button>
+                                    <button class="btn-secondary" style="padding: 4px 6px; font-size: 10px;" onclick="event.stopPropagation(); openCodeSmellsAnalyzer('${repo.full_name}')">🔍 Code Smells</button>
+                                    <button class="btn-secondary" style="padding: 4px 6px; font-size: 10px;" onclick="event.stopPropagation(); openSemanticSearch('${repo.full_name}')">🧠 Semantic Search</button>
                                 </div>
                             </div>
                         `;
@@ -1029,7 +1150,7 @@
             })
                 .then(res => res.json())
                 .then(data => {
-                    document.getElementById("readmeAnalysisContent").innerHTML = data.analysis.replace(/\n/g, '<br>');
+                    document.getElementById("readmeAnalysisContent").innerHTML = formatMarkdownToHtml(data.analysis);
                     latestImprovedReadme = data.analysis;
                 })
                 .catch(err => {
@@ -1040,6 +1161,66 @@
         function copyImprovedReadme() {
             navigator.clipboard.writeText(latestImprovedReadme);
             alert("Improved README analysis copied to clipboard!");
+        }
+
+        function openCodeSmellsAnalyzer(fullName) {
+            selectedRepoFullName = fullName;
+            const [owner, repo] = fullName.split("/");
+            document.getElementById("codeSmellsModalTitle").innerText = `🔍 Code Smells Audit: ${fullName}`;
+            document.getElementById("codeSmellsContent").innerHTML = "<p style='color: var(--text-muted);'>Scanning source code files, evaluating function lengths, duplication, naming conventions, and error handling with Gemini...</p>";
+            document.getElementById("codeSmellsModal").style.display = "flex";
+
+            fetch('/api/repo/code-smells', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ owner: owner, repo: repo })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById("codeSmellsContent").innerHTML = formatMarkdownToHtml(data.analysis);
+                    latestCodeSmellsReport = data.analysis;
+                })
+                .catch(err => {
+                    document.getElementById("codeSmellsContent").innerHTML = "<p style='color: #f85149;'>Failed to run code smells analysis.</p>";
+                });
+        }
+
+        function copyCodeSmellsReport() {
+            navigator.clipboard.writeText(latestCodeSmellsReport);
+            alert("Code smells audit report copied to clipboard!");
+        }
+
+        function openSemanticSearch(fullName) {
+            activeSemanticRepo = fullName;
+            document.getElementById("semanticSearchModalTitle").innerText = `🧠 Semantic Code Search: ${fullName}`;
+            document.getElementById("semanticQueryInput").value = "";
+            document.getElementById("semanticSearchResults").innerHTML = "<p style='color: var(--text-muted);'>Type what you are looking for in plain English (e.g., 'database queries', 'API routing logic') to search by meaning.</p>";
+            document.getElementById("semanticSearchModal").style.display = "flex";
+        }
+
+        function handleSemanticKey(event) {
+            if (event.key === "Enter") executeSemanticSearch();
+        }
+
+        function executeSemanticSearch() {
+            const query = document.getElementById("semanticQueryInput").value.trim();
+            if (!query) return;
+
+            document.getElementById("semanticSearchResults").innerHTML = "<p style='color: var(--text-muted);'>Searching repository chunks semantically using Gemini AI...</p>";
+
+            const [owner, repo] = activeSemanticRepo.split("/");
+            fetch('/api/repo/semantic-search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ owner: owner, repo: repo, query: query })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById("semanticSearchResults").innerHTML = formatMarkdownToHtml(data.results);
+                })
+                .catch(err => {
+                    document.getElementById("semanticSearchResults").innerHTML = "<p style='color: #f85149;'>Failed to execute semantic search.</p>";
+                });
         }
 
         function closeExplorer() {
@@ -1079,7 +1260,7 @@
             const chatBody = document.getElementById("chatBody");
             const msgDiv = document.createElement("div");
             msgDiv.className = `chat-msg ${sender}`;
-            msgDiv.innerHTML = text.replace(/\n/g, '<br>');
+            msgDiv.innerHTML = formatMarkdownToHtml(text);
             chatBody.appendChild(msgDiv);
             chatBody.scrollTop = chatBody.scrollHeight;
         }
