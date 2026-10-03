@@ -97,7 +97,8 @@
         'gpt-researcher/llms/supported-llms',
         'gpt-researcher/llms/testing-your-llm',
         'gpt-researcher/llms/running-with-azure',
-        'gpt-researcher/llms/running-with-ollama'
+        'gpt-researcher/llms/running-with-ollama',
+        'gpt-researcher/llms/running-with-a-cost-limit'
       ]
     },
     {
