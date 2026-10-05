@@ -256,13 +256,24 @@ See the [Context Filter docs](https://docs.gptr.dev/docs/gpt-researcher/gptr/con
 > **Step 3** - Within the docker-compose file comment out services that you don't want to run with Docker.
 
 ```bash
-docker-compose up --build
+docker-compose -f docker-compose.yml -f docker-compose.env.yml up --build
 ```
 
 If that doesn't work, try running it without the dash:
 ```bash
-docker compose up --build
+docker compose -f docker-compose.yml -f docker-compose.env.yml up --build
 ```
+
+The root `.env` is excluded from Docker images. Include `docker-compose.env.yml`
+to pass all its settings, including `RETRIEVER` and `SMART_LLM`, to the backend at
+runtime. Existing `environment` entries in `docker-compose.yml` take precedence.
+If you only export variables in your shell and have no `.env`, use
+`docker compose up --build` (or `docker-compose up --build`) without the override;
+the base file passes the variables listed in its `environment` sections.
+
+This exclusion applies to the root `.env`. Frontend environment files remain
+available to the fullstack build for Next.js build-time configuration; only put
+values intended for that frontend build in those files.
 
 > **Step 4** - By default, if you haven't uncommented anything in your docker-compose file, this flow will start 2 processes:
  - the Python server running on localhost:8000<br>

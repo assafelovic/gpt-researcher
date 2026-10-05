@@ -1,2 +1,5 @@
 .git
 output/
+
+# Root runtime configuration is supplied by Compose, never baked into images.
+.env
