@@ -46,4 +46,4 @@ Each log file contains detailed information about:
 
 ## Running New Evaluations
 
-To generate new evaluation logs, see the [main evaluation documentation](../README.md) for instructions on running evaluations with different configurations or sample sizes. 
+To generate new evaluation logs, see the [main evaluation documentation](../../README.md) for instructions on running evaluations with different configurations or sample sizes. 
