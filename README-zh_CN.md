@@ -29,7 +29,7 @@
 
 **GPT Researcher 是一个智能体代理，专为各种任务的综合在线研究而设计。**
 
-代理可以生成详细、正式且客观的研究报告，并提供自定义选项，专注于相关资源、结构框架和经验报告。受最近发表的[Plan-and-Solve](https://arxiv.org/abs/2305.04091) 和[RAG](https://arxiv.org/abs/2005.11401) 论文的启发，GPT Researcher 解决了速度、确定性和可靠性等问题，通过并行化的代理运行，而不是同步操作，提供了更稳定的性能和更高的速度。
+代理可以生成详细、正式且客观的研究报告，并提供自定义选项，专注于相关资源、结构框架和经验报告。GPT Researcher 早已不止于 RAG：规划代理与执行代理将每个任务拆解为研究问题，[决策模型](https://docs.gptr.dev/docs/gpt-researcher/gptr/context-filter)只保留真正有助于回答问题的上下文，[多代理](https://docs.gptr.dev/docs/gpt-researcher/multi_agents/langgraph)工作流协调各专业代理完成从规划到发布的全过程，[递归深度研究](https://docs.gptr.dev/docs/gpt-researcher/gptr/deep_research)则从广度和深度两方面探索主题。研究并行执行，因此快速、稳定、可靠，并能减少错误信息。
 
 **我们的使命是利用人工智能的力量，为个人和组织提供准确、客观和事实的信息。**
 
