@@ -8,7 +8,7 @@ Check out our blog posts:
 
 ## Use case
 By using AG2, the research process can be significantly improved in depth and quality by leveraging multiple agents with specialized skills.
-Inspired by the recent [STORM](https://arxiv.org/abs/2402.14207) paper, this example showcases how a team of AI agents can work together to conduct research on a given topic, from planning to publication.
+This example showcases how a team of AI agents can work together to conduct research on a given topic, from planning to publication.
 
 An average run generates a 5-6 page research report in multiple formats such as PDF, Docx and Markdown.
 

@@ -12,8 +12,8 @@ the research engine: a chief-editor deep agent plans a report outline with
 `write_todos`, spawns parallel `researcher` subagents, and each subagent
 calls GPT Researcher's full pipeline (`deep_research`) to produce a cited
 section draft. The harness handles orchestration; GPT Researcher handles
-evidence. It reproduces the STORM-style pipeline of our 8-agent LangGraph
-example in a fraction of the code, and works over the web, local documents
+evidence. It reproduces the plan, research, review and publish pipeline of
+our 8-agent LangGraph example in a fraction of the code, and works over the web, local documents
 (PDF/DOCX/md), or both.
 
 ## What we measured

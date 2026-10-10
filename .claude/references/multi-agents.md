@@ -12,7 +12,7 @@
 
 **Directory:** `multi_agents/`
 
-LangGraph-based system inspired by [STORM paper](https://arxiv.org/abs/2402.14207). Generates 5-6 page reports with multiple agents collaborating.
+LangGraph-based multi-agent system. Generates 5-6 page reports with multiple agents collaborating.
 
 ---
 
