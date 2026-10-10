@@ -9,6 +9,7 @@ import json
 import json_repair
 import os
 import warnings
+from copy import copy
 from typing import Any, Dict, List, Type, Union, get_args, get_origin
 
 from gpt_researcher.llm_provider.generic.base import ReasoningEfforts
@@ -50,15 +51,9 @@ class Config:
         if config_to_use['REPORT_SOURCE'] != 'web':
           self._set_doc_path(config_to_use)
 
-        # MCP support configuration
-        self.mcp_servers = []  # List of MCP server configurations
-        self.mcp_allowed_root_paths = []  # Allowed root paths for MCP servers
-
-        # Read from config
-        if hasattr(self, 'mcp_servers'):
-            self.mcp_servers = self.mcp_servers
-        if hasattr(self, 'mcp_allowed_root_paths'):
-            self.mcp_allowed_root_paths = self.mcp_allowed_root_paths
+        # Keep per-instance lists without discarding file or environment values.
+        self.mcp_servers = copy(self.mcp_servers)
+        self.mcp_allowed_root_paths = copy(self.mcp_allowed_root_paths)
 
     def _set_attributes(self, config: Dict[str, Any]) -> None:
         """Set configuration attributes from config dictionary.
