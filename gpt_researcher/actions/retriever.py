@@ -42,6 +42,7 @@ def get_retriever(retriever: str):
         - mcp: Model Context Protocol retriever
         - xquik: Xquik X/Twitter search
         - getxapi: GetXAPI X/Twitter search
+        - anysearch: AnySearch unified search (API key optional)
 
     Any other name is looked up among installed plugins registered under the
     ``gpt_researcher.retrievers`` entry-point group. Built-in names always win.
@@ -131,6 +132,10 @@ def get_retriever(retriever: str):
             from gpt_researcher.retrievers import GetXAPISearch
 
             return GetXAPISearch
+        case "anysearch":
+            from gpt_researcher.retrievers import AnySearchRetriever
+
+            return AnySearchRetriever
 
         case _:
             return _load_plugin_retriever(retriever)
