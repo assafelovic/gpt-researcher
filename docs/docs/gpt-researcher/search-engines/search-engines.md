@@ -47,6 +47,7 @@ Thanks to our community, we have integrated the following web search engines and
 - [fastCRW](https://fastcrw.com/docs/rest-api) - Env: `RETRIEVER=crw`
 - [PubMedCentral](https://www.ncbi.nlm.nih.gov/home/develop/api/) - Env: `RETRIEVER=pubmed_central`
 - [Xquik](https://xquik.com/) - Env: `RETRIEVER=xquik` and `XQUIK_API_KEY`
+- [AnySearch](https://anysearch.com) - Env: `RETRIEVER=anysearch`; optional `ANYSEARCH_API_KEY` (works anonymously without a key)
 - [MCP](../retrievers/mcp-configs) - Env: `RETRIEVER=mcp`
 
 Other search providers can be installed as separate packages. See [Retriever Plugins](./retriever-plugins.md).
