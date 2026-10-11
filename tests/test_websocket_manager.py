@@ -17,18 +17,6 @@ def _load_websocket_manager_module():
         if path_str not in sys.path:
             sys.path.insert(0, path_str)
 
-    for module_name in (
-        "backend.server.websocket_manager",
-        "backend.server.multi_agent_runner",
-        "backend.server.server_utils",
-        "gpt_researcher.actions",
-        "gpt_researcher.utils.enum",
-        "report_type",
-        "backend.report_type",
-        "fastapi",
-    ):
-        sys.modules.pop(module_name, None)
-
     fastapi_module = types.ModuleType("fastapi")
     fastapi_module.WebSocket = type("WebSocket", (), {})
 
@@ -72,6 +60,8 @@ def _load_websocket_manager_module():
             "backend.server.server_utils": server_utils_module,
         },
     ):
+        # Popped inside the patch so the real module comes back afterwards.
+        sys.modules.pop("backend.server.websocket_manager", None)
         return importlib.import_module("backend.server.websocket_manager")
 
 

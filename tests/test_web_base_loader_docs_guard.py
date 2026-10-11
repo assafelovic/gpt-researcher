@@ -7,7 +7,7 @@ import sys
 import types
 import unittest
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -67,6 +67,9 @@ def _load():
     return mod, WebBaseLoader
 
 
+# scrape() re-imports the stubbed langchain_community at call time, so keep
+# the stubs for the whole test and drop them afterwards.
+@patch.dict(sys.modules)
 class WebBaseLoaderDocsGuard(unittest.TestCase):
     def test_skips_none_docs_and_missing_page_content(self):
         mod, WebBaseLoader = _load()

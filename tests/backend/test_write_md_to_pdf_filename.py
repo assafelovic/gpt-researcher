@@ -64,8 +64,8 @@ async def test_explicit_filename_preserved(tmp_path, monkeypatch):
     core.md2pdf = fake_md2pdf
     md2pdf_mod = types.ModuleType("md2pdf")
     md2pdf_mod.core = core
-    sys.modules["md2pdf"] = md2pdf_mod
-    sys.modules["md2pdf.core"] = core
+    monkeypatch.setitem(sys.modules, "md2pdf", md2pdf_mod)
+    monkeypatch.setitem(sys.modules, "md2pdf.core", core)
 
     path = await backend_utils.write_md_to_pdf("# hi", filename="my-report")
     assert "my-report.pdf" in path

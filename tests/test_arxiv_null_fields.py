@@ -11,7 +11,7 @@ import pathlib
 import sys
 import types
 from types import SimpleNamespace
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 
 # Lightweight arxiv stub for pure unit tests (no network, no arxiv install).
@@ -36,7 +36,6 @@ class _Client:
 
 _arxiv.Client = _Client
 _arxiv.Search = MagicMock
-sys.modules["arxiv"] = _arxiv
 
 path = (
     pathlib.Path(__file__).resolve().parent.parent
@@ -47,19 +46,21 @@ path = (
 )
 spec = importlib.util.spec_from_file_location("_arxiv_ut", path)
 mod = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(mod)
+# Only the load needs the stub: arxiv.py binds it at import time.
+with patch.dict(sys.modules, {"arxiv": _arxiv}):
+    spec.loader.exec_module(mod)
 ArxivSearch = mod.ArxivSearch
 
 
-def test_skips_results_without_href_and_defaults_fields():
-    client = _arxiv.Client()
+def test_skips_results_without_href_and_defaults_fields(monkeypatch):
+    client = _Client()
     client._results = [
         SimpleNamespace(title="A", pdf_url="https://arxiv.org/pdf/1", summary="s1"),
         SimpleNamespace(title="B", pdf_url=None, entry_id=None, summary="s2"),
         SimpleNamespace(title=None, pdf_url="https://arxiv.org/pdf/3", summary=None),
         SimpleNamespace(title="D", pdf_url=None, entry_id="https://arxiv.org/abs/4", summary="s4"),
     ]
-    _arxiv.Client = lambda: client
+    monkeypatch.setattr(_arxiv, "Client", lambda: client)
     out = ArxivSearch("q").search()
     assert out == [
         {"title": "A", "href": "https://arxiv.org/pdf/1", "body": "s1"},
@@ -68,10 +69,10 @@ def test_skips_results_without_href_and_defaults_fields():
     ]
 
 
-def test_api_exception_returns_empty():
+def test_api_exception_returns_empty(monkeypatch):
     class BoomClient:
         def results(self, search):
             raise RuntimeError("network down")
 
-    _arxiv.Client = BoomClient
+    monkeypatch.setattr(_arxiv, "Client", BoomClient)
     assert ArxivSearch("q").search() == []
