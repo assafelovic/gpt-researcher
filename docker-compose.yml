@@ -4,6 +4,8 @@ services:
     image: gptresearcher/gpt-researcher
     build: ./
     environment: 
+      RETRIEVER:
+      SMART_LLM:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       OPENAI_BASE_URL: ${OPENAI_BASE_URL}
       TAVILY_API_KEY: ${TAVILY_API_KEY}
@@ -48,6 +50,8 @@ services:
     image: gptresearcher/gpt-researcher-tests
     build: ./
     environment: 
+      RETRIEVER:
+      SMART_LLM:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       OPENAI_BASE_URL: ${OPENAI_BASE_URL}
       TAVILY_API_KEY: ${TAVILY_API_KEY}
