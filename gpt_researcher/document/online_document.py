@@ -25,9 +25,14 @@ class OnlineDocumentLoader:
             pages = await self._download_and_process(url)
             for page in pages:
                 if page.page_content:
+                    # Loaders occasionally omit metadata["source"] (custom loaders,
+                    # some HTML partitions). Prefer source, then fall back to path,
+                    # so the url stays a string the way DocumentLoader keeps it.
+                    meta = getattr(page, "metadata", None) or {}
+                    source = meta.get("source") or meta.get("file_path") or ""
                     docs.append({
                         "raw_content": page.page_content,
-                        "url": page.metadata.get("source")
+                        "url": source
                     })
 
         if not docs:
