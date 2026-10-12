@@ -290,7 +290,8 @@ class DeepResearchSkill:
             model=self.researcher.cfg.strategic_llm_model,
             reasoning_effort=self.researcher.cfg.reasoning_effort,
             temperature=0.4,
-            llm_kwargs=self.researcher.cfg.llm_kwargs
+            llm_kwargs=self.researcher.cfg.llm_kwargs,
+            cost_callback=self.researcher.add_costs,
         )
 
         return parse_search_queries_response(response, num_queries)
@@ -344,7 +345,8 @@ Return ONLY a JSON object using this exact schema:
             model=self.researcher.cfg.strategic_llm_model,
             reasoning_effort=ReasoningEfforts.High.value,
             temperature=0.4,
-            llm_kwargs=self.researcher.cfg.llm_kwargs
+            llm_kwargs=self.researcher.cfg.llm_kwargs,
+            cost_callback=self.researcher.add_costs,
         )
 
         return parse_follow_up_questions_response(response, num_questions)
@@ -378,7 +380,8 @@ Return ONLY a JSON object using this exact schema:
             reasoning_effort=ReasoningEfforts.High.value,
             # Needs headroom for reasoning tokens on reasoning models
             max_tokens=4000,
-            llm_kwargs=self.researcher.cfg.llm_kwargs
+            llm_kwargs=self.researcher.cfg.llm_kwargs,
+            cost_callback=self.researcher.add_costs,
         )
 
         return parse_research_results_response(response, num_learnings)
@@ -455,6 +458,7 @@ Return ONLY a JSON object using this exact schema:
 
                     # Conduct research
                     context = await researcher.conduct_research()
+                    self.researcher.add_costs(researcher.get_costs())
 
                     # Get results and visited URLs
                     visited = researcher.visited_urls
