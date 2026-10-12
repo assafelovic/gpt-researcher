@@ -625,9 +625,14 @@ Return ONLY a JSON object using this exact schema:
             else:
                 context_with_citations.append(learning)
 
-        # Add all research context
+        # Add research context in the space the learnings leave, since the
+        # final trim keeps the newest items and would drop the learnings first
         if results.get('context'):
-            context_with_citations.extend(results['context'])
+            context_budget = MAX_CONTEXT_WORDS - count_words(context_with_citations)
+            if context_budget > 0:
+                context_with_citations.extend(
+                    trim_context_to_word_limit(results['context'], context_budget)
+                )
 
         # Trim final context to word limit
         final_context = trim_context_to_word_limit(context_with_citations)
