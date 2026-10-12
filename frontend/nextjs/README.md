@@ -17,7 +17,7 @@ A React component library for integrating the GPT Researcher interface into your
 [![Open In Colab](https://img.shields.io/static/v1?message=Open%20in%20Colab&logo=googlecolab&labelColor=grey&color=yellow&label=%20&style=flat&logoSize=40)](https://colab.research.google.com/github/assafelovic/gpt-researcher/blob/master/docs/docs/examples/pip-run.ipynb)
 [![Docker Image Version](https://img.shields.io/docker/v/elestio/gpt-researcher/latest?arch=amd64&style=flat&logo=docker&logoColor=white&color=1D63ED)](https://hub.docker.com/r/gptresearcher/gpt-researcher)
 
-[English](README.md) | [中文](README-zh_CN.md) | [日本語](README-ja_JP.md) | [한국어](README-ko_KR.md)
+[English](README.md) | [中文](https://github.com/assafelovic/gpt-researcher/blob/main/README-zh_CN.md) | [日本語](https://github.com/assafelovic/gpt-researcher/blob/main/README-ja_JP.md) | [한국어](https://github.com/assafelovic/gpt-researcher/blob/main/README-ko_KR.md) | [Русский](https://github.com/assafelovic/gpt-researcher/blob/main/README-ru_RU.md)
 
 </div>
 
