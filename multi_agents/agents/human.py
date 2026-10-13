@@ -46,7 +46,7 @@ class HumanAgent:
 
         from .utils.none_sentinels import is_human_plan_approval
 
-        if is_human_plan_approval(user_feedback):
+        if not user_feedback or is_human_plan_approval(user_feedback):
             user_feedback = None
 
         plan_revision_count = research_state.get("plan_revision_count", 0)
