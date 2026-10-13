@@ -10,8 +10,9 @@
   },
   "favicon": "/images/gptr-logo.png",
   "logo": {
-    "light": "/images/gptr-logo.png",
-    "dark": "/images/gptr-logo.png"
+    "light": "/logo-light.svg",
+    "dark": "/logo-dark.svg",
+    "href": "/"
   },
   "navigation": {
     "tabs": [
@@ -21,6 +22,7 @@
           {
             "group": "Getting Started",
             "pages": [
+              "index",
               "welcome",
               "gpt-researcher/getting-started/introduction",
               "gpt-researcher/getting-started/how-to-choose",
