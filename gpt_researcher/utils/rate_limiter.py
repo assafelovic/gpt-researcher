@@ -6,6 +6,7 @@ not just per-pool. This prevents multiple concurrent researchers from overwhelmi
 rate-limited APIs like Firecrawl.
 """
 import asyncio
+import threading
 import time
 from typing import ClassVar
 
@@ -20,6 +21,8 @@ class GlobalRateLimiter:
 
     _instance: ClassVar['GlobalRateLimiter'] = None
     _lock: ClassVar[asyncio.Lock] = None
+    _lock_loop: ClassVar[asyncio.AbstractEventLoop | None] = None
+    _owner_guard = threading.Lock()
 
     def __new__(cls):
         if cls._instance is None:
@@ -43,10 +46,24 @@ class GlobalRateLimiter:
 
     @classmethod
     def get_lock(cls):
-        """Get or create the async lock (must be called from async context)."""
-        if cls._lock is None:
-            cls._lock = asyncio.Lock()
-        return cls._lock
+        """Get the lock for this loop, retiring it only after its owner closes.
+
+        A different loop cannot use the limiter while the owner remains open,
+        even if that loop is stopped or the lock has not yet bound lazily.
+        """
+        loop = asyncio.get_running_loop()
+        with cls._owner_guard:
+            if cls._lock is None or (
+                cls._lock_loop is not None and cls._lock_loop.is_closed()
+            ):
+                cls._lock = asyncio.Lock()
+                cls._lock_loop = loop
+            elif cls._lock_loop is not loop:
+                raise RuntimeError(
+                    "GlobalRateLimiter cannot be shared by concurrent event loops; "
+                    "close the previous owner loop before using a different loop"
+                )
+            return cls._lock
 
     def configure(self, rate_limit_delay: float):
         """
