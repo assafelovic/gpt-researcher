@@ -74,6 +74,26 @@ NO_SUPPORT_TEMPERATURE_MODELS = [
     "claude-haiku-4-5-20251001",
 ]
 
+# Claude Opus 4.7 and later, the Claude 5 family, Fable and Mythos reject temperature with a 400.
+# Matched as prefixes so new versions are covered.
+NO_SUPPORT_TEMPERATURE_MODEL_PREFIXES = (
+    "claude-opus-4-7",
+    "claude-opus-4-8",
+    "claude-opus-5",
+    "claude-sonnet-5",
+    "claude-haiku-5",
+    "claude-fable",
+    "claude-mythos",
+)
+
+
+def supports_temperature(model: str) -> bool:
+    if model in NO_SUPPORT_TEMPERATURE_MODELS:
+        return False
+    # drop provider prefixes: "anthropic/claude-..." (OpenRouter) and "us.anthropic.claude-..." (Bedrock)
+    name = model.rsplit("/", 1)[-1].split("anthropic.", 1)[-1]
+    return not name.startswith(NO_SUPPORT_TEMPERATURE_MODEL_PREFIXES)
+
 SUPPORT_REASONING_EFFORT_MODELS = [
     "o3-mini",
     "o3-mini-2025-01-31",
