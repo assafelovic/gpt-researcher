@@ -4,7 +4,7 @@ import tempfile
 
 from gpt_researcher.utils.url_security import UnsafeURLError, validate_url
 from langchain_community.document_loaders import (
-    PyMuPDFLoader,
+    PyPDFLoader,
     TextLoader,
     UnstructuredCSVLoader,
     UnstructuredExcelLoader,
@@ -72,7 +72,7 @@ class OnlineDocumentLoader:
         ret_data = []
         try:
             loader_dict = {
-                "pdf": PyMuPDFLoader(file_path),
+                "pdf": PyPDFLoader(file_path),
                 "txt": TextLoader(file_path),
                 "doc": UnstructuredWordDocumentLoader(file_path),
                 "docx": UnstructuredWordDocumentLoader(file_path),

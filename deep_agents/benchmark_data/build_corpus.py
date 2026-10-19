@@ -21,28 +21,40 @@ Usage: python deep_agents/benchmark_data/build_corpus.py
 import shutil
 from pathlib import Path
 
-import pymupdf
 from docx import Document
+from pypdf import PdfWriter
+from pypdf.generic import DecodedStreamObject, DictionaryObject, NameObject
 
 SRC = Path(__file__).parent / "internal_docs_src"
 OUT = Path(__file__).parent / "internal_docs"
 
 
 def write_pdf(text: str, path: Path) -> None:
-    doc = pymupdf.open()
+    doc = PdfWriter()
+    font = doc._add_object(DictionaryObject({
+        NameObject("/Type"): NameObject("/Font"),
+        NameObject("/Subtype"): NameObject("/Type1"),
+        NameObject("/BaseFont"): NameObject("/Helvetica"),
+        NameObject("/Encoding"): NameObject("/WinAnsiEncoding"),
+    }))
     lines = text.splitlines()
     per_page = 52
     for start in range(0, len(lines), per_page):
-        page = doc.new_page()
-        page.insert_text(
-            (54, 60),
-            "\n".join(lines[start : start + per_page]),
-            fontsize=10,
-            fontname="helv",
-        )
+        page = doc.add_blank_page(width=595, height=842)
+        page[NameObject("/Resources")] = DictionaryObject({
+            NameObject("/Font"): DictionaryObject({NameObject("/F1"): font})
+        })
+        # Hex strings safely encode parentheses and backslashes in source text.
+        commands = ["BT /F1 10 Tf 14 TL 54 782 Td"]
+        for line in lines[start : start + per_page]:
+            commands.append(f"<{line.encode('cp1252', errors='replace').hex()}> Tj T*")
+        commands.append("ET")
+        stream = DecodedStreamObject()
+        stream.set_data("\n".join(commands).encode("ascii"))
+        page[NameObject("/Contents")] = doc._add_object(stream)
     path.parent.mkdir(parents=True, exist_ok=True)
-    doc.save(str(path))
-    doc.close()
+    with path.open("wb") as output:
+        doc.write(output)
 
 
 def write_docx(text: str, path: Path) -> None:

@@ -6,14 +6,14 @@ PDF links were detected with ``link.endswith(".pdf")``, which:
   * was case-sensitive, so ``.PDF`` was not recognized.
 
 In both cases a real PDF was routed to the configured HTML scraper
-(e.g. BeautifulSoup) instead of PyMuPDFScraper, producing garbage or
+(e.g. BeautifulSoup) instead of PyPDFScraper, producing garbage or
 empty content. These tests pin correct routing.
 """
 
 import unittest
 
 from gpt_researcher.scraper.scraper import Scraper
-from gpt_researcher.scraper import PyMuPDFScraper, BeautifulSoupScraper
+from gpt_researcher.scraper import PyPDFScraper, BeautifulSoupScraper
 
 
 def _scraper():
@@ -22,24 +22,24 @@ def _scraper():
 
 
 class GetScraperPdfDetectionTests(unittest.TestCase):
-    def test_plain_pdf_url_uses_pymupdf(self):
+    def test_plain_pdf_url_uses_pypdf(self):
         s = _scraper()
-        self.assertIs(s.get_scraper("https://example.com/doc.pdf"), PyMuPDFScraper)
+        self.assertIs(s.get_scraper("https://example.com/doc.pdf"), PyPDFScraper)
 
-    def test_pdf_with_query_string_uses_pymupdf(self):
+    def test_pdf_with_query_string_uses_pypdf(self):
         s = _scraper()
         self.assertIs(
             s.get_scraper("https://example.com/doc.pdf?sig=abc123&exp=999"),
-            PyMuPDFScraper,
+            PyPDFScraper,
         )
 
-    def test_pdf_with_fragment_uses_pymupdf(self):
+    def test_pdf_with_fragment_uses_pypdf(self):
         s = _scraper()
-        self.assertIs(s.get_scraper("https://example.com/doc.pdf#page=2"), PyMuPDFScraper)
+        self.assertIs(s.get_scraper("https://example.com/doc.pdf#page=2"), PyPDFScraper)
 
-    def test_uppercase_pdf_extension_uses_pymupdf(self):
+    def test_uppercase_pdf_extension_uses_pypdf(self):
         s = _scraper()
-        self.assertIs(s.get_scraper("https://example.com/REPORT.PDF"), PyMuPDFScraper)
+        self.assertIs(s.get_scraper("https://example.com/REPORT.PDF"), PyPDFScraper)
 
     def test_non_pdf_url_uses_default_scraper(self):
         s = _scraper()
