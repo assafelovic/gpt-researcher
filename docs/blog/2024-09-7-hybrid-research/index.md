@@ -57,7 +57,7 @@ LangChain provides a variety of document loaders that allow us to process differ
 
 ```python
 from langchain_community.document_loaders import (
-    PyMuPDFLoader, 
+    PyPDFLoader,
     TextLoader, 
     UnstructuredCSVLoader, 
     UnstructuredExcelLoader,
@@ -73,7 +73,7 @@ def load_local_documents(file_paths):
     documents = []
     for file_path in file_paths:
         if file_path.endswith('.pdf'):
-            loader = PyMuPDFLoader(file_path)
+            loader = PyPDFLoader(file_path)
         elif file_path.endswith('.txt'):
             loader = TextLoader(file_path)
         elif file_path.endswith('.csv'):
