@@ -2,6 +2,7 @@ import aiofiles
 import asyncio
 import importlib
 import json
+import math
 import subprocess
 import sys
 import traceback
@@ -115,10 +116,24 @@ class ChatLogger:
 
 class GenericLLMProvider:
 
-    def __init__(self, llm, chat_log: str | None = None,  verbose: bool = True):
+    def __init__(self, llm, chat_log: str | None = None, verbose: bool = True,
+                 *, llm_timeout: float | None = None):
         self.llm = llm
         self.chat_logger = ChatLogger(chat_log) if chat_log else None
         self.verbose = verbose
+        timeout = os.getenv("LLM_TIMEOUT", "300") if llm_timeout is None else llm_timeout
+        timeout_error = (
+            "LLM_TIMEOUT / llm_timeout must be a finite, non-negative number "
+            "of seconds (0 disables it)"
+        )
+        try:
+            if isinstance(timeout, bool):
+                raise ValueError
+            self.llm_timeout = float(timeout)
+        except (TypeError, ValueError, OverflowError):
+            raise ValueError(timeout_error) from None
+        if not math.isfinite(self.llm_timeout) or self.llm_timeout < 0:
+            raise ValueError(timeout_error)
         self.last_usage_metadata: dict[str, Any] | None = None
         self.last_response_metadata: dict[str, Any] = {}
 
@@ -143,7 +158,8 @@ class GenericLLMProvider:
             }
 
     @classmethod
-    def from_provider(cls, provider: str, chat_log: str | None = None, verbose: bool=True, **kwargs: Any):
+    def from_provider(cls, provider: str, chat_log: str | None = None, verbose: bool=True,
+                      *, llm_timeout: float | None = None, **kwargs: Any):
         if provider == "openai":
             _check_pkg("langchain_openai")
             from langchain_openai import ChatOpenAI
@@ -355,14 +371,32 @@ class GenericLLMProvider:
             raise ValueError(
                 f"Unsupported {provider}.\n\nSupported model providers are: {supported}"
             )
-        return cls(llm, chat_log, verbose=verbose)
+        return cls(llm, chat_log, verbose=verbose, llm_timeout=llm_timeout)
+
+    async def _await_llm_response(self, awaitable, *, streaming: bool = False):
+        # Limit each wait for the provider, not time spent forwarding output to
+        # the client. A stream may keep producing chunks for longer than this.
+        deadline = asyncio.timeout(self.llm_timeout or None)
+        try:
+            async with deadline:
+                return await awaitable
+        except TimeoutError as exc:
+            if not deadline.expired():
+                # Keep timeout errors raised by the provider itself unchanged.
+                raise
+            waiting_for = "the next stream chunk" if streaming else "a response"
+            raise TimeoutError(
+                f"LLM timed out after {self.llm_timeout:g} seconds waiting for {waiting_for}. "
+                "Increase LLM_TIMEOUT (or llm_kwargs['llm_timeout']) for slower models; "
+                "set it to 0 to disable this timeout."
+            ) from exc
 
 
     async def get_chat_response(self, messages, stream, websocket=None, **kwargs):
         self._reset_last_response_metadata()
         if not stream:
             # Getting output from the model chain using ainvoke for asynchronous invoking
-            output = await self.llm.ainvoke(messages, **kwargs)
+            output = await self._await_llm_response(self.llm.ainvoke(messages, **kwargs))
             self._capture_response_metadata(output)
 
             res = output.content
@@ -380,17 +414,30 @@ class GenericLLMProvider:
         paragraph = ""
         response = ""
 
-        # Streaming the response using the chain astream method from langchain
-        async for chunk in self.llm.astream(messages, **kwargs):
-            self._capture_response_metadata(chunk)
-            content = chunk.content
-            if not content:
-                continue
-            response += content
-            paragraph += content
-            if "\n" in paragraph:
-                await self._send_output(paragraph, websocket)
-                paragraph = ""
+        # Restart the timeout for every chunk, including metadata-only chunks,
+        # so long reports can continue as long as the provider is responding.
+        stream = self.llm.astream(messages, **kwargs)
+        try:
+            while True:
+                try:
+                    chunk = await self._await_llm_response(anext(stream), streaming=True)
+                except StopAsyncIteration:
+                    break
+                self._capture_response_metadata(chunk)
+                content = chunk.content
+                if not content:
+                    continue
+                response += content
+                paragraph += content
+                if "\n" in paragraph:
+                    await self._send_output(paragraph, websocket)
+                    paragraph = ""
+        finally:
+            # Close the provider stream on a timeout, caller cancellation, or
+            # a failed client send as well as on normal exhaustion.
+            close = getattr(stream, "aclose", None)
+            if close is not None:
+                await close()
 
         if paragraph:
             await self._send_output(paragraph, websocket)
