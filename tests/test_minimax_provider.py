@@ -58,6 +58,9 @@ def requests(monkeypatch):
                              "message": {"role": "assistant", "content": "ok"}}],
                 "usage": {"prompt_tokens": 1, "completion_tokens": 1, "total_tokens": 2},
             }
+        thinking = request.url.path.endswith("/messages") and body["model"] == MINIMAX_DEFAULT_MODEL
+        if thinking:
+            response["content"].insert(0, {"type": "thinking", "thinking": "reasoning", "signature": "test"})
         if body.get("stream"):
             if request.url.path.endswith("/messages"):
                 events = [
@@ -68,6 +71,15 @@ def requests(monkeypatch):
                     {"type": "message_delta", "delta": {"stop_reason": "end_turn", "stop_sequence": None}, "usage": {"output_tokens": 1}},
                     {"type": "message_stop"},
                 ]
+                if thinking:
+                    for event in events:
+                        if "index" in event:
+                            event["index"] += 1
+                    events[1:1] = [
+                        {"type": "content_block_start", "index": 0, "content_block": {"type": "thinking", "thinking": "", "signature": ""}},
+                        {"type": "content_block_delta", "index": 0, "delta": {"type": "thinking_delta", "thinking": "reasoning"}},
+                        {"type": "content_block_stop", "index": 0},
+                    ]
                 content = "".join(f"event: {event['type']}\ndata: {json.dumps(event)}\n\n" for event in events)
             else:
                 chunk = {**response, "object": "chat.completion.chunk", "choices": [
