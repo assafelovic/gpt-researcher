@@ -8,7 +8,7 @@ The full example lives in [`deep_agents/`](https://github.com/assafelovic/gpt-re
 
 ## Use case
 
-The LangGraph example wires 8 agents into an explicit state machine. This example produces a similar STORM-style pipeline (plan → parallel section research → review → publish) with far less code, because those behaviors are emergent from the deep agent harness:
+The LangGraph example wires 8 agents into an explicit state machine. This example produces a similar pipeline (plan → parallel section research → review → publish) with far less code, because those behaviors are emergent from the deep agent harness:
 
 | Capability | LangGraph example | Deep Agents example |
 |---|---|---|
@@ -108,7 +108,7 @@ The agent runs on a `FilesystemBackend`, so section drafts and the final `report
 
 ## How to run
 
-Requires Python 3.11+.
+Requires Python 3.12+.
 
 1. Install dependencies from the repository root:
 

@@ -16,8 +16,10 @@ class SearchApiSearch():
         Initializes the SearchApiSearch object
         Args:
             query:
+            query_domains: Optional list of domains to restrict the search to
         """
         self.query = query
+        self.query_domains = query_domains or None
         self.api_key = self.get_api_key()
 
     def get_api_key(self):
@@ -39,13 +41,19 @@ class SearchApiSearch():
         Returns:
 
         """
-        print("SearchApiSearch: Searching with query {0}...".format(self.query))
         """Useful for general internet search queries using SearchApi."""
+        # Restrict to the requested domains, the same way the google and serper
+        # retrievers do; without this the filter was accepted and ignored.
+        search_query = self.query
+        if self.query_domains and len(self.query_domains) > 0:
+            domain_query = " OR ".join([f"site:{domain}" for domain in self.query_domains])
+            search_query = f"({domain_query}) {self.query}"
 
+        print("SearchApiSearch: Searching with query {0}...".format(search_query))
 
         url = "https://www.searchapi.io/api/v1/search"
         params = {
-            "q": self.query,
+            "q": search_query,
             "engine": "google",
         }
 
@@ -60,7 +68,16 @@ class SearchApiSearch():
 
         try:
             response = requests.get(encoded_url, headers=headers, timeout=20)
-            if response.status_code == 200:
+            if response.status_code != 200:
+                # A failed call previously returned an empty list with nothing
+                # logged, so an expired key looked like "no results found".
+                logging.getLogger(__name__).warning(
+                    "SearchApiSearch: request failed with status %s (%s). "
+                    "Returning empty response.",
+                    response.status_code,
+                    response.text[:200],
+                )
+            else:
                 search_results = response.json() or {}
                 # ``organic_results`` may be absent (e.g. no matches, an error
                 # payload, or a non-google engine response). Default to [] so a

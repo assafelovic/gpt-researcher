@@ -63,7 +63,12 @@ class BingSearch():
             "safeSearch": "Strict"
         }
 
-        resp = requests.get(url, headers=headers, params=params)
+        try:
+            resp = requests.get(url, headers=headers, params=params, timeout=20)
+            resp.raise_for_status()
+        except requests.RequestException as exc:
+            self.logger.error(f"Bing search request failed: {exc}")
+            return []
 
         # Preprocess the results
         if resp is None:

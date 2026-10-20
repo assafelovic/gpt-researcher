@@ -11,21 +11,28 @@ class ResearchAgent:
         self.tone = tone
 
     async def research(self, query: str, research_report: str = "research_report",
-                       parent_query: str = "", verbose=True, source="web", tone=None, headers=None):
+                       parent_query: str = "", verbose=True, source="web", tone=None, headers=None,
+                       existing_headers=None):
         # Initialize the researcher
         researcher = GPTResearcher(query=query, report_type=research_report, parent_query=parent_query,
                                    verbose=verbose, report_source=source, tone=tone, websocket=self.websocket, headers=self.headers)
         # Conduct research on the given query
         await researcher.conduct_research()
         # Write the report
-        report = await researcher.write_report()
+        report = await researcher.write_report(existing_headers=existing_headers or [])
 
         return report
 
-    async def run_subtopic_research(self, parent_query: str, subtopic: str, verbose: bool = True, source="web", headers=None):
+    async def run_subtopic_research(self, parent_query: str, subtopic: str, verbose: bool = True, source="web",
+                                    headers=None, sibling_sections=None):
+        existing_headers = [
+            {"subtopic task": section, "note": "covered by another section of this report"}
+            for section in (sibling_sections or [])
+        ]
         try:
             report = await self.research(parent_query=parent_query, query=subtopic,
-                                         research_report="subtopic_report", verbose=verbose, source=source, tone=self.tone, headers=None)
+                                         research_report="subtopic_report", verbose=verbose, source=source, tone=self.tone, headers=None,
+                                         existing_headers=existing_headers)
         except Exception as e:
             print(f"{Fore.RED}Error in researching topic {subtopic}: {e}{Style.RESET_ALL}")
             report = None
@@ -54,5 +61,6 @@ class ResearchAgent:
         else:
             print_agent_output(f"Running in depth research on the following report topic: {topic}", agent="RESEARCHER")
         research_draft = await self.run_subtopic_research(parent_query=parent_query, subtopic=topic,
-                                                          verbose=verbose, source=source, headers=self.headers)
+                                                          verbose=verbose, source=source, headers=self.headers,
+                                                          sibling_sections=draft_state.get("sibling_sections"))
         return {"draft": research_draft}

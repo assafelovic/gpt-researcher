@@ -13,7 +13,7 @@ Before you begin, ensure you have the following:
 - Python 3.10 or higher installed on your system
 - pip (Python package installer)
 - An OpenAI API key (you can also choose other supported [LLMs](../gpt-researcher/llms/llms.md))
-- A Tavily API key (you can also choose other supported [Retrievers](../gpt-researcher/search-engines/retrievers.md))
+- A Tavily API key (you can also choose other supported [Retrievers](../gpt-researcher/search-engines/search-engines.md))
 
 ## Installation
 

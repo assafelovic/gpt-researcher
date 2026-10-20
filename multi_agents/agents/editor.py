@@ -72,7 +72,7 @@ class EditorAgent:
 
         final_drafts = [
             chain.ainvoke(self._create_task_input(
-                research_state, query, title), config={"tags": ["gpt-researcher"]})
+                research_state, query, title, queries), config={"tags": ["gpt-researcher"]})
             for query in queries
         ]
         research_results = [
@@ -178,11 +178,15 @@ class EditorAgent:
                 agent="EDITOR",
             )
 
-    def _create_task_input(self, research_state: Dict[str, any], query: str, title: str) -> Dict[str, any]:
+    def _create_task_input(self, research_state: Dict[str, any], query: str, title: str,
+                           sections: Optional[List[str]] = None) -> Dict[str, any]:
         """Create the input for a single research task."""
         return {
             "task": research_state.get("task"),
             "topic": query,
             "title": title,
             "headers": self.headers,
+            # Sections are researched in parallel, so none can see what the others
+            # wrote. Naming them lets each writer leave their ground alone (#1495).
+            "sibling_sections": [s for s in (sections or []) if s != query],
         }

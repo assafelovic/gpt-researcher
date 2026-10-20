@@ -53,3 +53,12 @@ server_log.txt
 CURSOR_RULES.md
 /.claude/worktrees/
 /.history
+
+# Maintainer-local triage notes and editor settings :-)
+/.triage/
+/ISSUE_BACKLOG.md
+/PR_pr_*.md
+.vscode/settings.json
+
+# Local context filter benchmark inputs (scraped pages)
+/evals/context_filter/runs/

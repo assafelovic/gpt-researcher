@@ -851,7 +851,8 @@ const GPTResearcher = (() => {
     // Update WebSocket status
     updateWebSocketStatus();
 
-    socket = new WebSocket(ws_uri)
+    const thisSocket = new WebSocket(ws_uri)
+    socket = thisSocket
     let reportContent = ''; // Store the report content for history
     let downloadLinkData = null; // Store download links
 
@@ -1011,8 +1012,10 @@ const GPTResearcher = (() => {
 
       console.log("WebSocket connection closed", event);
 
-      // If research is active, try to automatically reconnect
-      if (isResearchActive) {
+      // Only reconnect if this is still the live socket. A socket replaced by a
+      // new research run closes after that run has set isResearchActive, and
+      // reconnecting it would open a second connection competing for the run.
+      if (isResearchActive && thisSocket === socket) {
         reconnectWebSocket();
       }
     }
@@ -1026,8 +1029,9 @@ const GPTResearcher = (() => {
     return () => {
       try {
         isResearchActive = false; // Mark research as inactive
-        if (socket && socket.readyState !== WebSocket.CLOSED && socket.readyState !== WebSocket.CLOSING) {
-          socket.close();
+        thisSocket.onclose = null;
+        if (thisSocket.readyState !== WebSocket.CLOSED && thisSocket.readyState !== WebSocket.CLOSING) {
+          thisSocket.close();
         }
 
         // Update metrics on socket disposal

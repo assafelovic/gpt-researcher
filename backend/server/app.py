@@ -411,12 +411,11 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         await handle_websocket_communication(websocket, manager)
     except WebSocketDisconnect as e:
-        # Disconnect with more detailed logging about the WebSocket disconnect reason
         logger.info(f"WebSocket disconnected with code {e.code} and reason: '{e.reason}'")
-        await manager.disconnect(websocket)
     except Exception as e:
-        # More general exception handling
         logger.error(f"Unexpected WebSocket error: {str(e)}")
+    finally:
+        # Release the connection's queue and sender task however the loop ended.
         await manager.disconnect(websocket)
 
 @app.post("/api/chat")

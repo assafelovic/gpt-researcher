@@ -40,6 +40,7 @@
         'gpt-researcher/gptr/image_generation',
         'gpt-researcher/gptr/ai-development',
         'gpt-researcher/gptr/config',
+        'gpt-researcher/gptr/context-filter',
         'gpt-researcher/gptr/scraping',
         'gpt-researcher/gptr/querying-the-backend',
         'gpt-researcher/gptr/automated-tests',
@@ -106,6 +107,7 @@
       collapsed: true,
       items: [
         'gpt-researcher/search-engines/search-engines',
+        'gpt-researcher/search-engines/retriever-plugins',
         'gpt-researcher/retrievers/mcp-configs',
         'gpt-researcher/search-engines/test-your-retriever',
         ]

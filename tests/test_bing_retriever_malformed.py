@@ -1,8 +1,8 @@
-"""Regression tests for BingSearch result normalization.
+"""Regression tests for BingSearch result normalization and request handling.
 
-Without the fix, a single non-dict or null result raises AttributeError that
-aborts the whole ``search()`` call, and a response without a ``webPages``
-block should return [].
+Without the normalization guards, a single non-dict or null result raises
+AttributeError that aborts the whole ``search()`` call. Request failures should
+also degrade to an empty result instead of escaping the retriever boundary.
 """
 import importlib.util
 import json
@@ -25,6 +25,9 @@ BingSearch = _bing.BingSearch
 class _FakeResp:
     def __init__(self, payload):
         self.text = json.dumps(payload)
+
+    def raise_for_status(self):
+        return None
 
 
 @patch.dict(os.environ, {"BING_API_KEY": "test-key"})
@@ -71,4 +74,31 @@ def test_bing_skips_non_dict_and_empty_url():
 @patch.dict(os.environ, {"BING_API_KEY": "test-key"})
 def test_bing_no_webpages_returns_empty():
     with patch.object(_bing.requests, "get", return_value=_FakeResp({})):
+        assert BingSearch("q").search() == []
+
+
+@patch.dict(os.environ, {"BING_API_KEY": "test-key"})
+def test_bing_request_uses_timeout():
+    response = _FakeResp({"webPages": {"value": []}})
+    with patch.object(_bing.requests, "get", return_value=response) as get:
+        BingSearch("q").search()
+
+    assert get.call_args.kwargs["timeout"] == 20
+
+
+@patch.dict(os.environ, {"BING_API_KEY": "test-key"})
+def test_bing_request_exception_returns_empty():
+    error = _bing.requests.RequestException("network down")
+    with patch.object(_bing.requests, "get", side_effect=error):
+        assert BingSearch("q").search() == []
+
+
+@patch.dict(os.environ, {"BING_API_KEY": "test-key"})
+def test_bing_http_error_returns_empty():
+    response = _FakeResp({"webPages": {"value": []}})
+    response.raise_for_status = lambda: (_ for _ in ()).throw(
+        _bing.requests.RequestException("bad status")
+    )
+
+    with patch.object(_bing.requests, "get", return_value=response):
         assert BingSearch("q").search() == []

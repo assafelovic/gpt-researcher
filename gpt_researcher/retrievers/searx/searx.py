@@ -78,7 +78,8 @@ class SearxSearch():
             response = requests.get(
                 search_url,
                 params=params,
-                headers={'Accept': 'application/json'}
+                headers={'Accept': 'application/json'},
+                timeout=20,
             )
             response.raise_for_status()
             results = response.json()

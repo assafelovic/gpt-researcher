@@ -21,14 +21,15 @@
 [English](README.md) |
 [中文](README-zh_CN.md) |
 [日本語](README-ja_JP.md) |
-[한국어](README-ko_KR.md)
+[한국어](README-ko_KR.md) |
+[Русский](README-ru_RU.md)
 </div>
 
 # 🔎 GPT Researcher
 
 **GPT Researcher는 다양한 작업을 대해 포괄적인 온라인 연구를 수행하도록 설계된 자율 에이전트입니다.**
 
-이 에이전트는 세부적이고 사실에 기반하며 편견 없는 연구 보고서를 생성할 수 있으며, 관련 리소스와 개요에 초점을 맞춘 맞춤형 옵션을 제공합니다.  최근 발표된 [Plan-and-Solve](https://arxiv.org/abs/2305.04091) 및 [RAG](https://arxiv.org/abs/2005.11401) 논문에서 영감을 받아 GPT Researcher는 잘못된 정보, 속도, 결정론적 접근 방식, 신뢰성 문제를 해결하고, 동기화 작업이 아닌 병렬 에이전트 작업을 통해 더 안정적이고 빠른 성능을 제공합니다.
+이 에이전트는 세부적이고 사실에 기반하며 편견 없는 연구 보고서를 생성할 수 있으며, 관련 리소스와 개요에 초점을 맞춘 맞춤형 옵션을 제공합니다.  GPT Researcher는 RAG를 훨씬 넘어섭니다. 계획 에이전트와 실행 에이전트가 각 작업을 연구 질문으로 나누고, [의사결정 모델](https://docs.gptr.dev/docs/gpt-researcher/gptr/context-filter)이 질문에 실제로 유용한 컨텍스트만 남기며, [멀티 에이전트](https://docs.gptr.dev/docs/gpt-researcher/multi_agents/langgraph) 워크플로가 계획부터 출판까지 전문 에이전트들을 조율하고, [재귀적 딥 리서치](https://docs.gptr.dev/docs/gpt-researcher/gptr/deep_research)가 주제를 폭과 깊이 모두에서 탐구합니다. 연구는 병렬로 실행되어 빠르고 안정적이며 신뢰할 수 있고, 잘못된 정보를 줄여 줍니다.
 
 **우리의 목표는 AI의 힘을 활용하여 개인과 조직에게 정확하고 편향 없는 사실에 기반한 정보를 제공하는 것입니다.**
 
@@ -85,7 +86,7 @@ https://github.com/user-attachments/assets/092e9e71-7e27-475d-8c4f-9dddd28934a3
 
 ## ⚙️ 시작하기
 ### 설치
-> **1단계** - Python 3.11 또는 그 이상의 버전을 설치하세요. [여기](https://www.tutorialsteacher.com/python/install-python)를 참조하여 단계별 가이드를 확인하세요.
+> **1단계** - Python 3.12 또는 그 이상의 버전을 설치하세요. [여기](https://www.tutorialsteacher.com/python/install-python)를 참조하여 단계별 가이드를 확인하세요.
 
 > **2단계** - 프로젝트를 다운로드하고 해당 디렉토리로 이동하세요.
 
@@ -204,7 +205,7 @@ export DOC_PATH="./my-docs"
 
 AI가 프롬프트 엔지니어링 및 RAG에서 다중 에이전트 시스템으로 발전함에 따라, 우리는 [LangGraph](https://python.langchain.com/v0.1/docs/langgraph/)로 구축된 새로운 다중 에이전트 어시스턴트를 소개합니다.
 
-LangGraph를 사용하면 여러 에이전트의 전문 기술을 활용하여 연구 과정의 깊이와 질을 크게 향상시킬 수 있습니다. 최근 [STORM](https://arxiv.org/abs/2402.14207) 논문에서 영감을 받아, 이 프로젝트는 AI 에이전트 팀이 주제에 대한 연구를 계획에서 출판까지 함께 수행하는 방법을 보여줍니다.
+LangGraph를 사용하면 여러 에이전트의 전문 기술을 활용하여 연구 과정의 깊이와 질을 크게 향상시킬 수 있습니다. 이 프로젝트는 AI 에이전트 팀이 주제에 대한 연구를 계획에서 출판까지 함께 수행하는 방법을 보여줍니다.
 
 평균 실행은 5-6 페이지 분량의 연구 보고서를 PDF, Docx, Markdown 형식으로 생성합니다.
 
@@ -252,11 +253,11 @@ GPT-Researcher는 사용자 경험을 개선하고 연구 프로세스를 간소
 ---
 
 <p align="center">
-<a href="https://star-history.dera.page/#assafelovic/gpt-researcher">
+<a href="https://star-history.com/#assafelovic/gpt-researcher">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://star-history.dera.page/svg?repos=assafelovic/gpt-researcher&type=Date&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://star-history.dera.page/svg?repos=assafelovic/gpt-researcher&type=Date" />
-    <img alt="Star History Chart" src="https://star-history.dera.page/svg?repos=assafelovic/gpt-researcher&type=Date" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=assafelovic/gpt-researcher&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=assafelovic/gpt-researcher&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=assafelovic/gpt-researcher&type=Date" />
   </picture>
 </a>
 </p>

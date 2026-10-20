@@ -9,6 +9,10 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
+    # Only touch a requirement when the new release falls outside its range.
+    # The default strategy raises lower bounds (e.g. pandas>=2 -> >=3.0.5),
+    # which forces upgrades on every downstream install of the library. :-)
+    versioning-strategy: increase-if-necessary
   - package-ecosystem: "docker"
     directory: "/"
     schedule:

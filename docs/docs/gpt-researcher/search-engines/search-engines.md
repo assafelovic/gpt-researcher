@@ -49,6 +49,8 @@ Thanks to our community, we have integrated the following web search engines and
 - [Xquik](https://xquik.com/) - Env: `RETRIEVER=xquik` and `XQUIK_API_KEY`
 - [MCP](../retrievers/mcp-configs) - Env: `RETRIEVER=mcp`
 
+Other search providers can be installed as separate packages. See [Retriever Plugins](./retriever-plugins.md).
+
 ## Custom Retrievers
 
 You can also use any custom retriever of your choice by specifying the `RETRIEVER=custom` env var.

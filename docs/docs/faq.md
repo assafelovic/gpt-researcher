@@ -11,7 +11,7 @@ You can also check out demos and examples for inspiration [here](/docs/examples/
 
 GPT Researcher is a popular open source autonomous research agent that takes care of the tedious task of research for you, by scraping, filtering and aggregating over 20+ web sources per a single research task.
 
-GPT Researcher is built with best practices for leveraging LLMs (prompt engineering, RAG, chains, embeddings, etc), and is optimized for quick and efficient research. It is also fully customizable and can be tailored to your specific needs.
+GPT Researcher goes well beyond RAG: it combines planner and execution agents, decision models that keep only the most useful context, multi-agent workflows and recursive deep research, and is optimized for quick and efficient research. It is also fully customizable and can be tailored to your specific needs.
 
 To learn more about GPT Researcher, check out the [documentation page](/docs/gpt-researcher/getting-started/introduction).
 
@@ -23,7 +23,7 @@ A research task using GPT Researcher costs around $0.01 per a single run (for GP
 
 we do our best to ensure that the information we provide is factual and accurate. We do this by using multiple sources, and by using proprietary AI to score and rank the most relevant and accurate information. We also use proprietary AI to filter out irrelevant information and sources.
 
-Lastly, by using RAG and other techniques, we ensure that the information is relevant to the context of the research task, leading to more accurate generative AI content and reduced hallucinations.
+Lastly, decision models score every scraped passage for how useful it is to the research task and keep only the best ones, leading to more accurate generative AI content and reduced hallucinations.
 
 ### What are your plans for the future?
 

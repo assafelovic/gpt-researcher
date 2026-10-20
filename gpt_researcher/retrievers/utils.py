@@ -100,8 +100,21 @@ def get_all_retriever_names():
             item for item in all_items 
             if os.path.isdir(os.path.join(current_dir, item)) and not item.startswith('__')
         ]
-        
-        return retrievers
     except Exception as e:
         logger.error(f"Error getting retrievers: {e}")
-        return VALID_RETRIEVERS
+        retrievers = list(VALID_RETRIEVERS)
+
+    return retrievers + [name for name in get_plugin_retriever_names() if name not in retrievers]
+
+
+def get_plugin_retriever_names():
+    """Names of retrievers that installed packages register as plugins."""
+    from importlib.metadata import entry_points
+
+    from gpt_researcher.actions.retriever import RETRIEVER_ENTRY_POINT_GROUP
+
+    try:
+        return sorted({ep.name for ep in entry_points(group=RETRIEVER_ENTRY_POINT_GROUP)})
+    except Exception as e:
+        logger.error(f"Error discovering retriever plugins: {e}")
+        return []

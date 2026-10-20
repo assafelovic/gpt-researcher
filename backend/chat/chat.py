@@ -1,14 +1,11 @@
 import logging
 import os
-import uuid
 import json
 from fastapi import WebSocket
 from typing import List, Dict, Any
 
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import InMemoryVectorStore
-from gpt_researcher.memory import Memory
 from gpt_researcher.config.config import Config
+from gpt_researcher.context.select import select_context
 from gpt_researcher.utils.llm import create_chat_completion
 from gpt_researcher.utils.tools import create_chat_completion_with_tools, create_search_tool
 try:
@@ -81,64 +78,13 @@ class ChatAgentWithMemory:
             else:
                 logger.warning("TAVILY_API_KEY not set - web search in chat will be disabled")
         
-        # Process document and create vector store if not provided
-        if not self.vector_store and self.report:
-            self._setup_vector_store()
-        elif self.vector_store is not None and self.retriever is None:
-            # Allow callers to inject a store; build a retriever with supported kwargs.
+        # A caller-supplied vector store is theirs to query. Otherwise the report
+        # goes through the same context filter as research (CONTEXT_FILTER).
+        if self.vector_store is not None:
             try:
                 self.retriever = self.vector_store.as_retriever(search_kwargs={"k": 4})
             except TypeError:
                 self.retriever = self.vector_store.as_retriever()
-    
-    def _setup_vector_store(self):
-        """Setup vector store for document retrieval"""
-        # Process document into chunks
-        documents = self._process_document(self.report)
-        if not documents:
-            return
-        
-        # Create unique thread ID
-        self.thread_id = str(uuid.uuid4())
-        
-        # Setup embeddings and vector store using the agent config_path.
-        # Embedding construction can fail eagerly (e.g. OpenAI embeddings raise
-        # at init when OPENAI_API_KEY is unset), so fall back to no-RAG / full
-        # report mode instead of leaving chat broken for that message.
-        cfg = self.config
-        try:
-            self.embedding = Memory(
-                cfg.embedding_provider,
-                cfg.embedding_model,
-                **cfg.embedding_kwargs
-            ).get_embeddings()
-
-            # Create vector store and retriever
-            self.vector_store = InMemoryVectorStore(self.embedding)
-            self.vector_store.add_texts(documents)
-            try:
-                self.retriever = self.vector_store.as_retriever(search_kwargs={"k": 4})
-            except TypeError:
-                # Older langchain APIs accepted k= directly; prefer kwargs form.
-                self.retriever = self.vector_store.as_retriever(k=4)
-        except Exception as exc:  # noqa: BLE001 - embeddings must not break chat
-            logger.warning(
-                f"Vector store setup failed, using full report (no RAG): {exc}"
-            )
-            self.embedding = None
-            self.vector_store = None
-            self.retriever = None
-        
-    def _process_document(self, report):
-        """Split Report into Chunks"""
-        text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=1024,
-            chunk_overlap=20,
-            length_function=len,
-            is_separator_regex=False,
-        )
-        documents = text_splitter.split_text(report)
-        return documents
 
     def quick_search(self, query):
         """Perform a web search for current information using Tavily"""
@@ -160,29 +106,50 @@ class ChatAgentWithMemory:
             results = self.tavily_client.search(query=query, max_results=5)
             
             # Store search metadata for frontend
-            self.search_metadata = {
-                "query": query,
-                "sources": [
-                    {"title": result.get("title", ""), 
-                     "url": result.get("url", ""),
-                     "content": result.get("content", "")[:200] + "..." if len(result.get("content", "")) > 200 else result.get("content", "")}
-                    for result in results.get("results", [])
-                ]
-            }
+            self.search_metadata = self._build_search_metadata(query, results)
             
             return results
         except Exception as e:
             logger.error(f"Error performing web search: {str(e)}", exc_info=True)
-            return {
+            results = {
                 "error": str(e),
                 "results": []
             }
+            self.search_metadata = self._build_search_metadata(query, results)
+            return results
+
+    @staticmethod
+    def _build_search_metadata(query, results):
+        """Describe one search result without making another provider request."""
+        metadata = {"query": query, "sources": []}
+        for result in results.get("results", []):
+            content = result.get("content", "")
+            metadata["sources"].append({
+                "title": result.get("title", ""),
+                "url": result.get("url", ""),
+                "content": content[:200] + "..." if len(content) > 200 else content,
+            })
+        if "error" in results:
+            metadata["error"] = results["error"]
+        return metadata
 
 
     async def process_chat_completion(self, messages: List[Dict[str, str]]):
         """Process chat completion using configured LLM provider with tool calling support"""
-        # Create a search tool using the utility function
-        search_tool = create_search_tool(self.quick_search)
+        processed_metadata = []
+
+        def search_with_metadata(query):
+            results = self.quick_search(query)
+            # Keep sources local to this completion and tied to the evidence
+            # returned to the model, including repeated queries and failures.
+            processed_metadata.append({
+                "tool": "quick_search",
+                "query": query,
+                "search_metadata": self._build_search_metadata(query, results),
+            })
+            return results
+
+        search_tool = create_search_tool(search_with_metadata)
         
         # Use the tool-enabled chat completion utility
         response, tool_calls_metadata = await create_chat_completion_with_tools(
@@ -193,50 +160,39 @@ class ChatAgentWithMemory:
             llm_kwargs=self.config.llm_kwargs,
         )
         
-        # Process metadata to match the expected format for the chat system
-        processed_metadata = []
-        for metadata in tool_calls_metadata:
-            if metadata.get("tool") == "search_tool":
-                # Extract query from args
-                query = metadata.get("args", {}).get("query", "")
-                
-                # Trigger search again to get metadata (the search was already executed by LangChain)
-                if query:
-                    self.quick_search(query)  # This populates self.search_metadata
-                    
-                processed_metadata.append({
-                    "tool": "quick_search",
-                    "query": query,
-                    "search_metadata": self.search_metadata
-                })
-        
-        return response, processed_metadata
+        # The utility returns no tool metadata when it falls back to a plain
+        # completion; that answer was not generated from these search results.
+        return response, processed_metadata if tool_calls_metadata else []
 
 
 
-    def _retrieve_context(self, user_message: str) -> str:
-        """Return top retrieved report chunks for the latest user message.
+    async def _retrieve_context(self, user_message: str) -> str:
+        """The parts of the report relevant to the latest user message.
 
-        Falls back to the full report when retrieval is unavailable so chat stays
-        usable offline / without embeddings.
+        Uses the injected vector store when there is one, otherwise the same
+        context filter research uses. Falls back to the full report, so chat
+        always has something to answer from.
         """
-        if not self.retriever or not user_message:
+        if not self.report or not user_message:
             return self.report or ""
+        if self.retriever is not None:
+            try:
+                docs = self.retriever.invoke(user_message)
+                chunks = [str(getattr(d, "page_content", "") or "") for d in docs or []]
+                if any(chunks):
+                    return "\n\n".join(c for c in chunks if c)
+            except Exception as exc:  # noqa: BLE001 - retrieval must not break chat
+                logger.warning(f"Report retrieval failed, using the context filter: {exc}")
         try:
-            docs = self.retriever.invoke(user_message)
-        except Exception as exc:  # noqa: BLE001 - retrieval must not break chat
-            logger.warning(f"Report retrieval failed, using full report: {exc}")
-            return self.report or ""
-        chunks = []
-        for doc in docs or []:
-            content = getattr(doc, "page_content", None)
-            if content is None and isinstance(doc, dict):
-                content = doc.get("page_content") or doc.get("content")
-            if content:
-                chunks.append(str(content))
-        if not chunks:
-            return self.report or ""
-        return "\n\n".join(chunks)
+            context = await select_context(
+                user_message,
+                [{"url": "report", "title": "Research report", "raw_content": self.report}],
+                self.config,
+            )
+        except Exception as exc:  # noqa: BLE001 - chat must keep working
+            logger.warning(f"Report context selection failed, using full report: {exc}")
+            return self.report
+        return context or self.report
 
     async def chat(self, messages, websocket=None):
         """Chat with configured LLM provider (supports OpenAI, Google Gemini, Anthropic, etc.)
@@ -256,7 +212,7 @@ class ChatAgentWithMemory:
                 if isinstance(msg, dict) and msg.get("role") == "user" and msg.get("content"):
                     last_user = str(msg.get("content"))
                     break
-            report_context = self._retrieve_context(last_user)
+            report_context = await self._retrieve_context(last_user)
 
             # Format system prompt with the report context
             system_prompt = f"""

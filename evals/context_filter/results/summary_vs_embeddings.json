@@ -1,0 +1,98 @@
+[
+ {
+  "strategy": "embeddings",
+  "runs": 28,
+  "errors": 0,
+  "simpleqa_correct": 18,
+  "simpleqa_incorrect": 2,
+  "simpleqa_not_attempted": 0,
+  "simpleqa_n": 20,
+  "precision": 0.457,
+  "pairwise_vs_embeddings": null,
+  "median_filter_seconds": 1.04,
+  "median_context_tokens": 7627.0,
+  "median_write_seconds": 44.85,
+  "mean_filter_cost": 0.00282,
+  "mean_write_cost": 0.1139
+ },
+ {
+  "strategy": "jev",
+  "runs": 28,
+  "errors": 0,
+  "simpleqa_correct": 19,
+  "simpleqa_incorrect": 1,
+  "simpleqa_not_attempted": 0,
+  "simpleqa_n": 20,
+  "precision": 0.728,
+  "pairwise_vs_embeddings": {
+   "win": 15,
+   "tie": 10,
+   "loss": 3
+  },
+  "median_filter_seconds": 2.425,
+  "median_context_tokens": 4480.0,
+  "median_write_seconds": 45.730000000000004,
+  "mean_filter_cost": 0.00542,
+  "mean_write_cost": 0.1096
+ },
+ {
+  "strategy": "jev_top10",
+  "runs": 28,
+  "errors": 0,
+  "simpleqa_correct": 19,
+  "simpleqa_incorrect": 1,
+  "simpleqa_not_attempted": 0,
+  "simpleqa_n": 20,
+  "precision": 0.502,
+  "pairwise_vs_embeddings": {
+   "win": 13,
+   "tie": 10,
+   "loss": 5
+  },
+  "median_filter_seconds": 2.6950000000000003,
+  "median_context_tokens": 8556.5,
+  "median_write_seconds": 49.225,
+  "mean_filter_cost": 0.00542,
+  "mean_write_cost": 0.1187
+ },
+ {
+  "strategy": "none",
+  "runs": 28,
+  "errors": 0,
+  "simpleqa_correct": 20,
+  "simpleqa_incorrect": 0,
+  "simpleqa_not_attempted": 0,
+  "simpleqa_n": 20,
+  "precision": null,
+  "pairwise_vs_embeddings": {
+   "win": 13,
+   "tie": 11,
+   "loss": 4
+  },
+  "median_filter_seconds": 0.0,
+  "median_context_tokens": 33439.5,
+  "median_write_seconds": 45.96,
+  "mean_filter_cost": 0,
+  "mean_write_cost": 0.192
+ },
+ {
+  "strategy": "truncate",
+  "runs": 28,
+  "errors": 0,
+  "simpleqa_correct": 19,
+  "simpleqa_incorrect": 1,
+  "simpleqa_not_attempted": 0,
+  "simpleqa_n": 20,
+  "precision": 0.325,
+  "pairwise_vs_embeddings": {
+   "win": 7,
+   "tie": 8,
+   "loss": 13
+  },
+  "median_filter_seconds": 0.005,
+  "median_context_tokens": 7980.5,
+  "median_write_seconds": 47.165,
+  "mean_filter_cost": 0,
+  "mean_write_cost": 0.1172
+ }
+]

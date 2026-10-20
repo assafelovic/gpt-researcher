@@ -1,3 +1,4 @@
+import json
 from types import SimpleNamespace
 
 import pytest
@@ -132,6 +133,29 @@ def test_parse_search_queries_response_accepts_uppercase_json_fence():
 
     assert result
     assert result[0]["query"] == "x"
+
+
+@pytest.mark.parametrize(
+    "blank_item",
+    [
+        {"query": "   ", "researchGoal": "goal"},
+        {"query": "query", "researchGoal": " \t "},
+        {"query": "", "researchGoal": "goal"},
+        {"query": "query", "researchGoal": None},
+    ],
+)
+def test_parse_search_queries_response_rejects_blank_required_fields(blank_item):
+    response = json.dumps([blank_item, {"query": " kept ", "researchGoal": " goal "}])
+
+    result = parse_search_queries_response(response, num_queries=3)
+
+    assert result == [{"query": "kept", "researchGoal": "goal"}]
+
+
+def test_parse_search_queries_response_returns_empty_when_all_fields_blank():
+    response = json.dumps([{"query": "   ", "researchGoal": "goal"}])
+
+    assert parse_search_queries_response(response, num_queries=3) == []
 
 
 @pytest.mark.asyncio

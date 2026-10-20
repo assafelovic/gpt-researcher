@@ -40,7 +40,7 @@ pandas>=2.0.0
 
 # Vector Store & Embeddings
 tiktoken>=0.7.0
-numpy>=2.0.0,<2.3.0
+numpy>=2.0.0,<2.5.0
 
 # Utilities
 aiofiles>=23.2.1
@@ -58,7 +58,7 @@ mistune>=3.0.2
 htmldocx>=0.0.6
 
 # MCP Support (optional)
-mcp>=1.9.1
+mcp>=1.9.1,<2.0.0
 langchain-mcp-adapters>=0.1.0
 
 # Data Handling

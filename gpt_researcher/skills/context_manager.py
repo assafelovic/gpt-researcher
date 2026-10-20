@@ -5,14 +5,15 @@ retrieval, compression, and similarity matching for research queries.
 """
 
 import asyncio
+import logging
 from typing import Dict, List, Optional, Set
 
 from ..actions.utils import stream_output
-from ..context.compression import (
-    ContextCompressor,
-    VectorstoreCompressor,
-    WrittenContentCompressor,
-)
+from ..context.compression import VectorstoreCompressor, WrittenContentCompressor
+from ..context.lexical import rank_written_sections
+from ..context.select import select_context
+
+logger = logging.getLogger(__name__)
 
 
 class ContextManager:
@@ -52,15 +53,14 @@ class ContextManager:
                 self.researcher.websocket,
             )
 
-        context_compressor = ContextCompressor(
-            documents=pages,
-            embeddings=self.researcher.memory.get_embeddings(),
-            similarity_threshold=getattr(self.researcher.cfg, "similarity_threshold", None),
+        return await select_context(
+            query,
+            pages,
+            self.researcher.cfg,
+            max_results=10,
             prompt_family=self.researcher.prompt_family,
-            **self.researcher.kwargs
-        )
-        return await context_compressor.async_get_context(
-            query=query, max_results=10, cost_callback=self.researcher.add_costs
+            cost_callback=self.researcher.add_costs,
+            embeddings=lambda: self.researcher.memory.get_embeddings(),
         )
 
     async def get_similar_content_by_query_with_vectorstore(self, query: str, filter: dict | None) -> str:
@@ -144,9 +144,17 @@ class ContextManager:
                 self.researcher.websocket,
             )
 
+        try:
+            embeddings = self.researcher.memory.get_embeddings()
+        except Exception as e:
+            # No usable embedding model (none configured, or its package or key
+            # is missing): rank the written sections by keywords instead.
+            logger.info(f"Embeddings unavailable ({e}); ranking written content by keywords")
+            return rank_written_sections(query, written_contents, max_results=max_results)
+
         written_content_compressor = WrittenContentCompressor(
             documents=written_contents,
-            embeddings=self.researcher.memory.get_embeddings(),
+            embeddings=embeddings,
             similarity_threshold=similarity_threshold,
             **self.researcher.kwargs
         )

@@ -56,7 +56,7 @@ class TavilySearch:
                 api_key = os.environ["TAVILY_API_KEY"]
             except KeyError:
                 print(
-                    "Tavily API key not found, set to blank. If you need a retriver, please set the TAVILY_API_KEY environment variable."
+                    "Tavily API key not found, set to blank. If you need a retriever, please set the TAVILY_API_KEY environment variable."
                 )
                 return ""
         return api_key

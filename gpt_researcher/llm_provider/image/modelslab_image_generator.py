@@ -99,7 +99,7 @@ class ModelsLabImageGeneratorProvider:
                             return body["output"]
                         if body.get("status") == "error":
                             raise RuntimeError(
-                                body.get("messege", "ModelsLab generation error")
+                                body.get("message") or body.get("messege") or "ModelsLab generation error"
                             )
         except ImportError:
             import requests
@@ -116,7 +116,7 @@ class ModelsLabImageGeneratorProvider:
                 if body.get("status") == "success" and body.get("output"):
                     return body["output"]
                 if body.get("status") == "error":
-                    raise RuntimeError(body.get("messege", "ModelsLab generation error"))
+                    raise RuntimeError(body.get("message") or body.get("messege") or "ModelsLab generation error")
 
         raise TimeoutError("ModelsLab image generation timed out after polling.")
 
@@ -220,7 +220,7 @@ class ModelsLabImageGeneratorProvider:
             )
 
         if body.get("status") == "error":
-            raise RuntimeError(body.get("messege", "ModelsLab API error"))
+            raise RuntimeError(body.get("message") or body.get("messege") or "ModelsLab API error")
 
         if body.get("status") == "processing" and body.get("id"):
             return await self._poll_for_result(body["id"])

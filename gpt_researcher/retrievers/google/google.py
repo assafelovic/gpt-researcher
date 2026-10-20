@@ -77,7 +77,7 @@ class GoogleSearch:
             }
         )
         url = f"https://www.googleapis.com/customsearch/v1?{query_string}"
-        resp = requests.get(url)
+        resp = requests.get(url, timeout=20)
 
         if resp.status_code < 200 or resp.status_code >= 300:
             print("Google search: unexpected response status: ", resp.status_code)
@@ -101,7 +101,7 @@ class GoogleSearch:
             if not isinstance(result, dict):
                 continue
             link = result.get("link") or ""
-            if not link or "youtube.com" in link:
+            if not link or "youtube.com" in link.lower():
                 continue
             search_response.append(
                 {

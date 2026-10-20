@@ -1,6 +1,6 @@
 ## Detailed Reports
 
-Introducing long and detailed reports, with a completely new architecture inspired by the latest [STORM](https://arxiv.org/abs/2402.14207) paper.
+Introducing long and detailed reports, built by researching each subtopic of the task in depth and combining the results into a single report.
 
 In this method we do the following:
 

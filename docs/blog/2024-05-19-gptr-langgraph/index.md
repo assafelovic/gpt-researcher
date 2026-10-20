@@ -26,7 +26,7 @@ Enough with the smalltalk, let’s start building!
 ## Building the Ultimate Autonomous Research Agent
 By leveraging LangGraph, the research process can be significantly improved in depth and quality by leveraging multiple agents with specialized skills. Having every agent focus and specialize only a specific skill, allows for better separation of concerns, customizability, and further development at scale as the project grows.
 
-Inspired by the recent STORM paper, this example showcases how a team of AI agents can work together to conduct research on a given topic, from planning to publication. This example will also leverage the leading autonomous research agent GPT Researcher.
+This example showcases how a team of AI agents can work together to conduct research on a given topic, from planning to publication. This example will also leverage the leading autonomous research agent GPT Researcher.
 
 ### The Research Agent Team
 The research team consists of seven LLM agents:
