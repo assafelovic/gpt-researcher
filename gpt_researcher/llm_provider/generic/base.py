@@ -10,7 +10,10 @@ from colorama import Fore, Style, init
 import os
 from enum import Enum
 
-from gpt_researcher.llm_provider.minimax import get_minimax_base_url
+from gpt_researcher.llm_provider.minimax import (
+    MINIMAX_DEFAULT_MODEL,
+    get_minimax_base_url,
+)
 
 _SUPPORTED_PROVIDERS = {
     "openai",
@@ -335,6 +338,8 @@ class GenericLLMProvider:
             _check_pkg("langchain_openai")
             from langchain_openai import ChatOpenAI
 
+            if "model" not in kwargs and "model_name" not in kwargs:
+                kwargs["model"] = MINIMAX_DEFAULT_MODEL
             llm = ChatOpenAI(openai_api_base=get_minimax_base_url("openai"),
                      openai_api_key=os.environ["MINIMAX_API_KEY"],
                      **kwargs
@@ -343,6 +348,8 @@ class GenericLLMProvider:
             _check_pkg("langchain_anthropic")
             from langchain_anthropic import ChatAnthropic
 
+            if "model" not in kwargs and "model_name" not in kwargs:
+                kwargs["model"] = MINIMAX_DEFAULT_MODEL
             llm = ChatAnthropic(
                 base_url=get_minimax_base_url("anthropic"),
                 api_key=os.environ["MINIMAX_API_KEY"],

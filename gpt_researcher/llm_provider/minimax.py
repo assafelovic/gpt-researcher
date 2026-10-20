@@ -17,27 +17,37 @@ MINIMAX_ENDPOINTS = {
     },
 }
 
+MINIMAX_DEFAULT_MODEL = "MiniMax-M3.1-Flash"
+
+# Recommended models only; explicit legacy and custom model IDs remain valid.
 MINIMAX_MODEL_SPECS = {
+    MINIMAX_DEFAULT_MODEL: {
+        "context_window": 1_000_000,
+        "max_output_tokens": 524_288,
+        "thinking": ("adaptive",),
+        "reasoning_effort": ("low", "medium", "high", "xhigh", "max"),
+        "pricing_usd_per_million_tokens": {
+            "input": 0.15,
+            "output": 0.60,
+            "cache_read": 0.015,
+            "cache_write": None,
+        },
+    },
     "MiniMax-M3": {
         "context_window": 1_000_000,
         "input_modalities": ("text", "image", "video"),
         "thinking": ("adaptive", "disabled"),
         "pricing_usd_per_million_tokens": {
+            "input": 0.3,
+            "output": 1.2,
+            "cache_read": 0.06,
+            "cache_write": None,
+        },
+        "pricing_above_512k_usd_per_million_tokens": {
             "input": 0.6,
             "output": 2.4,
             "cache_read": 0.12,
             "cache_write": None,
-        },
-    },
-    "MiniMax-M2.7": {
-        "context_window": 204_800,
-        "input_modalities": ("text",),
-        "thinking": ("always_on",),
-        "pricing_usd_per_million_tokens": {
-            "input": 0.3,
-            "output": 1.2,
-            "cache_read": 0.06,
-            "cache_write": 0.375,
         },
     },
 }

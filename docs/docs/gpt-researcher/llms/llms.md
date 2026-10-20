@@ -394,9 +394,9 @@ Set the API key and choose the regional endpoint:
 ```env
 MINIMAX_API_KEY=[Your Key]
 MINIMAX_REGION=global_en
-FAST_LLM=minimax:MiniMax-M3
-SMART_LLM=minimax:MiniMax-M3
-STRATEGIC_LLM=minimax:MiniMax-M3
+FAST_LLM=minimax:MiniMax-M3.1-Flash
+SMART_LLM=minimax:MiniMax-M3.1-Flash
+STRATEGIC_LLM=minimax:MiniMax-M3.1-Flash
 EMBEDDING=minimax:embo-01
 ```
 
@@ -409,21 +409,24 @@ To use the Anthropic-compatible endpoint, set the provider to minimax_anthropic:
 
 ```env
 MINIMAX_REGION=global_en
-FAST_LLM=minimax_anthropic:MiniMax-M3
-SMART_LLM=minimax_anthropic:MiniMax-M3
-STRATEGIC_LLM=minimax_anthropic:MiniMax-M3
+FAST_LLM=minimax_anthropic:MiniMax-M3.1-Flash
+SMART_LLM=minimax_anthropic:MiniMax-M3.1-Flash
+STRATEGIC_LLM=minimax_anthropic:MiniMax-M3.1-Flash
 ```
 
-Available models:
-- MiniMax-M3: 1,000,000-token context; text, image, and video input; adaptive or disabled thinking.
-- MiniMax-M2.7: 204,800-token context; text input; always-on thinking.
-- MiniMax-M2.7-highspeed: existing low-latency variant.
+Recommended models:
+- `MiniMax-M3.1-Flash` (default): 1,000,000-token context, up to 524,288 output tokens, adaptive thinking only.
+- `MiniMax-M3`: 1,000,000-token context; text, image, and video input; adaptive or disabled thinking.
 
-Pricing per million tokens is $0.60 input, $2.40 output, and $0.12 cache reads for MiniMax-M3. MiniMax-M2.7 is $0.30 input, $1.20 output, $0.06 cache reads, and $0.375 cache writes.
+Explicit model IDs in saved configuration and custom requests are passed through unchanged. The MiniMax default applies only when constructing a MiniMax provider without a model; set the environment variables above to select it for research tasks. Embeddings continue to use `embo-01`.
+
+Flash supports `low`, `medium`, `high`, `xhigh`, and `max` effort (default `max`). Use `LLM_KWARGS='{"reasoning_effort":"high"}'` for `minimax`, or `LLM_KWARGS='{"output_config":{"effort":"high"}}'` for `minimax_anthropic`. Do not send disabled thinking, effort `none`, `service_tier`, or `reasoning_split=false` with Flash. M3 ignores effort and defaults to adaptive thinking on the OpenAI-compatible endpoint and disabled thinking on the Anthropic-compatible endpoint.
+
+Standard pricing per million input/output/cache-read tokens is $0.15/$0.60/$0.015 for Flash. M3 is $0.30/$1.20/$0.06 for input up to 512k and $0.60/$2.40/$0.12 above 512k; priority pricing is 1.5 times standard. See the [MiniMax model guide](https://platform.minimax.io/docs/guides/models-intro.md) and [pricing](https://platform.minimax.io/docs/pricing/overview) for current limits and rates.
 
 ## Avian
 
-[Avian](https://avian.io) provides an OpenAI-compatible API with access to cost-effective frontier models including DeepSeek-V3.2, Kimi-K2.5, GLM-5, and MiniMax-M2.5.
+[Avian](https://avian.io) provides an OpenAI-compatible API with access to cost-effective frontier models including DeepSeek-V3.2, Kimi-K2.5, and GLM-5.
 
 Sign up at [avian.io](https://avian.io) to get an API key, then set the following environment variables:
 
@@ -438,7 +441,6 @@ Available models:
 - `deepseek/deepseek-v3.2` — 164K context, $0.26/$0.38 per 1M tokens
 - `moonshotai/kimi-k2.5` — 131K context, $0.45/$2.20 per 1M tokens
 - `z-ai/glm-5` — 131K context, $0.30/$2.55 per 1M tokens
-- `minimax/minimax-m2.5` — 1M context, $0.30/$1.10 per 1M tokens
 
 ## Atlas Cloud
 
