@@ -10,6 +10,11 @@ from colorama import Fore, Style, init
 import os
 from enum import Enum
 
+from gpt_researcher.llm_provider.minimax import (
+    MINIMAX_DEFAULT_MODEL,
+    get_minimax_base_url,
+)
+
 _SUPPORTED_PROVIDERS = {
     "openai",
     "anthropic",
@@ -36,6 +41,7 @@ _SUPPORTED_PROVIDERS = {
     "forge",
     "avian",
     "minimax",
+    "minimax_anthropic",
     "atlascloud",
     "nebius",
 }
@@ -119,6 +125,7 @@ class GenericLLMProvider:
         self.llm = llm
         self.chat_logger = ChatLogger(chat_log) if chat_log else None
         self.verbose = verbose
+        self._text_only = False
         self.last_usage_metadata: dict[str, Any] | None = None
         self.last_response_metadata: dict[str, Any] = {}
 
@@ -332,10 +339,23 @@ class GenericLLMProvider:
             _check_pkg("langchain_openai")
             from langchain_openai import ChatOpenAI
 
-            llm = ChatOpenAI(openai_api_base='https://api.minimax.io/v1',
+            if "model" not in kwargs and "model_name" not in kwargs:
+                kwargs["model"] = MINIMAX_DEFAULT_MODEL
+            llm = ChatOpenAI(openai_api_base=get_minimax_base_url("openai"),
                      openai_api_key=os.environ["MINIMAX_API_KEY"],
                      **kwargs
                 )
+        elif provider == "minimax_anthropic":
+            _check_pkg("langchain_anthropic")
+            from langchain_anthropic import ChatAnthropic
+
+            if "model" not in kwargs and "model_name" not in kwargs:
+                kwargs["model"] = MINIMAX_DEFAULT_MODEL
+            llm = ChatAnthropic(
+                base_url=get_minimax_base_url("anthropic"),
+                api_key=os.environ["MINIMAX_API_KEY"],
+                **kwargs,
+            )
         elif provider == "nebius":
             _check_pkg("langchain_openai")
             from langchain_openai import ChatOpenAI
@@ -355,7 +375,10 @@ class GenericLLMProvider:
             raise ValueError(
                 f"Unsupported {provider}.\n\nSupported model providers are: {supported}"
             )
-        return cls(llm, chat_log, verbose=verbose)
+        instance = cls(llm, chat_log, verbose=verbose)
+        # Adaptive thinking yields Anthropic content blocks; research consumes text.
+        instance._text_only = provider == "minimax_anthropic"
+        return instance
 
 
     async def get_chat_response(self, messages, stream, websocket=None, **kwargs):
@@ -365,7 +388,7 @@ class GenericLLMProvider:
             output = await self.llm.ainvoke(messages, **kwargs)
             self._capture_response_metadata(output)
 
-            res = output.content
+            res = output.text if self._text_only else output.content
 
         else:
             res = await self.stream_response(messages, websocket, **kwargs)
@@ -383,7 +406,7 @@ class GenericLLMProvider:
         # Streaming the response using the chain astream method from langchain
         async for chunk in self.llm.astream(messages, **kwargs):
             self._capture_response_metadata(chunk)
-            content = chunk.content
+            content = chunk.text if self._text_only else chunk.content
             if not content:
                 continue
             response += content
