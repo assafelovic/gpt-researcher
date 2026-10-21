@@ -4,6 +4,45 @@ import xml.etree.ElementTree as ET
 import requests
 
 
+# JATS elements that start a block of their own. Text inside anything else, such as
+# <italic>, <sub> or <xref>, belongs to the word or sentence around it.
+_BLOCK_TAGS = {
+    "p", "sec", "title", "label", "caption", "list-item", "fig", "table-wrap",
+    "tr", "th", "td", "disp-formula", "disp-quote", "def-item", "term", "def",
+}
+
+
+def _element_text(element: Optional[ET.Element]) -> str:
+    """The text of `element`, with one line per block and its inline markup kept in place.
+
+    Joining `itertext()` with spaces split words at inline markup (`CO<sub>2</sub>` read
+    `CO 2`), and joining it with nothing would run paragraphs together.
+    """
+    if element is None:
+        return ""
+    parts: List[str] = []
+    # Walked with a stack rather than recursion, so a deeply nested document cannot
+    # exhaust the interpreter's recursion limit
+    stack: List[tuple] = [("start", element)]
+    while stack:
+        step, node = stack.pop()
+        if step == "start":
+            if node.tag in _BLOCK_TAGS:
+                parts.append("\n")
+            parts.append(node.text or "")
+            stack.append(("end", node))
+            for child in reversed(list(node)):
+                stack.append(("tail", child))
+                stack.append(("start", child))
+        elif step == "end":
+            if node.tag in _BLOCK_TAGS:
+                parts.append("\n")
+        else:
+            parts.append(node.tail or "")
+    lines = (" ".join(line.split()) for line in "".join(parts).split("\n"))
+    return "\n".join(line for line in lines if line)
+
+
 class PubMedCentralSearch:
     """
     PubMed Central Full-Text Search
@@ -103,19 +142,10 @@ class PubMedCentralSearch:
             try:
                 root = ET.fromstring(response.text)
                 
-                # Extract title (itertext so nested formatting tags are included)
-                title = root.find('.//article-title')
-                title_text = (
-                    " ".join(title.itertext()).strip() if title is not None else ""
-                )
-                
-                # Extract abstract
-                abstract = root.find('.//abstract')
-                abstract_text = " ".join(abstract.itertext()) if abstract is not None else ""
-                
-                # Extract body text
-                body = root.find('.//body')
-                body_text = " ".join(body.itertext()) if body is not None else ""
+                # Extract title, abstract and body, nested formatting tags included
+                title_text = _element_text(root.find('.//article-title'))
+                abstract_text = _element_text(root.find('.//abstract'))
+                body_text = _element_text(root.find('.//body'))
                 
                 # Combine all text content
                 full_content = f"Title: {title_text}\n\nAbstract: {abstract_text}\n\nBody: {body_text}"
