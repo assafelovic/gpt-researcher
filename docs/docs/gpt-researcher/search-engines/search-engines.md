@@ -49,7 +49,7 @@ Thanks to our community, we have integrated the following web search engines and
 - [Xquik](https://xquik.com/) - Env: `RETRIEVER=xquik` and `XQUIK_API_KEY`
 - [MCP](../retrievers/mcp-configs) - Env: `RETRIEVER=mcp`
 
-Other search providers can be installed as separate packages. See [Retriever Plugins](./retriever-plugins.md).
+Other search providers can be installed as separate packages. See [Retriever Plugins](./retriever-plugins.md) and the [community retrievers list](./retriever-plugins.md#community-retrievers), including [Sciverse](./retriever-plugins.md#sciverse) for scientific literature passages.
 
 ## Custom Retrievers
 
