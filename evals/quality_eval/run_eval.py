@@ -4,7 +4,7 @@ Quality Evaluation Runner
 Runs GPT-Researcher on a set of queries and evaluates each report across
 six quality metrics:
 
-  - Citation Ratio        : used sources cited in the report            ($0)
+  - Citation Faithfulness: listed references actually cited in the body ($0)
   - Source Diversity      : domain variety (ratio + Shannon entropy)     ($0)
   - Source Authority      : heuristic + optional LLM authority score     ($0 / ~$0.01/q)
   - Subtopic Coverage     : LLM-judged coverage of expected subtopics (~$0.02/q)

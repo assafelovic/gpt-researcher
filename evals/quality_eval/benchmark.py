@@ -534,27 +534,9 @@ async def main(
     summary_only: bool,
     max_topics: int | None = None,
 ):
-    load_dotenv()
-    openai_key  = os.getenv("OPENAI_API_KEY")
-    tavily_key  = os.getenv("TAVILY_API_KEY")
-
-    if not openai_key:
-        raise ValueError("OPENAI_API_KEY not set")
-    if not tavily_key:
-        raise ValueError("TAVILY_API_KEY not set")
-
-    os.environ["OPENAI_API_KEY"]  = openai_key
-    os.environ["TAVILY_API_KEY"]  = tavily_key
-    os.environ["RETRIEVER"]       = "tavily"
-
-    grader_model = ChatOpenAI(
-        temperature=0,
-        model_name=GRADER_MODEL_NAME,
-        openai_api_key=openai_key,
-    )
-
     selected = [c for c in CONFIGS if c["name"] in config_names]
 
+    # --summary-only only re-reads saved logs, so it needs no API keys.
     if summary_only:
         logs = []
         for config in selected:
@@ -566,6 +548,23 @@ async def main(
                 print(f"  No log found for {config['name']}")
         _print_summary(logs)
         return
+
+    load_dotenv()
+    openai_key  = os.getenv("OPENAI_API_KEY")
+    tavily_key  = os.getenv("TAVILY_API_KEY")
+
+    if not openai_key:
+        raise ValueError("OPENAI_API_KEY not set")
+    if not tavily_key:
+        raise ValueError("TAVILY_API_KEY not set")
+
+    os.environ["RETRIEVER"]       = "tavily"
+
+    grader_model = ChatOpenAI(
+        temperature=0,
+        model_name=GRADER_MODEL_NAME,
+        openai_api_key=openai_key,
+    )
 
     logs = []
     # Shared across every config in the sweep so each query is measured against
@@ -627,17 +626,6 @@ if __name__ == "__main__":
     if args.compare:
         compare_logs(args.compare[0], args.compare[1], detail=args.detail)
         sys.exit(0)
-
-    # Load API keys from file if not in environment
-    if not os.getenv("OPENAI_API_KEY"):
-        key_path = Path("D:/chenh/api_keys/gpt_api_key.txt")
-        if key_path.exists():
-            os.environ["OPENAI_API_KEY"] = key_path.read_text().strip()
-
-    if not os.getenv("TAVILY_API_KEY"):
-        key_path = Path("D:/chenh/api_keys/tavily_api_key.txt")
-        if key_path.exists():
-            os.environ["TAVILY_API_KEY"] = key_path.read_text().strip()
 
     try:
         asyncio.run(main(

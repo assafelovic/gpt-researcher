@@ -217,7 +217,7 @@ Two tools complement `run_eval.py` (shared metric logic lives in `metrics.py`):
 # Run all 6 metrics (most expensive, ~$0.06/query)
 python -m evals.quality_eval.run_eval --num_examples 5
 
-# Zero-cost only (citation ratio, diversity, authority)
+# Zero-cost only (citation faithfulness, diversity, authority)
 python -m evals.quality_eval.run_eval --num_examples 10 --no-subtopic --no-hallucination --no-unsupported-claim
 
 # Skip individual LLM metrics selectively
@@ -229,6 +229,8 @@ python -m evals.quality_eval.run_eval --num_examples 10 --no-unsupported-claim
 Logs are saved to `evals/quality_eval/logs/quality_eval_YYYY-MM-DD_HH-MM-SS_n{N}.jsonl`.
 
 ### Example Output
+
+The numbers below are illustrative and predate the evidence-window fix (`CONTEXT_CHARS`), so the claim scores in particular are lower than a current run gives.
 
 ```text
 Quality eval: 5 queries  subtopic=off  hallucination=off  unsupported_claim=on

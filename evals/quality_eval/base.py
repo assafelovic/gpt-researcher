@@ -77,7 +77,7 @@ class BaseMetric:
 
     Subclasses set the four class attributes and implement `measure()`, which
     wraps the underlying metric function (in metrics.py) and returns a
-    MetricResult. Keeping the raw functions separate means the existing 35 unit
+    MetricResult. Keeping the raw functions separate means the existing unit
     tests and perturbation checks stay valid — this layer only standardizes I/O.
     """
     name:         str = ""

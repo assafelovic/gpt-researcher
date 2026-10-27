@@ -15,7 +15,7 @@ IMPORTANT — reliability vs validity:
   extractive (copy-from-source) over abstractive (synthesis) writing — a
   separate validity concern that perturbation cannot address.
 
-Runs over multiple real gpt-4o reports (fixtures) so a result is a consistent
+Runs over ten real research reports (fixtures, each with its full context) so a result is a consistent
 property of the metric, not an artifact of one report.
 
 Usage:
@@ -203,7 +203,7 @@ def _header() -> str:
 
 async def main():
     if not FIXTURES.exists():
-        raise SystemExit(f"Fixtures not found: {FIXTURES}\nGenerate them first (3 gpt-4o reports).")
+        raise SystemExit(f"Fixtures not found: {FIXTURES}\nGenerate them first (real reports with their full context).")
     fixtures = json.loads(FIXTURES.read_text(encoding="utf-8"))
     print(f"Loaded {len(fixtures)} fixtures: {[f['topic'] for f in fixtures]}\n")
 
@@ -275,9 +275,7 @@ async def main():
 
 if __name__ == "__main__":
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-    # Load API key from file if not already set (needed for source_authority).
-    if not os.getenv("OPENAI_API_KEY"):
-        kp = Path("D:/chenh/api_keys/gpt_api_key.txt")
-        if kp.exists():
-            os.environ["OPENAI_API_KEY"] = kp.read_text().strip()
+    # OPENAI_API_KEY (needed from source_authority on) may come from .env.
+    from dotenv import load_dotenv
+    load_dotenv()
     asyncio.run(main())
