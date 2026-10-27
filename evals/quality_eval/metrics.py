@@ -460,13 +460,13 @@ async def subtopic_coverage(query: str, report: str, grader_model, subtopics=Non
             if not isinstance(subtopics, list) or not all(isinstance(t, str) for t in subtopics):
                 raise ValueError(f"expected a JSON list of strings, got {subtopics!r:.200}")
             generated = True
-        except Exception:
+        except Exception as e:
             return {
                 "expected_subtopics":     [],
                 "covered":                [],
                 "missing":                [],
                 "subtopic_coverage_rate": None,
-                "error":                  "Failed to parse subtopics from LLM",
+                "error":                  f"Subtopic generation failed: {type(e).__name__}: {e}",
             }
 
     if generated and subtopic_cache is not None:
