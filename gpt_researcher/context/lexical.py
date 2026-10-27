@@ -29,8 +29,18 @@ yours yourself yourselves
 
 
 def _stem(token: str) -> str:
-    """Light plural stripping so "batteries" matches "battery" and "costs" matches "cost"."""
-    if len(token) <= 4 or token.endswith("ss"):
+    'Light plural stripping so "batteries" matches "battery" and "costs" matches "cost".'
+    if type(token) is str:
+        if not token or token[-1] != "s" or len(token) <= 4:
+            return token
+        if not token.endswith(("ss", "ies", "sses", "xes", "zes", "ches", "shes")):
+            return token[:-1]
+        if token[-2] == "s":
+            return token
+        return token[:-3] + "y" if token[-3] == "i" else token[:-2]
+    if len(token) <= 4:
+        return token
+    if token.endswith("ss"):
         return token
     if token.endswith("ies"):
         return token[:-3] + "y"
