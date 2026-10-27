@@ -34,6 +34,7 @@ from gpt_researcher.agent import GPTResearcher
 from gpt_researcher.utils.enum import ReportType, ReportSource, Tone
 
 from evals.grader import grader_model_name, make_grader
+from gpt_researcher.config import Config
 from evals.quality_eval.pipeline_probe import PipelineProbe, sources_to_score
 from evals.quality_eval.metrics import (
     CONTEXT_CHARS, evaluate_report, skipped as _skipped, is_skipped as _is_skipped,
@@ -286,7 +287,9 @@ async def main(num_examples: int, run_subtopic: bool, run_hallucination: bool, r
             "timestamp":            run_timestamp,
             "git_commit":           _get_git_commit(),
             "grader_model":         grader_model_name(),
-            "researcher_model":     os.getenv("SMART_LLM", "openai:gpt-4.1"),
+            # Resolved the way GPTResearcher resolves it, so an unset SMART_LLM
+            # records the library default rather than a stale guess.
+            "researcher_model":     Config().smart_llm,
             "num_examples":         num_examples,
             "subtopic_enabled":       run_subtopic,
             "hallucination_enabled":       run_hallucination,

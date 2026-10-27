@@ -165,8 +165,13 @@ class TestGrader(unittest.TestCase):
             self.assertEqual(grader_model_name(), DEFAULT_GRADER_MODEL)
 
     def test_reasoning_models_get_no_temperature(self):
+        import os
+        from unittest import mock
         from evals.grader import make_grader
 
+        # ChatOpenAI refuses to build without a key; no call is made.
+        mock.patch.dict(os.environ, {"OPENAI_API_KEY": "sk-test"}).start()
+        self.addCleanup(mock.patch.stopall)
         self.assertEqual(make_grader("gpt-4o").temperature, 0)
         self.assertIsNone(make_grader("gpt-5.4-mini").temperature)
 
