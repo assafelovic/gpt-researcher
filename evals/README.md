@@ -101,10 +101,10 @@ LANGCHAIN_API_KEY=your_langchain_key_here
 
 3. Run evaluation:
 ```bash
-python run_eval.py --num_examples <number>
+python run_eval.py --num_examples <number> [--seed <int>]
 ```
 
-The `num_examples` parameter determines how many random test queries to evaluate (default: 1).
+The `num_examples` parameter determines how many random test queries to evaluate (default: 1). Pass `--seed` to draw the same questions on every run, so two runs can be compared question for question; each result records its row in the test set as `example_index`.
 
 #### Customizing Researcher Behavior
 
@@ -172,9 +172,9 @@ Structured log saved → evals/simple_evals/logs/eval_2025-02-22_10-32-11_n100.j
 See [`example_output.json`](simple_evals/example_output.json) for the full schema. Key fields:
 
 ```
-run_metadata        → timestamp, git_commit, grader_model, researcher_model
+run_metadata        → timestamp, git_commit, grader_model, researcher_model, seed
 aggregate_metrics   → accuracy, f1, cost, avg/p50/p95 latency, success/fail counts
-results             → per-query list with grade, score, latency, cost, sources
+results             → per-query list with grade, score, latency, cost, sources, example_index
 ```
 
 ## Quality Evaluation (`quality_eval/`)

@@ -8,6 +8,7 @@ import re
 import json
 import pandas
 import random
+from pathlib import Path
 from typing import Dict, List, Any
 from langchain_openai import ChatOpenAI
 
@@ -97,24 +98,49 @@ CHOICE_LETTERS = ["A", "B", "C"]
 CHOICE_STRINGS = ["CORRECT", "INCORRECT", "NOT_ATTEMPTED"]
 CHOICE_LETTER_TO_STRING = dict(zip(CHOICE_LETTERS, CHOICE_STRINGS))
 
+PROBLEMS_FILE = Path(__file__).parent / "problems" / "Simple QA Test Set.csv"
+
+
+def parse_grade(response_text: str) -> str | None:
+    """Map a grader reply to CORRECT / INCORRECT / NOT_ATTEMPTED, or None.
+
+    The grader is asked for a bare letter but sometimes adds punctuation
+    ("A.") or answers with the word itself. Words are matched whole: a
+    substring test would read "INCORRECT" as CORRECT, since it contains it.
+    """
+    text = (response_text or "").strip().upper()
+    letter = re.fullmatch(r"\(?([ABC])\)?[.:]?", text)
+    if letter:
+        return CHOICE_LETTER_TO_STRING[letter.group(1)]
+    words = set(re.findall(r"NOT[ _]ATTEMPTED|INCORRECT|CORRECT", text))
+    words = {w.replace(" ", "_") for w in words}
+    return words.pop() if len(words) == 1 else None
+
 
 class SimpleQAEval:
-    def __init__(self, grader_model, num_examples=1):
-        """Initialize the evaluator with a grader model and number of examples."""
+    def __init__(self, grader_model, num_examples=1, seed=None):
+        """Initialize the evaluator with a grader model and number of examples.
+
+        `seed` makes the sample reproducible: the same seed draws the same
+        questions, so two runs can be compared question for question.
+        """
         self.grader_model = grader_model
-        
-        # Load all examples from CSV
-        csv_url = "https://openaipublic.blob.core.windows.net/simple-evals/simple_qa_test_set.csv"
-        df = pandas.read_csv(csv_url)
+        self.seed = seed
+
+        # Load all examples from the local copy of the test set. It is kept in
+        # the repo so the benchmark cannot change underneath us (see README).
+        df = pandas.read_csv(PROBLEMS_FILE)
         all_examples = df.to_dict('records')
-        
+        for i, example in enumerate(all_examples):
+            example["index"] = i   # row in PROBLEMS_FILE, logged with each result
+
         # Randomly select num_examples without replacement
         if num_examples > len(all_examples):
             print(f"Warning: Requested {num_examples} examples but only {len(all_examples)} available")
             num_examples = len(all_examples)
-            
-        self.examples = random.sample(all_examples, num_examples)
-        print(f"Selected {num_examples} random examples for evaluation")
+
+        self.examples = random.Random(seed).sample(all_examples, num_examples)
+        print(f"Selected {num_examples} random examples for evaluation (seed={seed})")
 
     def evaluate_example(self, example: dict) -> dict:
         """Evaluate a single example."""
@@ -156,17 +182,11 @@ class SimpleQAEval:
         
         messages = [{"role": "user", "content": prompt}]
         response = self.grader_model.invoke(messages)
-        response_text = response.content.strip()
-        
-        # Convert letter response to grade string
-        if response_text in CHOICE_LETTERS:
-            grade = CHOICE_LETTER_TO_STRING[response_text]
-        else:
-            # Fallback for direct string responses
-            for grade in CHOICE_STRINGS:
-                if grade in response_text:
-                    return grade
-            grade = "NOT_ATTEMPTED"  # Default if no grade found
-            
+        grade = parse_grade(response.content)
+        if grade is None:
+            print(f"Warning: could not parse grader response {response.content!r}; "
+                  f"recording NOT_ATTEMPTED")
+            grade = "NOT_ATTEMPTED"
+
         print(f"\nGrade: {grade}")
         return grade 

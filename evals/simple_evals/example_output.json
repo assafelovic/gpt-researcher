@@ -5,6 +5,7 @@
     "grader_model": "gpt-4-turbo",
     "researcher_model": "openai:gpt-4.1",
     "num_examples": 5,
+    "seed": 42,
     "total_duration_seconds": 243.7
   },
   "aggregate_metrics": {
@@ -25,6 +26,8 @@
   "results": [
     {
       "query": "What is the name of the astronomer who discovered 83 Beatrix?",
+      "example_index": 1203,
+      "researcher_model": "openai:gpt-4.1",
       "context_length": 12453,
       "report_length": 3241,
       "latency_seconds": 45.1,
@@ -38,6 +41,8 @@
     },
     {
       "query": "In what year was the International Space Station first inhabited?",
+      "example_index": 87,
+      "researcher_model": "openai:gpt-4.1",
       "context_length": 9871,
       "report_length": 2987,
       "latency_seconds": 41.3,
@@ -51,6 +56,8 @@
     },
     {
       "query": "Who wrote the novel 'The Left Hand of Darkness'?",
+      "example_index": 3311,
+      "researcher_model": "openai:gpt-4.1",
       "context_length": 8102,
       "report_length": 2654,
       "latency_seconds": 38.9,
@@ -64,6 +71,8 @@
     },
     {
       "query": "What country does the Mekong River empty into the sea from?",
+      "example_index": 560,
+      "researcher_model": "openai:gpt-4.1",
       "context_length": 10234,
       "report_length": 3102,
       "latency_seconds": 52.6,
@@ -77,6 +86,8 @@
     },
     {
       "query": "What is the chemical symbol for tungsten?",
+      "example_index": 2901,
+      "researcher_model": "openai:gpt-4.1",
       "context_length": 7654,
       "report_length": 2108,
       "latency_seconds": 89.2,

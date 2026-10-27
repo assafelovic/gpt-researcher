@@ -86,6 +86,8 @@ async def evaluate_single_query(query: str, evaluator: SimpleQAEval) -> dict:
     # result gathering and formating
     result = {
         'query': query,
+        'example_index': example.get('index'),
+        'researcher_model': researcher.cfg.smart_llm,
         'context_length': len(context),
         'report_length': len(report),
         'latency_seconds': latency_seconds,
@@ -103,7 +105,7 @@ async def evaluate_single_query(query: str, evaluator: SimpleQAEval) -> dict:
 
     return result
 
-async def main(num_examples: int):
+async def main(num_examples: int, seed: int | None = None):
     if num_examples < 1:
         raise ValueError("num_examples must be at least 1")
     # start timming
@@ -119,7 +121,7 @@ async def main(num_examples: int):
             model_name=GRADER_MODEL_NAME,
             openai_api_key=os.getenv("OPENAI_API_KEY")
         )
-        evaluator = SimpleQAEval(grader_model=grader_model, num_examples=num_examples)
+        evaluator = SimpleQAEval(grader_model=grader_model, num_examples=num_examples, seed=seed)
         
         if not evaluator.examples:
             raise ValueError("No examples loaded in evaluator")
@@ -217,8 +219,12 @@ async def main(num_examples: int):
                     "timestamp": run_timestamp,
                     "git_commit": get_git_commit(),
                     "grader_model": GRADER_MODEL_NAME,
-                    "researcher_model": os.getenv("SMART_LLM", "openai:gpt-4.1"),
+                    # Read off the researchers that ran, not an env default,
+                    # so the log names the model that wrote the reports.
+                    "researcher_model": ", ".join(sorted({r['researcher_model'] for r in results
+                                                          if 'researcher_model' in r})),
                     "num_examples": num_examples,
+                    "seed": seed,
                     "total_duration_seconds": round(time.perf_counter() - run_start, 2),
                 }
                 log_record = {
@@ -249,10 +255,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run GPT-Researcher evaluation')
     parser.add_argument('--num_examples', type=int, default=1,
                       help='Number of examples to evaluate. Default is 1 example.')
+    parser.add_argument('--seed', type=int, default=None,
+                      help='Seed for sampling questions; the same seed draws the same questions.')
     args = parser.parse_args()
     
     try:
-        asyncio.run(main(args.num_examples))
+        asyncio.run(main(args.num_examples, args.seed))
     except KeyboardInterrupt:
         print("\nEvaluation interrupted by user")
     except Exception as e:
