@@ -7,7 +7,7 @@ called, not at import, so a .env loaded by the runner's main() still applies.
 
 import os
 
-DEFAULT_GRADER_MODEL = "gpt-4-turbo"
+DEFAULT_GRADER_MODEL = "gpt-4.1"
 
 # Reasoning models reject temperature=0 and only run at their default.
 _NO_TEMPERATURE_PREFIXES = ("gpt-5", "o1", "o3", "o4")
