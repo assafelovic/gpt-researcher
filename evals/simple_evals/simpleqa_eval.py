@@ -5,8 +5,8 @@ Adapted for GPT-Researcher from OpenAI's simple-evals
 
 import os
 import re
+import csv
 import json
-import pandas
 import random
 from pathlib import Path
 from typing import Dict, List, Any
@@ -129,8 +129,8 @@ class SimpleQAEval:
 
         # Load all examples from the local copy of the test set. It is kept in
         # the repo so the benchmark cannot change underneath us (see README).
-        df = pandas.read_csv(PROBLEMS_FILE)
-        all_examples = df.to_dict('records')
+        with open(PROBLEMS_FILE, encoding="utf-8", newline="") as f:
+            all_examples = list(csv.DictReader(f))
         for i, example in enumerate(all_examples):
             example["index"] = i   # row in PROBLEMS_FILE, logged with each result
 
