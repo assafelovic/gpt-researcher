@@ -17,9 +17,8 @@ from dotenv import load_dotenv
 from gpt_researcher.agent import GPTResearcher
 from gpt_researcher.utils.enum import ReportType, ReportSource, Tone
 from evals.simple_evals.simpleqa_eval import SimpleQAEval
-from langchain_openai import ChatOpenAI
+from evals.grader import grader_model_name, make_grader
 
-GRADER_MODEL_NAME = "gpt-4-turbo"
 LOGS_DIR = Path(__file__).parent / "logs"
 
 
@@ -116,11 +115,7 @@ async def main(num_examples: int, seed: int | None = None):
 
     try:
         # initiate evaluator
-        grader_model = ChatOpenAI(
-            temperature=0,
-            model_name=GRADER_MODEL_NAME,
-            openai_api_key=os.getenv("OPENAI_API_KEY")
-        )
+        grader_model = make_grader()
         evaluator = SimpleQAEval(grader_model=grader_model, num_examples=num_examples, seed=seed)
         
         if not evaluator.examples:
@@ -218,7 +213,7 @@ async def main(num_examples: int, seed: int | None = None):
                 run_metadata = {
                     "timestamp": run_timestamp,
                     "git_commit": get_git_commit(),
-                    "grader_model": GRADER_MODEL_NAME,
+                    "grader_model": grader_model_name(),
                     # Read off the researchers that ran, not an env default,
                     # so the log names the model that wrote the reports.
                     "researcher_model": ", ".join(sorted({r['researcher_model'] for r in results

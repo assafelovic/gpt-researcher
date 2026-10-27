@@ -148,6 +148,27 @@ class TestRunEvalOffline(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(r["subtopic_coverage"]["status"], "skipped")
         self.assertEqual(r["unsupported_claim"]["status"], "skipped")
         self.assertEqual(r["source_authority"]["llm_unscored_domains"], ["mayoclinic.org"])
+        # The real cause is reported, not a generic "failed to parse".
+        self.assertIn("grader unavailable", r["subtopic_coverage"]["reason"])
+
+
+class TestGrader(unittest.TestCase):
+
+    def test_env_override_is_read_at_call_time(self):
+        import os
+        from unittest import mock
+        from evals.grader import DEFAULT_GRADER_MODEL, grader_model_name
+
+        with mock.patch.dict(os.environ, {"EVAL_GRADER_MODEL": "gpt-4o"}):
+            self.assertEqual(grader_model_name(), "gpt-4o")
+        with mock.patch.dict(os.environ, {"EVAL_GRADER_MODEL": ""}):
+            self.assertEqual(grader_model_name(), DEFAULT_GRADER_MODEL)
+
+    def test_reasoning_models_get_no_temperature(self):
+        from evals.grader import make_grader
+
+        self.assertEqual(make_grader("gpt-4o").temperature, 0)
+        self.assertIsNone(make_grader("gpt-5.4-mini").temperature)
 
 
 class TestBenchmarkOffline(unittest.IsolatedAsyncioTestCase):

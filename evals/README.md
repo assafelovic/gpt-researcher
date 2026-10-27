@@ -59,21 +59,16 @@ Each JSON log file contains one record with three sections: `run_metadata`, `agg
 ### Features
 
 - Measures factual accuracy of research responses
-- Uses GPT-4 as a grading model (configurable)
-  ```python
-  # In run_eval.py, you can customize the grader model:
-  grader_model = ChatOpenAI(
-      temperature=0,                           # Lower temperature for more consistent grading
-      model_name="gpt-4-turbo",               # Can be changed to other OpenAI models
-      openai_api_key=os.getenv("OPENAI_API_KEY")
-  )
+- Uses an OpenAI model as the grader, shared by every eval runner and defined in [`evals/grader.py`](grader.py). Override it per run with the `EVAL_GRADER_MODEL` environment variable (or a line in `.env`); the model used is recorded in each run's log:
+  ```bash
+  EVAL_GRADER_MODEL=gpt-4o python -m evals.simple_evals.run_eval --num_examples 2
   ```
 - Grades responses on a three-point scale:
   - `CORRECT`: Answer fully contains important information without contradictions
   - `INCORRECT`: Answer contains factual contradictions
   - `NOT_ATTEMPTED`: Answer neither confirms nor contradicts the target
 
-**Note on Grader Configuration:** While the default grader uses GPT-4-turbo, you can modify the model and its parameters to use different OpenAI models or adjust the temperature for different grading behaviors. This is independent of the researcher's configuration, allowing you to optimize for cost or performance as needed.
+**Note on Grader Configuration:** The grader runs at temperature 0 (reasoning models such as gpt-5 and the o-series, which reject a temperature, run at their default). This is independent of the researcher's configuration, allowing you to optimize for cost or performance as needed.
 
 ### Metrics Tracked
 

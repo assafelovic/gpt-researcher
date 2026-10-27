@@ -29,11 +29,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from dotenv import load_dotenv
-from langchain_openai import ChatOpenAI
 
 from gpt_researcher.agent import GPTResearcher
 from gpt_researcher.utils.enum import ReportType, ReportSource, Tone
 
+from evals.grader import grader_model_name, make_grader
 from evals.quality_eval.pipeline_probe import PipelineProbe, sources_to_score
 from evals.quality_eval.metrics import (
     CONTEXT_CHARS, evaluate_report, skipped as _skipped, is_skipped as _is_skipped,
@@ -45,7 +45,6 @@ try:
 except ImportError:
     _HALLUCINATION_AVAILABLE = False
 
-GRADER_MODEL_NAME = "gpt-4-turbo"
 LOGS_DIR = Path(__file__).parent / "logs"
 QUERIES_FILE = Path(__file__).parent.parent / "hallucination_eval" / "inputs" / "search_queries.jsonl"
 
@@ -203,11 +202,7 @@ async def main(num_examples: int, run_subtopic: bool, run_hallucination: bool, r
 
     run_start     = time.perf_counter()
     run_timestamp = datetime.now(timezone.utc).isoformat()
-    grader_model  = ChatOpenAI(
-        temperature=0,
-        model_name=GRADER_MODEL_NAME,
-        openai_api_key=os.getenv("OPENAI_API_KEY"),
-    )
+    grader_model  = make_grader()
 
     if run_hallucination and not _HALLUCINATION_AVAILABLE:
         print("Warning: judges library not installed — hallucination metric will be skipped.")
@@ -290,7 +285,7 @@ async def main(num_examples: int, run_subtopic: bool, run_hallucination: bool, r
         "run_metadata": {
             "timestamp":            run_timestamp,
             "git_commit":           _get_git_commit(),
-            "grader_model":         GRADER_MODEL_NAME,
+            "grader_model":         grader_model_name(),
             "researcher_model":     os.getenv("SMART_LLM", "openai:gpt-4.1"),
             "num_examples":         num_examples,
             "subtopic_enabled":       run_subtopic,

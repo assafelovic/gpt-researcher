@@ -33,9 +33,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from dotenv import load_dotenv
-from langchain_openai import ChatOpenAI
 
 from evals.quality_eval.metrics import evaluate_report, is_skipped as _is_skipped
+from evals.grader import grader_model_name, make_grader
 from evals.quality_eval.pipeline_probe import PipelineProbe, sources_to_score
 
 # ---------------------------------------------------------------------------
@@ -60,7 +60,6 @@ CONFIGS = [
     {"name": "multi-gpt4o-mini",  "arch": "multi",  "model": "gpt-4o-mini"},
 ]
 
-GRADER_MODEL_NAME = "gpt-4-turbo"
 LOGS_DIR = Path(__file__).parent / "logs"
 
 # High-authority topics — tagged HIGH in the per-topic summary (others shown "low").
@@ -356,7 +355,7 @@ async def run_config(config: dict, grader_model, run_llm_metrics: bool,
             "config_name":        name,
             "arch":               config["arch"],
             "researcher_model":   config["model"],
-            "grader_model":       GRADER_MODEL_NAME,
+            "grader_model":       grader_model_name(),
             "llm_metrics_enabled": run_llm_metrics,
             "num_topics":         len(QUERIES),
             "total_duration_seconds": round(time.perf_counter() - t_start, 2),
@@ -560,11 +559,7 @@ async def main(
 
     os.environ["RETRIEVER"]       = "tavily"
 
-    grader_model = ChatOpenAI(
-        temperature=0,
-        model_name=GRADER_MODEL_NAME,
-        openai_api_key=openai_key,
-    )
+    grader_model = make_grader()
 
     logs = []
     # Shared across every config in the sweep so each query is measured against

@@ -230,9 +230,8 @@ async def main():
         print(_row(fx["topic"], vals))
 
     # --- source_authority: swap to low-authority (LLM-scored) ---
-    from langchain_openai import ChatOpenAI
-    grader = ChatOpenAI(temperature=0, model_name="gpt-4-turbo",
-                        openai_api_key=os.environ["OPENAI_API_KEY"])
+    from evals.grader import make_grader
+    grader = make_grader()
     print("\n=== source_authority  (swap to low-authority, LLM-scored) ===")
     print(_header())
     for fx in fixtures:
