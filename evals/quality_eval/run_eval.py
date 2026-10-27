@@ -34,7 +34,9 @@ from langchain_openai import ChatOpenAI
 from gpt_researcher.agent import GPTResearcher
 from gpt_researcher.utils.enum import ReportType, ReportSource, Tone
 
-from evals.quality_eval.metrics import evaluate_report, skipped as _skipped, is_skipped as _is_skipped
+from evals.quality_eval.metrics import (
+    CONTEXT_CHARS, evaluate_report, skipped as _skipped, is_skipped as _is_skipped,
+)
 
 try:
     from evals.hallucination_eval.evaluate import HallucinationEvaluator
@@ -120,7 +122,9 @@ async def evaluate_single_query(
                 h_eval = HallucinationEvaluator()
                 h_raw  = h_eval.evaluate_response(
                     model_output=report,
-                    source_text=source_text[:8000],
+                    # Same evidence window as unsupported_claim: a shorter cut
+                    # flags claims whose support was simply not shown.
+                    source_text=source_text[:CONTEXT_CHARS],
                 )
                 hallucination = {
                     "is_hallucination": h_raw.get("is_hallucination"),

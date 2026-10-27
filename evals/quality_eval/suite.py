@@ -104,7 +104,10 @@ class SubtopicCoverageMetric(BaseMetric):
         score = raw.get("subtopic_coverage_rate")
         if score is None:
             return MetricResult.skip(self, raw.get("error", "coverage unavailable"))
-        reason = f"{len(raw['covered'])}/{len(raw['expected_subtopics'])} subtopics covered"
+        judged = len(raw['covered']) + len(raw['missing'])
+        reason = f"{len(raw['covered'])}/{judged} subtopics covered"
+        if raw.get("judge_errors"):
+            reason += f", {len(raw['judge_errors'])} not judged (grader error)"
         if raw.get("retrieval_gap_rate"):
             reason += f", {raw['retrieval_gap_rate']:.0%} never searched for"
         return MetricResult(
@@ -133,7 +136,9 @@ class UnsupportedClaimMetric(BaseMetric):
         return MetricResult(
             name=self.name, group=self.group, aligned_with=self.aligned_with,
             score=score,   # higher = more faithful; unsupported_rate is in breakdown
-            reason=f"{raw['unsupported_count']}/{raw['total_claims']} claims unsupported",
+            reason=(f"{raw['unsupported_count']}/{raw['total_claims']} claims unsupported"
+                    + (f", {raw['judge_errors']} not judged (grader error)"
+                       if raw.get("judge_errors") else "")),
             breakdown=raw,
         )
 

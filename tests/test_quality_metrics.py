@@ -241,6 +241,22 @@ class TestSourceAuthorityRules(unittest.IsolatedAsyncioTestCase):
         mock.ainvoke = AsyncMock(side_effect=Exception("timeout"))
         result = await source_authority(["https://obscuresite.io/article"], grader_model=mock)
         self.assertAlmostEqual(result["avg_authority_score"], 0.4)
+        self.assertEqual(result["llm_unscored_domains"], ["obscuresite.io"])
+
+    async def test_llm_failure_uses_the_no_grader_rule_scores(self):
+        """A failed call scores like no grader at all, not a flat 0.4."""
+        mock = AsyncMock()
+        mock.ainvoke = AsyncMock(side_effect=Exception("timeout"))
+        urls = ["https://example.org/a", "https://example.com/b"]
+        failed  = await source_authority(urls, grader_model=mock)
+        no_llm  = await source_authority(urls)
+        self.assertEqual(failed["avg_authority_score"], no_llm["avg_authority_score"])
+        self.assertEqual(no_llm["llm_unscored_domains"], [])
+
+    async def test_llm_domain_key_is_normalised(self):
+        llm_result = [{"domain": "WWW.Obscuresite.io", "score": 0.65, "reason": "blog"}]
+        result = await source_authority(["https://obscuresite.io/a"], grader_model=_mock_model(llm_result))
+        self.assertAlmostEqual(result["avg_authority_score"], 0.65)
 
 
 # ---------------------------------------------------------------------------
@@ -349,9 +365,10 @@ class TestSubtopicCoverage(unittest.IsolatedAsyncioTestCase):
         self.assertIn("error", result)
         self.assertIsNone(result.get("subtopic_coverage_rate"))
 
-    async def test_independent_subtopic_check_failure_marks_missing(self):
-        """With independent checks, a subtopic whose check fails is marked
-        missing (self-contained) rather than failing the whole evaluation."""
+    async def test_independent_subtopic_check_failure_is_excluded(self):
+        """A subtopic whose check fails neither fails the whole evaluation nor
+        counts as missing: it is reported under judge_errors and left out of
+        the rate, so a grader outage does not read as a thin report."""
         subtopics = ["A", "B"]
         gen_msg   = MagicMock(); gen_msg.content = json.dumps(subtopics)   # generate
         ok_msg    = MagicMock(); ok_msg.content  = json.dumps({"covered": True})
@@ -361,7 +378,23 @@ class TestSubtopicCoverage(unittest.IsolatedAsyncioTestCase):
         result = await subtopic_coverage("query", "report", mock)
         self.assertNotIn("error", result)
         self.assertEqual(result["expected_subtopics"], subtopics)
-        self.assertAlmostEqual(result["subtopic_coverage_rate"], 0.5)  # 1 ok, 1 failed→missing
+        self.assertAlmostEqual(result["subtopic_coverage_rate"], 1.0)  # 1 ok, 1 failed→excluded
+        self.assertEqual(result["missing"], [])
+        self.assertEqual(result["judge_errors"], ["B"])
+
+    async def test_all_subtopic_checks_failing_gives_no_rate(self):
+        gen_msg = MagicMock(); gen_msg.content = json.dumps(["A", "B"])
+        mock    = AsyncMock()
+        mock.ainvoke = AsyncMock(side_effect=[gen_msg, RuntimeError("down"), RuntimeError("down")])
+        result = await subtopic_coverage("query", "report", mock)
+        self.assertIsNone(result["subtopic_coverage_rate"])
+        self.assertIn("error", result)
+
+    async def test_subtopic_generation_must_be_a_list(self):
+        gen_msg = MagicMock(); gen_msg.content = json.dumps({"subtopics": ["A"]})
+        mock    = AsyncMock(); mock.ainvoke = AsyncMock(return_value=gen_msg)
+        result = await subtopic_coverage("query", "report", mock)
+        self.assertIsNone(result["subtopic_coverage_rate"])
 
 
 # ---------------------------------------------------------------------------
@@ -423,18 +456,47 @@ class TestUnsupportedClaim(unittest.IsolatedAsyncioTestCase):
         self.assertIn("error", result)
         self.assertIsNone(result.get("avg_claim_score"))
 
-    async def test_independent_verify_failure_marks_claim_unsupported(self):
-        """With independent scoring, a claim whose verify fails is marked
-        unsupported (self-contained) rather than failing the whole batch."""
-        claims   = ["Claim A"]
+    async def test_independent_verify_failure_is_excluded(self):
+        """A claim whose verify fails neither fails the whole batch nor counts
+        as unsupported: it is kept in the breakdown as "error" and left out of
+        the rates."""
+        claims   = ["Claim A", "Claim B"]
         good_msg = MagicMock(); good_msg.content = json.dumps(claims)   # extract
-        bad_msg  = MagicMock(); bad_msg.content  = "{{broken"           # verify A fails
+        ok_msg   = MagicMock(); ok_msg.content   = json.dumps(
+            [{"claim": "restated A", "category": "supported", "score": 1.0, "reason": "r"}])
+        bad_msg  = MagicMock(); bad_msg.content  = "{{broken"           # verify B fails
         mock     = AsyncMock()
-        mock.ainvoke = AsyncMock(side_effect=[good_msg, bad_msg])
+        mock.ainvoke = AsyncMock(side_effect=[good_msg, ok_msg, bad_msg])
         result = await unsupported_claim("report", "context", mock)
         self.assertEqual(result["total_claims"], 1)
-        self.assertEqual(result["unsupported_count"], 1)
+        self.assertEqual(result["unsupported_count"], 0)
+        self.assertEqual(result["judge_errors"], 1)
+        self.assertEqual(result["avg_claim_score"], 1.0)
         self.assertNotIn("error", result)
+        # The breakdown names the claim that was asked about, not the restatement.
+        self.assertEqual([c["claim"] for c in result["breakdown"]], claims)
+        self.assertEqual(result["breakdown"][1]["category"], "error")
+
+    async def test_all_verifies_failing_gives_no_score(self):
+        good_msg = MagicMock(); good_msg.content = json.dumps(["Claim A"])
+        mock     = AsyncMock()
+        mock.ainvoke = AsyncMock(side_effect=[good_msg, RuntimeError("down")])
+        result = await unsupported_claim("report", "context", mock)
+        self.assertIsNone(result["avg_claim_score"])
+        self.assertIn("error", result)
+
+    async def test_unknown_category_is_an_error_not_a_verdict(self):
+        good_msg = MagicMock(); good_msg.content = json.dumps(["Claim A", "Claim B"])
+        odd_msg  = MagicMock(); odd_msg.content  = json.dumps(
+            [{"claim": "A", "category": "partially", "score": 0.5}])
+        ok_msg   = MagicMock(); ok_msg.content   = json.dumps(
+            [{"claim": "B", "category": "unsupported", "score": 0.0}])
+        mock     = AsyncMock()
+        mock.ainvoke = AsyncMock(side_effect=[good_msg, odd_msg, ok_msg])
+        result = await unsupported_claim("report", "context", mock)
+        self.assertEqual(result["total_claims"], 1)
+        self.assertEqual(result["unsupported_claim_rate"], 1.0)
+        self.assertEqual(result["judge_errors"], 1)
 
 
 # ---------------------------------------------------------------------------

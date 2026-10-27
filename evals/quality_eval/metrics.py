@@ -236,15 +236,22 @@ async def _llm_score_domains(domains: list[str], grader_model) -> list[dict]:
     prompt = _LLM_AUTHORITY_PROMPT.format(
         domains="\n".join(f"- {d}" for d in domains)
     )
+    """Score domains in one call. Returns [] when the call or its parse fails.
+
+    An empty result sends every domain to the rule fallback in
+    source_authority(), the same scores used when no grader is given, rather
+    than to a flat 0.4 that looked like a verdict on the domains themselves.
+    """
     try:
         resp    = await grader_model.ainvoke(prompt)
         results = _parse_json(resp.content)
         return [
-            {"domain": r["domain"], "score": float(r["score"]), "tier": f"llm:{r.get('reason','')}"}
+            {"domain": str(r["domain"]).lower().removeprefix("www."),
+             "score": float(r["score"]), "tier": f"llm:{r.get('reason','')}"}
             for r in results
         ]
     except Exception:
-        return [{"domain": d, "score": 0.4, "tier": "unknown"} for d in domains]
+        return []
 
 
 async def source_authority(source_urls: list[str], grader_model=None) -> dict:
@@ -272,6 +279,7 @@ async def source_authority(source_urls: list[str], grader_model=None) -> dict:
         else:
             deferred.append(domain)
 
+    unscored = []   # deferred domains the grader was asked about but did not score
     if deferred:
         score_map = {}
         if grader_model:
@@ -281,6 +289,8 @@ async def source_authority(source_urls: list[str], grader_model=None) -> dict:
         for domain in deferred:
             entry = score_map.get(domain)
             if entry is None:
+                if grader_model:
+                    unscored.append(domain)
                 fb_score, fb_tier = _fallback_score(domain)
                 entry = {"domain": domain, "score": fb_score, "tier": fb_tier}
             breakdown.append(dict(entry))
@@ -293,6 +303,9 @@ async def source_authority(source_urls: list[str], grader_model=None) -> dict:
     return {
         "avg_authority_score": round(avg, 3),
         "breakdown": sorted(breakdown, key=lambda x: -x["score"]),
+        # Domains that fell back to the rule table because the grader call
+        # failed or skipped them; non-empty means the LLM tier did not run fully.
+        "llm_unscored_domains": sorted(set(unscored)),
     }
 
 
@@ -376,7 +389,7 @@ async def _classify_gap(subtopic: str, subqueries: list[str], grader_model) -> s
         return "unknown"
 
 
-async def _check_one_subtopic(subtopic: str, report: str, grader_model) -> bool:
+async def _check_one_subtopic(subtopic: str, report: str, grader_model) -> bool | None:
     """Judge a single subtopic's coverage independently (no batch effects).
 
     Judges the BODY only. A trailing `## References` list names every source,
@@ -385,15 +398,19 @@ async def _check_one_subtopic(subtopic: str, report: str, grader_model) -> bool:
     is nothing but its reference list was scored 43-57% covered. Stripping the
     section deterministically is more reliable than asking the grader to ignore
     it (the prompt above says so too, as defence in depth).
+
+    Returns None when the grader call fails or its reply has no boolean
+    `covered`: a failed judgement is not evidence the subtopic is missing.
     """
     body, _ = _split_at_references(report)
     try:
         resp   = await grader_model.ainvoke(
             _COVERAGE_ONE_PROMPT.format(subtopic=subtopic, report=body[:12000]))
         result = _parse_json(resp.content)
-        return bool(result.get("covered", False))
     except Exception:
-        return False
+        return None
+    covered = result.get("covered") if isinstance(result, dict) else None
+    return covered if isinstance(covered, bool) else None
 
 
 async def subtopic_coverage(query: str, report: str, grader_model, subtopics=None,
@@ -440,6 +457,8 @@ async def subtopic_coverage(query: str, report: str, grader_model, subtopics=Non
         try:
             resp1     = await grader_model.ainvoke(_SUBTOPICS_PROMPT.format(query=query))
             subtopics = _parse_json(resp1.content)
+            if not isinstance(subtopics, list) or not all(isinstance(t, str) for t in subtopics):
+                raise ValueError(f"expected a JSON list of strings, got {subtopics!r:.200}")
             generated = True
         except Exception:
             return {
@@ -458,16 +477,23 @@ async def subtopic_coverage(query: str, report: str, grader_model, subtopics=Non
     flags   = await asyncio.gather(
         *(_check_one_subtopic(s, report, grader_model) for s in subtopics)
     )
-    covered = [s for s, ok in zip(subtopics, flags) if ok]
-    missing = [s for s, ok in zip(subtopics, flags) if not ok]
+    covered = [s for s, ok in zip(subtopics, flags) if ok is True]
+    missing = [s for s, ok in zip(subtopics, flags) if ok is False]
+    errored = [s for s, ok in zip(subtopics, flags) if ok is None]
 
-    total = len(subtopics)
+    # The rate is over the subtopics the grader actually judged. A failed call
+    # used to count as "not covered", so an outage read as a thin report.
+    total = len(covered) + len(missing)
     out = {
         "expected_subtopics":     subtopics,
         "covered":                covered,
         "missing":                missing,
+        "judge_errors":           errored,
         "subtopic_coverage_rate": round(len(covered) / total, 3) if total else 0.0,
     }
+    if subtopics and not total:
+        out["subtopic_coverage_rate"] = None
+        out["error"] = f"grader failed on all {len(errored)} subtopics"
 
     if missing and subqueries:
         gaps = await asyncio.gather(
@@ -567,9 +593,18 @@ Return ONLY a JSON array, one object per claim:
 """.strip()
 
 
+_CLAIM_CATEGORIES = ("supported", "inferred", "unsupported")
+
+
 async def _verify_one_claim(claim: str, context_text: str, grader_model,
                             context_chars: int = CONTEXT_CHARS) -> dict:
-    """Score a single claim independently against the context (no batch effects)."""
+    """Score a single claim independently against the context (no batch effects).
+
+    The returned `claim` is always the claim that was asked about, not the
+    grader's restatement of it. A failed call, or a reply without a known
+    category and a numeric score, comes back as category "error" — it is
+    not a judgement that the claim is unsupported.
+    """
     try:
         resp   = await grader_model.ainvoke(
             _VERIFY_CLAIMS_PROMPT.format(
@@ -579,13 +614,15 @@ async def _verify_one_claim(claim: str, context_text: str, grader_model,
         )
         result = _parse_json(resp.content)
         if isinstance(result, list) and result:
-            return result[0]
-        if isinstance(result, dict):
-            return result
-    except Exception:
-        pass
-    return {"claim": claim, "category": "unsupported", "score": 0.0,
-            "reason": "verification failed"}
+            result = result[0]
+        if isinstance(result, dict) and result.get("category") in _CLAIM_CATEGORIES:
+            return {"claim": claim, "category": result["category"],
+                    "score": float(result.get("score")),
+                    "reason": result.get("reason", "")}
+        reason = f"unreadable grader reply: {resp.content!r:.200}"
+    except Exception as e:
+        reason = f"verification failed: {type(e).__name__}: {e}"
+    return {"claim": claim, "category": "error", "score": None, "reason": reason}
 
 
 async def unsupported_claim(report: str, context, grader_model, claims=None,
@@ -612,6 +649,8 @@ async def unsupported_claim(report: str, context, grader_model, claims=None,
         try:
             resp1  = await grader_model.ainvoke(_EXTRACT_CLAIMS_PROMPT.format(report=report[:12000]))
             claims = _parse_json(resp1.content)
+            if not isinstance(claims, list) or not all(isinstance(c, str) for c in claims):
+                raise ValueError(f"expected a JSON list of strings, got {claims!r:.200}")
         except Exception as e:
             return {
                 "total_claims": 0, "avg_claim_score": None,
@@ -630,10 +669,21 @@ async def unsupported_claim(report: str, context, grader_model, claims=None,
     # Batch scoring let a corrupted/absurd claim shift the model's judgement of
     # unrelated claims in the same batch — so a claim's score depended on its
     # batch-mates. Independent scoring makes each claim's score self-contained.
-    scored_claims = await asyncio.gather(
+    verdicts = await asyncio.gather(
         *(_verify_one_claim(c, context_text, grader_model, context_chars)
           for c in claims)
     )
+    # Rates are over the claims the grader actually judged; failed calls are
+    # reported separately instead of being scored as unsupported.
+    scored_claims = [c for c in verdicts if c["category"] != "error"]
+    errored       = [c for c in verdicts if c["category"] == "error"]
+    if not scored_claims:
+        return {
+            "total_claims": 0, "avg_claim_score": None,
+            "unsupported_claim_rate": None, "inferred_claim_rate": None,
+            "judge_errors": len(errored), "breakdown": list(verdicts),
+            "error": f"grader failed on all {len(errored)} claims",
+        }
 
     supported_l   = [c for c in scored_claims if c.get("category") == "supported"]
     inferred_l    = [c for c in scored_claims if c.get("category") == "inferred"]
@@ -650,15 +700,8 @@ async def unsupported_claim(report: str, context, grader_model, claims=None,
         "avg_claim_score":        avg_score,
         "unsupported_claim_rate": round(len(unsupported_l) / total, 3) if total else 0.0,
         "inferred_claim_rate":    round(len(inferred_l)    / total, 3) if total else 0.0,
-        "breakdown": [
-            {
-                "claim":    c.get("claim"),
-                "category": c.get("category"),
-                "score":    float(c.get("score", 0.0)),
-                "reason":   c.get("reason", ""),
-            }
-            for c in scored_claims
-        ],
+        "judge_errors":           len(errored),
+        "breakdown":              list(verdicts),   # includes errored claims, marked "error"
     }
 
 
