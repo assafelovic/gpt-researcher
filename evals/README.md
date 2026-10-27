@@ -59,16 +59,16 @@ Each JSON log file contains one record with three sections: `run_metadata`, `agg
 ### Features
 
 - Measures factual accuracy of research responses
-- Uses an OpenAI model as the grader, shared by every eval runner and defined in [`evals/grader.py`](grader.py). Override it per run with the `EVAL_GRADER_MODEL` environment variable (or a line in `.env`); the model used is recorded in each run's log:
+- Uses two models. The **worker model** is gpt-researcher itself, the system under test, set with its usual `SMART_LLM` / `FAST_LLM` / `STRATEGIC_LLM`. The **judge model** stands in for a human reviewer: it grades answers and judges sources and claims. It is shared by every eval runner and defined in [`evals/judge.py`](judge.py); the default, `gpt-6-luna`, is a cheap one for testing and debugging, and a stronger one such as `gpt-6-sol` suits runs whose numbers will be reported. Override it per run with the `EVAL_JUDGE_MODEL` environment variable (or a line in `.env`); both models are recorded in each run's log:
   ```bash
-  EVAL_GRADER_MODEL=gpt-4o python -m evals.simple_evals.run_eval --num_examples 2
+  EVAL_JUDGE_MODEL=gpt-6-sol python -m evals.simple_evals.run_eval --num_examples 2
   ```
 - Grades responses on a three-point scale:
   - `CORRECT`: Answer fully contains important information without contradictions
   - `INCORRECT`: Answer contains factual contradictions
   - `NOT_ATTEMPTED`: Answer neither confirms nor contradicts the target
 
-**Note on Grader Configuration:** The grader runs at temperature 0 (reasoning models such as gpt-5 and the o-series, which reject a temperature, run at their default). This is independent of the researcher's configuration, allowing you to optimize for cost or performance as needed.
+**Note on Judge Configuration:** The judge runs at temperature 0 where the model allows it; reasoning models (gpt-5, gpt-6 and the o-series) reject that and run at their default. This is independent of the worker's configuration, allowing you to optimize for cost or performance as needed.
 
 ### Metrics Tracked
 
@@ -167,7 +167,7 @@ Structured log saved → evals/simple_evals/logs/eval_2025-02-22_10-32-11_n100.j
 See [`example_output.json`](simple_evals/example_output.json) for the full schema. Key fields:
 
 ```
-run_metadata        → timestamp, git_commit, grader_model, researcher_model, seed
+run_metadata        → timestamp, git_commit, judge_model, worker_model, seed
 aggregate_metrics   → accuracy, f1, cost, avg/p50/p95 latency, success/fail counts
 results             → per-query list with grade, score, latency, cost, sources, example_index
 ```

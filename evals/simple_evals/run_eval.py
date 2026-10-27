@@ -17,7 +17,7 @@ from dotenv import load_dotenv
 from gpt_researcher.agent import GPTResearcher
 from gpt_researcher.utils.enum import ReportType, ReportSource, Tone
 from evals.simple_evals.simpleqa_eval import SimpleQAEval
-from evals.grader import grader_model_name, make_grader
+from evals.judge import judge_model_name, make_judge
 
 LOGS_DIR = Path(__file__).parent / "logs"
 
@@ -86,7 +86,7 @@ async def evaluate_single_query(query: str, evaluator: SimpleQAEval) -> dict:
     result = {
         'query': query,
         'example_index': example.get('index'),
-        'researcher_model': researcher.cfg.smart_llm,
+        'worker_model': researcher.cfg.smart_llm,
         'context_length': len(context),
         'report_length': len(report),
         'latency_seconds': latency_seconds,
@@ -115,7 +115,7 @@ async def main(num_examples: int, seed: int | None = None):
 
     try:
         # initiate evaluator
-        grader_model = make_grader()
+        grader_model = make_judge()
         evaluator = SimpleQAEval(grader_model=grader_model, num_examples=num_examples, seed=seed)
         
         if not evaluator.examples:
@@ -213,11 +213,11 @@ async def main(num_examples: int, seed: int | None = None):
                 run_metadata = {
                     "timestamp": run_timestamp,
                     "git_commit": get_git_commit(),
-                    "grader_model": grader_model_name(),
+                    "judge_model": judge_model_name(),
                     # Read off the researchers that ran, not an env default,
                     # so the log names the model that wrote the reports.
-                    "researcher_model": ", ".join(sorted({r['researcher_model'] for r in results
-                                                          if 'researcher_model' in r})),
+                    "worker_model": ", ".join(sorted({r['worker_model'] for r in results
+                                                          if 'worker_model' in r})),
                     "num_examples": num_examples,
                     "seed": seed,
                     "total_duration_seconds": round(time.perf_counter() - run_start, 2),

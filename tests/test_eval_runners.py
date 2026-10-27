@@ -152,28 +152,29 @@ class TestRunEvalOffline(unittest.IsolatedAsyncioTestCase):
         self.assertIn("grader unavailable", r["subtopic_coverage"]["reason"])
 
 
-class TestGrader(unittest.TestCase):
+class TestJudge(unittest.TestCase):
 
     def test_env_override_is_read_at_call_time(self):
         import os
         from unittest import mock
-        from evals.grader import DEFAULT_GRADER_MODEL, grader_model_name
+        from evals.judge import DEFAULT_JUDGE_MODEL, judge_model_name
 
-        with mock.patch.dict(os.environ, {"EVAL_GRADER_MODEL": "gpt-4o"}):
-            self.assertEqual(grader_model_name(), "gpt-4o")
-        with mock.patch.dict(os.environ, {"EVAL_GRADER_MODEL": ""}):
-            self.assertEqual(grader_model_name(), DEFAULT_GRADER_MODEL)
+        with mock.patch.dict(os.environ, {"EVAL_JUDGE_MODEL": "gpt-4o"}):
+            self.assertEqual(judge_model_name(), "gpt-4o")
+        with mock.patch.dict(os.environ, {"EVAL_JUDGE_MODEL": ""}):
+            self.assertEqual(judge_model_name(), DEFAULT_JUDGE_MODEL)
 
     def test_reasoning_models_get_no_temperature(self):
         import os
         from unittest import mock
-        from evals.grader import make_grader
+        from evals.judge import make_judge
 
         # ChatOpenAI refuses to build without a key; no call is made.
         mock.patch.dict(os.environ, {"OPENAI_API_KEY": "sk-test"}).start()
         self.addCleanup(mock.patch.stopall)
-        self.assertEqual(make_grader("gpt-4o").temperature, 0)
-        self.assertIsNone(make_grader("gpt-5.4-mini").temperature)
+        self.assertEqual(make_judge("gpt-4o").temperature, 0)
+        self.assertIsNone(make_judge("gpt-5.4-mini").temperature)
+        self.assertIsNone(make_judge("gpt-6-luna").temperature)
 
 
 class TestBenchmarkOffline(unittest.IsolatedAsyncioTestCase):

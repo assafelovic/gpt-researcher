@@ -230,8 +230,8 @@ async def main():
         print(_row(fx["topic"], vals))
 
     # --- source_authority: swap to low-authority (LLM-scored) ---
-    from evals.grader import make_grader
-    grader = make_grader()
+    from evals.judge import make_judge
+    grader = make_judge()
     print("\n=== source_authority  (swap to low-authority, LLM-scored) ===")
     print(_header())
     for fx in fixtures:

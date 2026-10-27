@@ -33,7 +33,7 @@ from dotenv import load_dotenv
 from gpt_researcher.agent import GPTResearcher
 from gpt_researcher.utils.enum import ReportType, ReportSource, Tone
 
-from evals.grader import grader_model_name, make_grader
+from evals.judge import judge_model_name, make_judge
 from gpt_researcher.config import Config
 from evals.quality_eval.pipeline_probe import PipelineProbe, sources_to_score
 from evals.quality_eval.metrics import (
@@ -203,7 +203,7 @@ async def main(num_examples: int, run_subtopic: bool, run_hallucination: bool, r
 
     run_start     = time.perf_counter()
     run_timestamp = datetime.now(timezone.utc).isoformat()
-    grader_model  = make_grader()
+    grader_model  = make_judge()
 
     if run_hallucination and not _HALLUCINATION_AVAILABLE:
         print("Warning: judges library not installed — hallucination metric will be skipped.")
@@ -286,10 +286,10 @@ async def main(num_examples: int, run_subtopic: bool, run_hallucination: bool, r
         "run_metadata": {
             "timestamp":            run_timestamp,
             "git_commit":           _get_git_commit(),
-            "grader_model":         grader_model_name(),
+            "judge_model":         judge_model_name(),
             # Resolved the way GPTResearcher resolves it, so an unset SMART_LLM
             # records the library default rather than a stale guess.
-            "researcher_model":     Config().smart_llm,
+            "worker_model":     Config().smart_llm,
             "num_examples":         num_examples,
             "subtopic_enabled":       run_subtopic,
             "hallucination_enabled":       run_hallucination,

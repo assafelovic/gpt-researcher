@@ -35,7 +35,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from evals.quality_eval.metrics import evaluate_report, is_skipped as _is_skipped
-from evals.grader import grader_model_name, make_grader
+from evals.judge import judge_model_name, make_judge
 from evals.quality_eval.pipeline_probe import PipelineProbe, sources_to_score
 
 # ---------------------------------------------------------------------------
@@ -354,8 +354,8 @@ async def run_config(config: dict, grader_model, run_llm_metrics: bool,
             "git_commit":         _get_git_commit(),
             "config_name":        name,
             "arch":               config["arch"],
-            "researcher_model":   config["model"],
-            "grader_model":       grader_model_name(),
+            "worker_model":   config["model"],
+            "judge_model":       judge_model_name(),
             "llm_metrics_enabled": run_llm_metrics,
             "num_topics":         len(QUERIES),
             "total_duration_seconds": round(time.perf_counter() - t_start, 2),
@@ -476,7 +476,7 @@ def compare_logs(path_a: str, path_b: str, detail: bool = False):
                             ("B", path_b, log_b.get("run_metadata", {}))]:
         print(f"  {tag}: {Path(path).name}")
         print(f"     commit={meta.get('git_commit','?')}  "
-              f"model={meta.get('researcher_model','?')}  ts={meta.get('timestamp','?')[:19]}")
+              f"model={meta.get('worker_model', meta.get('researcher_model', '?'))}  ts={meta.get('timestamp','?')[:19]}")
     print(f"{'='*70}")
     print(f"  {'Metric':<28} {'A':>10} {'B':>10}  Change")
     print(f"  {'-'*28} {'-'*10} {'-'*10}  {'-'*12}")
@@ -559,7 +559,7 @@ async def main(
 
     os.environ["RETRIEVER"]       = "tavily"
 
-    grader_model = make_grader()
+    grader_model = make_judge()
 
     logs = []
     # Shared across every config in the sweep so each query is measured against
