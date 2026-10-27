@@ -234,8 +234,8 @@ async def main(num_examples: int, run_subtopic: bool, run_hallucination: bool, r
     n = len(successful)
 
     if n == 0:
-        print("No successful results.")
-        return
+        # Exit non-zero: a run that scored nothing is a failed run.
+        raise SystemExit("No successful results.")
 
     # --- Aggregate ---
     def avg(key_path):

@@ -246,6 +246,8 @@ async def main(num_examples: int, seed: int | None = None):
                 with open(log_filename, "w", encoding="utf-8") as f:
                     f.write(json.dumps(log_record) + "\n")
                 print(f"\nStructured log saved → {log_filename}")
+            else:
+                raise RuntimeError(f"All {len(evaluator.examples)} queries failed; nothing to score")
 
     except Exception as e:
         print(f"Fatal error in main: {str(e)}")
@@ -265,3 +267,5 @@ if __name__ == "__main__":
         print("\nEvaluation interrupted by user")
     except Exception as e:
         print(f"Fatal error: {str(e)}")
+        # A failed run must not exit 0, or scripts and CI read it as a pass.
+        sys.exit(1)
