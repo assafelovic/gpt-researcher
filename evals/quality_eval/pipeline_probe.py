@@ -164,6 +164,24 @@ class PipelineTrace:
         }
 
 
+def sources_to_score(trace: PipelineTrace, visited: list[str]) -> tuple[list[str], str]:
+    """The URLs source-quality metrics should score, and which set they are.
+
+    Returns (urls, basis). basis is "scraped" when the probe saw the scrape
+    stage: the pages that loaded, which may be none if every scrape failed.
+    It is "visited" only when the probe recorded no scrape at all, meaning
+    its hooks did not fire, and the caller falls back to everything the
+    retriever proposed. That fallback overstates authority (see
+    `scraped_urls`), so it is labelled in the log rather than silent.
+    """
+    if trace.scrapes:
+        return trace.scraped_urls, "scraped"
+    if visited:
+        print("      [WARN] pipeline probe recorded no scrapes; scoring all visited "
+              "URLs, including pages that may never have loaded")
+    return list(visited), "visited"
+
+
 # ---------------------------------------------------------------------------
 # Patching
 # ---------------------------------------------------------------------------

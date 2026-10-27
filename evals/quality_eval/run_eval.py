@@ -34,6 +34,7 @@ from langchain_openai import ChatOpenAI
 from gpt_researcher.agent import GPTResearcher
 from gpt_researcher.utils.enum import ReportType, ReportSource, Tone
 
+from evals.quality_eval.pipeline_probe import PipelineProbe, sources_to_score
 from evals.quality_eval.metrics import (
     CONTEXT_CHARS, evaluate_report, skipped as _skipped, is_skipped as _is_skipped,
 )
@@ -94,9 +95,14 @@ async def evaluate_single_query(
         tone=Tone.Objective,
         verbose=False,
     )
-    context  = await researcher.conduct_research()
-    report   = await researcher.write_report()
-    sources  = researcher.get_source_urls()
+    # Same instrumentation as benchmark.py, so both runners score source
+    # quality on the pages that actually loaded rather than on every URL the
+    # retriever proposed.
+    with PipelineProbe() as probe:
+        context  = await researcher.conduct_research()
+        report   = await researcher.write_report()
+    visited  = researcher.get_source_urls()
+    sources, sources_basis = sources_to_score(probe.trace, visited)
     cost     = researcher.get_costs()
     latency  = round(time.perf_counter() - t_start, 2)
 
@@ -140,6 +146,9 @@ async def evaluate_single_query(
         "latency_seconds":   latency,
         "cost":              cost,
         "source_count":      len(sources),
+        "visited_count":     len(visited),
+        "sources_basis":     sources_basis,   # "scraped", or "visited" if the probe saw nothing
+        "pipeline_funnel":   probe.trace.funnel(),
         "report_length":     len(report),
         "citation_faithfulness": citation,
         "source_diversity":  diversity,

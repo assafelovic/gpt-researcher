@@ -36,7 +36,7 @@ from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 
 from evals.quality_eval.metrics import evaluate_report, is_skipped as _is_skipped
-from evals.quality_eval.pipeline_probe import PipelineProbe
+from evals.quality_eval.pipeline_probe import PipelineProbe, sources_to_score
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -204,7 +204,7 @@ async def _evaluate_query(
     # strictest bot defences are disproportionately the authoritative ones, so
     # scoring the proposed set credits the pipeline for evidence the writer
     # never saw — measured at +0.066 authority on a three-query sample.
-    scored_sources = trace.scraped_urls or sources
+    scored_sources, sources_basis = sources_to_score(trace, sources)
     funnel = trace.funnel()
     if funnel["scrape_rate"] is not None:
         print(f"      funnel: {funnel['urls_scraped']}/{funnel['urls_attempted']} scraped "
@@ -258,6 +258,7 @@ async def _evaluate_query(
         "latency_seconds":   latency,
         "cost":              cost,
         "source_count":      len(scored_sources),
+        "sources_basis":     sources_basis,   # "scraped", or "visited" if the probe saw nothing
         "report_length":     len(report),
         "citation_faithfulness": citation,
         "source_diversity":  diversity,
