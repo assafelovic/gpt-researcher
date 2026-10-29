@@ -240,7 +240,7 @@ Findings were checked by hand against the report and chunks.
 | `citation_coverage` | 1.000 | Correct: all 9 references are cited in the body |
 | `fact_grounding` | 0.976 | 165 tokens; the 4 misses are acronyms (KYC, TFR, AML, CFT) absent from the cited pages |
 | `faithfulness` | 0.726 | Flagged claims are real embellishments (e.g. "DAC8 is less visible than MiCA", onboarding effects) after the fixes below |
-| `citation_recall` | 0.300 | Low because the writer ends most paragraphs with its own analysis under the same citation; strict ALCE fails the whole unit |
+| `citation_recall` | 0.300 | Low because the writer ends most paragraphs with its own analysis under the same citation; strict ALCE fails the whole unit. Kept strict on purpose: whether an inference is reasonable is hard to judge, and an unreasonable one should not sit under a citation (faithfulness gives inferences partial credit) |
 | `citation_precision` | 0.255 | Tracks recall (ALCE counts citations of unsupported units as imprecise); only 1 over-citation |
 | `effective_citations` | 6 | Count of unit-URL citations a source fully supports |
 | `toxicity` / `bias` | 0 / 0 | No flagged opinions |
@@ -254,8 +254,6 @@ made the judge call passporting unsupported although the cited page states it.
 
 - Source diversity formulation (domain ratio saturates; under research).
 - Generation metrics: validated on one archive only (q001, below).
-- Citation recall definition: strict ALCE (every claim of a cited unit fully supported)
-  vs. counting inferred claims as supported; open.
 - Per-paragraph sampling twice for a more stable faithfulness verdict (design §5).
 - Perturbation tests on a frozen archive (does each metric move the expected way when a
   known problem is injected), then judge calibration with a small human-labelled set.
