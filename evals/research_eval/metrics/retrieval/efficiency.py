@@ -100,27 +100,37 @@ class CitationUtilization(Metric):
 
 
 class QueryRelevance(Metric):
-    """Judge rubric on each sub-query packaged with its material.
+    """Judge rubric on each search step packaged with its material.
 
-    One call per executed sub-query that returned material (Q1 topic relevance,
-    Q2 key points hit, Q3 specificity, Q4 uniqueness, Q5 usability, then a
-    0-10 total). v1 uses only the judge's total: value = mean(total / 10).
-    Sub-queries that returned nothing are listed but not judged; plan_adherence
-    already counts them. The run's core query is not a sub-query and is not
-    judged; nested researchers' root queries (deep SERP queries, subtopics) are.
+    One call per search step that returned material (Q1 topic relevance, Q2
+    key points hit, Q3 specificity, Q4 uniqueness, Q5 usability, then a 0-10
+    total). v1 uses only the judge's total: value = mean(total / 10).
+
+    Units: every executed sub-query except the run's core query, plus each
+    researcher's initial (planning) search, which is often where the most-cited
+    sources come from. Material: one representative chunk per source URL (the
+    chunk that best matches the query by BM25 weighting), best URLs first,
+    within a character budget, so the judge sees the breadth of what came back
+    rather than the first few chunks of the first site. `details` records how
+    many URLs and chunks each judge call saw.
+
+    Steps that returned nothing are listed but not judged; plan_adherence
+    already counts them.
     """
 
     name, category = "query_relevance", "retrieval.efficiency"
+    version = "2"
     uses_llm = True
     prompts = (QUERY_RELEVANCE, KEY_POINTS)
-    CHUNK_CHARS, MATERIAL_CHARS = 1500, 6000
+    CHUNK_CHARS, MATERIAL_CHARS = 1500, 12000
 
     async def score(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:
         if ctx.judge is None:
             return self.skip("no judge configured")
         core = archive.query.strip()
         units = [u for u in archive.retrieval_units
-                 if u.kind == "sub_query" and u.query.strip() != core]
+                 if u.kind == "initial_results"
+                 or (u.kind == "sub_query" and u.query.strip() != core)]
         if not units:
             return self.skip("no executed sub-queries")
         points, provenance = await get_key_points(archive, ctx)
@@ -128,20 +138,22 @@ class QueryRelevance(Metric):
             return self.skip("no key points", key_points=provenance)
         judged = [u for u in units if u.chunk_ids]
         empty = [u.query for u in units if not u.chunk_ids]
-        all_queries = list(dict.fromkeys(u.query for u in units))
+        all_queries = list(dict.fromkeys(u.query for u in units if u.kind == "sub_query"))
 
         async def judge_one(u):
+            material, shown = self._material(archive, u)
+            label = (f"{u.query}\n(the initial search on this query, run while planning)"
+                     if u.kind == "initial_results" else u.query)
             prompt = QUERY_RELEVANCE.render(
                 question=archive.query,
                 key_points="\n".join(f"{i}. {p}" for i, p in enumerate(points, 1)),
                 other_queries="\n".join(f"- {q}" for q in all_queries if q != u.query) or "(none)",
-                query=u.query,
-                material=self._material(archive, u.chunk_ids))
-            return u, await ctx.judge.ask(QUERY_RELEVANCE.id, QUERY_RELEVANCE.version, prompt)
+                query=label, material=material)
+            return u, shown, await ctx.judge.ask(QUERY_RELEVANCE.id, QUERY_RELEVANCE.version, prompt)
 
         results = await ctx.gather(judge_one(u) for u in judged)
         per_query, scores = [], []
-        for u, r in results:
+        for u, shown, r in results:
             total = r.parsed.get("total") if isinstance(r.parsed, dict) else None
             try:
                 norm = max(0.0, min(1.0, float(total) / 10))
@@ -149,7 +161,8 @@ class QueryRelevance(Metric):
                 norm = None
             if norm is not None:
                 scores.append(norm)
-            per_query.append({"span_id": u.span_id, "query": u.query, "chunks": len(u.chunk_ids),
+            per_query.append({"span_id": u.span_id, "kind": u.kind, "query": u.query,
+                              "chunks": len(u.chunk_ids), **shown,
                               "score": rounded(norm), "rubric": r.parsed, "error": r.error})
         res = self.result(rounded(sum(scores) / len(scores)) if scores else None,
                           key_points=provenance, judged=len(scores),
@@ -158,21 +171,27 @@ class QueryRelevance(Metric):
             res.skipped = "every judge call failed"
         elif not judged:
             res.skipped = "no sub-query returned material"
-        res.llm = self.llm_record(ctx, [r for _, r in results])
+        res.llm = self.llm_record(ctx, [r for _, _, r in results])
         return res
 
-    def _material(self, archive: RunArchive, chunk_ids: list[str]) -> str:
+    def _material(self, archive: RunArchive, unit) -> tuple[str, dict]:
+        """One best-matching chunk per URL, best URLs first, within the budget."""
+        chunks = [(cid, archive.chunks[cid]) for cid in unit.chunk_ids if cid in archive.chunks]
+        idf = idf_table([c["content"] for _, c in chunks])
+        best: dict[str, tuple[float, dict]] = {}
+        for _, c in chunks:
+            key = normalize_url(c["url"]) if c.get("url") else f"unattributed:{id(c)}"
+            score = weighted_overlap(unit.query, set(tokenize(c["content"])), idf)
+            if key not in best or score > best[key][0]:
+                best[key] = (score, c)
         parts, used = [], 0
-        for cid in chunk_ids:
-            c = archive.chunks.get(cid)
-            if not c:
-                continue
+        for _, c in sorted(best.values(), key=lambda x: -x[0]):
             block = f"[{c.get('url') or 'unknown source'}]\n{c['content'][:self.CHUNK_CHARS]}"
             if used + len(block) > self.MATERIAL_CHARS and parts:
                 break
             parts.append(block)
             used += len(block)
-        return "\n\n".join(parts)
+        return "\n\n".join(parts), {"urls_total": len(best), "urls_shown": len(parts)}
 
 
 class RetrievalOverlap(Metric):

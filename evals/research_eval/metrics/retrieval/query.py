@@ -9,7 +9,7 @@ from itertools import combinations
 from ...archive import RunArchive
 from ...judge import cosine
 from ...key_points import get_key_points
-from ...prompts import KEY_POINTS, TREE_QUALITY
+from ...prompts import DECOMPOSITION_COVERAGE, KEY_POINTS, TREE_QUALITY
 from ..base import Metric, MetricResult, ScoringContext, rounded
 from ..lexical import idf_table, symmetric_overlap
 
@@ -29,27 +29,63 @@ class DecompositionCoverage(Metric):
     """Share of the question's key points that some sub-query is aimed at.
 
     Key points come from get_key_points (frozen / cached / one judge call per
-    question). Sub-queries and key points are embedded; a key point is covered
-    when its best cosine similarity to any sub-query reaches the threshold.
-    The threshold is uncalibrated in v1: per-point best similarities are kept
-    in `details` so it can be tuned against human labels.
+    question). One judge call then maps every key point to the sub-queries
+    that target it, quoting the sub-query as evidence. Covered = at least one
+    sub-query. Whole-query embedding similarity proved unreliable for this
+    (a query naming four regulations is close to none of them, a query about
+    the EU looked close to a UK key point), so embeddings are only a fallback
+    when no judge is configured, flagged in `details.method`.
     """
 
     name, category = "decomposition_coverage", "retrieval.query"
-    uses_llm = uses_embeddings = True
-    prompts = (KEY_POINTS,)
-    DEFAULT_THRESHOLD = 0.5
+    version = "2"
+    uses_llm = True
+    prompts = (KEY_POINTS, DECOMPOSITION_COVERAGE)
+    EMBEDDING_THRESHOLD = 0.5
 
     async def score(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:
-        if ctx.embedder is None:
-            return self.skip("no embedder configured")
+        if ctx.judge is None and ctx.embedder is None:
+            return self.skip("no judge or embedder configured")
         points, provenance = await get_key_points(archive, ctx)
         if not points:
             return self.skip("no key points", key_points=provenance)
         queries = all_subqueries(archive)
         if not queries:
-            return self.result(0.0, key_points=provenance, covered=[], reason="no sub-queries")
-        threshold = ctx.option("coverage_threshold", self.DEFAULT_THRESHOLD)
+            return self.result(0.0, key_points=provenance, per_point=[], reason="no sub-queries")
+        if ctx.judge is None:
+            return await self._by_embedding(points, queries, provenance, ctx)
+
+        prompt = DECOMPOSITION_COVERAGE.render(
+            question=archive.query,
+            key_points="\n".join(f"{i}. {p}" for i, p in enumerate(points, 1)),
+            subqueries="\n".join(f"{i}. {q}" for i, q in enumerate(queries, 1)))
+        r = await ctx.judge.ask(DECOMPOSITION_COVERAGE.id, DECOMPOSITION_COVERAGE.version, prompt)
+        entries = r.parsed.get("points") if isinstance(r.parsed, dict) else None
+        by_point = {}
+        for e in entries if isinstance(entries, list) else []:
+            try:
+                by_point[int(e["point"])] = e
+            except (KeyError, TypeError, ValueError):
+                continue
+        if not by_point:
+            res = self.skip("judge call failed", key_points=provenance, error=r.error, raw=r.raw[:500])
+            res.llm = self.llm_record(ctx, [r])
+            return res
+        per_point = []
+        for i, p in enumerate(points, 1):
+            e = by_point.get(i, {})
+            nums = [n for n in e.get("subqueries") or [] if isinstance(n, int) and 1 <= n <= len(queries)]
+            per_point.append({"key_point": p, "covered": bool(nums),
+                              "subqueries": [queries[n - 1] for n in nums],
+                              "evidence": e.get("evidence"), "answered": i in by_point})
+        covered = sum(x["covered"] for x in per_point)
+        res = self.result(rounded(covered / len(points)), method="judge", key_points=provenance,
+                          n_subqueries=len(queries), per_point=per_point)
+        res.llm = self.llm_record(ctx, [r])
+        return res
+
+    async def _by_embedding(self, points, queries, provenance, ctx) -> MetricResult:
+        threshold = ctx.option("coverage_threshold", self.EMBEDDING_THRESHOLD)
         vecs = await ctx.embedder.embed(points + queries)
         pv, qv = vecs[:len(points)], vecs[len(points):]
         per_point = []
@@ -57,11 +93,12 @@ class DecompositionCoverage(Metric):
             sims = [cosine(v, w) for w in qv]
             best = max(range(len(sims)), key=sims.__getitem__)
             per_point.append({"key_point": p, "best_similarity": round(sims[best], 4),
-                              "best_subquery": queries[best], "covered": sims[best] >= threshold})
+                              "subqueries": [queries[best]] if sims[best] >= threshold else [],
+                              "covered": sims[best] >= threshold})
         covered = sum(x["covered"] for x in per_point)
-        return self.result(rounded(covered / len(points)), threshold=threshold,
-                           embedding_model=ctx.embedder.model, key_points=provenance,
-                           n_subqueries=len(queries), per_point=per_point)
+        return self.result(rounded(covered / len(points)), method="embedding_fallback",
+                           threshold=threshold, embedding_model=ctx.embedder.model,
+                           key_points=provenance, n_subqueries=len(queries), per_point=per_point)
 
 
 class SubqueryRedundancy(Metric):

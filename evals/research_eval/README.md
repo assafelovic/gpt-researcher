@@ -99,21 +99,21 @@ whose follow-up questions produced it (matched by the research goal in its query
 
 | Category | Metric | Value | LLM cost per run |
 |---|---|---|---|
-| Query | `decomposition_coverage` | key points covered by some sub-query (embedding cosine >= 0.5) / K | key points: 1 per question, cached |
+| Query | `decomposition_coverage` | key points some sub-query is aimed at / K; one judge call maps key points to sub-queries (embedding cosine only as a no-judge fallback) | key points: 1 per question, cached; mapping: 1 |
 | Query | `subquery_redundancy` | sibling pairs with symmetric BM25-weighted overlap >= 0.6 / pairs (lower is better) | 0 |
 | Query | `decomposition_tree_quality` | mean of judge total / 8 per parent (coverage, specificity, searchability, relevance) | 1 per parent |
 | Query | `plan_adherence` | planned sub-queries that returned chunks / planned | 0 |
 | Source | `source_authority` | mean authority over sources; rule tiers, then global domain cache, then one batched call | <= 1, tends to 0 |
 | Source | `source_diversity` | distinct domains / sources; entropy in details | 0 |
 | Efficiency | `citation_utilization` | mean of URL level (cited / retrieved) and chunk level (lexical match, judge for borderline) | borderline chunks only, capped at 20 |
-| Efficiency | `query_relevance` | mean of judge total / 10 per sub-query + material (Q1-Q5 rubric) | 1 per sub-query with material |
+| Efficiency | `query_relevance` | mean of judge total / 10 per search step + material (Q1-Q5 rubric); steps = sub-queries + each initial search; material = one best chunk per URL, 12k chars | 1 per step with material |
 | Efficiency | `retrieval_overlap` | search results already seen / proposed (lower is better) | 0 |
 
 Every result carries `version`, `higher_is_better`, `details`, `skipped` (a reason,
 when it could not run) and, for LLM metrics, `llm` (judge model, prompt versions and
 hashes, judge requests, cache hits, actual API calls, errors).
 
-Thresholds (0.5 coverage, 0.6 redundancy, 0.7 / 0.4 utilization) are uncalibrated
+Thresholds (0.6 redundancy, 0.7 / 0.4 utilization, 0.5 for the coverage embedding fallback) are uncalibrated
 first guesses; `details` keeps the underlying similarities so they can be tuned
 against human labels. Override per scoring run via `ScoringContext.options`.
 
@@ -129,8 +129,10 @@ against human labels. Override per scoring run via `ScoringContext.options`.
 - **Plan adherence** counts plan sub-queries, deep-research SERP queries and detailed
   subtopics. Deep-research clarifying questions are folded into one combined query by
   the library, so they are not counted.
-- **Query relevance** judges every executed sub-query except the run's own core query;
-  nested researchers' root queries (SERP queries, subtopics) are included.
+- **Query relevance** judges every executed sub-query except the run's own core query
+  (nested researchers' root queries, i.e. SERP queries and subtopics, are included), plus each
+  researcher's initial planning search. The judge sees one chunk per source URL, so a step
+  with 20+ chunks is judged on its breadth, not on the first site's first chunks.
 - **Context formats.** Chunks are split from the default `pretty_print_docs` format.
   MCP results and the Granite prompt families use other formats; such text is kept as
   one chunk with `url = null` and counted in `health.context_parse_warnings`.

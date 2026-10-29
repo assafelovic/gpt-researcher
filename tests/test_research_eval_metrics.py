@@ -83,6 +83,12 @@ class FakeJudge:
         self.prompts.append(prompt)
         if "List the distinct aspects" in prompt:
             return json.dumps({"key_points": ["cobalt supply", "lithium refining", "recycling policy"]})
+        if "which aspects of a research question" in prompt:
+            points = re.findall(r"^(\d+)\. (.+)$", prompt.split("Key points:")[1].split("Sub-queries:")[0], re.M)
+            subs = re.findall(r"^(\d+)\. (.+)$", prompt.split("Sub-queries:")[1].split("Return ONLY")[0], re.M)
+            return json.dumps({"points": [
+                {"point": int(i), "evidence": "",
+                 "subqueries": [int(j) for j, q in subs if p.split()[0] in q]} for i, p in points]})
         if "how a research agent split a query" in prompt:
             return json.dumps({"q1": {"score": 1}, "q2": {"score": 2}, "q3": {"score": 2},
                                "q4": {"score": 1}, "total": 6})
@@ -113,12 +119,36 @@ def ctx():
     return c
 
 
-async def test_decomposition_coverage(ctx):
+async def test_decomposition_coverage_uses_judge_mapping(ctx):
     r = await DecompositionCoverage().score(make_archive(), ctx)
-    covered = {p["key_point"]: p["covered"] for p in r.details["per_point"]}
-    assert covered == {"cobalt supply": True, "lithium refining": True, "recycling policy": False}
+    assert r.details["method"] == "judge"
+    covered = {p["key_point"]: p["subqueries"] for p in r.details["per_point"]}
+    assert covered == {"cobalt supply": ["cobalt supply concentration"],
+                       "lithium refining": ["lithium refining capacity",
+                                            "lithium refining capacity worldwide"],
+                       "recycling policy": []}
     assert r.value == pytest.approx(2 / 3, abs=1e-3)
     assert r.details["key_points"]["source"] == "judge"
+    prompt = next(p for p in ctx.fake.prompts if "which aspects of a research question" in p)
+    assert "4. sodium battery alternatives" in prompt and CORE not in prompt.split("Sub-queries:")[1]
+
+
+async def test_decomposition_coverage_embedding_fallback_with_frozen_points(ctx, tmp_path):
+    (tmp_path / "q1.json").write_text(json.dumps({"key_points": ["cobalt supply", "recycling policy"]}))
+    ctx.key_points_dir, ctx.judge = tmp_path, None
+    r = await DecompositionCoverage().score(make_archive(), ctx)
+    assert r.details["method"] == "embedding_fallback"
+    assert [p["covered"] for p in r.details["per_point"]] == [True, False]
+
+
+async def test_decomposition_coverage_judge_failure_is_skipped(ctx):
+    async def bad(prompt):
+        if "List the distinct aspects" in prompt:
+            return json.dumps({"key_points": ["cobalt supply"]})
+        return "not json"
+    ctx.judge = Judge(ctx.cache, model="judge-y", complete=bad)
+    r = await DecompositionCoverage().score(make_archive(), ctx)
+    assert r.value is None and r.skipped == "judge call failed"
 
 
 async def test_key_points_frozen_file_wins(ctx, tmp_path):
@@ -208,6 +238,25 @@ async def test_query_relevance(ctx):
     assert CORE not in prompt.split("Other sub-queries in this run:")[1].split("Sub-query under review")[0]
 
 
+async def test_query_relevance_material_and_initial_search(ctx):
+    a = make_archive()
+    cid = {k: _chunk(k)[0] for k in CHUNK_TEXT}
+    extra = {k + "2": ("https://energy.gov/lithium", "Lithium refining also needs permits.") for k in ["lithium"]}
+    for key, (url, text) in extra.items():
+        a.data["chunks"][chunk_id(url, text)] = {"url": url, "title": key, "content": text, "jev_score": None}
+    a.data["spans"].append({"span_id": "s8", "parent_id": "s2", "name": "initial_results", "attributes": {
+        "query": CORE, "chunk_ids": [cid["lithium"], chunk_id(*extra["lithium2"]), cid["unused"]],
+        "proposed_urls": [], "new_urls": []}})
+    a = RunArchive(a.data)                      # rebuild cached views
+    r = await QueryRelevance().score(a, ctx)
+    initial, = [q for q in r.details["per_query"] if q["kind"] == "initial_results"]
+    # Two chunks from energy.gov + one from the weather blog: one chunk per URL is shown.
+    assert (initial["chunks"], initial["urls_total"], initial["urls_shown"]) == (3, 2, 2)
+    prompt = next(p for p in ctx.fake.prompts if "the initial search on this query" in p)
+    material = prompt.split("Material retrieved for it:")[1]
+    assert material.count("https://energy.gov/lithium") == 1
+
+
 async def test_retrieval_overlap(ctx):
     r = await RetrievalOverlap().score(make_archive(), ctx)
     assert (r.details["proposed"], r.details["new"]) == (6, 4)
@@ -243,7 +292,7 @@ async def test_score_archive_lists_every_metric_and_is_reproducible(ctx, tmp_pat
 async def test_scorer_version_tracks_metric_changes():
     a = scorer_version(all_metrics())
     m = all_metrics()
-    m[0].version = "2"
+    m[0].version = "99"
     assert scorer_version(m) != a
 
 

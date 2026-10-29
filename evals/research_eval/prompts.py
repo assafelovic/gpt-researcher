@@ -45,6 +45,30 @@ Return ONLY JSON: {{"key_points": ["...", "..."]}}
 """.strip())
 
 
+DECOMPOSITION_COVERAGE = Prompt("decomposition_coverage", "1", """
+You are auditing which aspects of a research question a research agent decided
+to search for. Below are the question's key points and the sub-queries the
+agent searched. For EACH key point, list the numbers of the sub-queries that
+are aimed at it: the sub-query names that aspect, or is clearly written to
+find information about it. A sub-query that only shares broad topic words
+(e.g. "crypto regulation in Europe") does not count. A sub-query may serve
+several key points. Quote the words of the sub-query your answer rests on;
+leave the list empty when no sub-query targets the point.
+
+Question:
+{question}
+
+Key points:
+{key_points}
+
+Sub-queries:
+{subqueries}
+
+Return ONLY JSON, one entry per key point, in order:
+{{"points": [{{"point": 1, "evidence": "...", "subqueries": [2]}}]}}
+""".strip())
+
+
 TREE_QUALITY = Prompt("tree_quality", "1", """
 You are auditing how a research agent split a query into sub-queries before
 searching the web. Judge the split below. Answer the four questions IN ORDER;
@@ -161,4 +185,4 @@ Return ONLY a JSON array in this exact format, one entry per domain:
 """.strip())
 
 
-ALL = (KEY_POINTS, TREE_QUALITY, QUERY_RELEVANCE, CHUNK_USED, DOMAIN_AUTHORITY)
+ALL = (KEY_POINTS, DECOMPOSITION_COVERAGE, TREE_QUALITY, QUERY_RELEVANCE, CHUNK_USED, DOMAIN_AUTHORITY)
