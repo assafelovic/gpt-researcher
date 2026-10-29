@@ -147,16 +147,50 @@ against human labels. Override per scoring run via `ScoringContext.options`.
 - **Cost.** `cost_usd` sums every `add_costs` call across nested researchers. The
   library's deep-research planning calls do not report cost, so deep runs under-count.
 
+## Validation so far
+
+One real run: q001, default mode (about 135 s, $0.17 worker cost, 25 Tavily results).
+Each metric's score was checked by hand against the report, spans and chunks.
+
+| Metric | Score | Verdict |
+|---|---|---|
+| `retrieval_overlap` | 0.400 | Correct; flags a real waste: the core query is searched twice (initial search + appended core sub-query), 5 duplicate results |
+| `decomposition_tree_quality` | 0.875 | Rubric evidence holds; the one deduction (non-EU Europe missing) is the report's real gap |
+| `source_authority` | 0.554 | Domain scores plausible; the low score reflects zero official sources |
+| `plan_adherence` | 1.000 | Correct; little room to vary in default mode |
+| `subquery_redundancy` | 0.000 | Correct for 3 sub-queries; sample too small to judge |
+| `decomposition_coverage` | 0.625 | Correct after v2 (v1 embedding matching had 3 of 8 points wrong) |
+| `query_relevance` | 0.800 | v2 shows the judge every source URL (v1 saw 5-7 of 11-23 chunks) and scores the initial search |
+| `citation_utilization` | 0.692 | 9 of 13 retrieved URLs cited; v1's LLM chunk level marked uncited sources as used |
+| `source_diversity` | 1.000 | Computed correctly but saturates; formulation open |
+
+Re-scoring the same archive replays every judge call from the cache and gives identical
+numbers. `query_relevance` and `decomposition_coverage` answer different questions and
+can legitimately differ: material on a key point can arrive from a search not aimed at it.
+
 ## Adding generation metrics
 
 Subclass `metrics.base.Metric`, set `category = "generation.<group>"`, put LLM prompts
 in `prompts.py` with a version, and register the class next to `RETRIEVAL_METRICS`
-in `metrics/__init__.py:all_metrics`. The parsed report (`archive.report`) already
-has sections, paragraphs, citations and evidence per citation, and
-`key_points.get_key_points` gives the cached per-question key points.
+in `metrics/__init__.py:all_metrics`. What is ready to build on:
+
+- `archive.report`: sections, paragraphs (`type`, `heading_path`), citations, and per
+  citation the retrieved chunks behind it (`evidence`, `found: false` = cited URL never
+  retrieved); `parse_warnings` for instruction following.
+- `report_parser.paragraph_sentences` / `report_sentences`, and `metrics/lexical.py`
+  (BM25-weighted term overlap) for matching report text to chunks.
+- `key_points.get_key_points`: cached per-question key points (comprehensiveness).
+- `Judge` / `prompts.Prompt` for cached, versioned rubric calls.
+
+Left to the generation metrics on purpose: which chunk or claim the writer actually used
+(ALCE citation recall / precision). `citation_utilization` stays URL-level until that
+matching exists; its rule-based chunk diagnostic can then be replaced by it.
 
 ## Not yet done
 
+- Source diversity formulation (domain ratio saturates; under research).
+- Perturbation tests on a frozen archive (does each metric move the expected way when a
+  known problem is injected), then judge calibration with a small human-labelled set.
+- Runs of detailed and deep mode with real APIs (covered so far by offline tests only).
 - Question set size and composition (`dataset/questions_v0.jsonl` is a placeholder).
-- Generation metrics; old-vs-new comparison against `quality_eval`; judge calibration
-  and evaluator stability / sensitivity benchmarks.
+- Old-vs-new comparison against `quality_eval`; evaluator stability benchmarks.
