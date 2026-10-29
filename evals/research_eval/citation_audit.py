@@ -49,8 +49,8 @@ VERDICT_SCORES = {"supported": 1.0, "inferred_a": 0.5, "inferred_b": 0.4, "infer
 
 MIN_UNCITED_CHARS = 80      # shorter uncited paragraphs are headings-in-disguise or transitions
 PASSAGE_CHARS = 1200        # one chunk shown to the judge
-SOURCE_PASSAGES = 5         # chunks shown per cited URL
-MATERIAL_CHARS = 16000      # per paragraph
+SOURCE_PASSAGES = 12        # chunks shown per cited URL: most pages fit whole
+MATERIAL_CHARS = 24000      # per paragraph, shared by its cited URLs
 UNCITED_PASSAGES = 4        # BM25 top-k for paragraphs without citations
 UNAVAILABLE = "(not available: the agent never retrieved this URL)"
 
@@ -178,7 +178,8 @@ def prepare(archive: "RunArchive", paragraph: dict, idf: dict,
         for n, url in enumerate(urls, 1):
             cids = archive.chunks_by_url.get(normalize_url(url), [])
             picked, used = [], 0
-            for cid in _candidates(archive, sents, paragraph["text"], cids, idf)[:SOURCE_PASSAGES]:
+            for cid in _candidates(archive, cited_sentences(paragraph), paragraph["text"],
+                                   cids, idf)[:SOURCE_PASSAGES]:
                 size = min(len(archive.chunks[cid]["content"]), PASSAGE_CHARS)
                 if picked and used + size > per_source:
                     break

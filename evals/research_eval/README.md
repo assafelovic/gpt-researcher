@@ -200,8 +200,9 @@ citation and faithfulness metrics and by `citation_utilization`:
   the strict reading scored recall 0.37: it judged each paragraph's citation only
   against its closing, usually analytical, sentence.
 - Material: for each cited URL, its retrieved chunks that best match the paragraph
-  (first the best chunk for each sentence, then by match with the paragraph; up to 5,
-  16k chars per paragraph); a cited URL that was never
+  (first the best chunk for each sentence, then by match with the paragraph; up to 12,
+  24k chars per paragraph, so most cited pages are shown whole: with 3 chunks per URL a
+  fact on a long page was judged unsupported because its chunk was not shown); a cited URL that was never
   retrieved is shown as unavailable and its sentence counts as unsupported without
   asking. Paragraphs without citations (>= 80 chars) get the 4 best-matching chunks of
   everything retrieved; the judge skips them when they are opinion or transition.
