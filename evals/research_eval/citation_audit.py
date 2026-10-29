@@ -43,6 +43,11 @@ if TYPE_CHECKING:
     from .judge import JudgeResponse
     from .metrics.base import ScoringContext
 
+# Bump when the audit's material or unit logic changes (prompt changes bump the
+# prompt version instead); every metric that reads the audit carries it in its
+# version, so the scorer version changes and old results are not overwritten.
+AUDIT_VERSION = "3"
+
 # Faithfulness points per verdict (eval-design/generation-metrics.md §3.2 B).
 VERDICT_SCORES = {"supported": 1.0, "inferred_a": 0.5, "inferred_b": 0.4, "inferred_c": 0.3,
                   "unsupported": 0.0, "contradicted": -1.0}

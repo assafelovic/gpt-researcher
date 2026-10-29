@@ -7,7 +7,7 @@ shared citation audit (one judge call per paragraph, see citation_audit.py).
 from __future__ import annotations
 
 from ...archive import RunArchive, normalize_url
-from ...citation_audit import CitationAudit, citation_audit
+from ...citation_audit import AUDIT_VERSION, CitationAudit, citation_audit
 from ...prompts import PARAGRAPH_AUDIT
 from ...report_parser import body_paragraphs, cited_urls
 from ..base import Metric, MetricResult, ScoringContext, rounded
@@ -15,6 +15,7 @@ from ..base import Metric, MetricResult, ScoringContext, rounded
 
 class _AuditMetric(Metric):
     category = "generation.citation"
+    version = f"1.audit{AUDIT_VERSION}"
     uses_llm = True
     prompts = (PARAGRAPH_AUDIT,)
 

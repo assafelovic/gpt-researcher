@@ -5,7 +5,7 @@ C. Efficiency metrics: whether what was retrieved was worth retrieving.
 from __future__ import annotations
 
 from ...archive import RunArchive, normalize_url
-from ...citation_audit import citation_audit
+from ...citation_audit import AUDIT_VERSION, citation_audit
 from ...key_points import get_key_points
 from ...prompts import KEY_POINTS, PARAGRAPH_AUDIT, QUERY_RELEVANCE
 from ...report_parser import body_paragraphs, cited_urls, paragraph_sentences, report_sentences
@@ -42,7 +42,7 @@ class CitationUtilization(Metric):
     """
 
     name, category = "citation_utilization", "retrieval.efficiency"
-    version = "3"
+    version = f"3.audit{AUDIT_VERSION}"
     prompts = (PARAGRAPH_AUDIT,)
     MATCH, MIN_TERMS = 0.5, 5
 
