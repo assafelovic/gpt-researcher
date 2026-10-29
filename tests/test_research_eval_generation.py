@@ -317,3 +317,14 @@ async def test_generation_llm_metrics_skip_without_judge():
     for m in (Comprehensiveness(), Insight(), TopicRelevance(), CitationRecall(), Faithfulness(), Toxicity()):
         r = await m.score(make_archive(), c)
         assert r.value is None and r.skipped == "no judge configured"
+
+
+def test_cited_sentences_apa_citation_after_full_stop():
+    md = ("# T\n\n## S\n\nThe grandfathering window ended on 1 July 2026. Unlicensed firms must stop. "
+          "([Didit, 2026](https://a.com); [Norton Rose Fulbright, n.d.](https://b.com); "
+          "[Crypto Council for Innovation, 2026](https://c.com))\n")
+    p = parse_report(md)["sections"][0]["paragraphs"][0]
+    got = cited_sentences(p)
+    # The citation-only fragment (and "n.d." inside it) does not become a sentence.
+    assert [len(s["urls"]) for s in got] == [0, 3]
+    assert got[1]["text"].startswith("Unlicensed firms must stop.")

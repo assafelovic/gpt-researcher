@@ -233,31 +233,46 @@ def cited_sentences(paragraph: dict, min_chars: int = 20) -> list[dict]:
     """A paragraph's sentences with the URLs each one cites.
 
     Returns [{"text", "urls"}] in order, each sentence's URLs in the order they
-    appear. Citations are placed by position: a
-    link belongs to the sentence it ends in. Fragments shorter than `min_chars`
-    (typically a citation written after the full stop, "... rose. (Reuters)")
-    are merged into the sentence before them, so their links go with it.
+    appear. Citations are placed by position: a link belongs to the sentence it
+    ends in. A sentence never ends inside parentheses ("(Norton, n.d.; ...)"),
+    and a fragment that holds little besides citation anchors or is shorter than
+    `min_chars` (a citation written after the full stop, "... rose. (Reuters,
+    2026)") is merged into the sentence before it, so its links go with it.
     """
     text = paragraph["text"]
+    links = sorted((off, c["url"], c.get("anchor") or "") for c in paragraph.get("citations", [])
+                   for off in c.get("offsets", []))
+    # Text with anchors and URLs blanked out: what a fragment says on its own.
+    bare = list(text)
+    for off, _, anchor in links:
+        for k in range(max(0, off - len(anchor)), min(off, len(bare))):
+            bare[k] = " "
+    bare = _BARE_URL.sub(lambda m: " " * len(m.group(0)), "".join(bare))
+
     spans, start = [], 0
     for m in _SENTENCE_END.finditer(text):
+        if text[:m.start()].count("(") > text[:m.start()].count(")"):
+            continue
         spans.append((start, m.start()))
         start = m.end()
     spans.append((start, len(text)))
+
+    def substance(a: int, b: int) -> int:
+        return len(re.sub(r"[\s()\[\];,.|*\-]+", "", bare[a:b]))
+
     merged: list[list[int]] = []
     for a, b in spans:
-        frag = text[a:b].strip(" |-*")
-        if merged and len(_BARE_URL.sub("", frag)) < min_chars:
+        if not text[a:b].strip(" |-*"):
+            continue
+        if merged and substance(a, b) < min_chars:
             merged[-1][1] = b
-        elif frag:
+        else:
             merged.append([a, b])
-    if len(merged) > 1 and len(_BARE_URL.sub("", text[merged[0][0]:merged[0][1]]).strip()) < min_chars:
+    if len(merged) > 1 and substance(*merged[0]) < min_chars:
         merged[1][0] = merged[0][0]
         merged.pop(0)
     out = [{"text": text[a:b].strip(), "urls": []} for a, b in merged]
-    links = sorted((off, c["url"]) for c in paragraph.get("citations", [])
-                   for off in c.get("offsets", []))
-    for off, url in links:
+    for off, url, _ in links:
         i = next((k for k, (a, b) in enumerate(merged) if off <= b), len(merged) - 1)
         if out and url not in out[i]["urls"]:
             out[i]["urls"].append(url)

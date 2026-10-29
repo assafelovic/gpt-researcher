@@ -191,9 +191,11 @@ can legitimately differ: material on a key point can arrive from a search not ai
 citation and faithfulness metrics and by `citation_utilization`:
 
 - Citations are placed per sentence by link position (`report_parser.cited_sentences`;
-  a citation after the full stop goes with the sentence before it).
+  a citation after the full stop, e.g. APA style "... rose. (Didit, 2026; Norton, n.d.)",
+  goes with the sentence before it, and no sentence ends inside parentheses).
 - Material: for each cited URL, its retrieved chunks that best match the paragraph
-  (BM25-weighted, up to 3, 10k chars per paragraph); a cited URL that was never
+  (first the best chunk for each sentence, then by match with the paragraph; up to 5,
+  16k chars per paragraph); a cited URL that was never
   retrieved is shown as unavailable and its sentence counts as unsupported without
   asking. Paragraphs without citations (>= 80 chars) get the 4 best-matching chunks of
   everything retrieved; the judge skips them when they are opinion or transition.

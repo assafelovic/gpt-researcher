@@ -49,8 +49,8 @@ VERDICT_SCORES = {"supported": 1.0, "inferred_a": 0.5, "inferred_b": 0.4, "infer
 
 MIN_UNCITED_CHARS = 80      # shorter uncited paragraphs are headings-in-disguise or transitions
 PASSAGE_CHARS = 1200        # one chunk shown to the judge
-SOURCE_PASSAGES = 3         # chunks shown per cited URL
-MATERIAL_CHARS = 10000      # per paragraph
+SOURCE_PASSAGES = 5         # chunks shown per cited URL
+MATERIAL_CHARS = 16000      # per paragraph
 UNCITED_PASSAGES = 4        # BM25 top-k for paragraphs without citations
 UNAVAILABLE = "(not available: the agent never retrieved this URL)"
 
@@ -126,17 +126,33 @@ def _rank(text: str, chunk_ids: list[str], archive: "RunArchive", idf: dict) -> 
     return [c for _, _, c in sorted(scored, key=lambda x: (-x[0], x[1]))]
 
 
+def _candidates(archive: "RunArchive", sents: list[dict], text: str, cids: list[str],
+                idf: dict) -> list[str]:
+    """A source's chunks in the order to show them: first the best chunk for
+    each sentence in turn (a long source is often cited for several facts that
+    sit in different chunks), then the rest by match with the whole paragraph."""
+    if len(cids) <= 1:
+        return list(cids)
+    out: list[str] = []
+    for s in sents:
+        best = _rank(s["text"], cids, archive, idf)[0]
+        if best not in out:
+            out.append(best)
+    out.extend(c for c in _rank(text, cids, archive, idf) if c not in out)
+    return out
+
+
 def prepare(archive: "RunArchive", paragraph: dict, idf: dict) -> ParagraphAudit:
     sents = cited_sentences(paragraph) or [{"text": paragraph["text"], "urls": []}]
     urls = list(dict.fromkeys(u for s in sents for u in s["urls"]))
     sources: list[dict] = []
     if urls:
         mode = "cited"
-        per_source = max(PASSAGE_CHARS, MATERIAL_CHARS // len(urls))
+        per_source = max(2 * PASSAGE_CHARS, MATERIAL_CHARS // len(urls))
         for n, url in enumerate(urls, 1):
             cids = archive.chunks_by_url.get(normalize_url(url), [])
             picked, used = [], 0
-            for cid in _rank(paragraph["text"], cids, archive, idf)[:SOURCE_PASSAGES]:
+            for cid in _candidates(archive, sents, paragraph["text"], cids, idf)[:SOURCE_PASSAGES]:
                 size = min(len(archive.chunks[cid]["content"]), PASSAGE_CHARS)
                 if picked and used + size > per_source:
                     break
