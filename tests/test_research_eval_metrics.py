@@ -1,0 +1,255 @@
+"""Tests for the retrieval metrics and the scoring layer of evals/research_eval.
+
+Archives are built by hand so every expected number can be worked out from
+the fixture; the judge and the embedder are offline fakes.
+"""
+
+import json
+import re
+
+import pytest
+
+from evals.research_eval.archive import RunArchive, build_archive
+from evals.research_eval.cache import EvalCache
+from evals.research_eval.chunks import chunk_id
+from evals.research_eval.judge import Embedder, Judge
+from evals.research_eval.metrics import all_metrics
+from evals.research_eval.metrics.base import ScoringContext
+from evals.research_eval.metrics.retrieval import (
+    CitationUtilization, DecompositionCoverage, DecompositionTreeQuality, PlanAdherence,
+    QueryRelevance, RetrievalOverlap, SourceAuthority, SourceDiversity, SubqueryRedundancy)
+from evals.research_eval.scoring import save_results, score_archive, scorer_version
+
+CORE = "battery supply chain risks"
+
+CHUNK_TEXT = {
+    "cobalt": "Cobalt mining concentrated in Congo creates supply risk for battery makers in 2024.",
+    "lithium": "Lithium refining capacity sits mostly in China, according to agency data.",
+    "unused": "Weather forecasts for the coming weekend show rain across northern regions.",
+}
+URLS = {"cobalt": "https://www.reuters.com/cobalt", "lithium": "https://energy.gov/lithium",
+        "unused": "https://weather-blog.com/rain"}
+
+
+def _chunk(key):
+    return chunk_id(URLS[key], CHUNK_TEXT[key]), {
+        "url": URLS[key], "title": key, "content": CHUNK_TEXT[key], "jev_score": None}
+
+
+def make_archive(report=None):
+    chunks = dict(_chunk(k) for k in CHUNK_TEXT)
+    cid = {k: _chunk(k)[0] for k in CHUNK_TEXT}
+    spans = [
+        {"span_id": "s1", "parent_id": None, "name": "run", "attributes": {"query": CORE}},
+        {"span_id": "s2", "parent_id": "s1", "name": "research", "attributes": {"query": CORE}},
+        {"span_id": "s3", "parent_id": "s2", "name": "plan", "attributes": {
+            "query": CORE, "sub_queries": ["cobalt supply concentration",
+                                           "lithium refining capacity",
+                                           "lithium refining capacity worldwide",
+                                           "sodium battery alternatives"]}},
+        {"span_id": "s4", "parent_id": "s3", "name": "sub_query", "attributes": {
+            "query": "cobalt supply concentration", "chunk_ids": [cid["cobalt"]],
+            "proposed_urls": [URLS["cobalt"], "https://dup.com"], "new_urls": [URLS["cobalt"], "https://dup.com"]}},
+        {"span_id": "s5", "parent_id": "s3", "name": "sub_query", "attributes": {
+            "query": "lithium refining capacity", "chunk_ids": [cid["lithium"], cid["unused"]],
+            "proposed_urls": [URLS["lithium"], URLS["unused"], "https://dup.com"],
+            "new_urls": [URLS["lithium"], URLS["unused"]]}},
+        {"span_id": "s6", "parent_id": "s3", "name": "sub_query", "attributes": {
+            "query": "lithium refining capacity worldwide", "chunk_ids": [],
+            "proposed_urls": ["https://dup.com"], "new_urls": []}},
+        # "sodium battery alternatives" was planned but never executed.
+        {"span_id": "s7", "parent_id": "s3", "name": "sub_query", "attributes": {
+            "query": CORE, "is_core_query": True, "chunk_ids": [cid["cobalt"]],
+            "proposed_urls": [], "new_urls": []}},
+    ]
+    report = report if report is not None else (
+        "# Battery risks\n\n## Supply\n\n"
+        "Cobalt mining is concentrated in Congo, which creates supply risk for battery makers "
+        "([Reuters](https://reuters.com/cobalt)).\n\n"
+        "Lithium prices moved a lot over the past year for many unrelated reasons entirely.\n\n"
+        "## References\n\n- https://reuters.com/cobalt\n")
+    return RunArchive(build_archive(
+        meta={"run_id": "run-1", "question_id": "q1", "query": CORE, "config": {"mode": "default"}},
+        spans=spans, chunks=chunks, report_markdown=report))
+
+
+class FakeJudge:
+    """Backend for Judge: answers each prompt type with a canned verdict."""
+
+    def __init__(self):
+        self.prompts = []
+
+    async def __call__(self, prompt):
+        self.prompts.append(prompt)
+        if "List the distinct aspects" in prompt:
+            return json.dumps({"key_points": ["cobalt supply", "lithium refining", "recycling policy"]})
+        if "how a research agent split a query" in prompt:
+            return json.dumps({"q1": {"score": 1}, "q2": {"score": 2}, "q3": {"score": 2},
+                               "q4": {"score": 1}, "total": 6})
+        if "auditing one retrieval step" in prompt:
+            q = re.search(r"Sub-query under review:\n(.*)\n", prompt).group(1)
+            return json.dumps({"total": 8 if "cobalt" in q else 4})
+        if "used information from a source passage" in prompt:
+            return json.dumps({"used": "Lithium" in prompt.split("Report sentences")[0], "evidence": ""})
+        if "Rate the authority" in prompt:
+            return json.dumps([{"domain": "weather-blog.com", "score": 0.2, "reason": "blog"}])
+        raise AssertionError(prompt[:80])
+
+
+VOCAB = ["cobalt", "lithium", "refining", "supply", "recycling", "policy", "sodium", "concentration"]
+
+
+async def fake_embed(texts):
+    return [[1.0 if w in t.lower() else 0.0 for w in VOCAB] + [0.01] for t in texts]
+
+
+@pytest.fixture
+def ctx():
+    cache = EvalCache(":memory:")
+    fake = FakeJudge()
+    c = ScoringContext(cache=cache, judge=Judge(cache, model="judge-x", complete=fake),
+                       embedder=Embedder(cache, model="emb:x", embed=fake_embed))
+    c.fake = fake
+    return c
+
+
+async def test_decomposition_coverage(ctx):
+    r = await DecompositionCoverage().score(make_archive(), ctx)
+    covered = {p["key_point"]: p["covered"] for p in r.details["per_point"]}
+    assert covered == {"cobalt supply": True, "lithium refining": True, "recycling policy": False}
+    assert r.value == pytest.approx(2 / 3, abs=1e-3)
+    assert r.details["key_points"]["source"] == "judge"
+
+
+async def test_key_points_frozen_file_wins(ctx, tmp_path):
+    (tmp_path / "q1.json").write_text(json.dumps({"key_points": ["cobalt supply"]}))
+    ctx.key_points_dir = tmp_path
+    r = await DecompositionCoverage().score(make_archive(), ctx)
+    assert r.value == 1.0 and r.details["key_points"]["source"] == "frozen"
+    assert not any("List the distinct aspects" in p for p in ctx.fake.prompts)
+
+
+async def test_subquery_redundancy_flags_near_duplicates(ctx):
+    r = await SubqueryRedundancy().score(make_archive(), ctx)
+    assert r.details["pairs"] == 6
+    pairs = {(d["a"], d["b"]) for d in r.details["duplicate_pairs"]}
+    assert pairs == {("lithium refining capacity", "lithium refining capacity worldwide")}
+    assert r.value == pytest.approx(1 / 6, abs=1e-3)
+    assert r.higher_is_better is False
+
+
+async def test_tree_quality_uses_judge_total(ctx):
+    r = await DecompositionTreeQuality().score(make_archive(), ctx)
+    assert r.value == 0.75
+    assert r.llm["calls"] == 1 and r.llm["judge_model"] == "judge-x"
+    assert r.llm["prompts"]["tree_quality"]["version"] == "1"
+
+
+async def test_plan_adherence_counts_empty_and_unexecuted(ctx):
+    r = await PlanAdherence().score(make_archive(), ctx)
+    assert (r.details["planned"], r.details["delivered"]) == (4, 2)
+    assert {f["query"] for f in r.details["not_delivered"]} == {
+        "lithium refining capacity worldwide", "sodium battery alternatives"}
+
+
+async def test_source_diversity(ctx):
+    r = await SourceDiversity().score(make_archive(), ctx)
+    assert r.details["unique_domains"] == 3 and r.value == 1.0
+    assert r.details["domain_entropy"] == pytest.approx(1.585, abs=1e-3)
+
+
+async def test_source_authority_rules_judge_and_domain_cache(ctx):
+    r = await SourceAuthority().score(make_archive(), ctx)
+    basis = {b["domain"]: (b["score"], b["basis"]) for b in r.details["breakdown"]}
+    assert basis == {"energy.gov": (1.0, "rule"), "reuters.com": (0.8, "rule"),
+                     "weather-blog.com": (0.2, "judge")}
+    assert r.value == pytest.approx((1.0 + 0.8 + 0.2) / 3, abs=1e-3)
+    # Second run: the domain verdict comes from the global cache, no new call.
+    before = len(ctx.fake.prompts)
+    r2 = await SourceAuthority().score(make_archive(), ctx)
+    assert len(ctx.fake.prompts) == before
+    assert {b["basis"] for b in r2.details["breakdown"] if b["domain"] == "weather-blog.com"} == {"domain_cache"}
+
+
+async def test_source_authority_without_judge_falls_back():
+    r = await SourceAuthority().score(make_archive(), ScoringContext(cache=EvalCache(":memory:")))
+    assert r.details["fallback_domains"] == ["weather-blog.com"]
+
+
+async def test_citation_utilization(ctx):
+    r = await CitationUtilization().score(make_archive(), ctx)
+    assert r.details["url_level"] == pytest.approx(1 / 3, abs=1e-3)
+    used = {c["chunk_id"]: (c["used"], c["basis"]) for c in r.details["per_chunk"]}
+    cid = {k: _chunk(k)[0] for k in CHUNK_TEXT}
+    assert used[cid["cobalt"]] == (True, "lexical")
+    assert used[cid["unused"]] == (False, "lexical")
+    # "Lithium prices..." shares only one rare word with the lithium chunk:
+    # borderline or below, never a lexical "used".
+    assert used[cid["lithium"]][1] in ("judge", "lexical")
+    assert r.value == pytest.approx((r.details["url_level"] + r.details["chunk_level"]) / 2, abs=1e-3)
+
+
+async def test_citation_utilization_cap_leaves_borderline_undecided(ctx):
+    ctx.options = {"utilization_high": 1.01, "utilization_low": 0.0, "utilization_max_borderline": 0}
+    r = await CitationUtilization().score(make_archive(), ctx)
+    assert r.details["chunks_decided"] == 0 and r.details["chunk_level"] is None
+    assert r.value == r.details["url_level"]
+    assert r.llm["calls"] == 0
+
+
+async def test_query_relevance(ctx):
+    r = await QueryRelevance().score(make_archive(), ctx)
+    scores = {q["query"]: q["score"] for q in r.details["per_query"]}
+    assert scores == {"cobalt supply concentration": 0.8, "lithium refining capacity": 0.4}
+    assert r.details["no_material"] == ["lithium refining capacity worldwide"]
+    assert r.value == pytest.approx(0.6)
+    prompt = next(p for p in ctx.fake.prompts if "Sub-query under review:\ncobalt" in p)
+    assert "1. cobalt supply" in prompt and "- lithium refining capacity" in prompt
+    assert CORE not in prompt.split("Other sub-queries in this run:")[1].split("Sub-query under review")[0]
+
+
+async def test_retrieval_overlap(ctx):
+    r = await RetrievalOverlap().score(make_archive(), ctx)
+    assert (r.details["proposed"], r.details["new"]) == (6, 4)
+    assert r.value == pytest.approx(2 / 6, abs=1e-3)
+
+
+async def test_llm_metrics_skip_without_judge():
+    c = ScoringContext(cache=EvalCache(":memory:"))
+    for m in (DecompositionCoverage(), DecompositionTreeQuality(), QueryRelevance()):
+        r = await m.score(make_archive(), c)
+        assert r.value is None and r.skipped
+
+
+async def test_score_archive_lists_every_metric_and_is_reproducible(ctx, tmp_path):
+    metrics = all_metrics()
+    first = await score_archive(make_archive(), metrics, ctx)
+    calls = len(ctx.fake.prompts)
+    second = await score_archive(make_archive(), metrics, ctx)
+    assert len(ctx.fake.prompts) == calls              # everything replayed from cache
+    assert set(first["metrics"]) == {m.name for m in metrics}
+    assert "overall" not in first and "total" not in first
+    strip = lambda rec: {k: (v["value"], v["skipped"]) for k, v in rec["metrics"].items()}
+    assert strip(first) == strip(second)
+    assert all(v["skipped"] is None for v in first["metrics"].values()), {
+        k: v["skipped"] for k, v in first["metrics"].items() if v["skipped"]}
+    path = save_results(first, tmp_path)
+    assert path == tmp_path / "run-1" / f"{first['scorer_version']}.json"
+
+
+async def test_scorer_version_tracks_metric_changes():
+    a = scorer_version(all_metrics())
+    m = all_metrics()
+    m[0].version = "2"
+    assert scorer_version(m) != a
+
+
+async def test_metric_crash_is_recorded_not_raised(ctx):
+    class Broken(SourceDiversity):
+        name = "broken"
+
+        async def score(self, archive, ctx):
+            raise RuntimeError("nope")
+
+    rec = await score_archive(make_archive(), [Broken()], ctx)
+    assert rec["metrics"]["broken"]["skipped"].startswith("error: RuntimeError")

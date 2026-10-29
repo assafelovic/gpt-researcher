@@ -11,6 +11,7 @@ Three complementary evaluation systems, each answering a different question:
 | `simple_evals/` | Is the answer factually correct? | Yes (OpenAI SimpleQA dataset) |
 | `quality_eval/` | Is the report well-sourced and complete? | No — works on any query |
 | `hallucination_eval/` | Does the report fabricate content? | No — compares against scraped sources |
+| `research_eval/` | How well does each pipeline stage work? (run/score separated; retrieval metrics so far) | No — see [`research_eval/README.md`](research_eval/README.md) |
 
 **Quick start:**
 
