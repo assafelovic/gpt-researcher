@@ -206,25 +206,30 @@ async def test_source_authority_without_judge_falls_back():
     assert r.details["fallback_domains"] == ["weather-blog.com"]
 
 
-async def test_citation_utilization(ctx):
+async def test_citation_utilization_is_url_level_and_rule_based(ctx):
     r = await CitationUtilization().score(make_archive(), ctx)
-    assert r.details["url_level"] == pytest.approx(1 / 3, abs=1e-3)
-    used = {c["chunk_id"]: (c["used"], c["basis"]) for c in r.details["per_chunk"]}
+    assert r.value == pytest.approx(1 / 3, abs=1e-3)
+    assert r.details["uncited_urls"] == [URLS["lithium"], URLS["unused"]]
+    assert r.llm is None and not CitationUtilization.uses_llm
+    used = {c["chunk_id"]: c["used"] for c in r.details["per_chunk"]}
     cid = {k: _chunk(k)[0] for k in CHUNK_TEXT}
-    assert used[cid["cobalt"]] == (True, "lexical")
-    assert used[cid["unused"]] == (False, "lexical")
-    # "Lithium prices..." shares only one rare word with the lithium chunk:
-    # borderline or below, never a lexical "used".
-    assert used[cid["lithium"]][1] in ("judge", "lexical")
-    assert r.value == pytest.approx((r.details["url_level"] + r.details["chunk_level"]) / 2, abs=1e-3)
+    assert used == {cid["cobalt"]: True, cid["lithium"]: False, cid["unused"]: False}
+    assert r.details["chunk_level"] == pytest.approx(1 / 3, abs=1e-3)
 
 
-async def test_citation_utilization_cap_leaves_borderline_undecided(ctx):
-    ctx.options = {"utilization_high": 1.01, "utilization_low": 0.0, "utilization_max_borderline": 0}
-    r = await CitationUtilization().score(make_archive(), ctx)
-    assert r.details["chunks_decided"] == 0 and r.details["chunk_level"] is None
-    assert r.value == r.details["url_level"]
-    assert r.llm["requests"] == 0
+async def test_citation_utilization_uncited_overlap_is_echo_not_use(ctx):
+    report = ("# R\n\n## S\n\n"
+              "Lithium refining capacity sits mostly in China, according to agency data from 2024.\n\n"
+              "Cobalt mining is concentrated in Congo and creates supply risk for battery makers, "
+              "but this paragraph cites [Weather](https://weather-blog.com/rain).\n")
+    r = await CitationUtilization().score(make_archive(report), ctx)
+    by = {c["chunk_id"]: c for c in r.details["per_chunk"]}
+    cid = {k: _chunk(k)[0] for k in CHUNK_TEXT}
+    # Lithium text is reproduced but its URL is never cited: echoed, not used.
+    assert by[cid["lithium"]]["used"] is False and by[cid["lithium"]]["echoed_uncited"] is True
+    # The weather page is cited, but by a paragraph that does not match its content.
+    assert by[cid["unused"]]["url_cited"] is True and by[cid["unused"]]["used"] is False
+    assert r.details["chunks_echoed_uncited"] >= 1
 
 
 async def test_query_relevance(ctx):

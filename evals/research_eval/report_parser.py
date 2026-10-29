@@ -208,13 +208,17 @@ _SENTENCE_END = re.compile(r"(?<=[.!?。！？])\s+|\n+")
 _MD_LINK_TAIL = re.compile(r"\(\s*https?://[^)]*\)")
 
 
+def paragraph_sentences(paragraph: dict) -> list[str]:
+    """A paragraph's sentences, with URLs removed."""
+    text = _BARE_URL.sub("", _MD_LINK_TAIL.sub("", paragraph["text"]))
+    out = []
+    for s in _SENTENCE_END.split(text):
+        s = s.strip(" |-*")
+        if len(s) >= 20:
+            out.append(s)
+    return out
+
+
 def report_sentences(parsed: dict) -> list[str]:
     """Body sentences, with URLs removed, for matching chunks against the text."""
-    out = []
-    for p in body_paragraphs(parsed):
-        text = _BARE_URL.sub("", _MD_LINK_TAIL.sub("", p["text"]))
-        for s in _SENTENCE_END.split(text):
-            s = s.strip(" |-*")
-            if len(s) >= 20:
-                out.append(s)
-    return out
+    return [s for p in body_paragraphs(parsed) for s in paragraph_sentences(p)]

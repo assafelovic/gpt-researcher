@@ -6,8 +6,8 @@ from __future__ import annotations
 
 from ...archive import RunArchive, normalize_url
 from ...key_points import get_key_points
-from ...prompts import CHUNK_USED, KEY_POINTS, QUERY_RELEVANCE
-from ...report_parser import cited_urls, report_sentences
+from ...prompts import KEY_POINTS, QUERY_RELEVANCE
+from ...report_parser import body_paragraphs, cited_urls, paragraph_sentences, report_sentences
 from ..base import Metric, MetricResult, ScoringContext, rounded
 from ..lexical import idf_table, weighted_overlap
 
@@ -15,88 +15,75 @@ from gpt_researcher.context.lexical import tokenize
 
 
 class CitationUtilization(Metric):
-    """How much of the retrieved material ended up in the report.
+    """Share of retrieved source URLs that the report cites (rule-based, no LLM).
 
-    Two levels, combined as their mean:
+        value = cited URLs ∩ retrieved URLs / retrieved URLs
 
-      url_level    cited URLs ∩ retrieved URLs / retrieved URLs
-      chunk_level  used chunks / decided chunks. For each chunk, the report
-                   sentence it best matches is found with BM25 term weighting
-                   (share of the sentence's weight present in the chunk).
-                   >= high: used; < low: not used; in between: one judge call
-                   per chunk, at most `max_borderline` of them. Borderline
-                   chunks over the cap, or whose call failed, stay undecided
-                   and are left out of the denominator.
+    Whether a specific chunk or claim was used is the generation metrics' job
+    (ALCE-style citation recall / precision): matching a paragraph to the chunk
+    behind it is the same machinery, and should live there once. Until then
+    `details` carries a rule-based chunk diagnostic, not part of the value:
+
+      chunk_level      chunks matched by a paragraph that cites their URL /
+                       chunks. A chunk matches when the best sentence of such a
+                       paragraph has >= `match` of its BM25-weighted terms in
+                       the chunk. Chunks of uncited URLs never count as used:
+                       many sources repeat the same facts, so content overlap
+                       alone does not show a source was used.
+      echoed_uncited   chunks of uncited URLs whose content the report still
+                       echoes (best sentence anywhere >= `match`): material the
+                       writer either took without citing or got elsewhere.
     """
 
     name, category = "citation_utilization", "retrieval.efficiency"
-    uses_llm = True
-    prompts = (CHUNK_USED,)
-    HIGH, LOW, MAX_BORDERLINE, MIN_TERMS = 0.7, 0.4, 20, 5
+    version = "2"
+    MATCH, MIN_TERMS = 0.5, 5
 
     async def score(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:
         retrieved = archive.retrieved_urls
-        if not archive.retrieved_chunk_ids:
-            return self.skip("no retrieved chunks")
+        if not retrieved:
+            return self.skip("no retrieved sources")
         parsed = archive.report
         cited = {normalize_url(u) for u in cited_urls(parsed)}
         used_urls = [u for u in retrieved if normalize_url(u) in cited]
-        url_level = len(used_urls) / len(retrieved) if retrieved else None
+        threshold = ctx.option("utilization_match", self.MATCH)
 
-        high = ctx.option("utilization_high", self.HIGH)
-        low = ctx.option("utilization_low", self.LOW)
-        cap = ctx.option("utilization_max_borderline", self.MAX_BORDERLINE)
+        def usable(sentences):
+            return [s for s in sentences if len(set(tokenize(s))) >= self.MIN_TERMS]
 
-        sentences = [s for s in report_sentences(parsed) if len(set(tokenize(s))) >= self.MIN_TERMS]
+        by_url: dict[str, list[str]] = {}
+        for p in body_paragraphs(parsed):
+            sents = usable(paragraph_sentences(p))
+            for c in p["citations"]:
+                by_url.setdefault(normalize_url(c["url"]), []).extend(sents)
+        all_sentences = usable(report_sentences(parsed))
+
         chunk_ids = archive.retrieved_chunk_ids
-        contents = [archive.chunks[c]["content"] for c in chunk_ids]
-        idf = idf_table(contents)
-        per_chunk, borderline = [], []
-        for cid, content in zip(chunk_ids, contents):
-            terms = set(tokenize(content))
-            sims = sorted(((weighted_overlap(s, terms, idf), s) for s in sentences), reverse=True)
-            best = sims[0][0] if sims else 0.0
-            entry = {"chunk_id": cid, "best_match": round(best, 3),
-                     "sentence": sims[0][1] if sims else None}
-            if best >= high:
-                entry["used"], entry["basis"] = True, "lexical"
-            elif best < low:
-                entry["used"], entry["basis"] = False, "lexical"
+        idf = idf_table([archive.chunks[c]["content"] for c in chunk_ids])
+        per_chunk, used, echoed = [], 0, 0
+        for cid in chunk_ids:
+            chunk = archive.chunks[cid]
+            key = normalize_url(chunk["url"]) if chunk.get("url") else None
+            terms = set(tokenize(chunk["content"]))
+            is_cited = key in cited
+            pool = by_url.get(key, []) if is_cited else all_sentences
+            best = max((weighted_overlap(s, terms, idf) for s in pool), default=0.0)
+            entry = {"chunk_id": cid, "url_cited": is_cited, "best_match": round(best, 3)}
+            if is_cited:
+                entry["used"] = best >= threshold
+                used += entry["used"]
             else:
-                entry["used"], entry["basis"] = None, "borderline"
-                borderline.append((entry, content, [s for _, s in sims[:3]]))
+                entry["used"] = False
+                entry["echoed_uncited"] = best >= threshold
+                echoed += entry["echoed_uncited"]
             per_chunk.append(entry)
 
-        borderline.sort(key=lambda x: -x[0]["best_match"])
-        to_judge, over_cap = borderline[:cap], borderline[cap:]
-        responses = []
-        if to_judge and ctx.judge is not None:
-            async def judge_one(item):
-                entry, content, top = item
-                prompt = CHUNK_USED.render(chunk=content[:4000],
-                                           sentences="\n".join(f"- {s}" for s in top))
-                return entry, await ctx.judge.ask(CHUNK_USED.id, CHUNK_USED.version, prompt)
-
-            for entry, r in await ctx.gather(judge_one(i) for i in to_judge):
-                responses.append(r)
-                used = r.parsed.get("used") if isinstance(r.parsed, dict) else None
-                if isinstance(used, bool):
-                    entry["used"], entry["basis"] = used, "judge"
-        for entry, _, _ in over_cap:
-            entry["basis"] = "borderline_over_cap"
-
-        decided = [e for e in per_chunk if e["used"] is not None]
-        chunk_level = sum(e["used"] for e in decided) / len(decided) if decided else None
-        parts = [x for x in (url_level, chunk_level) if x is not None]
-        res = self.result(rounded(sum(parts) / len(parts)) if parts else None,
-                          url_level=rounded(url_level), chunk_level=rounded(chunk_level),
-                          retrieved_urls=len(retrieved), cited_retrieved_urls=len(used_urls),
-                          chunks=len(per_chunk), chunks_decided=len(decided),
-                          chunks_undecided=len(per_chunk) - len(decided),
-                          thresholds={"high": high, "low": low, "max_borderline": cap},
-                          per_chunk=per_chunk)
-        res.llm = self.llm_record(ctx, responses)
-        return res
+        return self.result(rounded(len(used_urls) / len(retrieved)),
+                           retrieved_urls=len(retrieved), cited_retrieved_urls=len(used_urls),
+                           uncited_urls=[u for u in retrieved if normalize_url(u) not in cited],
+                           chunk_level=rounded(used / len(per_chunk)) if per_chunk else None,
+                           chunks=len(per_chunk), chunks_used=used, chunks_echoed_uncited=echoed,
+                           match_threshold=threshold, per_chunk=per_chunk)
 
 
 class QueryRelevance(Metric):

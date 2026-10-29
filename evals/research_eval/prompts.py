@@ -155,21 +155,6 @@ Return ONLY JSON:
 """.strip())
 
 
-CHUNK_USED = Prompt("chunk_used", "1", """
-Decide whether a research report used information from a source passage.
-"Used" means at least one specific fact, figure, claim or example in the report
-sentences comes from the passage. Shared topic words alone do not count.
-
-Source passage:
-{chunk}
-
-Report sentences most similar to it:
-{sentences}
-
-Return ONLY JSON: {{"evidence": "<the sentence and passage text that match, or why none do>", "used": true}}
-""".strip())
-
-
 DOMAIN_AUTHORITY = Prompt("domain_authority", "1", """
 You are a research source evaluator.
 
@@ -185,4 +170,4 @@ Return ONLY a JSON array in this exact format, one entry per domain:
 """.strip())
 
 
-ALL = (KEY_POINTS, DECOMPOSITION_COVERAGE, TREE_QUALITY, QUERY_RELEVANCE, CHUNK_USED, DOMAIN_AUTHORITY)
+ALL = (KEY_POINTS, DECOMPOSITION_COVERAGE, TREE_QUALITY, QUERY_RELEVANCE, DOMAIN_AUTHORITY)

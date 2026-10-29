@@ -105,7 +105,7 @@ whose follow-up questions produced it (matched by the research goal in its query
 | Query | `plan_adherence` | planned sub-queries that returned chunks / planned | 0 |
 | Source | `source_authority` | mean authority over sources; rule tiers, then global domain cache, then one batched call | <= 1, tends to 0 |
 | Source | `source_diversity` | distinct domains / sources; entropy in details | 0 |
-| Efficiency | `citation_utilization` | mean of URL level (cited / retrieved) and chunk level (lexical match, judge for borderline) | borderline chunks only, capped at 20 |
+| Efficiency | `citation_utilization` | retrieved URLs the body cites / retrieved URLs; a rule-based chunk diagnostic in details | 0 |
 | Efficiency | `query_relevance` | mean of judge total / 10 per search step + material (Q1-Q5 rubric); steps = sub-queries + each initial search; material = one best chunk per URL, 12k chars | 1 per step with material |
 | Efficiency | `retrieval_overlap` | search results already seen / proposed (lower is better) | 0 |
 
@@ -113,7 +113,7 @@ Every result carries `version`, `higher_is_better`, `details`, `skipped` (a reas
 when it could not run) and, for LLM metrics, `llm` (judge model, prompt versions and
 hashes, judge requests, cache hits, actual API calls, errors).
 
-Thresholds (0.6 redundancy, 0.7 / 0.4 utilization, 0.5 for the coverage embedding fallback) are uncalibrated
+Thresholds (0.6 redundancy, 0.5 for the utilization chunk diagnostic and for the coverage embedding fallback) are uncalibrated
 first guesses; `details` keeps the underlying similarities so they can be tuned
 against human labels. Override per scoring run via `ScoringContext.options`.
 
@@ -123,9 +123,17 @@ against human labels. Override per scoring run via `ScoringContext.options`.
   chunks that reached the context, i.e. what the writer could read, not every URL
   the search proposed.
 - **URL matching** ignores scheme, `www.`, trailing slash and fragment.
-- **Chunk-level utilization** scores a chunk by the report sentence whose
-  BM25-IDF-weighted terms it covers best (saturated term frequency, so the score is
-  bounded in [0, 1] and comparable across chunk lengths).
+- **Citation utilization** is URL-level and rule-based. Which chunk or claim the writer
+  actually used is left to the generation metrics (ALCE citation recall / precision use
+  the same paragraph-to-chunk matching, which should be built once, there). The chunk
+  diagnostic in `details` only counts a chunk as used when a paragraph citing its URL
+  matches it (BM25-IDF-weighted term share, bounded in [0, 1]); chunks of uncited URLs
+  whose content the report echoes are listed as `echoed_uncited`, since many sources
+  repeat the same facts. A first LLM-judged version marked every borderline chunk as used,
+  uncited sources and page navigation text included.
+- **Source diversity** is still a domain count (distinct domains / sources, entropy).
+  On this pipeline it saturates near 1.0 (5 results per query, URLs de-duplicated), so it
+  separates runs poorly; a better formulation is open.
 - **Plan adherence** counts plan sub-queries, deep-research SERP queries and detailed
   subtopics. Deep-research clarifying questions are folded into one combined query by
   the library, so they are not counted.
