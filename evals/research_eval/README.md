@@ -111,7 +111,7 @@ whose follow-up questions produced it (matched by the research goal in its query
 
 Every result carries `version`, `higher_is_better`, `details`, `skipped` (a reason,
 when it could not run) and, for LLM metrics, `llm` (judge model, prompt versions and
-hashes, calls, cache hits, errors).
+hashes, judge requests, cache hits, actual API calls, errors).
 
 Thresholds (0.5 coverage, 0.6 redundancy, 0.7 / 0.4 utilization) are uncalibrated
 first guesses; `details` keeps the underlying similarities so they can be tuned

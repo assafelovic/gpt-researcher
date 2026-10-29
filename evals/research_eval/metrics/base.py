@@ -91,8 +91,11 @@ class Metric:
         return {
             "judge_model": ctx.judge.model if ctx.judge else None,
             "prompts": {p.id: {"version": p.version, "hash": p.hash} for p in self.prompts},
-            "calls": len(responses),
+            # requests = judge requests made by the metric; api_calls = the
+            # ones that reached the model (the rest were replayed from cache).
+            "requests": len(responses),
             "cache_hits": sum(r.cache_hit for r in responses),
+            "api_calls": sum(not r.cache_hit for r in responses),
             "errors": sum(r.error is not None for r in responses),
         }
 

@@ -141,7 +141,7 @@ async def test_subquery_redundancy_flags_near_duplicates(ctx):
 async def test_tree_quality_uses_judge_total(ctx):
     r = await DecompositionTreeQuality().score(make_archive(), ctx)
     assert r.value == 0.75
-    assert r.llm["calls"] == 1 and r.llm["judge_model"] == "judge-x"
+    assert r.llm["requests"] == r.llm["api_calls"] == 1 and r.llm["judge_model"] == "judge-x"
     assert r.llm["prompts"]["tree_quality"]["version"] == "1"
 
 
@@ -194,7 +194,7 @@ async def test_citation_utilization_cap_leaves_borderline_undecided(ctx):
     r = await CitationUtilization().score(make_archive(), ctx)
     assert r.details["chunks_decided"] == 0 and r.details["chunk_level"] is None
     assert r.value == r.details["url_level"]
-    assert r.llm["calls"] == 0
+    assert r.llm["requests"] == 0
 
 
 async def test_query_relevance(ctx):
@@ -227,6 +227,9 @@ async def test_score_archive_lists_every_metric_and_is_reproducible(ctx, tmp_pat
     calls = len(ctx.fake.prompts)
     second = await score_archive(make_archive(), metrics, ctx)
     assert len(ctx.fake.prompts) == calls              # everything replayed from cache
+    for v in second["metrics"].values():
+        if v["llm"]:
+            assert v["llm"]["api_calls"] == 0 and v["llm"]["cache_hits"] == v["llm"]["requests"]
     assert set(first["metrics"]) == {m.name for m in metrics}
     assert "overall" not in first and "total" not in first
     strip = lambda rec: {k: (v["value"], v["skipped"]) for k, v in rec["metrics"].items()}
