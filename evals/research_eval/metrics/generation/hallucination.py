@@ -55,13 +55,15 @@ class Faithfulness(_AuditMetric):
 
 _NUMBER = re.compile(r"(?<![\w.])\d{1,3}(?:,\d{3})+(?:\.\d+)?|(?<![\w.,])\d+(?:\.\d+)?")
 _THOUSANDS = re.compile(r"(?<=\d),(?=\d{3}\b)")
-_ENTITY = re.compile(r"\b(?:[A-Z][\w&'\-]*|[A-Z]{2,})(?:\s+(?:of|for|and|de|the)\s+[A-Z][\w&'\-]*|\s+[A-Z][\w&'\-]*)*")
-_SENT_START = re.compile(r"(^|[.!?:;]\s+|\n)$")
+_WORD = r"[A-Z][\w&']*(?:-[A-Z][\w&']*)*"
+_ENTITY = re.compile(rf"\b{_WORD}(?:\s+(?:of|for|de|the)\s+{_WORD}|\s+{_WORD})*")
+_SENT_START = re.compile(r"(^|[.!?:;|]\s+|\n\s*)$")
 
 
 def fact_tokens(text: str) -> list[tuple[str, str]]:
-    """(kind, token) pairs: numbers >= 10 or with decimals, and capitalised names
-    not at a sentence start (single capitalised words at a start are skipped)."""
+    """(kind, token) pairs: numbers >= 10 or with decimals, and capitalised names.
+    A capitalised first word of a sentence is dropped unless it is an acronym;
+    a hyphenated lower-case tail is not part of a name ("EU-wide" -> "EU")."""
     out = []
     norm = _THOUSANDS.sub("", text)
     for m in _NUMBER.finditer(norm):
@@ -70,9 +72,11 @@ def fact_tokens(text: str) -> list[tuple[str, str]]:
             out.append(("number", tok))
     for m in _ENTITY.finditer(text):
         tok = m.group(0)
-        at_start = bool(_SENT_START.search(text[:m.start()]))
-        if at_start and " " not in tok and not tok.isupper():
-            continue
+        if _SENT_START.search(text[:m.start()]):
+            # Sentence-initial capital says nothing; keep the rest ("Most MiCA" -> "MiCA").
+            first, _, rest = tok.partition(" ")
+            if not first.isupper() or len(first) < 2:
+                tok = rest
         if len(tok) >= 2:
             out.append(("entity", tok))
     return list(dict.fromkeys(out))
