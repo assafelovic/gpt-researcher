@@ -193,6 +193,12 @@ citation and faithfulness metrics and by `citation_utilization`:
 - Citations are placed per sentence by link position (`report_parser.cited_sentences`;
   a citation after the full stop, e.g. APA style "... rose. (Didit, 2026; Norton, n.d.)",
   goes with the sentence before it, and no sentence ends inside parentheses).
+- Citation scope: by default a citation vouches for its sentence plus the uncited
+  sentences right before it (back to the previous citation), because the writer is
+  told to cite "at the end of the sentence or paragraph" and mostly cites once per
+  paragraph. Strict per-sentence ALCE: option `citation_scope="sentence"`. On q001
+  the strict reading scored recall 0.37: it judged each paragraph's citation only
+  against its closing, usually analytical, sentence.
 - Material: for each cited URL, its retrieved chunks that best match the paragraph
   (first the best chunk for each sentence, then by match with the paragraph; up to 5,
   16k chars per paragraph); a cited URL that was never

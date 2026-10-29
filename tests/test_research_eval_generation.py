@@ -73,7 +73,7 @@ def make_archive(report=REPORT, config=None):
 
 def audit_reply(prompt):
     """Canned paragraph-audit verdicts, keyed on the paragraph's first words."""
-    para = prompt.split("Paragraph (sentences numbered")[1].split("Material:")[0]
+    para = prompt.split("Paragraph (numbered items")[1].split("Material:")[0]
     if "Congo produced" in para:
         return {"kind": "factual",
                 "claims": [{"claim": "Congo 74% cobalt", "verdict": "supported", "passages": ["1a"]},
@@ -328,3 +328,14 @@ def test_cited_sentences_apa_citation_after_full_stop():
     # The citation-only fragment (and "n.d." inside it) does not become a sentence.
     assert [len(s["urls"]) for s in got] == [0, 3]
     assert got[1]["text"].startswith("Unlicensed firms must stop.")
+
+
+def test_citation_units_cover_preceding_uncited_sentences():
+    from evals.research_eval.citation_audit import citation_units
+    md = ("# T\n\n## S\n\nFirst fact stated here plainly. Second fact stated here too. "
+          "Third claim with its source ([A](https://a.com)). A closing remark without a source.\n")
+    p = parse_report(md)["sections"][0]["paragraphs"][0]
+    units = citation_units(p)
+    assert [(u["urls"], u.get("sentences")) for u in units] == [(["https://a.com"], 3), ([], None)]
+    assert units[0]["text"].startswith("First fact") and units[0]["text"].endswith("(A).")
+    assert len(citation_units(p, "sentence")) == 4

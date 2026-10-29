@@ -142,8 +142,34 @@ def _candidates(archive: "RunArchive", sents: list[dict], text: str, cids: list[
     return out
 
 
-def prepare(archive: "RunArchive", paragraph: dict, idf: dict) -> ParagraphAudit:
+def citation_units(paragraph: dict, scope: str = "preceding") -> list[dict]:
+    """The paragraph split into the units a citation vouches for.
+
+    scope "sentence" (strict ALCE): each sentence alone.
+    scope "preceding" (default): a citation also covers the uncited sentences
+    right before it, back to the previous citation. gpt-researcher's writer is
+    told to cite "at the end of the sentence or paragraph", and in practice
+    puts one citation group at the end of a paragraph; scoring only the last
+    sentence would judge the citation on its conclusion and ignore the facts it
+    was given for. Uncited sentences after the last citation stay on their own.
+    """
     sents = cited_sentences(paragraph) or [{"text": paragraph["text"], "urls": []}]
+    if scope == "sentence":
+        return sents
+    units, pending = [], []
+    for s in sents:
+        if s["urls"]:
+            units.append({"text": " ".join([p["text"] for p in pending] + [s["text"]]),
+                          "urls": s["urls"], "sentences": len(pending) + 1})
+            pending = []
+        else:
+            pending.append(s)
+    return units + pending
+
+
+def prepare(archive: "RunArchive", paragraph: dict, idf: dict,
+            scope: str = "preceding") -> ParagraphAudit:
+    sents = citation_units(paragraph, scope)
     urls = list(dict.fromkeys(u for s in sents for u in s["urls"]))
     sources: list[dict] = []
     if urls:
@@ -274,7 +300,7 @@ async def _run(archive: "RunArchive", ctx: "ScoringContext") -> CitationAudit:
                for p in s["paragraphs"]}
     audits = []
     for p in paragraphs:
-        pa = prepare(archive, p, idf)
+        pa = prepare(archive, p, idf, ctx.option("citation_scope", "preceding"))
         pa.heading_path = heading.get(p["para_id"], [])
         audits.append(pa)
 

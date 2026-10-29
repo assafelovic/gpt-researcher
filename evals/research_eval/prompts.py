@@ -172,14 +172,15 @@ Return ONLY a JSON array in this exact format, one entry per domain:
 
 # --- generation metrics ------------------------------------------------------
 
-PARAGRAPH_AUDIT = Prompt("paragraph_audit", "1", """
+PARAGRAPH_AUDIT = Prompt("paragraph_audit", "2", """
 You are checking one paragraph of a research report against the source material
 the writer had. Work only from the material shown; do not use outside knowledge.
 
 Core question of the report:
 {question}
 
-Paragraph (sentences numbered; "cites" lists the sources each sentence links to):
+Paragraph (numbered items; "cites" lists the sources an item links to; a
+citation vouches for the whole item it ends, which may be several sentences):
 {sentences}
 
 Material:
@@ -206,7 +207,8 @@ Do the following IN ORDER.
    For each claim list the passage ids (e.g. "1a") it rests on and quote the
    material words your verdict rests on.
 
-3. sentences: ONLY for the sentences that cite sources (listed with "cites").
+3. sentences: ONLY for the numbered items that cite sources (listed with "cites");
+   "sentence" is the item number. "The sentence" below means the whole item.
    - "supported": do the cited sources TOGETHER fully support everything the
      sentence states? Partial support is false.
    - For each cited source: "alone": does that source by itself fully support
