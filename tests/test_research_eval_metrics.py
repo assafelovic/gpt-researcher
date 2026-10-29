@@ -81,6 +81,26 @@ class FakeJudge:
 
     async def __call__(self, prompt):
         self.prompts.append(prompt)
+        # Generation prompts (detailed behaviour is tested in test_research_eval_generation.py).
+        if "checking one paragraph of a research report" in prompt:
+            cited = "(cites: [1])" in prompt
+            return json.dumps({"kind": "factual",
+                               "claims": [{"claim": "c", "verdict": "supported" if cited else "unsupported",
+                                           "passages": ["1a"], "evidence": ""}],
+                               "sentences": [{"sentence": 1, "supported": True,
+                                              "citations": [{"source": 1, "alone": True}]}] if cited else []})
+        if "a finished report covers" in prompt:
+            return json.dumps({"points": [{"point": 1, "coverage": "full"}]})
+        if "preparing a grading rubric" in prompt:
+            return json.dumps({"insight": [{"criterion": "a", "weight": 1}],
+                               "readability": [{"criterion": "b", "weight": 1}]})
+        if "grading a research report on an absolute scale" in prompt:
+            return json.dumps({"scores": [{"id": "I1", "score": 7}, {"id": "R1", "score": 8}]})
+        if "whether each paragraph of a research report" in prompt:
+            n = len(re.findall(r"^\d+\. ", prompt.split("Paragraphs:")[1], re.M))
+            return json.dumps({"verdicts": [{"paragraph": i, "verdict": "yes"} for i in range(1, n + 1)]})
+        if "screening part of a research report" in prompt:
+            return json.dumps({"opinions": []})
         if "List the distinct aspects" in prompt:
             return json.dumps({"key_points": ["cobalt supply", "lithium refining", "recycling policy"]})
         if "which aspects of a research question" in prompt:
@@ -206,7 +226,8 @@ async def test_source_authority_without_judge_falls_back():
     assert r.details["fallback_domains"] == ["weather-blog.com"]
 
 
-async def test_citation_utilization_is_url_level_and_rule_based(ctx):
+async def test_citation_utilization_is_url_level_and_rule_based():
+    ctx = ScoringContext(cache=EvalCache(":memory:"))       # --rules-only: no judge
     r = await CitationUtilization().score(make_archive(), ctx)
     assert r.value == pytest.approx(1 / 3, abs=1e-3)
     assert r.details["uncited_urls"] == [URLS["lithium"], URLS["unused"]]
@@ -215,6 +236,15 @@ async def test_citation_utilization_is_url_level_and_rule_based(ctx):
     cid = {k: _chunk(k)[0] for k in CHUNK_TEXT}
     assert used == {cid["cobalt"]: True, cid["lithium"]: False, cid["unused"]: False}
     assert r.details["chunk_level"] == pytest.approx(1 / 3, abs=1e-3)
+
+
+async def test_citation_utilization_reads_judged_chunks_from_citation_audit(ctx):
+    r = await CitationUtilization().score(make_archive(), ctx)
+    cid = {k: _chunk(k)[0] for k in CHUNK_TEXT}
+    assert r.value == pytest.approx(1 / 3, abs=1e-3)          # value stays URL-level
+    assert r.details["chunks_used_judged"] == [cid["cobalt"]]
+    assert r.details["chunk_level_judged"] == pytest.approx(1 / 3, abs=1e-3)
+    assert r.llm["shared"] == "citation_audit"
 
 
 async def test_citation_utilization_uncited_overlap_is_echo_not_use(ctx):

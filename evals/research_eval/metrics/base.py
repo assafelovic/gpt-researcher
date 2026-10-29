@@ -13,6 +13,7 @@ prompts they used and how many calls hit the cache.
 from __future__ import annotations
 
 import asyncio
+import weakref
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Awaitable, Iterable, TypeVar
@@ -50,6 +51,13 @@ class ScoringContext:
     max_concurrency: int = 4
     options: dict[str, Any] = field(default_factory=dict)
     _memo: dict[Any, Any] = field(default_factory=dict)
+    _per_archive: "weakref.WeakKeyDictionary" = field(default_factory=weakref.WeakKeyDictionary)
+
+    def archive_memo(self, archive: "RunArchive") -> dict[Any, Any]:
+        """Results several metrics share within one scoring of one archive
+        (e.g. the citation audit). Scoring the archive again starts afresh, so
+        each scoring reports its own API calls and cache hits."""
+        return self._per_archive.setdefault(archive, {})
 
     def option(self, name: str, default: Any) -> Any:
         return self.options.get(name, default)

@@ -1,0 +1,273 @@
+"""
+Citation audit: which source passages each part of the report rests on.
+-----------------------------------------------------------------------
+Shared by the generation metrics (ALCE citation recall / precision, effective
+citations, faithfulness) and by the retrieval side's `citation_utilization`,
+which reads `used_chunk_ids` for its chunk-level view. One judge call per
+paragraph does all of it, so running several of these metrics costs the same
+as running one: the audit is memoised on the ScoringContext and every call is
+in the judge cache.
+
+Per paragraph the judge sees:
+  sentences  numbered, each with the sources it links to (placed by link
+             position, `report_parser.cited_sentences`);
+  material   for a paragraph with citations, the passages of its cited URLs
+             (the retrieved chunks of each URL that best match the paragraph,
+             BM25-weighted, within a budget); a cited URL that was never
+             retrieved is shown as unavailable. For a paragraph without
+             citations, the best-matching passages from everything retrieved.
+and returns:
+  kind       factual | non_factual (opinion, transition: no claims judged)
+  claims     the paragraph's factual claims, each with a 6-level verdict and
+             the passage ids it rests on (-> chunk ids)
+  sentences  for each citing sentence, whether its sources together support it,
+             and per source whether it alone supports it and whether the others
+             would without it (ALCE's two conditions for an irrelevant citation)
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from string import ascii_lowercase
+from typing import TYPE_CHECKING
+
+from gpt_researcher.context.lexical import tokenize
+
+from .archive import normalize_url
+from .metrics.lexical import idf_table, weighted_overlap
+from .prompts import PARAGRAPH_AUDIT
+from .report_parser import body_paragraphs, cited_sentences
+
+if TYPE_CHECKING:
+    from .archive import RunArchive
+    from .judge import JudgeResponse
+    from .metrics.base import ScoringContext
+
+# Faithfulness points per verdict (eval-design/generation-metrics.md §3.2 B).
+VERDICT_SCORES = {"supported": 1.0, "inferred_a": 0.5, "inferred_b": 0.4, "inferred_c": 0.3,
+                  "unsupported": 0.0, "contradicted": -1.0}
+
+MIN_UNCITED_CHARS = 80      # shorter uncited paragraphs are headings-in-disguise or transitions
+PASSAGE_CHARS = 1200        # one chunk shown to the judge
+SOURCE_PASSAGES = 3         # chunks shown per cited URL
+MATERIAL_CHARS = 10000      # per paragraph
+UNCITED_PASSAGES = 4        # BM25 top-k for paragraphs without citations
+UNAVAILABLE = "(not available: the agent never retrieved this URL)"
+
+
+@dataclass
+class ParagraphAudit:
+    para_id: str
+    heading_path: list[str]
+    mode: str                                   # cited | uncited
+    sentences: list[dict]                       # [{"text", "urls"}]
+    sources: list[dict]                         # [{"n", "url", "found", "passages": [{"id", "chunk_id"}]}]
+    response: "JudgeResponse | None" = None
+    kind: str | None = None                     # factual | non_factual
+    claims: list[dict] = field(default_factory=list)
+    sentence_checks: list[dict] = field(default_factory=list)
+    error: str | None = None
+
+    def to_dict(self) -> dict:
+        return {"para_id": self.para_id, "heading_path": self.heading_path, "mode": self.mode,
+                "kind": self.kind, "claims": self.claims, "sentences": self.sentence_checks,
+                "sources": [{"n": s["n"], "url": s["url"], "found": s["found"],
+                             "chunk_ids": [p["chunk_id"] for p in s["passages"]]}
+                            for s in self.sources],
+                "error": self.error}
+
+
+@dataclass
+class CitationAudit:
+    paragraphs: list[ParagraphAudit]
+
+    @property
+    def responses(self) -> list["JudgeResponse"]:
+        return [p.response for p in self.paragraphs if p.response is not None]
+
+    @property
+    def judged(self) -> list[ParagraphAudit]:
+        return [p for p in self.paragraphs if p.error is None]
+
+    @property
+    def used_chunk_ids(self) -> set[str]:
+        """Chunks some claim rests on (supported or inferred)."""
+        return {cid for p in self.judged for c in p.claims if (c["score"] or 0) > 0
+                for cid in c["chunk_ids"]}
+
+    @property
+    def sentence_checks(self) -> list[dict]:
+        return [s for p in self.judged for s in p.sentence_checks]
+
+
+async def citation_audit(archive: "RunArchive", ctx: "ScoringContext") -> CitationAudit:
+    memo, key = ctx.archive_memo(archive), "citation_audit"
+    if key not in memo:
+        memo[key] = await _run(archive, ctx)
+    return memo[key]
+
+
+def audited_paragraphs(archive: "RunArchive") -> list[dict]:
+    """Body paragraphs worth auditing: not code; uncited ones only if substantial."""
+    return [p for p in body_paragraphs(archive.report) if p["type"] != "code"
+            and (p["citations"] or len(p["text"]) >= MIN_UNCITED_CHARS)]
+
+
+def material_idf(archive: "RunArchive", ctx: "ScoringContext") -> dict[str, float]:
+    memo, key = ctx.archive_memo(archive), "material_idf"
+    if key not in memo:
+        memo[key] = idf_table([archive.chunks[c]["content"] for c in archive.retrieved_chunk_ids])
+    return memo[key]
+
+
+def _rank(text: str, chunk_ids: list[str], archive: "RunArchive", idf: dict) -> list[str]:
+    scored = [(weighted_overlap(text, set(tokenize(archive.chunks[c]["content"])), idf), i, c)
+              for i, c in enumerate(chunk_ids)]
+    return [c for _, _, c in sorted(scored, key=lambda x: (-x[0], x[1]))]
+
+
+def prepare(archive: "RunArchive", paragraph: dict, idf: dict) -> ParagraphAudit:
+    sents = cited_sentences(paragraph) or [{"text": paragraph["text"], "urls": []}]
+    urls = list(dict.fromkeys(u for s in sents for u in s["urls"]))
+    sources: list[dict] = []
+    if urls:
+        mode = "cited"
+        per_source = max(PASSAGE_CHARS, MATERIAL_CHARS // len(urls))
+        for n, url in enumerate(urls, 1):
+            cids = archive.chunks_by_url.get(normalize_url(url), [])
+            picked, used = [], 0
+            for cid in _rank(paragraph["text"], cids, archive, idf)[:SOURCE_PASSAGES]:
+                size = min(len(archive.chunks[cid]["content"]), PASSAGE_CHARS)
+                if picked and used + size > per_source:
+                    break
+                picked.append(cid)
+                used += size
+            sources.append({"n": n, "url": url, "found": bool(cids),
+                            "passages": [{"id": f"{n}{ascii_lowercase[i]}", "chunk_id": c}
+                                         for i, c in enumerate(picked)]})
+    else:
+        mode = "uncited"
+        top = _rank(paragraph["text"], archive.retrieved_chunk_ids, archive, idf)[:UNCITED_PASSAGES]
+        sources = [{"n": n, "url": archive.chunks[c].get("url"), "found": True,
+                    "passages": [{"id": f"{n}a", "chunk_id": c}]} for n, c in enumerate(top, 1)]
+    return ParagraphAudit(paragraph["para_id"], [], mode, sents, sources)
+
+
+def render(archive: "RunArchive", pa: ParagraphAudit) -> str:
+    num = {s["url"]: s["n"] for s in pa.sources}
+    lines = []
+    for i, s in enumerate(pa.sentences, 1):
+        cites = ", ".join(f"[{num[u]}]" for u in s["urls"] if u in num)
+        lines.append(f"{i}. {s['text']}" + (f"  (cites: {cites})" if cites else ""))
+    blocks = []
+    if pa.mode == "uncited":
+        blocks.append("(The paragraph cites nothing. These are the retrieved passages that "
+                      "match it best.)")
+    for s in pa.sources:
+        header = f"Source [{s['n']}] {s['url'] or 'unknown source'}"
+        if not s["found"]:
+            blocks.append(f"{header}\n{UNAVAILABLE}")
+            continue
+        for p in s["passages"]:
+            text = archive.chunks[p["chunk_id"]]["content"][:PASSAGE_CHARS]
+            blocks.append(f"{header} passage {p['id']}:\n{text}")
+    if not pa.sources:
+        blocks.append("(no material)")
+    return PARAGRAPH_AUDIT.render(question=archive.query, sentences="\n".join(lines),
+                                  material="\n\n".join(blocks))
+
+
+def interpret(pa: ParagraphAudit) -> None:
+    """Fill kind / claims / sentence_checks from the judge response."""
+    r = pa.response
+    if r is None or not isinstance(r.parsed, dict):
+        pa.error = (r.error if r else None) or "no usable judge response"
+        return
+    data = r.parsed
+    pa.kind = data.get("kind") if data.get("kind") in ("factual", "non_factual") else "factual"
+    passage_chunk = {p["id"]: p["chunk_id"] for s in pa.sources for p in s["passages"]}
+    for c in data.get("claims") or [] if pa.kind == "factual" else []:
+        if not isinstance(c, dict):
+            continue
+        verdict = str(c.get("verdict", "")).strip().lower()
+        pa.claims.append({
+            "claim": c.get("claim", ""), "verdict": verdict, "score": VERDICT_SCORES.get(verdict),
+            "sentences": c.get("sentences") or [],
+            "chunk_ids": [passage_chunk[str(x)] for x in c.get("passages") or []
+                          if str(x) in passage_chunk],
+            "evidence": c.get("evidence", "")})
+
+    by_n = {}
+    for s in data.get("sentences") or []:
+        if isinstance(s, dict):
+            try:
+                by_n[int(s.get("sentence"))] = s
+            except (TypeError, ValueError):
+                continue
+    url_of = {s["n"]: s for s in pa.sources}
+    num = {s["url"]: s["n"] for s in pa.sources}
+    for i, sent in enumerate(pa.sentences, 1):
+        if not sent["urls"]:
+            continue
+        got = by_n.get(i, {})
+        cites = {}
+        for c in got.get("citations") or []:
+            try:
+                cites[int(c.get("source"))] = c
+            except (TypeError, ValueError, AttributeError):
+                continue
+        found_any = any(url_of[num[u]]["found"] for u in sent["urls"])
+        # A sentence whose sources were never retrieved cannot be supported by them.
+        supported = bool(got.get("supported")) if found_any else False
+        judged = found_any is False or "supported" in got
+        checks = []
+        for u in sent["urls"]:
+            src = url_of[num[u]]
+            c = cites.get(src["n"], {})
+            alone = bool(c.get("alone")) and src["found"]
+            rest = bool(c.get("rest_suffice")) and len(sent["urls"]) > 1
+            checks.append({"url": u, "found": src["found"], "alone": alone, "rest_suffice": rest})
+        _alce(supported, checks)
+        pa.sentence_checks.append({"para_id": pa.para_id, "sentence": i, "text": sent["text"],
+                                   "judged": judged, "supported": supported, "citations": checks})
+
+
+def _alce(supported: bool, checks: list[dict]) -> None:
+    """ALCE precision per citation, as in its reference implementation.
+
+    Not jointly supported -> no citation of the sentence is precise. One
+    citation -> precise iff supported. Several -> a citation is irrelevant only
+    when it does not support the sentence alone AND the rest still do.
+    A citation counts as effective (supported) when it supports the sentence
+    alone, or is the single citation of a supported sentence.
+    """
+    for c in checks:
+        if not supported:
+            c["precise"] = False
+        elif len(checks) == 1:
+            c["precise"] = True
+        else:
+            c["precise"] = c["alone"] or not c["rest_suffice"]
+        c["effective"] = c["alone"] or (supported and len(checks) == 1)
+
+
+async def _run(archive: "RunArchive", ctx: "ScoringContext") -> CitationAudit:
+    idf = material_idf(archive, ctx)
+    paragraphs = audited_paragraphs(archive)
+    heading = {p["para_id"]: s["heading_path"] for s in archive.report["sections"]
+               for p in s["paragraphs"]}
+    audits = []
+    for p in paragraphs:
+        pa = prepare(archive, p, idf)
+        pa.heading_path = heading.get(p["para_id"], [])
+        audits.append(pa)
+
+    async def ask(pa: ParagraphAudit) -> None:
+        pa.response = await ctx.judge.ask(PARAGRAPH_AUDIT.id, PARAGRAPH_AUDIT.version,
+                                          render(archive, pa))
+        interpret(pa)
+
+    await ctx.gather(ask(pa) for pa in audits)
+    return CitationAudit(audits)
+
+

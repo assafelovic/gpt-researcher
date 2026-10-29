@@ -63,4 +63,5 @@ async def test_score_cli_rules_only(monkeypatch, tmp_path, capsys):
     rec = json.loads(result.read_text())
     assert rec["judge_model"] is None
     assert set(rec["metrics"]) == {"subquery_redundancy", "plan_adherence", "source_diversity", "citation_utilization",
-                                   "retrieval_overlap"}
+                                   "retrieval_overlap", "instruction_following", "citation_coverage",
+                                   "fact_grounding"}

@@ -5,8 +5,9 @@ C. Efficiency metrics: whether what was retrieved was worth retrieving.
 from __future__ import annotations
 
 from ...archive import RunArchive, normalize_url
+from ...citation_audit import citation_audit
 from ...key_points import get_key_points
-from ...prompts import KEY_POINTS, QUERY_RELEVANCE
+from ...prompts import KEY_POINTS, PARAGRAPH_AUDIT, QUERY_RELEVANCE
 from ...report_parser import body_paragraphs, cited_urls, paragraph_sentences, report_sentences
 from ..base import Metric, MetricResult, ScoringContext, rounded
 from ..lexical import idf_table, weighted_overlap
@@ -19,10 +20,15 @@ class CitationUtilization(Metric):
 
         value = cited URLs ∩ retrieved URLs / retrieved URLs
 
-    Whether a specific chunk or claim was used is the generation metrics' job
-    (ALCE-style citation recall / precision): matching a paragraph to the chunk
-    behind it is the same machinery, and should live there once. Until then
-    `details` carries a rule-based chunk diagnostic, not part of the value:
+    Which chunk a claim actually rests on comes from the generation side's
+    citation audit (one judge call per paragraph, shared with citation recall /
+    precision and faithfulness). With a judge configured `details` adds:
+
+      chunk_level_judged  retrieved chunks some judged claim rests on / retrieved
+                          chunks; `chunks_used_judged` lists them.
+
+    Without a judge (--rules-only) `details` keeps the rule-based diagnostic.
+    Neither is part of the value:
 
       chunk_level      chunks matched by a paragraph that cites their URL /
                        chunks. A chunk matches when the best sentence of such a
@@ -36,7 +42,8 @@ class CitationUtilization(Metric):
     """
 
     name, category = "citation_utilization", "retrieval.efficiency"
-    version = "2"
+    version = "3"
+    prompts = (PARAGRAPH_AUDIT,)
     MATCH, MIN_TERMS = 0.5, 5
 
     async def score(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:
@@ -78,12 +85,19 @@ class CitationUtilization(Metric):
                 echoed += entry["echoed_uncited"]
             per_chunk.append(entry)
 
-        return self.result(rounded(len(used_urls) / len(retrieved)),
-                           retrieved_urls=len(retrieved), cited_retrieved_urls=len(used_urls),
-                           uncited_urls=[u for u in retrieved if normalize_url(u) not in cited],
-                           chunk_level=rounded(used / len(per_chunk)) if per_chunk else None,
-                           chunks=len(per_chunk), chunks_used=used, chunks_echoed_uncited=echoed,
-                           match_threshold=threshold, per_chunk=per_chunk)
+        res = self.result(rounded(len(used_urls) / len(retrieved)),
+                          retrieved_urls=len(retrieved), cited_retrieved_urls=len(used_urls),
+                          uncited_urls=[u for u in retrieved if normalize_url(u) not in cited],
+                          chunk_level=rounded(used / len(per_chunk)) if per_chunk else None,
+                          chunks=len(per_chunk), chunks_used=used, chunks_echoed_uncited=echoed,
+                          match_threshold=threshold, per_chunk=per_chunk)
+        if ctx.judge is not None and chunk_ids:
+            audit = await citation_audit(archive, ctx)
+            judged_used = [c for c in chunk_ids if c in audit.used_chunk_ids]
+            res.details.update(chunk_level_judged=rounded(len(judged_used) / len(chunk_ids)),
+                               chunks_used_judged=judged_used)
+            res.llm = {**self.llm_record(ctx, audit.responses), "shared": "citation_audit"}
+        return res
 
 
 class QueryRelevance(Metric):

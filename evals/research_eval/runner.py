@@ -53,6 +53,7 @@ def run_config(researcher, mode: str, capture: RunCapture) -> dict:
     cfg = researcher.cfg
     return {
         "report_type": researcher.report_type,
+        "total_words": getattr(cfg, "total_words", None),
         "mode": mode,
         "context_filter": getattr(cfg, "context_filter", None),
         "context_filter_resolved": sorted(capture.context_filters),

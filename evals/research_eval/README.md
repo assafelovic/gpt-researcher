@@ -5,8 +5,8 @@ writing) with reference-free metrics. Built alongside the older `quality_eval/`,
 which is left untouched until the two have been compared on the same runs.
 
 Design: `eval-design/` (README, infrastructure, retrieval-metrics,
-generation-metrics). This package implements the infrastructure and the
-retrieval metrics; generation metrics plug into the same interface later.
+generation-metrics). This package implements the infrastructure, the retrieval
+metrics and the generation metrics (plus toxicity / bias).
 
 ## Principles
 
@@ -39,7 +39,8 @@ dataset/questions_*.jsonl -> runner.py -> capture.py (hooks) -> runs/<dataset>/<
 | `judge.py` | Cached judge (model from `evals/judge.py`) and cached embedder (repo `EMBEDDING` setting). |
 | `prompts.py` | Versioned rubric prompts; version + content hash go into cache keys and results. |
 | `key_points.py` | Per-question key points: frozen file > cache > one judge call. |
-| `metrics/` | `Metric` interface and registry; `retrieval/` holds the nine retrieval metrics. |
+| `citation_audit.py` | Shared paragraph-level judge audit: claims, ALCE sentence checks, which chunks were used. |
+| `metrics/` | `Metric` interface and registry; `retrieval/` holds the nine retrieval metrics, `generation/` the thirteen generation ones. |
 | `scoring.py` | Runs metrics on an archive; results keyed by run_id + scorer version. |
 | `runner.py`, `score.py` | CLIs. |
 
@@ -105,7 +106,7 @@ whose follow-up questions produced it (matched by the research goal in its query
 | Query | `plan_adherence` | planned sub-queries that returned chunks / planned | 0 |
 | Source | `source_authority` | mean authority over sources; rule tiers, then global domain cache, then one batched call | <= 1, tends to 0 |
 | Source | `source_diversity` | distinct domains / sources; entropy in details | 0 |
-| Efficiency | `citation_utilization` | retrieved URLs the body cites / retrieved URLs; a rule-based chunk diagnostic in details | 0 |
+| Efficiency | `citation_utilization` | retrieved URLs the body cites / retrieved URLs; chunk level in details (judged via the citation audit when a judge is set, else rule-based) | 0 (audit shared) |
 | Efficiency | `query_relevance` | mean of judge total / 10 per search step + material (Q1-Q5 rubric); steps = sub-queries + each initial search; material = one best chunk per URL, 12k chars | 1 per step with material |
 | Efficiency | `retrieval_overlap` | search results already seen / proposed (lower is better) | 0 |
 
@@ -123,10 +124,10 @@ against human labels. Override per scoring run via `ScoringContext.options`.
   chunks that reached the context, i.e. what the writer could read, not every URL
   the search proposed.
 - **URL matching** ignores scheme, `www.`, trailing slash and fragment.
-- **Citation utilization** is URL-level and rule-based. Which chunk or claim the writer
-  actually used is left to the generation metrics (ALCE citation recall / precision use
-  the same paragraph-to-chunk matching, which should be built once, there). The chunk
-  diagnostic in `details` only counts a chunk as used when a paragraph citing its URL
+- **Citation utilization** is URL-level and rule-based. Which chunk a claim actually
+  rests on comes from the generation side's citation audit: with a judge, `details`
+  adds `chunk_level_judged` / `chunks_used_judged`. The rule-based chunk
+  diagnostic (kept for `--rules-only`) only counts a chunk as used when a paragraph citing its URL
   matches it (BM25-IDF-weighted term share, bounded in [0, 1]); chunks of uncited URLs
   whose content the report echoes are listed as `echoed_uncited`, since many sources
   repeat the same facts. A first LLM-judged version marked every borderline chunk as used,
@@ -168,27 +169,58 @@ Re-scoring the same archive replays every judge call from the cache and gives id
 numbers. `query_relevance` and `decomposition_coverage` answer different questions and
 can legitimately differ: material on a key point can arrive from a search not aimed at it.
 
-## Adding generation metrics
+## Generation metrics
 
-Subclass `metrics.base.Metric`, set `category = "generation.<group>"`, put LLM prompts
-in `prompts.py` with a version, and register the class next to `RETRIEVAL_METRICS`
-in `metrics/__init__.py:all_metrics`. What is ready to build on:
+| Category | Metric | Value | LLM cost per run |
+|---|---|---|---|
+| Writing | `comprehensiveness` | (full + 0.5 partial key points) / K; uncovered points that a retrieved chunk seems to discuss are listed as `omitted_but_retrieved` | 1 (+ key points, shared) |
+| Writing | `insight` | weighted rubric score / 10; rubric (3-5 criteria) generated once per question | rubric: 1 per question, cached; scoring: 1, shared with readability |
+| Writing | `readability` | same, readability criteria | shared |
+| Writing | `instruction_following` | passed / 7 rule checks: min words, one title, clean headings, no TOC, references, in-text citations, cites only retrieved URLs | 0 |
+| Writing | `topic_relevance` | (yes + idk) / paragraphs | 1 per ~20k chars |
+| Citation | `citation_recall` | ALCE: citing sentences supported by their own sources / citing sentences | audit (below) |
+| Citation | `citation_precision` | ALCE: precise citations / citations (sentence-URL pairs) | audit |
+| Citation | `citation_coverage` | references cited in the body / references (URL level; formerly `citation_faithfulness`) | 0 |
+| Citation | `effective_citations` | count of citations their source supports (FACT style) | audit |
+| Hallucination | `faithfulness` | mean claim score in [-1, 1]: supported 1, inferred 0.5 / 0.4 / 0.3, unsupported 0, contradicted -1 | audit |
+| Hallucination | `fact_grounding` | numbers and capitalised names found verbatim in the cited chunks / checked | 0 |
+| Other | `toxicity` | flagged opinions / opinions (lower is better) | 1 per ~15k chars, shared with bias |
+| Other | `bias` | same, bias flag (gender, politics, race, religion, geography) | shared |
 
-- `archive.report`: sections, paragraphs (`type`, `heading_path`), citations, and per
-  citation the retrieved chunks behind it (`evidence`, `found: false` = cited URL never
-  retrieved); `parse_warnings` for instruction following.
-- `report_parser.paragraph_sentences` / `report_sentences`, and `metrics/lexical.py`
-  (BM25-weighted term overlap) for matching report text to chunks.
-- `key_points.get_key_points`: cached per-question key points (comprehensiveness).
-- `Judge` / `prompts.Prompt` for cached, versioned rubric calls.
+**Citation audit** (`citation_audit.py`), one judge call per paragraph, shared by the
+citation and faithfulness metrics and by `citation_utilization`:
 
-Left to the generation metrics on purpose: which chunk or claim the writer actually used
-(ALCE citation recall / precision). `citation_utilization` stays URL-level until that
-matching exists; its rule-based chunk diagnostic can then be replaced by it.
+- Citations are placed per sentence by link position (`report_parser.cited_sentences`;
+  a citation after the full stop goes with the sentence before it).
+- Material: for each cited URL, its retrieved chunks that best match the paragraph
+  (BM25-weighted, up to 3, 10k chars per paragraph); a cited URL that was never
+  retrieved is shown as unavailable and its sentence counts as unsupported without
+  asking. Paragraphs without citations (>= 80 chars) get the 4 best-matching chunks of
+  everything retrieved; the judge skips them when they are opinion or transition.
+- The judge returns the paragraph's claims (6-level verdict + passage ids, which map
+  to `used_chunk_ids`) and, per citing sentence, joint support plus per source
+  `alone` / `rest_suffice`. ALCE precision is computed as in its reference code: a
+  citation of an unsupported sentence is imprecise, and with several citations one is
+  irrelevant only when it does not support alone and the rest still do.
+- Shared calls are reported by every metric that reads them (`llm.shared`), so do not
+  sum `api_calls` across those metrics.
+
+Notes:
+
+- Faithfulness and the rule check are listed separately (design §3.2 called them one
+  composite score; there are no combined scores in this system).
+- Comprehensiveness uses one judge call, not an embedding pre-pass: on the retrieval
+  side embedding matching got 3 of 8 key points wrong.
+- `instruction_following` reads `config.total_words` (recorded by the runner from now
+  on); older archives fall back to option `min_words` (default 1200, the repo default).
+- `fact_grounding` is uncalibrated: a paraphrased or unit-converted figure counts as
+  missing; per-paragraph `missing` lists are in `details` for review.
 
 ## Not yet done
 
 - Source diversity formulation (domain ratio saturates; under research).
+- Generation metrics validated on real archives (offline tests only so far).
+- Per-paragraph sampling twice for a more stable faithfulness verdict (design §5).
 - Perturbation tests on a frozen archive (does each metric move the expected way when a
   known problem is injected), then judge calibration with a small human-labelled set.
 - Runs of detailed and deep mode with real APIs (covered so far by offline tests only).

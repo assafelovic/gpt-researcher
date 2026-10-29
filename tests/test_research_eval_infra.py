@@ -125,7 +125,8 @@ def test_parse_report_structure_citations_and_evidence():
                      ["EU crypto rules", "Licensing", "Deep heading"]]
     lic = r["sections"][1]["paragraphs"]
     assert [p["type"] for p in lic] == ["text", "list"]
-    assert lic[0]["citations"] == [{"url": "https://esma.europa.eu/mica/", "anchor": "ESMA"}]
+    assert lic[0]["citations"] == [{"url": "https://esma.europa.eu/mica/", "anchor": "ESMA",
+                                    "offsets": [len("MiCA requires licences for issuers, see ESMA")]}]
     assert lic[0]["evidence"] == [{"url": "https://esma.europa.eu/mica/", "found": True, "chunk_ids": ["c1"]}]
     assert lic[1]["citations"][0]["url"] == "https://bare.example.com/x"
     assert lic[1]["evidence"][0]["found"] is False

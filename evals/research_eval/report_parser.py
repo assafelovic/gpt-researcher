@@ -33,6 +33,7 @@ _BARE_URL = re.compile(r"https?://[^\s\)\]\,\"'<>]+")
 _BLOCK_TYPES = {"p": "text", "ul": "list", "ol": "list", "table": "table",
                 "blockquote": "quote", "pre": "code"}
 _HEADINGS = {f"h{i}": i for i in range(1, 7)}
+_LINK_END = "\ue000"   # private-use marker: where a link's anchor text ends
 
 
 class _Blocks(HTMLParser):
@@ -67,10 +68,19 @@ class _Blocks(HTMLParser):
     def handle_endtag(self, tag):
         if self._cur is not None and tag == "a" and self._href:
             self._cur["links"].append({"url": self._href, "anchor": "".join(self._anchor).strip()})
+            self._cur["text"].append(_LINK_END)
             self._href = None
         self._depth = max(0, self._depth - 1)
         if self._depth == 0 and self._cur is not None:
-            self._cur["text"] = re.sub(r"[ \t]+", " ", "".join(self._cur["text"])).strip()
+            text = re.sub(r"[ \t]+", " ", "".join(self._cur["text"])).strip()
+            # Record each link's position in the final text, then drop the markers.
+            offsets, out = [], []
+            for part in text.split(_LINK_END):
+                out.append(part)
+                offsets.append(sum(map(len, out)))
+            for link, off in zip(self._cur["links"], offsets):
+                link["offset"] = off
+            self._cur["text"] = "".join(out)
             self.blocks.append(self._cur)
             self._cur = None
 
@@ -86,18 +96,18 @@ class _Blocks(HTMLParser):
 
 
 def _citations(block: dict) -> list[dict]:
-    out, seen = [], set()
+    """Distinct links of a block; `offsets` = where in the text each occurrence ends."""
+    out: dict[str, dict] = {}
     for link in block["links"]:
         url = link["url"]
-        if url.startswith(("http://", "https://")) and url not in seen:
-            seen.add(url)
-            out.append({"url": url, "anchor": link["anchor"]})
-    for url in _BARE_URL.findall(block["text"]):
-        url = url.rstrip(".;:")
-        if url not in seen:
-            seen.add(url)
-            out.append({"url": url, "anchor": ""})
-    return out
+        if url.startswith(("http://", "https://")):
+            c = out.setdefault(url, {"url": url, "anchor": link["anchor"], "offsets": []})
+            c["offsets"].append(link.get("offset", len(block["text"])))
+    for m in _BARE_URL.finditer(block["text"]):
+        url = m.group(0).rstrip(".;:")
+        c = out.setdefault(url, {"url": url, "anchor": "", "offsets": []})
+        c["offsets"].append(m.start() + len(url))
+    return list(out.values())
 
 
 def parse_report(markdown_text: str, chunks_by_url: dict[str, list[str]] | None = None) -> dict:
@@ -216,6 +226,41 @@ def paragraph_sentences(paragraph: dict) -> list[str]:
         s = s.strip(" |-*")
         if len(s) >= 20:
             out.append(s)
+    return out
+
+
+def cited_sentences(paragraph: dict, min_chars: int = 20) -> list[dict]:
+    """A paragraph's sentences with the URLs each one cites.
+
+    Returns [{"text", "urls"}] in order, each sentence's URLs in the order they
+    appear. Citations are placed by position: a
+    link belongs to the sentence it ends in. Fragments shorter than `min_chars`
+    (typically a citation written after the full stop, "... rose. (Reuters)")
+    are merged into the sentence before them, so their links go with it.
+    """
+    text = paragraph["text"]
+    spans, start = [], 0
+    for m in _SENTENCE_END.finditer(text):
+        spans.append((start, m.start()))
+        start = m.end()
+    spans.append((start, len(text)))
+    merged: list[list[int]] = []
+    for a, b in spans:
+        frag = text[a:b].strip(" |-*")
+        if merged and len(_BARE_URL.sub("", frag)) < min_chars:
+            merged[-1][1] = b
+        elif frag:
+            merged.append([a, b])
+    if len(merged) > 1 and len(_BARE_URL.sub("", text[merged[0][0]:merged[0][1]]).strip()) < min_chars:
+        merged[1][0] = merged[0][0]
+        merged.pop(0)
+    out = [{"text": text[a:b].strip(), "urls": []} for a, b in merged]
+    links = sorted((off, c["url"]) for c in paragraph.get("citations", [])
+                   for off in c.get("offsets", []))
+    for off, url in links:
+        i = next((k for k, (a, b) in enumerate(merged) if off <= b), len(merged) - 1)
+        if out and url not in out[i]["urls"]:
+            out[i]["urls"].append(url)
     return out
 
 
