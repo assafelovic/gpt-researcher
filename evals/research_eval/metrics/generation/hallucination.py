@@ -82,10 +82,34 @@ def fact_tokens(text: str) -> list[tuple[str, str]]:
     return list(dict.fromkeys(out))
 
 
+def _name_variants(tok: str) -> list[str]:
+    """A name as written plus the forms a source may use for the same thing:
+    without a leading "the", each word singular or plural ("CASPs" ~ "CASP")."""
+    words = tok.split()
+    if len(words) > 1 and words[0].lower() == "the":
+        words = words[1:]
+    out = [" ".join(words).lower()]
+    last = words[-1]
+    if len(last) > 2 and last.endswith("s"):
+        out.append(" ".join(words[:-1] + [last[:-1]]).lower())
+    elif last[-1:].isalpha():
+        out.append(" ".join(words[:-1] + [last + "s"]).lower())
+    return out
+
+
+def _acronym(tok: str) -> str | None:
+    """"Digital Operational Resilience Act" -> "DORA"; "Transfer of Funds Regulation" -> "TFR"."""
+    caps = [w for w in tok.split() if w[:1].isupper()]
+    return "".join(w[0] for w in caps) if len(caps) >= 3 else None
+
+
 def found_in(kind: str, tok: str, evidence: str, evidence_lower: str) -> bool:
     if kind == "number":
         return re.search(rf"(?<![\d.]){re.escape(tok)}(?!\.?\d)", evidence) is not None
-    return " ".join(tok.lower().split()) in evidence_lower
+    if any(v in evidence_lower for v in _name_variants(tok)):
+        return True
+    acro = _acronym(tok)
+    return acro is not None and re.search(rf"\b{acro}s?\b", evidence) is not None
 
 
 class FactGrounding(Metric):
@@ -95,12 +119,16 @@ class FactGrounding(Metric):
 
     Only paragraphs that cite at least one retrieved URL; the evidence is every
     chunk of those URLs. Tokens: numbers (thousands separators ignored; 45 does
-    not match 45.3) and capitalised names (case-insensitive phrase match).
+    not match 45.3) and capitalised names (case-insensitive phrase match; singular
+    and plural forms match, a leading "the" is ignored, and a name of three or
+    more capitalised words also matches its acronym, "Digital Operational
+    Resilience Act" ~ "DORA"). `details` reports numbers and names separately.
     Citation anchor text, i.e. the source's own name, is not checked.
     Unjudged and uncalibrated: a paraphrased or converted figure counts as missing.
     """
 
     name, category = "fact_grounding", "generation.hallucination"
+    version = "2"
 
     async def score(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:
         paras = [p for p in audited_paragraphs(archive)
@@ -108,6 +136,7 @@ class FactGrounding(Metric):
         if not paras:
             return self.skip("no paragraph cites a retrieved source")
         per_para, found, total = [], 0, 0
+        by_kind = {"number": [0, 0], "entity": [0, 0]}      # [found, checked]
         for p in paras:
             cids = [cid for c in p["citations"]
                     for cid in archive.chunks_by_url.get(normalize_url(c["url"]), [])]
@@ -119,7 +148,13 @@ class FactGrounding(Metric):
                     text = text.replace(c["anchor"], " ")
             text = re.sub(r"https?://\S+", " ", text)
             toks = fact_tokens(text)
-            missing = [t for k, t in toks if not found_in(k, t, evidence, ev_lower)]
+            missing = []
+            for k, t in toks:
+                ok = found_in(k, t, evidence, ev_lower)
+                by_kind[k][0] += ok
+                by_kind[k][1] += 1
+                if not ok:
+                    missing.append(t)
             found += len(toks) - len(missing)
             total += len(toks)
             if toks:
@@ -127,4 +162,6 @@ class FactGrounding(Metric):
         if not total:
             return self.skip("no numbers or names to check")
         return self.result(rounded(found / total), checked=total, found=found,
+                           numbers={"checked": by_kind["number"][1], "found": by_kind["number"][0]},
+                           names={"checked": by_kind["entity"][1], "found": by_kind["entity"][0]},
                            paragraphs=len(per_para), per_paragraph=per_para)

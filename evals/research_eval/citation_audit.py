@@ -46,7 +46,7 @@ if TYPE_CHECKING:
 # Bump when the audit's material or unit logic changes (prompt changes bump the
 # prompt version instead); every metric that reads the audit carries it in its
 # version, so the scorer version changes and old results are not overwritten.
-AUDIT_VERSION = "3"
+AUDIT_VERSION = "4"
 
 # Faithfulness points per verdict (eval-design/generation-metrics.md §3.2 B).
 VERDICT_SCORES = {"supported": 1.0, "inferred_a": 0.5, "inferred_b": 0.4, "inferred_c": 0.3,
@@ -113,8 +113,9 @@ async def citation_audit(archive: "RunArchive", ctx: "ScoringContext") -> Citati
 
 
 def audited_paragraphs(archive: "RunArchive") -> list[dict]:
-    """Body paragraphs worth auditing: not code; uncited ones only if substantial."""
-    return [p for p in body_paragraphs(archive.report) if p["type"] != "code"
+    """Body paragraphs worth auditing: not code or a table of contents; uncited
+    ones only if substantial."""
+    return [p for p in body_paragraphs(archive.report) if p["type"] not in ("code", "toc")
             and (p["citations"] or len(p["text"]) >= MIN_UNCITED_CHARS)]
 
 

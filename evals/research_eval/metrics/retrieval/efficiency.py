@@ -126,6 +126,13 @@ class QueryRelevance(Metric):
     CHUNK_CHARS, MATERIAL_CHARS = 1500, 12000
 
     async def score(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:
+        # Shared with subquery_redundancy (it reads Q4), so each scoring judges once.
+        memo = ctx.archive_memo(archive)
+        if "query_relevance" not in memo:
+            memo["query_relevance"] = await self._score(archive, ctx)
+        return memo["query_relevance"]
+
+    async def _score(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:
         if ctx.judge is None:
             return self.skip("no judge configured")
         core = archive.query.strip()

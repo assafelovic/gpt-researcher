@@ -69,10 +69,13 @@ Return ONLY JSON, one entry per key point, in order:
 """.strip())
 
 
-TREE_QUALITY = Prompt("tree_quality", "1", """
+TREE_QUALITY = Prompt("tree_quality", "2", """
 You are auditing how a research agent split a query into sub-queries before
-searching the web. Judge the split below. Answer the four questions IN ORDER;
+searching the web. Judge the split below. Answer the five questions IN ORDER;
 for each, quote the parent or child text your answer rests on, then score it.
+
+Original research question (the root of the whole search tree):
+{question}
 
 Parent query:
 {parent}
@@ -89,14 +92,21 @@ Q3 Searchability: could each child be pasted into a web search engine as-is and
 Q4 Relevance: does every child serve the parent? Moderate extension beyond the
    parent's literal scope is acceptable when it helps answer it.
    2 = all relevant, 1 = one or two drift, 0 = several are off-topic.
+Q5 Root relevance: do the children still serve the ORIGINAL research question?
+   A deep tree can stay faithful to each parent while drifting away from the
+   question step by step, for example toward one firm's business situation or a
+   detail the question never asked about. If the parent is the original
+   question itself, score Q5 the same as Q4.
+   2 = all serve it, 1 = one or two have drifted, 0 = several have drifted.
 
-Finally give "total", the sum of the four scores (0-8).
+Finally give "total", the sum of the five scores (0-10).
 
 Return ONLY JSON:
 {{"q1": {{"evidence": "...", "score": 0}},
   "q2": {{"evidence": "...", "score": 0}},
   "q3": {{"evidence": "...", "score": 0}},
   "q4": {{"evidence": "...", "score": 0}},
+  "q5": {{"evidence": "...", "score": 0}},
   "total": 0}}
 """.strip())
 

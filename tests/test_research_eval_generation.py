@@ -238,6 +238,16 @@ def test_fact_tokens():
                     ("entity", "European Central Bank"), ("entity", "MiCA")]
 
 
+def test_found_in_name_variants():
+    from evals.research_eval.metrics.generation.hallucination import found_in
+    ev = "Each CASP must apply DORA. The European Union adopted it."
+    low = ev.lower()
+    assert found_in("entity", "CASPs", ev, low)                                # plural ~ singular
+    assert found_in("entity", "the European Union", ev, low)
+    assert found_in("entity", "Digital Operational Resilience Act", ev, low)   # ~ DORA
+    assert not found_in("entity", "ESMA", ev, low)
+
+
 async def test_fact_grounding(ctx):
     r = await FactGrounding().score(make_archive(), ctx)
     missing = {p["para_id"]: p["missing"] for p in r.details["per_paragraph"]}
@@ -248,6 +258,7 @@ async def test_fact_grounding(ctx):
     assert set(missing["sec1-p2"]) == {"Europe", "Glencore", "2030"}
     assert r.details["paragraphs"] == 2
     assert r.value == pytest.approx(r.details["found"] / r.details["checked"], abs=1e-3)
+    assert r.details["numbers"]["checked"] + r.details["names"]["checked"] == r.details["checked"]
 
 
 async def test_citation_coverage(ctx):
@@ -339,3 +350,71 @@ def test_citation_units_cover_preceding_uncited_sentences():
     assert [(u["urls"], u.get("sentences")) for u in units] == [(["https://a.com"], 3), ([], None)]
     assert units[0]["text"].startswith("First fact") and units[0]["text"].endswith("(A).")
     assert len(citation_units(p, "sentence")) == 4
+
+
+TABLE_REPORT = """# Title
+
+## Table of Contents
+
+- Rules
+- Outlook
+
+## 1. Rules
+
+### 1.1 Timeline
+
+| Date | Change |
+|---|---|
+| 30 June 2024 | Stablecoin rules apply |
+
+Sources: ([ESMA, 2026](https://esma.europa.eu/a); [EBA, 2025](https://eba.europa.eu/b))
+
+A sentence about the rules ([ESMA, 2026](https://esma.europa.eu/a)).
+
+([EBA, 2025](https://eba.europa.eu/b))
+
+## References
+
+- [ESMA](https://esma.europa.eu/a)
+"""
+
+
+def test_citation_line_attaches_to_the_block_above_and_toc_is_marked():
+    from evals.research_eval.citation_audit import audited_paragraphs, citation_units
+    parsed = parse_report(TABLE_REPORT)
+    paras = [p for s in parsed["sections"] for p in s["paragraphs"]]
+    assert [p["type"] for p in paras] == ["toc", "table", "text"]
+    table, text = paras[1], paras[2]
+    assert [c["url"] for c in table["citations"]] == ["https://esma.europa.eu/a", "https://eba.europa.eu/b"]
+    assert table["text"].endswith("(ESMA, 2026; EBA, 2025)")
+    assert all(off <= len(table["text"]) for c in table["citations"] for off in c["offsets"])
+    # The whole table is the unit its citation line vouches for.
+    units = citation_units(table)
+    assert len(units) == 1 and "Stablecoin rules apply" in units[0]["text"]
+    assert len(units[0]["urls"]) == 2
+    assert {c["url"] for c in text["citations"]} == {"https://esma.europa.eu/a", "https://eba.europa.eu/b"}
+    toc_free = [p["type"] for p in audited_paragraphs(make_archive(TABLE_REPORT))]
+    assert "toc" not in toc_free
+
+
+def test_report_text_keeps_the_reports_own_structure():
+    from evals.research_eval.metrics.generation.common import report_text
+    text, truncated = report_text(make_archive(TABLE_REPORT))
+    assert not truncated
+    assert text.count("# Title") == 1
+    assert "## 1. Rules\n\n### 1.1 Timeline" in text          # a heading with only sub-headings stays
+    assert "| Date | Change |\n|---|---|\n| 30 June 2024 | Stablecoin rules apply |" in text
+    assert "(ESMA, 2026; EBA, 2025)" in text and "http" not in text
+    assert "References" not in text
+
+
+async def test_score_record_keeps_the_full_citation_audit(ctx):
+    from evals.research_eval.scoring import score_archive
+    rec = await score_archive(make_archive(), [CitationRecall(), Faithfulness()], ctx)
+    paras = rec["citation_audit"]["paragraphs"]
+    first = next(p for p in paras if p["para_id"] == "sec1-p1")
+    assert [c["verdict"] for c in first["claims"]] == ["supported", "inferred_b"]
+    assert first["sentences"] and all("supported" in s for s in first["sentences"])
+    json.dumps(rec)                                     # serialisable as saved
+    rules = await score_archive(make_archive(), [FactGrounding()], ctx)
+    assert "citation_audit" not in rules

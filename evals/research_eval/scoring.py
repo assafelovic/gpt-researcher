@@ -16,6 +16,7 @@ from pathlib import Path
 
 from .archive import RunArchive
 from .cache import stable_hash
+from .citation_audit import AUDIT_VERSION
 from .metrics.base import Metric, MetricResult, ScoringContext
 
 SCORER_BASE_VERSION = "0.1"
@@ -39,7 +40,7 @@ async def score_archive(archive: RunArchive, metrics: list[Metric],
                              {"traceback": traceback.format_exc(limit=5)},
                              skipped=f"error: {type(e).__name__}: {e}")
         results[m.name] = r.to_dict()
-    return {
+    record = {
         "run_id": archive.run_id,
         "question_id": archive.question_id,
         "mode": archive.meta.get("config", {}).get("mode"),
@@ -49,6 +50,13 @@ async def score_archive(archive: RunArchive, metrics: list[Metric],
         "embedding_model": ctx.embedder.model if ctx.embedder else None,
         "metrics": results,
     }
+    audit = ctx.archive_memo(archive).get("citation_audit")
+    if audit is not None:
+        # Every claim and citing sentence with its verdict, so a person can check
+        # what the audit metrics counted (they keep only flagged items).
+        record["citation_audit"] = {"version": AUDIT_VERSION,
+                                    "paragraphs": [p.to_dict() for p in audit.paragraphs]}
+    return record
 
 
 def save_results(record: dict, results_dir: str | Path = RESULTS_DIR) -> Path:

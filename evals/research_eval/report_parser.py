@@ -13,7 +13,8 @@ Output (see eval-design/infrastructure.md §4):
                   claim by the report, not necessarily what the body cites
   parse_warnings  format problems, input to the instruction-following metric
   sections[]      heading_path + paragraphs[]
-    paragraphs[]  type text | list | table | quote | code, plain text,
+    paragraphs[]  type text | list | table | quote | code | toc (anything under a
+                  table-of-contents heading), plain text,
                   citations (links the paragraph makes) and evidence (the
                   retrieved chunks behind each cited URL; found=false means
                   the report cites a URL that was never retrieved)
@@ -28,7 +29,9 @@ import markdown
 
 from .archive import normalize_url
 
-_REFERENCES_HEADING = re.compile(r"^\s*(references|sources|citations|bibliography|参考(文献|资料)?)\s*:?\s*$", re.I)
+REFERENCES_HEADING = re.compile(r"^\s*(references|sources|citations|bibliography|参考(文献|资料)?)\s*:?\s*$", re.I)
+TOC_HEADING = re.compile(r"^\s*(table of contents|contents|目录)\s*$", re.I)
+_CITATION_LABEL = re.compile(r"^\s*(sources?|references?|citations?|来源)\s*[:：]", re.I)
 _BARE_URL = re.compile(r"https?://[^\s\)\]\,\"'<>]+")
 _BLOCK_TYPES = {"p": "text", "ul": "list", "ol": "list", "table": "table",
                 "blockquote": "quote", "pre": "code"}
@@ -146,7 +149,7 @@ def parse_report(markdown_text: str, chunks_by_url: dict[str, list[str]] | None 
                     title = text
                 else:
                     _add(warnings, "multiple_titles")
-            in_refs = bool(_REFERENCES_HEADING.match(text))
+            in_refs = bool(REFERENCES_HEADING.match(text))
             if in_refs:
                 saw_refs = True
                 current = None
@@ -168,18 +171,20 @@ def parse_report(markdown_text: str, chunks_by_url: dict[str, list[str]] | None 
             if not path:
                 _add(warnings, "content_before_first_heading")
             current = new_section()
+        if current["paragraphs"] and cites and _citation_only(block["text"], cites):
+            # A citation line under a table, list or paragraph ("(ESMA, 2026; EBA, 2025)")
+            # vouches for that block: attach it there instead of leaving a paragraph
+            # with citations and nothing to cite.
+            _attach(current["paragraphs"][-1], block["text"], cites, chunks_by_url)
+            continue
+        kind = "toc" if path and TOC_HEADING.match(path[-1][1]) else _BLOCK_TYPES.get(tag, "text")
         para_id = f"{current['section_id']}-p{len(current['paragraphs']) + 1}"
         current["paragraphs"].append({
             "para_id": para_id,
-            "type": _BLOCK_TYPES.get(tag, "text"),
+            "type": kind,
             "text": block["text"],
             "citations": cites,
-            "evidence": [
-                {"url": c["url"],
-                 "found": normalize_url(c["url"]) in chunks_by_url,
-                 "chunk_ids": list(chunks_by_url.get(normalize_url(c["url"]), []))}
-                for c in cites
-            ],
+            "evidence": _evidence(cites, chunks_by_url),
         })
 
     if title is None:
@@ -191,6 +196,39 @@ def parse_report(markdown_text: str, chunks_by_url: dict[str, list[str]] | None 
 
     return {"title": title, "references": references,
             "parse_warnings": warnings, "sections": sections}
+
+
+def _evidence(cites: list[dict], chunks_by_url: dict[str, list[str]]) -> list[dict]:
+    return [{"url": c["url"],
+             "found": normalize_url(c["url"]) in chunks_by_url,
+             "chunk_ids": list(chunks_by_url.get(normalize_url(c["url"]), []))}
+            for c in cites]
+
+
+def _citation_only(text: str, cites: list[dict]) -> bool:
+    """True when a block holds nothing but citations (anchors, URLs, punctuation),
+    optionally after a "Sources:" label."""
+    text = _CITATION_LABEL.sub("", text)
+    for c in cites:
+        if c["anchor"]:
+            text = text.replace(c["anchor"], " ")
+    rest = _BARE_URL.sub(" ", text)
+    return len(re.sub(r"[\s()\[\];,.|*\-]+", "", rest)) < 5
+
+
+def _attach(paragraph: dict, text: str, cites: list[dict], chunks_by_url) -> None:
+    """Append a citation-only block to the paragraph before it, keeping link offsets."""
+    shift = len(paragraph["text"]) + 1
+    paragraph["text"] = f"{paragraph['text']}\n{text}"
+    merged = {c["url"]: c for c in paragraph["citations"]}
+    for c in cites:
+        offsets = [o + shift for o in c["offsets"]]
+        if c["url"] in merged:
+            merged[c["url"]]["offsets"].extend(offsets)
+        else:
+            merged[c["url"]] = {**c, "offsets": offsets}
+    paragraph["citations"] = list(merged.values())
+    paragraph["evidence"] = _evidence(paragraph["citations"], chunks_by_url)
 
 
 def _add(warnings: list[str], w: str) -> None:

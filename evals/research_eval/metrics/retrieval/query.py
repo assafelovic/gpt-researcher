@@ -102,19 +102,52 @@ class DecompositionCoverage(Metric):
 
 
 class SubqueryRedundancy(Metric):
-    """Share of sibling sub-query pairs that ask the same thing (lower is better).
+    """Share of search steps that ask what another step already asks (lower is better).
 
-    Siblings are the children of one decomposition. Two siblings are a
-    duplicate when their symmetric BM25-weighted term overlap reaches the
-    threshold; IDF is computed over the sibling group, so the core-topic words
-    every sibling shares carry little weight.
+    With a judge: read from query_relevance's Q4 ("compared with the other
+    sub-queries, does this one go after something they do not?"), which sees
+    every sub-query of the run, across branches and depths, and is already
+    paid for. value = steps judged not unique / steps with a Q4 answer.
+
+    Without a judge (`details.method` = "lexical"): sibling pairs whose
+    symmetric BM25-weighted term overlap reaches the threshold, IDF over the
+    sibling group. Kept as a fallback only: with three or four siblings the
+    group IDF gives shared words so little weight that near-duplicates score
+    well under the threshold, and branches are never compared.
     """
 
     name, category = "subquery_redundancy", "retrieval.query"
+    version = "2"
     higher_is_better = False
     DEFAULT_THRESHOLD = 0.6
 
     async def score(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:
+        if ctx.judge is None:
+            return self._lexical(archive, ctx)
+        from .efficiency import QueryRelevance
+        qr = await QueryRelevance().score(archive, ctx)
+        if qr.value is None:
+            res = self.skip(f"query_relevance: {qr.skipped}")
+            res.llm = {**(qr.llm or {}), "shared": "query_relevance"}
+            return res
+        steps = []
+        for q in qr.details["per_query"]:
+            q4 = (q.get("rubric") or {}).get("q4") if isinstance(q.get("rubric"), dict) else None
+            unique = q4.get("unique") if isinstance(q4, dict) else None
+            if isinstance(unique, str):
+                unique = {"true": True, "false": False}.get(unique.strip().lower())
+            if isinstance(unique, bool):
+                steps.append({"span_id": q["span_id"], "kind": q["kind"], "query": q["query"],
+                              "unique": unique, "evidence": q4.get("evidence", "")})
+        if not steps:
+            return self.skip("query_relevance returned no uniqueness answers")
+        dupes = [x for x in steps if not x["unique"]]
+        res = self.result(rounded(len(dupes) / len(steps)), method="judge_q4",
+                          steps=len(steps), not_unique=dupes)
+        res.llm = {**(qr.llm or {}), "shared": "query_relevance"}
+        return res
+
+    def _lexical(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:
         threshold = ctx.option("redundancy_threshold", self.DEFAULT_THRESHOLD)
         pairs_total, dupes, groups = 0, [], []
         for d in archive.decompositions:
@@ -132,18 +165,22 @@ class SubqueryRedundancy(Metric):
             groups.append({"span_id": d.span_id, "kind": d.kind, "pairs": n_pairs})
         if not pairs_total:
             return self.skip("no decomposition with two or more children")
-        return self.result(rounded(len(dupes) / pairs_total), threshold=threshold,
+        return self.result(rounded(len(dupes) / pairs_total), method="lexical", threshold=threshold,
                            pairs=pairs_total, duplicate_pairs=dupes, groups=groups)
 
 
 class DecompositionTreeQuality(Metric):
-    """Judge rubric per parent node: coverage, specificity, searchability, relevance.
+    """Judge rubric per parent node: coverage, specificity, searchability,
+    relevance to the parent, and relevance to the original question (Q5, which
+    catches a deep tree drifting away from the question one level at a time).
 
     One call per decomposition (parent + all its children). Each call returns a
-    0-8 total; the value is the mean of total/8 over parents.
+    0-10 total; the value is the mean of total/10 over parents.
     """
 
     name, category = "decomposition_tree_quality", "retrieval.query"
+    version = "2"
+    MAX_TOTAL = 10
     uses_llm = True
     prompts = (TREE_QUALITY,)
 
@@ -156,6 +193,7 @@ class DecompositionTreeQuality(Metric):
 
         async def judge_one(d):
             prompt = TREE_QUALITY.render(
+                question=archive.query.strip(),
                 parent=d.parent_query.strip(),
                 children="\n".join(f"- {c}" for c in d.child_queries))
             return d, await ctx.judge.ask(TREE_QUALITY.id, TREE_QUALITY.version, prompt)
@@ -164,7 +202,7 @@ class DecompositionTreeQuality(Metric):
         per_parent, scores = [], []
         for d, r in results:
             total = _number((r.parsed or {}).get("total")) if isinstance(r.parsed, dict) else None
-            norm = None if total is None else max(0.0, min(1.0, total / 8))
+            norm = None if total is None else max(0.0, min(1.0, total / self.MAX_TOTAL))
             if norm is not None:
                 scores.append(norm)
             per_parent.append({"span_id": d.span_id, "kind": d.kind, "parent": d.parent_query,

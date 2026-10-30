@@ -111,10 +111,11 @@ class FakeJudge:
                  "subqueries": [int(j) for j, q in subs if p.split()[0] in q]} for i, p in points]})
         if "how a research agent split a query" in prompt:
             return json.dumps({"q1": {"score": 1}, "q2": {"score": 2}, "q3": {"score": 2},
-                               "q4": {"score": 1}, "total": 6})
+                               "q4": {"score": 1}, "q5": {"score": 2}, "total": 8})
         if "auditing one retrieval step" in prompt:
             q = re.search(r"Sub-query under review:\n(.*)\n", prompt).group(1)
-            return json.dumps({"total": 8 if "cobalt" in q else 4})
+            return json.dumps({"total": 8 if "cobalt" in q else 4,
+                               "q4": {"evidence": "", "unique": "cobalt" in q}})
         if "used information from a source passage" in prompt:
             return json.dumps({"used": "Lithium" in prompt.split("Report sentences")[0], "evidence": ""})
         if "Rate the authority" in prompt:
@@ -179,9 +180,22 @@ async def test_key_points_frozen_file_wins(ctx, tmp_path):
     assert not any("List the distinct aspects" in p for p in ctx.fake.prompts)
 
 
-async def test_subquery_redundancy_flags_near_duplicates(ctx):
+async def test_subquery_redundancy_reads_query_relevance_q4(ctx):
+    a = make_archive()
+    r = await SubqueryRedundancy().score(a, ctx)
+    assert r.details["method"] == "judge_q4" and r.details["steps"] == 2
+    assert [x["query"] for x in r.details["not_unique"]] == ["lithium refining capacity"]
+    assert r.value == 0.5 and r.higher_is_better is False
+    # query_relevance reuses the same judgements: no new calls.
+    before = len(ctx.fake.prompts)
+    await QueryRelevance().score(a, ctx)
+    assert len(ctx.fake.prompts) == before
+
+
+async def test_subquery_redundancy_lexical_fallback_flags_near_duplicates():
+    ctx = ScoringContext(cache=EvalCache(":memory:"))       # no judge
     r = await SubqueryRedundancy().score(make_archive(), ctx)
-    assert r.details["pairs"] == 6
+    assert r.details["method"] == "lexical" and r.details["pairs"] == 6
     pairs = {(d["a"], d["b"]) for d in r.details["duplicate_pairs"]}
     assert pairs == {("lithium refining capacity", "lithium refining capacity worldwide")}
     assert r.value == pytest.approx(1 / 6, abs=1e-3)
@@ -190,9 +204,11 @@ async def test_subquery_redundancy_flags_near_duplicates(ctx):
 
 async def test_tree_quality_uses_judge_total(ctx):
     r = await DecompositionTreeQuality().score(make_archive(), ctx)
-    assert r.value == 0.75
+    assert r.value == 0.8                                   # 8 / 10
     assert r.llm["requests"] == r.llm["api_calls"] == 1 and r.llm["judge_model"] == "judge-x"
-    assert r.llm["prompts"]["tree_quality"]["version"] == "1"
+    assert r.llm["prompts"]["tree_quality"]["version"] == "2"
+    prompt = next(p for p in ctx.fake.prompts if "how a research agent split a query" in p)
+    assert f"Original research question (the root of the whole search tree):\n{CORE}" in prompt
 
 
 async def test_plan_adherence_counts_empty_and_unexecuted(ctx):
@@ -213,12 +229,25 @@ async def test_source_authority_rules_judge_and_domain_cache(ctx):
     basis = {b["domain"]: (b["score"], b["basis"]) for b in r.details["breakdown"]}
     assert basis == {"energy.gov": (1.0, "rule"), "reuters.com": (0.8, "rule"),
                      "weather-blog.com": (0.2, "judge")}
-    assert r.value == pytest.approx((1.0 + 0.8 + 0.2) / 3, abs=1e-3)
+    # The report cites only Reuters; the retrieved mean stays in details.
+    assert r.value == 0.8 and r.details["basis"] == "citations"
+    assert r.details["retrieved_mean"] == pytest.approx((1.0 + 0.8 + 0.2) / 3, abs=1e-3)
     # Second run: the domain verdict comes from the global cache, no new call.
     before = len(ctx.fake.prompts)
     r2 = await SourceAuthority().score(make_archive(), ctx)
     assert len(ctx.fake.prompts) == before
     assert {b["basis"] for b in r2.details["breakdown"] if b["domain"] == "weather-blog.com"} == {"domain_cache"}
+
+
+async def test_source_authority_weights_by_citation_and_matches_subdomains(ctx):
+    report = ("# T\n\n## S\n\nCobalt mining is concentrated in Congo ([Reuters](https://reuters.com/cobalt)).\n\n"
+              "Lithium refining sits in China ([DOE](https://energy.gov/lithium)).\n\n"
+              "Refining data again ([DOE](https://energy.gov/lithium)).\n\n"
+              "The EU rule applies ([ESMA](https://www.esma.europa.eu/x)).\n")
+    r = await SourceAuthority().score(make_archive(report), ctx)
+    assert {b["domain"]: b["basis"] for b in r.details["breakdown"]}["esma.europa.eu"] == "rule"
+    assert r.value == pytest.approx((0.8 + 1.0 + 1.0 + 0.9) / 4, abs=1e-3)
+    assert r.details["cited_domains"][0] == ("energy.gov", 2)
 
 
 async def test_source_authority_without_judge_falls_back():

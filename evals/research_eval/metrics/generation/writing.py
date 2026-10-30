@@ -6,8 +6,6 @@ All scores are absolute; nothing is compared with a reference report.
 
 from __future__ import annotations
 
-import re
-
 from gpt_researcher.context.lexical import tokenize
 
 from ...archive import RunArchive, normalize_url
@@ -15,7 +13,7 @@ from ...citation_audit import material_idf
 from ...key_points import get_key_points
 from ...prompts import (COMPREHENSIVENESS, KEY_POINTS, QUALITY_RUBRIC, QUALITY_SCORE,
                         TOPIC_RELEVANCE)
-from ...report_parser import body_paragraphs, cited_urls
+from ...report_parser import TOC_HEADING, body_paragraphs, cited_urls
 from ..base import Metric, MetricResult, ScoringContext, rounded
 from ..lexical import weighted_overlap
 from .common import batches, body_word_count, paragraph_plain, report_text
@@ -39,6 +37,7 @@ class Comprehensiveness(Metric):
     """
 
     name, category = "comprehensiveness", "generation.writing"
+    version = "2"           # 2: reads the report's own Markdown (common.report_text)
     uses_llm = True
     prompts = (COMPREHENSIVENESS, KEY_POINTS)
     HINT = 0.6
@@ -157,6 +156,7 @@ class _RubricDimension(Metric):
     """
 
     category = "generation.writing"
+    version = "2"           # 2: reads the report's own Markdown (common.report_text)
     uses_llm = True
     prompts = (QUALITY_RUBRIC, QUALITY_SCORE)
     dimension = ""
@@ -185,9 +185,6 @@ class Insight(_RubricDimension):
 class Readability(_RubricDimension):
     __doc__ = _RubricDimension.__doc__
     name, dimension = "readability", "readability"
-
-
-_TOC = re.compile(r"^\s*(table of contents|contents|目录)\s*$", re.I)
 
 
 class InstructionFollowing(Metric):
@@ -223,7 +220,7 @@ class InstructionFollowing(Metric):
             "single_title": not ({"no_title", "multiple_titles"} & set(w)),
             "clean_headings": bool(headings) and not ({"heading_level_jump",
                                                         "content_before_first_heading"} & set(w)),
-            "no_toc": not any(_TOC.match(h) for h in headings),
+            "no_toc": not any(TOC_HEADING.match(h) for h in headings),
             "references": bool(refs) and len(set(refs)) == len(refs),
             "in_text_citations": bool(cited),
             "cites_only_retrieved": not not_retrieved,

@@ -16,6 +16,7 @@ from urllib.parse import urlparse
 from ...archive import RunArchive
 from ...cache import stable_hash
 from ...prompts import DOMAIN_AUTHORITY
+from ...report_parser import body_paragraphs
 from ..base import Metric, MetricResult, ScoringContext, rounded
 
 
@@ -66,8 +67,10 @@ def rule_score(domain: str) -> tuple[float, str] | None:
     d = domain.lower().removeprefix("www.")
     if d.endswith(".gov"):           return 1.0, "government"
     if d.endswith(".edu"):           return 0.9, "academic-edu"
-    if d in _HIGH_AUTHORITY_DOMAINS: return 0.9, "high-authority"
-    if d in _MAJOR_NEWS_DOMAINS:     return 0.8, "major-news"
+    if any(d == h or d.endswith("." + h) for h in _HIGH_AUTHORITY_DOMAINS):
+        return 0.9, "high-authority"
+    if any(d == h or d.endswith("." + h) for h in _MAJOR_NEWS_DOMAINS):
+        return 0.8, "major-news"
     if "wikipedia.org" in d:         return 0.75, "wikipedia"
     return None
 
@@ -81,7 +84,16 @@ def fallback_score(domain: str) -> tuple[float, str]:
 
 
 class SourceAuthority(Metric):
-    """Mean authority score (0-1) over retrieved sources.
+    """Authority (0-1) of the sources the report rests on.
+
+        value = mean domain score over the report's citations, one per
+                paragraph-URL pair, so a source cited in ten paragraphs weighs
+                ten times one cited once
+
+    The mean over every retrieved source is kept in `details.retrieved_mean`:
+    a run that searches widely and then cites regulators would otherwise score
+    below a run that retrieves and cites ten vendor blogs. A report with no
+    citations falls back to the retrieved mean (`details.basis`).
 
     Rule tiers first. Deferred domains are looked up in the global domain
     cache (domain + prompt version), and the rest are scored in ONE batched
@@ -92,17 +104,20 @@ class SourceAuthority(Metric):
     """
 
     name, category = "source_authority", "retrieval.source"
+    version = "2"
     uses_llm = True
     prompts = (DOMAIN_AUTHORITY,)
 
     async def score(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:
         domains = [d for d in (domain_of(u) for u in archive.retrieved_urls) if d]
-        if not domains:
+        cited = [d for d in (domain_of(c["url"]) for p in body_paragraphs(archive.report)
+                             for c in p["citations"]) if d]
+        if not domains and not cited:
             return self.skip("no retrieved sources")
 
         verdicts: dict[str, dict] = {}
         deferred = []
-        for d in sorted(set(domains)):
+        for d in sorted(set(domains) | set(cited)):
             rule = rule_score(d)
             if rule is not None:
                 verdicts[d] = {"score": rule[0], "tier": rule[1], "basis": "rule"}
@@ -142,9 +157,14 @@ class SourceAuthority(Metric):
                 verdicts[d] = {"score": s, "tier": tier, "basis": "fallback"}
                 fallback.append(d)
 
-        scores = [verdicts[d]["score"] for d in domains]
-        res = self.result(rounded(sum(scores) / len(scores)),
+        def mean(ds):
+            return rounded(sum(verdicts[d]["score"] for d in ds) / len(ds)) if ds else None
+
+        res = self.result(mean(cited) if cited else mean(domains),
+                          basis="citations" if cited else "retrieved",
+                          n_citations=len(cited), retrieved_mean=mean(domains),
                           n_sources=len(domains),
+                          cited_domains=Counter(cited).most_common(),
                           breakdown=sorted(({"domain": d, **v} for d, v in verdicts.items()),
                                            key=lambda x: -x["score"]),
                           fallback_domains=fallback)
