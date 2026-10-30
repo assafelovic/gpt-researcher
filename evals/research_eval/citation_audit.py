@@ -46,7 +46,7 @@ if TYPE_CHECKING:
 # Bump when the audit's material or unit logic changes (prompt changes bump the
 # prompt version instead); every metric that reads the audit carries it in its
 # version, so the scorer version changes and old results are not overwritten.
-AUDIT_VERSION = "4"
+AUDIT_VERSION = "5"
 
 # Faithfulness points per verdict (eval-design/generation-metrics.md §3.2 B).
 VERDICT_SCORES = {"supported": 1.0, "inferred_a": 0.5, "inferred_b": 0.4, "inferred_c": 0.3,
@@ -160,6 +160,20 @@ def citation_units(paragraph: dict, scope: str = "preceding") -> list[dict]:
     was given for. Uncited sentences after the last citation stay on their own.
     """
     sents = cited_sentences(paragraph) or [{"text": paragraph["text"], "urls": []}]
+    if paragraph.get("type") == "table":
+        # A table is cited once, on the line under it, for all its rows. Each row
+        # is a statement of its own, so each data row is a unit carrying the
+        # table's citations; judging the whole table as one unit fails it as soon
+        # as any of its rows is not fully supported. The header row states nothing.
+        urls = list(dict.fromkeys(u for s in sents for u in s["urls"]))
+        rows = [[c.strip() for c in r.strip(" |").split("|")]
+                for r in paragraph["text"].split("\n") if "|" in r]
+        if len(rows) < 2:
+            return [{"text": " | ".join(r), "urls": urls, "sentences": 1} for r in rows]
+        header, body = rows[0], rows[1:]
+        # "Date: 30 June 2024 | Change: ..." so each row reads as a statement.
+        return [{"text": " | ".join(f"{h}: {c}" if h else c for h, c in zip(header + [""] * len(r), r)),
+                 "urls": urls, "sentences": 1} for r in body if any(r)]
     if scope == "sentence":
         return sents
     units, pending = [], []

@@ -93,6 +93,8 @@ class _Blocks(HTMLParser):
                 self.blocks.append({"tag": "p", "text": data.strip(), "links": []})
             return
         if self._cur is not None:
+            if self._cur["tag"] == "table" and not data.strip():
+                return          # layout whitespace between cells: one row per line
             self._cur["text"].append(data)
             if self._href is not None:
                 self._anchor.append(data)

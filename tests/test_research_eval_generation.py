@@ -388,9 +388,10 @@ def test_citation_line_attaches_to_the_block_above_and_toc_is_marked():
     assert [c["url"] for c in table["citations"]] == ["https://esma.europa.eu/a", "https://eba.europa.eu/b"]
     assert table["text"].endswith("(ESMA, 2026; EBA, 2025)")
     assert all(off <= len(table["text"]) for c in table["citations"] for off in c["offsets"])
-    # The whole table is the unit its citation line vouches for.
+    # Each data row is a unit carrying the table's citations; the header is not.
     units = citation_units(table)
     assert len(units) == 1 and "Stablecoin rules apply" in units[0]["text"]
+    assert units[0]["text"] == "Date: 30 June 2024 | Change: Stablecoin rules apply"
     assert len(units[0]["urls"]) == 2
     assert {c["url"] for c in text["citations"]} == {"https://esma.europa.eu/a", "https://eba.europa.eu/b"}
     toc_free = [p["type"] for p in audited_paragraphs(make_archive(TABLE_REPORT))]
