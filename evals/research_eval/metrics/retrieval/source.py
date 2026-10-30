@@ -118,7 +118,13 @@ class SourceAuthority(Metric):
             r = await ctx.judge.ask(DOMAIN_AUTHORITY.id, DOMAIN_AUTHORITY.version,
                                     DOMAIN_AUTHORITY.render(domains="\n".join(f"- {d}" for d in deferred)))
             responses.append(r)
-            for item in r.parsed if isinstance(r.parsed, list) else []:
+            if r.error is not None or not isinstance(r.parsed, list):
+                # A failed call must not turn into fallback scores that look like a real result.
+                res = self.skip("judge call failed", n_sources=len(domains),
+                                unscored_domains=deferred, error=r.error, raw=r.raw[:500])
+                res.llm = self.llm_record(ctx, responses)
+                return res
+            for item in r.parsed:
                 try:
                     d = str(item["domain"]).lower().removeprefix("www.")
                     v = {"score": max(0.0, min(1.0, float(item["score"]))),

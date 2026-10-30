@@ -257,6 +257,7 @@ made the judge call passporting unsupported although the cited page states it.
 - Per-paragraph sampling twice for a more stable faithfulness verdict (design §5).
 - Perturbation tests on a frozen archive (does each metric move the expected way when a
   known problem is injected), then judge calibration with a small human-labelled set.
-- Runs of detailed and deep mode with real APIs (covered so far by offline tests only).
+- More real runs: one each of default, detailed and deep (q001) are saved as seed samples in
+  `seeds/v0/` (archive, report, scores, logs), not yet reviewed by hand.
 - Question set size and composition (`dataset/questions_v0.jsonl` is a placeholder).
 - Old-vs-new comparison against `quality_eval`; evaluator stability benchmarks.

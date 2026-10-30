@@ -225,7 +225,7 @@ async def test_audit_judge_failure_is_reported(ctx):
         return "not json"
     ctx.judge = Judge(EvalCache(":memory:"), model="judge-y", complete=bad)
     r = await CitationRecall().score(make_archive(), ctx)
-    assert r.value is None and r.skipped == "no citing sentences"
+    assert r.value is None and r.skipped == "every judge call failed"
     assert len(r.details["failed_paragraphs"]) == 4 and r.llm["errors"] == 4
 
 

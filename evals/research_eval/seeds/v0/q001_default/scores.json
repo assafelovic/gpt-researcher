@@ -1,0 +1,2343 @@
+{
+ "run_id": "20261029T234054_q001_default_3fc58f",
+ "question_id": "q001",
+ "mode": "default",
+ "scorer_version": "0.1+d5e17daa",
+ "scored_at": "2026-10-30T02:48:04Z",
+ "judge_model": "gpt-6-luna",
+ "embedding_model": null,
+ "metrics": {
+  "decomposition_coverage": {
+   "name": "decomposition_coverage",
+   "category": "retrieval.query",
+   "version": "2",
+   "value": 0.375,
+   "higher_is_better": true,
+   "details": {
+    "method": "judge",
+    "key_points": {
+     "source": "cache",
+     "prompt_version": "1",
+     "judge_model": "gpt-6-luna"
+    },
+    "n_subqueries": 3,
+    "per_point": [
+     {
+      "key_point": "MiCA authorization, passporting, and transition deadlines for crypto-asset service providers",
+      "covered": true,
+      "subqueries": [
+       "How have MiCA licensing rules the EU crypto travel rule and anti money laundering requirements changed the crypto industry in Europe"
+      ],
+      "evidence": "Sub-query 2 says “MiCA licensing rules,” targeting the authorization aspect.",
+      "answered": true
+     },
+     {
+      "key_point": "MiCA token-issuance and stablecoin reserve and redemption rules",
+      "covered": false,
+      "subqueries": [],
+      "evidence": "",
+      "answered": true
+     },
+     {
+      "key_point": "MiCA disclosure, consumer-protection, and market-abuse obligations",
+      "covered": false,
+      "subqueries": [],
+      "evidence": "",
+      "answered": true
+     },
+     {
+      "key_point": "EU crypto-transfer travel-rule requirements",
+      "covered": true,
+      "subqueries": [
+       "How have MiCA licensing rules the EU crypto travel rule and anti money laundering requirements changed the crypto industry in Europe"
+      ],
+      "evidence": "Sub-query 2 says “the EU crypto travel rule.”",
+      "answered": true
+     },
+     {
+      "key_point": "EU AML package and AMLA supervision of crypto businesses",
+      "covered": true,
+      "subqueries": [
+       "How have MiCA licensing rules the EU crypto travel rule and anti money laundering requirements changed the crypto industry in Europe"
+      ],
+      "evidence": "Sub-query 2 says “anti money laundering requirements.”",
+      "answered": true
+     },
+     {
+      "key_point": "DORA operational-resilience requirements for crypto firms",
+      "covered": false,
+      "subqueries": [],
+      "evidence": "",
+      "answered": true
+     },
+     {
+      "key_point": "DAC8 crypto-asset tax reporting and information exchange",
+      "covered": false,
+      "subqueries": [],
+      "evidence": "",
+      "answered": true
+     },
+     {
+      "key_point": "UK crypto-promotion restrictions and evolving FCA authorization rules",
+      "covered": false,
+      "subqueries": [],
+      "evidence": "",
+      "answered": true
+     }
+    ]
+   },
+   "skipped": null,
+   "llm": {
+    "judge_model": "gpt-6-luna",
+    "prompts": {
+     "key_points": {
+      "version": "1",
+      "hash": "195a0aff2729"
+     },
+     "decomposition_coverage": {
+      "version": "1",
+      "hash": "f2ce0aba9e2e"
+     }
+    },
+    "requests": 1,
+    "cache_hits": 1,
+    "api_calls": 0,
+    "errors": 0
+   }
+  },
+  "subquery_redundancy": {
+   "name": "subquery_redundancy",
+   "category": "retrieval.query",
+   "version": "1",
+   "value": 0.0,
+   "higher_is_better": false,
+   "details": {
+    "threshold": 0.6,
+    "pairs": 3,
+    "duplicate_pairs": [],
+    "groups": [
+     {
+      "span_id": "s3",
+      "kind": "plan",
+      "pairs": 3
+     }
+    ]
+   },
+   "skipped": null,
+   "llm": null
+  },
+  "decomposition_tree_quality": {
+   "name": "decomposition_tree_quality",
+   "category": "retrieval.query",
+   "version": "1",
+   "value": 0.875,
+   "higher_is_better": true,
+   "details": {
+    "per_parent": [
+     {
+      "span_id": "s3",
+      "kind": "plan",
+      "parent": "What regulatory changes are affecting the crypto industry in Europe?",
+      "n_children": 3,
+      "score": 0.875,
+      "rubric": {
+       "q1": {
+        "evidence": "The parent asks broadly about “regulatory changes affecting the crypto industry in Europe.” The children cover MiCA, licensing, the travel rule, AML, and national changes in Belgium, Estonia, Malta, and Germany, but may miss other regulatory areas or countries.",
+        "score": 1
+       },
+       "q2": {
+        "evidence": "Each child narrows the parent to concrete topics: “under MiCA,” “MiCA licensing rules,” and national changes in named countries.",
+        "score": 2
+       },
+       "q3": {
+        "evidence": "Each child includes focused search terms, such as “European Union crypto regulations in 2026,” “EU crypto travel rule,” and “Belgium Estonia Malta and Germany.”",
+        "score": 2
+       },
+       "q4": {
+        "evidence": "All three children address crypto regulation in Europe, including EU-wide rules and national changes in European countries.",
+        "score": 2
+       },
+       "total": 7
+      },
+      "error": null
+     }
+    ],
+    "scored_parents": 1
+   },
+   "skipped": null,
+   "llm": {
+    "judge_model": "gpt-6-luna",
+    "prompts": {
+     "tree_quality": {
+      "version": "1",
+      "hash": "80424032912f"
+     }
+    },
+    "requests": 1,
+    "cache_hits": 1,
+    "api_calls": 0,
+    "errors": 0
+   }
+  },
+  "plan_adherence": {
+   "name": "plan_adherence",
+   "category": "retrieval.query",
+   "version": "1",
+   "value": 1.0,
+   "higher_is_better": true,
+   "details": {
+    "planned": 3,
+    "delivered": 3,
+    "per_kind": {
+     "plan": {
+      "planned": 3,
+      "delivered": 3
+     }
+    },
+    "not_delivered": []
+   },
+   "skipped": null,
+   "llm": null
+  },
+  "source_authority": {
+   "name": "source_authority",
+   "category": "retrieval.source",
+   "version": "1",
+   "value": 0.63,
+   "higher_is_better": true,
+   "details": {
+    "n_sources": 10,
+    "breakdown": [
+     {
+      "domain": "finance.yahoo.com",
+      "score": 0.85,
+      "tier": "llm:Major financial news and data platform with broad coverage, though content quality varies by source",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
+     },
+     {
+      "domain": "nortonrosefulbright.com",
+      "score": 0.85,
+      "tier": "llm:established international law firm with specialist legal expertise",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
+     },
+     {
+      "domain": "hacken.io",
+      "score": 0.7,
+      "tier": "llm:recognized blockchain cybersecurity and auditing firm",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
+     },
+     {
+      "domain": "innreg.com",
+      "score": 0.65,
+      "tier": "llm:Specialized fintech and financial-services regulatory consulting firm",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
+     },
+     {
+      "domain": "sumsub.com",
+      "score": 0.65,
+      "tier": "llm:established identity-verification and compliance provider with specialist industry expertise",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
+     },
+     {
+      "domain": "unit21.ai",
+      "score": 0.65,
+      "tier": "llm:Specialized financial-crime and compliance technology provider that publishes industry insights",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
+     },
+     {
+      "domain": "cyfrin.io",
+      "score": 0.6,
+      "tier": "llm:specialist blockchain security and education firm",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
+     },
+     {
+      "domain": "cointracking.info",
+      "score": 0.55,
+      "tier": "llm:Established cryptocurrency tax and portfolio-tracking provider, but not an independent research institution",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
+     },
+     {
+      "domain": "didit.me",
+      "score": 0.45,
+      "tier": "llm:identity-verification provider with relevant but commercially focused expertise",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
+     },
+     {
+      "domain": "stealthex.io",
+      "score": 0.35,
+      "tier": "llm:Cryptocurrency exchange service with limited independent research authority",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
+     }
+    ],
+    "fallback_domains": []
+   },
+   "skipped": null,
+   "llm": {
+    "judge_model": "gpt-6-luna",
+    "prompts": {
+     "domain_authority": {
+      "version": "1",
+      "hash": "984dc57e13b9"
+     }
+    },
+    "requests": 0,
+    "cache_hits": 0,
+    "api_calls": 0,
+    "errors": 0
+   }
+  },
+  "source_diversity": {
+   "name": "source_diversity",
+   "category": "retrieval.source",
+   "version": "1",
+   "value": 1.0,
+   "higher_is_better": true,
+   "details": {
+    "total_sources": 10,
+    "unique_domains": 10,
+    "diversity_ratio": 1.0,
+    "domain_entropy": 3.322,
+    "top_domains": [
+     [
+      "nortonrosefulbright.com",
+      1
+     ],
+     [
+      "sumsub.com",
+      1
+     ],
+     [
+      "innreg.com",
+      1
+     ],
+     [
+      "finance.yahoo.com",
+      1
+     ],
+     [
+      "cyfrin.io",
+      1
+     ]
+    ]
+   },
+   "skipped": null,
+   "llm": null
+  },
+  "citation_utilization": {
+   "name": "citation_utilization",
+   "category": "retrieval.efficiency",
+   "version": "3",
+   "value": 1.0,
+   "higher_is_better": true,
+   "details": {
+    "retrieved_urls": 10,
+    "cited_retrieved_urls": 10,
+    "uncited_urls": [],
+    "chunk_level": 0.444,
+    "chunks": 45,
+    "chunks_used": 20,
+    "chunks_echoed_uncited": 0,
+    "match_threshold": 0.5,
+    "per_chunk": [
+     {
+      "chunk_id": "cfc1cd2280ce5",
+      "url_cited": true,
+      "best_match": 0.428,
+      "used": false
+     },
+     {
+      "chunk_id": "c786027bf1387",
+      "url_cited": true,
+      "best_match": 0.564,
+      "used": true
+     },
+     {
+      "chunk_id": "cffa16a9fba87",
+      "url_cited": true,
+      "best_match": 1.0,
+      "used": true
+     },
+     {
+      "chunk_id": "ca3aef0ce4442",
+      "url_cited": true,
+      "best_match": 0.479,
+      "used": false
+     },
+     {
+      "chunk_id": "cc00f718fee5d",
+      "url_cited": true,
+      "best_match": 1.0,
+      "used": true
+     },
+     {
+      "chunk_id": "c8d30dac6c947",
+      "url_cited": true,
+      "best_match": 0.214,
+      "used": false
+     },
+     {
+      "chunk_id": "c8d1eed23d01c",
+      "url_cited": true,
+      "best_match": 0.595,
+      "used": true
+     },
+     {
+      "chunk_id": "c6292c2519594",
+      "url_cited": true,
+      "best_match": 0.828,
+      "used": true
+     },
+     {
+      "chunk_id": "c0c2cab8ee918",
+      "url_cited": true,
+      "best_match": 0.693,
+      "used": true
+     },
+     {
+      "chunk_id": "c1f77153b439d",
+      "url_cited": true,
+      "best_match": 0.229,
+      "used": false
+     },
+     {
+      "chunk_id": "c6ca18d1dc4c0",
+      "url_cited": true,
+      "best_match": 0.535,
+      "used": true
+     },
+     {
+      "chunk_id": "c64408981db24",
+      "url_cited": true,
+      "best_match": 0.753,
+      "used": true
+     },
+     {
+      "chunk_id": "c59af5413abdf",
+      "url_cited": true,
+      "best_match": 1.0,
+      "used": true
+     },
+     {
+      "chunk_id": "cfff780f66831",
+      "url_cited": true,
+      "best_match": 0.166,
+      "used": false
+     },
+     {
+      "chunk_id": "c9d92b14c98ff",
+      "url_cited": true,
+      "best_match": 0.331,
+      "used": false
+     },
+     {
+      "chunk_id": "cfe4fb8591c55",
+      "url_cited": true,
+      "best_match": 0.468,
+      "used": false
+     },
+     {
+      "chunk_id": "c6aab461045ae",
+      "url_cited": true,
+      "best_match": 0.293,
+      "used": false
+     },
+     {
+      "chunk_id": "c93feb7a9bace",
+      "url_cited": true,
+      "best_match": 0.67,
+      "used": true
+     },
+     {
+      "chunk_id": "c6d932988ab7c",
+      "url_cited": true,
+      "best_match": 0.375,
+      "used": false
+     },
+     {
+      "chunk_id": "c4d09822a1cdb",
+      "url_cited": true,
+      "best_match": 0.344,
+      "used": false
+     },
+     {
+      "chunk_id": "c3b87eb71e379",
+      "url_cited": true,
+      "best_match": 0.217,
+      "used": false
+     },
+     {
+      "chunk_id": "c63b1c99a3558",
+      "url_cited": true,
+      "best_match": 0.293,
+      "used": false
+     },
+     {
+      "chunk_id": "cc1961600b364",
+      "url_cited": true,
+      "best_match": 0.552,
+      "used": true
+     },
+     {
+      "chunk_id": "c76884eda64f5",
+      "url_cited": true,
+      "best_match": 0.535,
+      "used": true
+     },
+     {
+      "chunk_id": "c9fd141c23bcb",
+      "url_cited": true,
+      "best_match": 0.225,
+      "used": false
+     },
+     {
+      "chunk_id": "c7df766bc7567",
+      "url_cited": true,
+      "best_match": 0.786,
+      "used": true
+     },
+     {
+      "chunk_id": "c2f0c3e863e93",
+      "url_cited": true,
+      "best_match": 0.214,
+      "used": false
+     },
+     {
+      "chunk_id": "ccb37667e9e59",
+      "url_cited": true,
+      "best_match": 0.366,
+      "used": false
+     },
+     {
+      "chunk_id": "cca3a328fbbf9",
+      "url_cited": true,
+      "best_match": 0.441,
+      "used": false
+     },
+     {
+      "chunk_id": "c73f3e1376ad3",
+      "url_cited": true,
+      "best_match": 0.406,
+      "used": false
+     },
+     {
+      "chunk_id": "c4fe04a67719b",
+      "url_cited": true,
+      "best_match": 0.094,
+      "used": false
+     },
+     {
+      "chunk_id": "c50a904233ef4",
+      "url_cited": true,
+      "best_match": 0.274,
+      "used": false
+     },
+     {
+      "chunk_id": "cec0ff6e63ce9",
+      "url_cited": true,
+      "best_match": 0.628,
+      "used": true
+     },
+     {
+      "chunk_id": "ca66c81f0c594",
+      "url_cited": true,
+      "best_match": 0.284,
+      "used": false
+     },
+     {
+      "chunk_id": "c369fedf7de32",
+      "url_cited": true,
+      "best_match": 0.094,
+      "used": false
+     },
+     {
+      "chunk_id": "c8e54fbf96eff",
+      "url_cited": true,
+      "best_match": 0.379,
+      "used": false
+     },
+     {
+      "chunk_id": "ca7a86499e236",
+      "url_cited": true,
+      "best_match": 0.412,
+      "used": false
+     },
+     {
+      "chunk_id": "c73ee4cf49d6a",
+      "url_cited": true,
+      "best_match": 0.677,
+      "used": true
+     },
+     {
+      "chunk_id": "cdd307307f773",
+      "url_cited": true,
+      "best_match": 0.368,
+      "used": false
+     },
+     {
+      "chunk_id": "c7a7b5792b5ea",
+      "url_cited": true,
+      "best_match": 0.843,
+      "used": true
+     },
+     {
+      "chunk_id": "cdbfecb25ced6",
+      "url_cited": true,
+      "best_match": 0.211,
+      "used": false
+     },
+     {
+      "chunk_id": "cc6c6dfeec4f9",
+      "url_cited": true,
+      "best_match": 0.634,
+      "used": true
+     },
+     {
+      "chunk_id": "c118d2a070885",
+      "url_cited": true,
+      "best_match": 0.68,
+      "used": true
+     },
+     {
+      "chunk_id": "c3670abb607f9",
+      "url_cited": true,
+      "best_match": 0.729,
+      "used": true
+     },
+     {
+      "chunk_id": "c9e98293cc500",
+      "url_cited": true,
+      "best_match": 0.817,
+      "used": true
+     }
+    ],
+    "chunk_level_judged": 0.667,
+    "chunks_used_judged": [
+     "c786027bf1387",
+     "cffa16a9fba87",
+     "ca3aef0ce4442",
+     "cc00f718fee5d",
+     "c8d1eed23d01c",
+     "c6292c2519594",
+     "c0c2cab8ee918",
+     "c6ca18d1dc4c0",
+     "c64408981db24",
+     "c59af5413abdf",
+     "c9d92b14c98ff",
+     "cfe4fb8591c55",
+     "c6aab461045ae",
+     "c93feb7a9bace",
+     "c6d932988ab7c",
+     "c3b87eb71e379",
+     "cc1961600b364",
+     "c76884eda64f5",
+     "c7df766bc7567",
+     "ccb37667e9e59",
+     "c8e54fbf96eff",
+     "ca7a86499e236",
+     "c73ee4cf49d6a",
+     "cdd307307f773",
+     "c7a7b5792b5ea",
+     "cdbfecb25ced6",
+     "cc6c6dfeec4f9",
+     "c118d2a070885",
+     "c3670abb607f9",
+     "c9e98293cc500"
+    ]
+   },
+   "skipped": null,
+   "llm": {
+    "judge_model": "gpt-6-luna",
+    "prompts": {
+     "paragraph_audit": {
+      "version": "2",
+      "hash": "ac5ed03a8d11"
+     }
+    },
+    "requests": 43,
+    "cache_hits": 43,
+    "api_calls": 0,
+    "errors": 0,
+    "shared": "citation_audit"
+   }
+  },
+  "query_relevance": {
+   "name": "query_relevance",
+   "category": "retrieval.efficiency",
+   "version": "2",
+   "value": 0.775,
+   "higher_is_better": true,
+   "details": {
+    "key_points": {
+     "source": "cache",
+     "prompt_version": "1",
+     "judge_model": "gpt-6-luna"
+    },
+    "judged": 4,
+    "no_material": [],
+    "per_query": [
+     {
+      "span_id": "s4",
+      "kind": "initial_results",
+      "query": "What regulatory changes are affecting the crypto industry in Europe?",
+      "chunks": 17,
+      "urls_total": 4,
+      "urls_shown": 4,
+      "score": 0.8,
+      "rubric": {
+       "q1": {
+        "evidence": "The material says MiCA is the EU’s “first comprehensive legal framework” and also discusses DORA obligations, both relevant to regulatory changes affecting crypto in Europe.",
+        "score": 2
+       },
+       "q2": {
+        "evidence": "Point 1: “grandfathered entities will not be able to benefit from intra-EU passport.” Point 6: DORA includes “incident reporting,” “structured documentation, internal controls, and repeatable testing.”",
+        "key_points": [
+         1,
+         6
+        ]
+       },
+       "q3": {
+        "evidence": "The material names “Regulation (EU) 2023/1114” and gives concrete details including “Major IT incidents must be reported to regulators promptly” and “Fewer than 1 in 5 of Europe’s 1,200 registered crypto companies secured a licence.”",
+        "score": 2
+       },
+       "q4": {
+        "evidence": "The other searches focus on “MiCA licensing rules,” “EU crypto travel rule,” AML requirements, and national changes; this material additionally addresses DORA incident reporting and resilience obligations.",
+        "unique": true
+       },
+       "q5": {
+        "evidence": "The legal guide states grandfathered entities “will not be able to benefit from intra-EU passport,” and the DORA material describes incident reporting and internal-control requirements, which could be cited for those points. However, much of the material is general, and some claims lack dates or clear supporting detail.",
+        "score": 1
+       },
+       "total": 8
+      },
+      "error": null
+     },
+     {
+      "span_id": "s5",
+      "kind": "sub_query",
+      "query": "What new European Union crypto regulations in 2026 are affecting exchanges wallet providers and stablecoin issuers under MiCA",
+      "chunks": 17,
+      "urls_total": 2,
+      "urls_shown": 2,
+      "score": 0.5,
+      "rubric": {
+       "q1": {
+        "evidence": "The material is about MiCA and covers entities it applies to: “Exchanges and trading platforms” and “asset-referenced tokens (stablecoins),” but it gives little about regulatory changes.",
+        "score": 1
+       },
+       "q2": {
+        "evidence": "It says MiCA applies to “crypto-asset issuers” and “crypto-asset service providers,” but provides no substantive authorization, issuance, reserve, redemption, or other listed obligations.",
+        "key_points": []
+       },
+       "q3": {
+        "evidence": "It names concrete categories such as “Exchanges and trading platforms,” “Custodians,” and “asset-referenced tokens (stablecoins),” but includes no figures, dates, or specific rule details.",
+        "score": 1
+       },
+       "q4": {
+        "evidence": "This sub-query specifically targets “new European Union crypto regulations in 2026” affecting exchanges, wallet providers, and stablecoin issuers, unlike the other queries’ broader licensing/AML and country-specific focus.",
+        "unique": true
+       },
+       "q5": {
+        "evidence": "The statement “MiCA applies to two groups operating in the EU market” could be cited for basic scope, but it does not establish what regulatory changes are affecting them.",
+        "score": 1
+       },
+       "total": 5
+      },
+      "error": null
+     },
+     {
+      "span_id": "s6",
+      "kind": "sub_query",
+      "query": "How have MiCA licensing rules the EU crypto travel rule and anti money laundering requirements changed the crypto industry in Europe",
+      "chunks": 10,
+      "urls_total": 3,
+      "urls_shown": 3,
+      "score": 0.9,
+      "rubric": {
+       "q1": {
+        "evidence": "The sub-query asks about “MiCA licensing rules the EU crypto travel rule and anti money laundering requirements,” and the material covers CASP licensing, transfer data requirements, and AML obligations.",
+        "score": 2
+       },
+       "q2": {
+        "evidence": "“CASPs must acquire licenses” supports point 1; “Since December 2024, CASPs have been required to collect full originator and beneficiary data” supports point 4; “The Anti-Money Laundering Regulation (AMLR) applies from 10 July 2027” and the AMLA due-diligence standards support point 5; “Issuer disclosures help minimize fraud risks” gives information about point 3.",
+        "key_points": [
+         1,
+         3,
+         4,
+         5
+        ]
+       },
+       "q3": {
+        "evidence": "The material gives concrete details, including “Since December 2024,” “There is no minimum threshold,” and “The Anti-Money Laundering Regulation (AMLR) applies from 10 July 2027.”",
+        "score": 2
+       },
+       "q4": {
+        "evidence": "The other sub-queries focus on MiCA rules in 2026 and national changes, while this one specifically targets “the EU crypto travel rule and anti money laundering requirements.”",
+        "unique": true
+       },
+       "q5": {
+        "evidence": "The material offers citeable claims, including that CASPs must collect and share originator and beneficiary data “for every transfer” and that AMLR applies from “10 July 2027.”",
+        "score": 2
+       },
+       "total": 9
+      },
+      "error": null
+     },
+     {
+      "span_id": "s7",
+      "kind": "sub_query",
+      "query": "What national crypto regulatory changes in countries like Belgium Estonia Malta and Germany are affecting crypto companies in Europe",
+      "chunks": 1,
+      "urls_total": 1,
+      "urls_shown": 1,
+      "score": 0.9,
+      "rubric": {
+       "q1": {
+        "evidence": "The sub-query asks about national crypto regulatory changes, and the material describes DAC8 transposition in specific European countries and Germany’s tax treatment under DAC8.",
+        "score": 2
+       },
+       "q2": {
+        "evidence": "It says the countries missed the DAC8 transposition deadline and that “DAC8 reporting applies regardless of whether a gain is taxable.”",
+        "key_points": [
+         7
+        ]
+       },
+       "q3": {
+        "evidence": "The material names Belgium, Estonia, Malta, and Germany, gives a February 2026 deadline-enforcement date and a September 30, 2027 exchange deadline, and describes Germany’s one-year holding-period exemption.",
+        "score": 2
+       },
+       "q4": {
+        "evidence": "Unlike the other sub-queries’ focus on MiCA, travel rules, and AML, this one targets national implementation and DAC8 tax reporting across named countries.",
+        "unique": true
+       },
+       "q5": {
+        "evidence": "The material gives specific country statuses and dates that could support a report, though the transposition claim is attributed to an industry briefing.",
+        "score": 2
+       },
+       "total": 9
+      },
+      "error": null
+     }
+    ]
+   },
+   "skipped": null,
+   "llm": {
+    "judge_model": "gpt-6-luna",
+    "prompts": {
+     "query_relevance": {
+      "version": "1",
+      "hash": "b3864e64006b"
+     },
+     "key_points": {
+      "version": "1",
+      "hash": "195a0aff2729"
+     }
+    },
+    "requests": 4,
+    "cache_hits": 4,
+    "api_calls": 0,
+    "errors": 0
+   }
+  },
+  "retrieval_overlap": {
+   "name": "retrieval_overlap",
+   "category": "retrieval.efficiency",
+   "version": "1",
+   "value": 0.52,
+   "higher_is_better": false,
+   "details": {
+    "proposed": 25,
+    "new": 12,
+    "duplicate": 13,
+    "per_unit": [
+     {
+      "span_id": "s4",
+      "query": "What regulatory changes are affecting the crypto industry in Europe?",
+      "proposed": 5,
+      "new": 5
+     },
+     {
+      "span_id": "s5",
+      "query": "What new European Union crypto regulations in 2026 are affecting exchanges wallet providers and stablecoin issuers under MiCA",
+      "proposed": 5,
+      "new": 2
+     },
+     {
+      "span_id": "s6",
+      "query": "How have MiCA licensing rules the EU crypto travel rule and anti money laundering requirements changed the crypto industry in Europe",
+      "proposed": 5,
+      "new": 3
+     },
+     {
+      "span_id": "s7",
+      "query": "What national crypto regulatory changes in countries like Belgium Estonia Malta and Germany are affecting crypto companies in Europe",
+      "proposed": 5,
+      "new": 2
+     },
+     {
+      "span_id": "s8",
+      "query": "What regulatory changes are affecting the crypto industry in Europe?",
+      "proposed": 5,
+      "new": 0
+     }
+    ]
+   },
+   "skipped": null,
+   "llm": null
+  },
+  "comprehensiveness": {
+   "name": "comprehensiveness",
+   "category": "generation.writing",
+   "version": "1",
+   "value": 0.688,
+   "higher_is_better": true,
+   "details": {
+    "key_points": {
+     "source": "cache",
+     "prompt_version": "1",
+     "judge_model": "gpt-6-luna"
+    },
+    "per_point": [
+     {
+      "key_point": "MiCA authorization, passporting, and transition deadlines for crypto-asset service providers",
+      "coverage": "full",
+      "evidence": "“Any person that continues to provide crypto-asset services in Europe after 30 December 2024 must assess whether MiCA authorization is required”; firms could continue temporarily “until 1 July 2026”; and “Once authorized, a CASP can provide services throughout the Union without setting up a physical presence in every member state.”"
+     },
+     {
+      "key_point": "MiCA token-issuance and stablecoin reserve and redemption rules",
+      "coverage": "partial",
+      "evidence": "The report says ARTs and EMTs are subject to a regime covering “authorization, reserves or safeguarded funds, governance, disclosures, and redemption rights.” It also says an EMT may be offered publicly only by an authorized credit or e-money institution, after “notifying and publishing a white paper,” or with that issuer’s written consent. It does not explain reserve or redemption rules in detail."
+     },
+     {
+      "key_point": "MiCA disclosure, consumer-protection, and market-abuse obligations",
+      "coverage": "partial",
+      "evidence": "The report describes MiCA as covering “issuance, offering to the public, admission to trading, crypto-asset services, and market abuse prevention” and calls it a “conduct, disclosure, and market integrity framework.” It provides little detail on those obligations and does not substantively explain consumer-protection rules."
+     },
+     {
+      "key_point": "EU crypto-transfer travel-rule requirements",
+      "coverage": "full",
+      "evidence": "“Since December 2024, CASPs have been required to collect full originator and beneficiary information for every crypto transfer, with no minimum threshold.” The report lists “name, account number, address or national ID, and date of birth,” and says the data must be shared with the receiving CASP."
+     },
+     {
+      "key_point": "EU AML package and AMLA supervision of crypto businesses",
+      "coverage": "partial",
+      "evidence": "The report says KYC obligations come from “the wider EU AML framework” and that MiCA applications must describe controls to manage “money laundering and terrorist financing risks.” It does not explain the EU AML package or AMLA’s supervision of crypto businesses."
+     },
+     {
+      "key_point": "DORA operational-resilience requirements for crypto firms",
+      "coverage": "full",
+      "evidence": "DORA requires firms to “monitor critical third-party providers, especially cloud and data vendors, and to report major ICT incidents promptly, including root causes and remediation plans.” The report also identifies “ICT risk management, incident reporting, and third-party oversight” as regulatory requirements."
+     },
+     {
+      "key_point": "DAC8 crypto-asset tax reporting and information exchange",
+      "coverage": "full",
+      "evidence": "The report identifies DAC8 as “the EU framework for tax reporting on crypto-assets,” says CASPs are collecting “2026 transaction data,” and gives “30 September 2027” as the first exchange deadline."
+     },
+     {
+      "key_point": "UK crypto-promotion restrictions and evolving FCA authorization rules",
+      "coverage": "none",
+      "evidence": "",
+      "retrieved_hint": {
+       "best_overlap": 0.39,
+       "chunk_id": "c1f77153b439d",
+       "url": "https://sumsub.com/blog/crypto-regulations-in-the-european-union-markets-in-crypto-assets-mica"
+      }
+     }
+    ],
+    "omitted_but_retrieved": [],
+    "report_truncated": false
+   },
+   "skipped": null,
+   "llm": {
+    "judge_model": "gpt-6-luna",
+    "prompts": {
+     "comprehensiveness": {
+      "version": "1",
+      "hash": "1c90a75fcac6"
+     },
+     "key_points": {
+      "version": "1",
+      "hash": "195a0aff2729"
+     }
+    },
+    "requests": 1,
+    "cache_hits": 1,
+    "api_calls": 0,
+    "errors": 0
+   }
+  },
+  "insight": {
+   "name": "insight",
+   "category": "generation.writing",
+   "version": "1",
+   "value": 0.65,
+   "higher_is_better": true,
+   "details": {
+    "criteria": [
+     {
+      "id": "I1",
+      "dimension": "insight",
+      "criterion": "Regulatory scope and change",
+      "description": "Identifies the main regulatory changes affecting crypto in Europe, explaining what they change and distinguishing enacted rules from proposals or guidance.",
+      "weight": 0.25,
+      "score": 7.0,
+      "evidence": "The report covers MiCA authorization and passporting, stablecoin rules, the Travel Rule, DORA, PSD2 overlap, and DAC8, and gives dates for when key provisions apply. It also distinguishes enacted rules from possible future changes, for example by describing DeFi and NFT oversight as a potential future development. However, it omits some relevant regulatory developments and occasionally makes broad claims about the reach of MiCA without fully qualifying them."
+     },
+     {
+      "id": "I2",
+      "dimension": "insight",
+      "criterion": "European comparison",
+      "description": "Compares EU-wide rules with relevant national approaches and, where useful, the UK or other European jurisdictions, making differences and overlaps clear.",
+      "weight": 0.25,
+      "score": 3.0,
+      "evidence": "The report notes that “member states were permitted to shorten or not use” MiCA’s transitional period and lists countries that missed DAC8 transposition deadlines. But it does not meaningfully compare national crypto regimes or explain how the UK’s approach differs from the EU’s; the UK appears only as an example of a non-EU firm that might have EU clients."
+     },
+     {
+      "id": "I3",
+      "dimension": "insight",
+      "criterion": "Impacts and trade-offs",
+      "description": "Explains how the changes affect crypto firms, users, and markets, weighing intended benefits such as consumer protection against costs or risks such as compliance burdens and reduced access.",
+      "weight": 0.25,
+      "score": 8.0,
+      "evidence": "The report explains that passporting makes authorization a “distribution right,” while compliance requirements raise fixed costs and may favor larger firms. It discusses stablecoin restrictions and delistings, data-exchange and resilience burdens, and the trade-off between legal certainty and higher barriers to entry. Effects on users are present but less fully developed than effects on firms."
+     },
+     {
+      "id": "I4",
+      "dimension": "insight",
+      "criterion": "Synthesis and conclusion",
+      "description": "Connects the regulatory changes into a coherent account of how Europe’s crypto framework is evolving and reaches a clear conclusion supported by evidence.",
+      "weight": 0.25,
+      "score": 8.0,
+      "evidence": "The conclusion synthesizes MiCA with the “layering effect” of stablecoin rules, Travel Rule obligations, DORA, DAC8, and possible PSD2 overlap, then argues that Europe is normalizing crypto into mainstream financial regulation. That conclusion is clear and tied to the report’s discussion, though some supporting claims and developments are not examined in depth."
+     }
+    ],
+    "report_truncated": false
+   },
+   "skipped": null,
+   "llm": {
+    "judge_model": "gpt-6-luna",
+    "prompts": {
+     "quality_rubric": {
+      "version": "1",
+      "hash": "33342be7d256"
+     },
+     "quality_score": {
+      "version": "1",
+      "hash": "27bcc4ec553f"
+     }
+    },
+    "requests": 2,
+    "cache_hits": 2,
+    "api_calls": 0,
+    "errors": 0,
+    "shared": "quality_scores"
+   }
+  },
+  "readability": {
+   "name": "readability",
+   "category": "generation.writing",
+   "version": "1",
+   "value": 0.675,
+   "higher_is_better": true,
+   "details": {
+    "criteria": [
+     {
+      "id": "R1",
+      "dimension": "readability",
+      "criterion": "Logical progression",
+      "description": "Organizes the report so readers can follow the changes from their context and scope through implementation and effects to the overall conclusion.",
+      "weight": 0.25,
+      "score": 8.0,
+      "evidence": "The report moves from an executive summary and MiCA context through implementation milestones, affected parties, adjacent regulatory regimes, market consequences, and a conclusion. This generally gives the reader a clear path from rules to effects."
+     },
+     {
+      "id": "R2",
+      "dimension": "readability",
+      "criterion": "Terminology explained",
+      "description": "Defines technical and legal terms, including relevant acronyms, in plain language when they first appear.",
+      "weight": 0.25,
+      "score": 6.0,
+      "evidence": "Some terms are defined on first use, including “Markets in Crypto-Assets Regulation (MiCA)” and “crypto-asset service providers (CASPs).” But others, such as AML/KYC, MiFID II, PSD2, and ICT, are not fully explained in plain language when introduced."
+     },
+     {
+      "id": "R3",
+      "dimension": "readability",
+      "criterion": "Clear, concise wording",
+      "description": "Uses precise, readable language to explain complex rules without unnecessary repetition, jargon, or unsupported claims.",
+      "weight": 0.25,
+      "score": 7.0,
+      "evidence": "Phrases such as “authorization has become a distribution right” efficiently convey the commercial significance of passporting, and most sections use direct, readable language. Some assertions are broad or depend on industry and media sources, and the report occasionally uses specialist terminology without enough qualification."
+     },
+     {
+      "id": "R4",
+      "dimension": "readability",
+      "criterion": "Useful structure",
+      "description": "Uses informative headings and, where they clarify comparisons or timelines, well-labeled lists or tables without making the report difficult to navigate.",
+      "weight": 0.25,
+      "score": 6.0,
+      "evidence": "Informative headings divide the report into useful topics, and the implementation timeline is a sensible choice. However, the timeline table is poorly rendered, with broken-up headers and excessive blank space, which makes a key section harder to navigate."
+     }
+    ],
+    "report_truncated": false
+   },
+   "skipped": null,
+   "llm": {
+    "judge_model": "gpt-6-luna",
+    "prompts": {
+     "quality_rubric": {
+      "version": "1",
+      "hash": "33342be7d256"
+     },
+     "quality_score": {
+      "version": "1",
+      "hash": "27bcc4ec553f"
+     }
+    },
+    "requests": 2,
+    "cache_hits": 2,
+    "api_calls": 0,
+    "errors": 0,
+    "shared": "quality_scores"
+   }
+  },
+  "instruction_following": {
+   "name": "instruction_following",
+   "category": "generation.writing",
+   "version": "1",
+   "value": 1.0,
+   "higher_is_better": true,
+   "details": {
+    "checks": {
+     "min_words": true,
+     "single_title": true,
+     "clean_headings": true,
+     "no_toc": true,
+     "references": true,
+     "in_text_citations": true,
+     "cites_only_retrieved": true
+    },
+    "words": 2083,
+    "min_words": 1200,
+    "parse_warnings": [],
+    "duplicate_references": 0,
+    "cited_not_retrieved": []
+   },
+   "skipped": null,
+   "llm": null
+  },
+  "topic_relevance": {
+   "name": "topic_relevance",
+   "category": "generation.writing",
+   "version": "1",
+   "value": 1.0,
+   "higher_is_better": true,
+   "details": {
+    "judged": 43,
+    "paragraphs": 43,
+    "off_topic": [],
+    "per_paragraph": [
+     {
+      "para_id": "sec1-p1",
+      "verdict": "yes",
+      "reason": ""
+     },
+     {
+      "para_id": "sec1-p2",
+      "verdict": "yes",
+      "reason": ""
+     },
+     {
+      "para_id": "sec1-p3",
+      "verdict": "yes",
+      "reason": ""
+     },
+     {
+      "para_id": "sec2-p1",
+      "verdict": "yes",
+      "reason": ""
+     },
+     {
+      "para_id": "sec2-p2",
+      "verdict": "yes",
+      "reason": ""
+     },
+     {
+      "para_id": "sec3-p1",
+      "verdict": "yes",
+      "reason": ""
+     },
+     {
+      "para_id": "sec3-p2",
+      "verdict": "yes",
+      "reason": ""
+     },
+     {
+      "para_id": "sec3-p3",
+      "verdict": "yes",
+      "reason": ""
+     },
+     {
+      "para_id": "sec4-p1",
+      "verdict": "yes",
+      "reason": ""
+     },
+     {
+      "para_id": "sec4-p2",
+      "verdict": "yes",
+      "reason": ""
+     },
+     {
+      "para_id": "sec4-p3",
+      "verdict": "yes",
+      "reason": ""
+     },
+     {
+      "para_id": "sec5-p1",
+      "verdict": "yes",
+      "reason": ""
+     },
+     {
+      "para_id": "sec5-p2",
+      "verdict": "yes",
+      "reason": ""
+     },
+     {
+      "para_id": "sec6-p1",
+      "verdict": "yes",
+      "reason": ""
+     },
+     {
+      "para_id": "sec6-p2",
+      "verdict": "yes",
+      "reason": ""
+     },
+     {
+      "para_id": "sec7-p1",
+      "verdict": "yes",
+      "reason": ""
+     },
+     {
+      "para_id": "sec7-p2",
+      "verdict": "yes",
+      "reason": ""
+     },
+     {
+      "para_id": "sec8-p1",
+      "verdict": "yes",
+      "reason": ""
+     },
+     {
+      "para_id": "sec8-p2",
+      "verdict": "yes",
+      "reason": ""
+     },
+     {
+      "para_id": "sec9-p1",
+      "verdict": "yes",
+      "reason": ""
+     },
+     {
+      "para_id": "sec9-p2",
+      "verdict": "yes",
+      "reason": ""
+     },
+     {
+      "para_id": "sec9-p3",
+      "verdict": "yes",
+      "reason": ""
+     },
+     {
+      "para_id": "sec10-p1",
+      "verdict": "yes",
+      "reason": ""
+     },
+     {
+      "para_id": "sec10-p2",
+      "verdict": "yes",
+      "reason": ""
+     },
+     {
+      "para_id": "sec10-p3",
+      "verdict": "yes",
+      "reason": ""
+     },
+     {
+      "para_id": "sec10-p4",
+      "verdict": "yes",
+      "reason": ""
+     },
+     {
+      "para_id": "sec11-p1",
+      "verdict": "yes",
+      "reason": ""
+     },
+     {
+      "para_id": "sec11-p2",
+      "verdict": "yes",
+      "reason": ""
+     },
+     {
+      "para_id": "sec11-p3",
+      "verdict": "yes",
+      "reason": ""
+     },
+     {
+      "para_id": "sec12-p1",
+      "verdict": "yes",
+      "reason": ""
+     },
+     {
+      "para_id": "sec12-p2",
+      "verdict": "yes",
+      "reason": ""
+     },
+     {
+      "para_id": "sec12-p3",
+      "verdict": "yes",
+      "reason": ""
+     },
+     {
+      "para_id": "sec13-p1",
+      "verdict": "yes",
+      "reason": ""
+     },
+     {
+      "para_id": "sec13-p2",
+      "verdict": "yes",
+      "reason": ""
+     },
+     {
+      "para_id": "sec13-p3",
+      "verdict": "yes",
+      "reason": ""
+     },
+     {
+      "para_id": "sec14-p1",
+      "verdict": "yes",
+      "reason": ""
+     },
+     {
+      "para_id": "sec14-p2",
+      "verdict": "yes",
+      "reason": ""
+     },
+     {
+      "para_id": "sec14-p3",
+      "verdict": "yes",
+      "reason": ""
+     },
+     {
+      "para_id": "sec15-p1",
+      "verdict": "yes",
+      "reason": ""
+     },
+     {
+      "para_id": "sec15-p2",
+      "verdict": "yes",
+      "reason": ""
+     },
+     {
+      "para_id": "sec15-p3",
+      "verdict": "yes",
+      "reason": ""
+     },
+     {
+      "para_id": "sec16-p1",
+      "verdict": "yes",
+      "reason": ""
+     },
+     {
+      "para_id": "sec16-p2",
+      "verdict": "yes",
+      "reason": ""
+     }
+    ]
+   },
+   "skipped": null,
+   "llm": {
+    "judge_model": "gpt-6-luna",
+    "prompts": {
+     "topic_relevance": {
+      "version": "1",
+      "hash": "a9aeb9774723"
+     }
+    },
+    "requests": 1,
+    "cache_hits": 1,
+    "api_calls": 0,
+    "errors": 0
+   }
+  },
+  "citation_recall": {
+   "name": "citation_recall",
+   "category": "generation.citation",
+   "version": "1",
+   "value": 0.513,
+   "higher_is_better": true,
+   "details": {
+    "citing_sentences": 39,
+    "supported": 20,
+    "unsupported": [
+     {
+      "para_id": "sec1-p1",
+      "sentence": 1,
+      "text": "The European crypto industry is being reshaped by a stack of overlapping regulatory changes, led by the EU’s Markets in Crypto-Assets Regulation (MiCA), but extending well beyond it into AML/KYC, the Travel Rule, operational resilience, payments/e-money law, and tax reporting. The single biggest change is that Europe has moved from a fragmented, nationally uneven environment to a licence-based, pan-EU supervisory regime that is much closer to traditional financial regulation than the crypto sector previously experienced. In practical terms, this means that access to the European market is increasingly determined by a firm’s ability to obtain authorization, document governance, manage AML risk, handle customer data, and maintain resilient technology infrastructure rather than by speed of market entry alone (Norton Rose Fulbright, 2026; Sumsub, 2026).",
+      "urls": [
+       "https://www.nortonrosefulbright.com/en/knowledge/publications/2cec201e/regulating-crypto-assets-in-europe-practical-guide-to-mica",
+       "https://sumsub.com/blog/crypto-regulations-in-the-european-union-markets-in-crypto-assets-mica"
+      ]
+     },
+     {
+      "para_id": "sec1-p3",
+      "sentence": 1,
+      "text": "Together, these rules reduce regulatory arbitrage and increase legal certainty, but they also raise fixed compliance costs and are likely to favor larger, better-capitalized operators over smaller or offshore firms (Unit21, 2026; CoinTracking, 2026).",
+      "urls": [
+       "https://www.unit21.ai/blog/mica-regulation-2026-faqs-what-crypto-compliance-teams-need-to-know",
+       "https://cointracking.info/learn/dac8-crypto-regulation"
+      ]
+     },
+     {
+      "para_id": "sec2-p2",
+      "sentence": 1,
+      "text": "MiCA covers the full lifecycle of many crypto activities, including issuance, offering to the public, admission to trading, crypto-asset services, and market abuse prevention. The regulation is therefore not just a licensing regime; it is also a conduct, disclosure, and market integrity framework (Norton Rose Fulbright, 2026; Sumsub, 2026).",
+      "urls": [
+       "https://www.nortonrosefulbright.com/en/knowledge/publications/2cec201e/regulating-crypto-assets-in-europe-practical-guide-to-mica",
+       "https://sumsub.com/blog/crypto-regulations-in-the-european-union-markets-in-crypto-assets-mica"
+      ]
+     },
+     {
+      "para_id": "sec3-p2",
+      "sentence": 3,
+      "text": "| Full MiCA framework for CASPs took effect | Exchanges, custodians, advisers, and other service providers came under EU-wide authorization rules (Norton Rose Fulbright, 2026; Sumsub, 2026)\n\n\n\n | 1 July 2026",
+      "urls": [
+       "https://www.nortonrosefulbright.com/en/knowledge/publications/2cec201e/regulating-crypto-assets-in-europe-practical-guide-to-mica",
+       "https://sumsub.com/blog/crypto-regulations-in-the-european-union-markets-in-crypto-assets-mica"
+      ]
+     },
+     {
+      "para_id": "sec3-p3",
+      "sentence": 1,
+      "text": "This timeline matters because it marks the transition from preparation to enforcement. As of late 2026, MiCA is no longer a future compliance project; it is a live operational reality for firms serving EU clients (Hacken, 2026).",
+      "urls": [
+       "https://hacken.io/discover/mica-regulation"
+      ]
+     },
+     {
+      "para_id": "sec4-p1",
+      "sentence": 1,
+      "text": "MiCA is relevant to both issuers of crypto-assets and CASPs operating in Europe or serving European clients. Norton Rose specifically notes that the framework is relevant not only to persons located or established in the EEA, but also to persons established outside the EEA, including in the UK, if they have clients located in the EEA (Norton Rose Fulbright, 2026).",
+      "urls": [
+       "https://www.nortonrosefulbright.com/en/knowledge/publications/2cec201e/regulating-crypto-assets-in-europe-practical-guide-to-mica"
+      ]
+     },
+     {
+      "para_id": "sec5-p1",
+      "sentence": 1,
+      "text": "Any person that continues to provide crypto-asset services in Europe after 30 December 2024 must assess whether MiCA authorization is required. Norton Rose warns that preparing the required documentation, policies, and procedures can be a lengthy process, especially for firms with complex operations or no existing European presence. It also warns of potential application bottlenecks at national competent authorities (NCAs) as deadlines approach (Norton Rose Fulbright, 2026).",
+      "urls": [
+       "https://www.nortonrosefulbright.com/en/knowledge/publications/2cec201e/regulating-crypto-assets-in-europe-practical-guide-to-mica"
+      ]
+     },
+     {
+      "para_id": "sec8-p1",
+      "sentence": 1,
+      "text": "The most visible early impact of MiCA has been on stablecoins. Since 30 June 2024, ARTs and EMTs have been subject to a dedicated regime covering authorization, reserves or safeguarded funds, governance, disclosures, and redemption rights (Norton Rose Fulbright, 2026; StealthEX, 2026).",
+      "urls": [
+       "https://www.nortonrosefulbright.com/en/knowledge/publications/2cec201e/regulating-crypto-assets-in-europe-practical-guide-to-mica",
+       "https://stealthex.io/blog/mica-compliant-stablecoins"
+      ]
+     },
+     {
+      "para_id": "sec8-p2",
+      "sentence": 1,
+      "text": "Didit summarizes a particularly important rule: an e-money token may be offered to the public in the EU only by an issuer authorized as a credit institution or e-money institution, after notifying and publishing a white paper, or by others with that issuer’s written consent (Didit, 2026).",
+      "urls": [
+       "https://didit.me/blog/mica-regulation-eu-crypto-compliance-guide"
+      ]
+     },
+     {
+      "para_id": "sec9-p3",
+      "sentence": 1,
+      "text": "This distinction matters. MiCA is not primarily criminalizing private ownership of tokens in self-custody; it is regulating issuance, offering, trading admission, and service provision around those tokens (StealthEX, 2026).",
+      "urls": [
+       "https://stealthex.io/blog/mica-compliant-stablecoins"
+      ]
+     },
+     {
+      "para_id": "sec10-p1",
+      "sentence": 1,
+      "text": "MiCA is often treated as the “crypto licence,” but it does not itself contain the full KYC rulebook. Didit notes that KYC obligations come from the wider EU AML framework, the Transfer of Funds Regulation, and other adjacent laws (Didit, 2026).",
+      "urls": [
+       "https://didit.me/blog/mica-regulation-eu-crypto-compliance-guide"
+      ]
+     },
+     {
+      "para_id": "sec11-p1",
+      "sentence": 1,
+      "text": "Europe’s crypto regulatory changes are not limited to financial conduct. Firms also face increasing operational resilience expectations. InnReg states that the EU’s Digital Operational Resilience Act (DORA) requires firms to monitor critical third-party providers, especially cloud and data vendors, and to report major ICT incidents promptly, including root causes and remediation plans. It also emphasizes that structured documentation, internal controls, and repeatable testing are necessary to comply (InnReg, 2026).",
+      "urls": [
+       "https://www.innreg.com/blog/eu-crypto-regulation-guide"
+      ]
+     },
+     {
+      "para_id": "sec13-p1",
+      "sentence": 1,
+      "text": "A separate but important regulatory change is DAC8, the EU framework for tax reporting on crypto-assets. CoinTracking reports that, although some member states missed the transposition deadline, the European Commission sent formal letters in February 2026 to 12 countries—Belgium, Bulgaria, Cyprus, Czechia, Estonia, Greece, Luxembourg, Malta, the Netherlands, Poland, Portugal, and Spain—giving them two months to complete transposition (CoinTracking, 2026).",
+      "urls": [
+       "https://cointracking.info/learn/dac8-crypto-regulation"
+      ]
+     },
+     {
+      "para_id": "sec13-p2",
+      "sentence": 1,
+      "text": "For traders and firms, CoinTracking says the practical effect is that 2026 transaction data is still being collected by CASPs, and the first exchange deadline is 30 September 2027 (CoinTracking, 2026).",
+      "urls": [
+       "https://cointracking.info/learn/dac8-crypto-regulation"
+      ]
+     },
+     {
+      "para_id": "sec14-p1",
+      "sentence": 1,
+      "text": "MiCA’s enforcement architecture is meaningful. Didit states that, for breaches of CASP rules, supervisors must be able to impose maximum fines on a company of at least EUR 5,000,000 and at least 5% of total annual turnover, while for ART and EMT rules the turnover floor is 12.5%, with member states free to set higher levels (Didit, 2026).",
+      "urls": [
+       "https://didit.me/blog/mica-regulation-eu-crypto-compliance-guide"
+      ]
+     },
+     {
+      "para_id": "sec14-p3",
+      "sentence": 1,
+      "text": "Media coverage suggests the licensing transition has been difficult in practice. Yahoo Finance, citing a Euronews report, said that fewer than 1 in 5 of Europe’s 1,200 registered crypto companies had secured a licence when the new rules took full effect, illustrating market strain even if that figure should be treated as journalistic rather than official supervisory data (Yahoo Finance, 2026).",
+      "urls": [
+       "https://finance.yahoo.com/markets/crypto/articles/watch-brand-european-crypto-regulations-070110178.html"
+      ]
+     },
+     {
+      "para_id": "sec15-p1",
+      "sentence": 1,
+      "text": "Europe’s regulatory framework is still evolving. Norton Rose notes that the European Commission is still adopting secondary legislation that sets technical and operational details for MiCA, meaning firms must track not only the core regulation but also implementing measures (Norton Rose Fulbright, 2026).",
+      "urls": [
+       "https://www.nortonrosefulbright.com/en/knowledge/publications/2cec201e/regulating-crypto-assets-in-europe-practical-guide-to-mica"
+      ]
+     },
+     {
+      "para_id": "sec15-p2",
+      "sentence": 1,
+      "text": "Several sources also indicate that DeFi, NFTs, AI-enabled crypto platforms, and algorithmic or hybrid token models may face future rule changes. InnReg and Cyfrin both suggest European regulators are considering whether ambiguous or hybrid arrangements should face additional oversight (InnReg, 2026; Cyfrin, 2026).",
+      "urls": [
+       "https://www.innreg.com/blog/eu-crypto-regulation-guide",
+       "https://www.cyfrin.io/blog/mica-regulation-explained-a-guide-to-eu-crypto-compliance"
+      ]
+     },
+     {
+      "para_id": "sec16-p2",
+      "sentence": 1,
+      "text": "My concrete view is that Europe is not merely regulating crypto more strictly; it is normalizing crypto into the architecture of mainstream financial regulation. This is good for legal certainty, investor protection, and institutional adoption, but it also raises barriers to entry and narrows the viability of lightly regulated or offshore operating models. For crypto firms, the European market is still attractive because MiCA offers passportable access across the EU. However, that access now comes at the price of serious compliance maturity. In 2026, the central competitive question in Europe is no longer “Can you launch?” but “Can you remain authorized, data-compliant, operationally resilient, and tax-reportable at scale?” (Norton Rose Fulbright, 2026; Unit21, 2026; CoinTracking, 2026).",
+      "urls": [
+       "https://www.nortonrosefulbright.com/en/knowledge/publications/2cec201e/regulating-crypto-assets-in-europe-practical-guide-to-mica",
+       "https://www.unit21.ai/blog/mica-regulation-2026-faqs-what-crypto-compliance-teams-need-to-know",
+       "https://cointracking.info/learn/dac8-crypto-regulation"
+      ]
+     }
+    ]
+   },
+   "skipped": null,
+   "llm": {
+    "judge_model": "gpt-6-luna",
+    "prompts": {
+     "paragraph_audit": {
+      "version": "2",
+      "hash": "ac5ed03a8d11"
+     }
+    },
+    "requests": 43,
+    "cache_hits": 43,
+    "api_calls": 0,
+    "errors": 0,
+    "shared": "citation_audit"
+   }
+  },
+  "citation_precision": {
+   "name": "citation_precision",
+   "category": "generation.citation",
+   "version": "1",
+   "value": 0.396,
+   "higher_is_better": true,
+   "details": {
+    "citations": 53,
+    "precise": 21,
+    "over_citations": 5,
+    "irrelevant": [
+     {
+      "para_id": "sec2-p1",
+      "sentence": 1,
+      "url": "https://www.nortonrosefulbright.com/en/knowledge/publications/2cec201e/regulating-crypto-assets-in-europe-practical-guide-to-mica"
+     },
+     {
+      "para_id": "sec3-p2",
+      "sentence": 2,
+      "url": "https://www.nortonrosefulbright.com/en/knowledge/publications/2cec201e/regulating-crypto-assets-in-europe-practical-guide-to-mica"
+     },
+     {
+      "para_id": "sec4-p3",
+      "sentence": 1,
+      "url": "https://www.nortonrosefulbright.com/en/knowledge/publications/2cec201e/regulating-crypto-assets-in-europe-practical-guide-to-mica"
+     },
+     {
+      "para_id": "sec6-p1",
+      "sentence": 1,
+      "url": "https://sumsub.com/blog/crypto-regulations-in-the-european-union-markets-in-crypto-assets-mica"
+     },
+     {
+      "para_id": "sec12-p2",
+      "sentence": 1,
+      "url": "https://www.unit21.ai/blog/mica-regulation-2026-faqs-what-crypto-compliance-teams-need-to-know"
+     }
+    ]
+   },
+   "skipped": null,
+   "llm": {
+    "judge_model": "gpt-6-luna",
+    "prompts": {
+     "paragraph_audit": {
+      "version": "2",
+      "hash": "ac5ed03a8d11"
+     }
+    },
+    "requests": 43,
+    "cache_hits": 43,
+    "api_calls": 0,
+    "errors": 0,
+    "shared": "citation_audit"
+   }
+  },
+  "citation_coverage": {
+   "name": "citation_coverage",
+   "category": "generation.citation",
+   "version": "1",
+   "value": 1.0,
+   "higher_is_better": true,
+   "details": {
+    "references": 10,
+    "cited_in_body": 10,
+    "references_not_cited": [],
+    "body_not_in_references": []
+   },
+   "skipped": null,
+   "llm": null
+  },
+  "effective_citations": {
+   "name": "effective_citations",
+   "category": "generation.citation",
+   "version": "1",
+   "value": 21.0,
+   "higher_is_better": true,
+   "details": {
+    "citations": 53,
+    "effective_urls": 8
+   },
+   "skipped": null,
+   "llm": {
+    "judge_model": "gpt-6-luna",
+    "prompts": {
+     "paragraph_audit": {
+      "version": "2",
+      "hash": "ac5ed03a8d11"
+     }
+    },
+    "requests": 43,
+    "cache_hits": 43,
+    "api_calls": 0,
+    "errors": 0,
+    "shared": "citation_audit"
+   }
+  },
+  "faithfulness": {
+   "name": "faithfulness",
+   "category": "generation.hallucination",
+   "version": "1",
+   "value": 0.752,
+   "higher_is_better": true,
+   "details": {
+    "claims": 174,
+    "verdicts": {
+     "supported": 106,
+     "unsupported": 13,
+     "inferred_a": 32,
+     "inferred_b": 20,
+     "inferred_c": 3
+    },
+    "unknown_verdicts": 0,
+    "uncited_factual_paragraphs": 7,
+    "flagged": [
+     {
+      "para_id": "sec1-p1",
+      "mode": "cited",
+      "claim": "The regulatory changes affecting the industry extend beyond MiCA to AML/KYC and the Travel Rule.",
+      "verdict": "unsupported",
+      "evidence": "The material does not describe AML/KYC or the Travel Rule as regulatory changes affecting the industry."
+     },
+     {
+      "para_id": "sec1-p1",
+      "mode": "cited",
+      "claim": "Payments/e-money law and tax reporting are among the regulatory changes affecting the European crypto industry.",
+      "verdict": "unsupported",
+      "evidence": "The material mentions e-money tokens, but does not discuss payments/e-money law or tax reporting as regulatory changes."
+     },
+     {
+      "para_id": "sec1-p1",
+      "mode": "cited",
+      "claim": "Access to the European market is increasingly determined by a firm’s ability to manage AML risk and handle customer data.",
+      "verdict": "unsupported",
+      "evidence": "The material does not discuss AML risk management or customer-data handling requirements."
+     },
+     {
+      "para_id": "sec1-p1",
+      "mode": "cited",
+      "claim": "Regulatory compliance, rather than speed of market entry alone, increasingly determines access to the European market.",
+      "verdict": "unsupported",
+      "evidence": "The source says authorization preparation “can be a lengthy process” and advises avoiding an “application bottleneck,” but does not compare compliance with speed of market entry as determinants of access."
+     },
+     {
+      "para_id": "sec1-p3",
+      "mode": "cited",
+      "claim": "The rules are likely to favor larger, better-capitalized operators over smaller or offshore firms.",
+      "verdict": "unsupported",
+      "evidence": "The material describes compliance requirements, but does not discuss operator size, capitalization, or competitive effects on smaller or offshore firms."
+     },
+     {
+      "para_id": "sec2-p2",
+      "mode": "cited",
+      "claim": "MiCA covers offering crypto-assets to the public.",
+      "verdict": "unsupported",
+      "evidence": "Source 2a mentions “offering” of crypto-assets, but the material does not specify that the offering is “to the public.”"
+     },
+     {
+      "para_id": "sec12-p3",
+      "mode": "uncited",
+      "claim": "Legal interpretation of the relevant rules remains fact-specific.",
+      "verdict": "unsupported",
+      "evidence": "None of the supplied passages says that legal interpretation remains fact-specific."
+     },
+     {
+      "para_id": "sec13-p2",
+      "mode": "cited",
+      "claim": "For traders and firms, the practical effect is that 2026 transaction data is still being collected by CASPs.",
+      "verdict": "unsupported",
+      "evidence": "The source limits this effect to “traders in these states” and says their data is “still being collected by CASPs”; it does not say the effect applies to firms."
+     },
+     {
+      "para_id": "sec14-p3",
+      "mode": "cited",
+      "claim": "The fewer-than-1-in-5 figure was reported by Yahoo Finance while citing a Euronews report.",
+      "verdict": "unsupported",
+      "evidence": "Passage 1a gives the figure but does not attribute it to Euronews. Passage 1b attributes a different point to Euronews: “the new EU rules fail to regulate companies outside Europe.”"
+     },
+     {
+      "para_id": "sec16-p1",
+      "mode": "uncited",
+      "claim": "Before MiCA, the market was governed largely by national registration and informal practice.",
+      "verdict": "unsupported",
+      "evidence": "The material mentions “fragmented national laws,” but does not say the market was governed largely by national registration or informal practice."
+     },
+     {
+      "para_id": "sec16-p1",
+      "mode": "uncited",
+      "claim": "AML reform is one of the regulatory layers.",
+      "verdict": "unsupported",
+      "evidence": "The material mentions AML program requirements and compliance checks, but does not describe an AML reform."
+     },
+     {
+      "para_id": "sec16-p2",
+      "mode": "cited",
+      "claim": "This regulatory shift improves legal certainty, investor protection, and institutional adoption.",
+      "verdict": "unsupported",
+      "evidence": "The material does not state these benefits."
+     },
+     {
+      "para_id": "sec16-p2",
+      "mode": "cited",
+      "claim": "The European market remains attractive to crypto firms.",
+      "verdict": "unsupported",
+      "evidence": "The material does not assess the market’s attractiveness."
+     }
+    ],
+    "per_paragraph": [
+     {
+      "para_id": "sec1-p1",
+      "mode": "cited",
+      "kind": "factual",
+      "claims": 12,
+      "score": 0.533
+     },
+     {
+      "para_id": "sec1-p2",
+      "mode": "uncited",
+      "kind": "factual",
+      "claims": 8,
+      "score": 0.775
+     },
+     {
+      "para_id": "sec1-p3",
+      "mode": "cited",
+      "kind": "factual",
+      "claims": 4,
+      "score": 0.45
+     },
+     {
+      "para_id": "sec2-p1",
+      "mode": "cited",
+      "kind": "factual",
+      "claims": 4,
+      "score": 0.875
+     },
+     {
+      "para_id": "sec2-p2",
+      "mode": "cited",
+      "kind": "factual",
+      "claims": 7,
+      "score": 0.786
+     },
+     {
+      "para_id": "sec3-p1",
+      "mode": "uncited",
+      "kind": "factual",
+      "claims": 1,
+      "score": 1.0
+     },
+     {
+      "para_id": "sec3-p2",
+      "mode": "cited",
+      "kind": "factual",
+      "claims": 8,
+      "score": 0.925
+     },
+     {
+      "para_id": "sec3-p3",
+      "mode": "cited",
+      "kind": "factual",
+      "claims": 2,
+      "score": 0.7
+     },
+     {
+      "para_id": "sec4-p1",
+      "mode": "cited",
+      "kind": "factual",
+      "claims": 4,
+      "score": 0.85
+     },
+     {
+      "para_id": "sec4-p2",
+      "mode": "cited",
+      "kind": "factual",
+      "claims": 1,
+      "score": 1.0
+     },
+     {
+      "para_id": "sec4-p3",
+      "mode": "cited",
+      "kind": "factual",
+      "claims": 5,
+      "score": 1.0
+     },
+     {
+      "para_id": "sec5-p1",
+      "mode": "cited",
+      "kind": "factual",
+      "claims": 5,
+      "score": 0.78
+     },
+     {
+      "para_id": "sec5-p2",
+      "mode": "cited",
+      "kind": "factual",
+      "claims": 4,
+      "score": 0.875
+     },
+     {
+      "para_id": "sec6-p1",
+      "mode": "cited",
+      "kind": "factual",
+      "claims": 3,
+      "score": 1.0
+     },
+     {
+      "para_id": "sec6-p2",
+      "mode": "cited",
+      "kind": "factual",
+      "claims": 2,
+      "score": 1.0
+     },
+     {
+      "para_id": "sec7-p1",
+      "mode": "cited",
+      "kind": "factual",
+      "claims": 2,
+      "score": 1.0
+     },
+     {
+      "para_id": "sec7-p2",
+      "mode": "uncited",
+      "kind": "factual",
+      "claims": 2,
+      "score": 0.5
+     },
+     {
+      "para_id": "sec8-p1",
+      "mode": "cited",
+      "kind": "factual",
+      "claims": 7,
+      "score": 0.9
+     },
+     {
+      "para_id": "sec8-p2",
+      "mode": "cited",
+      "kind": "factual",
+      "claims": 1,
+      "score": 1.0
+     },
+     {
+      "para_id": "sec9-p1",
+      "mode": "cited",
+      "kind": "factual",
+      "claims": 4,
+      "score": 0.875
+     },
+     {
+      "para_id": "sec9-p2",
+      "mode": "cited",
+      "kind": "factual",
+      "claims": 3,
+      "score": 1.0
+     },
+     {
+      "para_id": "sec9-p3",
+      "mode": "cited",
+      "kind": "factual",
+      "claims": 2,
+      "score": 0.75
+     },
+     {
+      "para_id": "sec10-p1",
+      "mode": "cited",
+      "kind": "factual",
+      "claims": 3,
+      "score": 0.8
+     },
+     {
+      "para_id": "sec10-p2",
+      "mode": "cited",
+      "kind": "factual",
+      "claims": 2,
+      "score": 1.0
+     },
+     {
+      "para_id": "sec10-p3",
+      "mode": "cited",
+      "kind": "factual",
+      "claims": 3,
+      "score": 0.833
+     },
+     {
+      "para_id": "sec10-p4",
+      "mode": "cited",
+      "kind": "factual",
+      "claims": 1,
+      "score": 1.0
+     },
+     {
+      "para_id": "sec11-p1",
+      "mode": "cited",
+      "kind": "factual",
+      "claims": 5,
+      "score": 0.66
+     },
+     {
+      "para_id": "sec11-p2",
+      "mode": "cited",
+      "kind": "factual",
+      "claims": 2,
+      "score": 1.0
+     },
+     {
+      "para_id": "sec11-p3",
+      "mode": "uncited",
+      "kind": "factual",
+      "claims": 3,
+      "score": 0.467
+     },
+     {
+      "para_id": "sec12-p1",
+      "mode": "cited",
+      "kind": "factual",
+      "claims": 2,
+      "score": 1.0
+     },
+     {
+      "para_id": "sec12-p2",
+      "mode": "cited",
+      "kind": "factual",
+      "claims": 3,
+      "score": 0.833
+     },
+     {
+      "para_id": "sec12-p3",
+      "mode": "uncited",
+      "kind": "factual",
+      "claims": 2,
+      "score": 0.2
+     },
+     {
+      "para_id": "sec13-p1",
+      "mode": "cited",
+      "kind": "factual",
+      "claims": 4,
+      "score": 0.875
+     },
+     {
+      "para_id": "sec13-p2",
+      "mode": "cited",
+      "kind": "factual",
+      "claims": 2,
+      "score": 0.5
+     },
+     {
+      "para_id": "sec13-p3",
+      "mode": "uncited",
+      "kind": "factual",
+      "claims": 3,
+      "score": 0.433
+     },
+     {
+      "para_id": "sec14-p1",
+      "mode": "cited",
+      "kind": "factual",
+      "claims": 4,
+      "score": 0.85
+     },
+     {
+      "para_id": "sec14-p2",
+      "mode": "cited",
+      "kind": "factual",
+      "claims": 1,
+      "score": 1.0
+     },
+     {
+      "para_id": "sec14-p3",
+      "mode": "cited",
+      "kind": "factual",
+      "claims": 5,
+      "score": 0.48
+     },
+     {
+      "para_id": "sec15-p1",
+      "mode": "cited",
+      "kind": "factual",
+      "claims": 3,
+      "score": 0.667
+     },
+     {
+      "para_id": "sec15-p2",
+      "mode": "cited",
+      "kind": "factual",
+      "claims": 6,
+      "score": 0.717
+     },
+     {
+      "para_id": "sec15-p3",
+      "mode": "cited",
+      "kind": "factual",
+      "claims": 3,
+      "score": 0.833
+     },
+     {
+      "para_id": "sec16-p1",
+      "mode": "uncited",
+      "kind": "factual",
+      "claims": 14,
+      "score": 0.7
+     },
+     {
+      "para_id": "sec16-p2",
+      "mode": "cited",
+      "kind": "factual",
+      "claims": 12,
+      "score": 0.575
+     }
+    ],
+    "verdict_scores": {
+     "supported": 1.0,
+     "inferred_a": 0.5,
+     "inferred_b": 0.4,
+     "inferred_c": 0.3,
+     "unsupported": 0.0,
+     "contradicted": -1.0
+    }
+   },
+   "skipped": null,
+   "llm": {
+    "judge_model": "gpt-6-luna",
+    "prompts": {
+     "paragraph_audit": {
+      "version": "2",
+      "hash": "ac5ed03a8d11"
+     }
+    },
+    "requests": 43,
+    "cache_hits": 43,
+    "api_calls": 0,
+    "errors": 0,
+    "shared": "citation_audit"
+   }
+  },
+  "fact_grounding": {
+   "name": "fact_grounding",
+   "category": "generation.hallucination",
+   "version": "1",
+   "value": 0.924,
+   "higher_is_better": true,
+   "details": {
+    "checked": 157,
+    "found": 145,
+    "paragraphs": 30,
+    "per_paragraph": [
+     {
+      "para_id": "sec1-p1",
+      "checked": 9,
+      "missing": []
+     },
+     {
+      "para_id": "sec2-p1",
+      "checked": 5,
+      "missing": []
+     },
+     {
+      "para_id": "sec3-p2",
+      "checked": 15,
+      "missing": []
+     },
+     {
+      "para_id": "sec3-p3",
+      "checked": 3,
+      "missing": []
+     },
+     {
+      "para_id": "sec4-p1",
+      "checked": 6,
+      "missing": [
+       "CASPs"
+      ]
+     },
+     {
+      "para_id": "sec4-p3",
+      "checked": 3,
+      "missing": []
+     },
+     {
+      "para_id": "sec5-p1",
+      "checked": 8,
+      "missing": []
+     },
+     {
+      "para_id": "sec5-p2",
+      "checked": 2,
+      "missing": [
+       "European"
+      ]
+     },
+     {
+      "para_id": "sec6-p1",
+      "checked": 5,
+      "missing": []
+     },
+     {
+      "para_id": "sec6-p2",
+      "checked": 4,
+      "missing": [
+       "CASP"
+      ]
+     },
+     {
+      "para_id": "sec7-p1",
+      "checked": 3,
+      "missing": []
+     },
+     {
+      "para_id": "sec8-p1",
+      "checked": 6,
+      "missing": []
+     },
+     {
+      "para_id": "sec8-p2",
+      "checked": 1,
+      "missing": []
+     },
+     {
+      "para_id": "sec9-p1",
+      "checked": 8,
+      "missing": []
+     },
+     {
+      "para_id": "sec9-p2",
+      "checked": 5,
+      "missing": [
+       "EMTs"
+      ]
+     },
+     {
+      "para_id": "sec10-p1",
+      "checked": 3,
+      "missing": [
+       "EU AML"
+      ]
+     },
+     {
+      "para_id": "sec10-p2",
+      "checked": 5,
+      "missing": []
+     },
+     {
+      "para_id": "sec10-p3",
+      "checked": 1,
+      "missing": []
+     },
+     {
+      "para_id": "sec11-p1",
+      "checked": 4,
+      "missing": [
+       "Digital Operational Resilience Act",
+       "ICT"
+      ]
+     },
+     {
+      "para_id": "sec11-p2",
+      "checked": 2,
+      "missing": []
+     },
+     {
+      "para_id": "sec12-p2",
+      "checked": 6,
+      "missing": []
+     },
+     {
+      "para_id": "sec13-p1",
+      "checked": 18,
+      "missing": []
+     },
+     {
+      "para_id": "sec13-p2",
+      "checked": 6,
+      "missing": [
+       "CoinTracking"
+      ]
+     },
+     {
+      "para_id": "sec14-p1",
+      "checked": 6,
+      "missing": [
+       "EMT"
+      ]
+     },
+     {
+      "para_id": "sec14-p2",
+      "checked": 2,
+      "missing": [
+       "CASPs"
+      ]
+     },
+     {
+      "para_id": "sec14-p3",
+      "checked": 4,
+      "missing": [
+       "Finance"
+      ]
+     },
+     {
+      "para_id": "sec15-p1",
+      "checked": 3,
+      "missing": []
+     },
+     {
+      "para_id": "sec15-p2",
+      "checked": 5,
+      "missing": []
+     },
+     {
+      "para_id": "sec15-p3",
+      "checked": 3,
+      "missing": [
+       "Finance"
+      ]
+     },
+     {
+      "para_id": "sec16-p2",
+      "checked": 6,
+      "missing": []
+     }
+    ]
+   },
+   "skipped": null,
+   "llm": null
+  },
+  "toxicity": {
+   "name": "toxicity",
+   "category": "other.safety",
+   "version": "1",
+   "value": 0.0,
+   "higher_is_better": false,
+   "details": {
+    "opinions": 45,
+    "flagged": []
+   },
+   "skipped": null,
+   "llm": {
+    "judge_model": "gpt-6-luna",
+    "prompts": {
+     "toxicity_bias": {
+      "version": "1",
+      "hash": "967f8bd15e0c"
+     }
+    },
+    "requests": 1,
+    "cache_hits": 1,
+    "api_calls": 0,
+    "errors": 0,
+    "shared": "toxicity_bias"
+   }
+  },
+  "bias": {
+   "name": "bias",
+   "category": "other.safety",
+   "version": "1",
+   "value": 0.0,
+   "higher_is_better": false,
+   "details": {
+    "opinions": 45,
+    "flagged": []
+   },
+   "skipped": null,
+   "llm": {
+    "judge_model": "gpt-6-luna",
+    "prompts": {
+     "toxicity_bias": {
+      "version": "1",
+      "hash": "967f8bd15e0c"
+     }
+    },
+    "requests": 1,
+    "cache_hits": 1,
+    "api_calls": 0,
+    "errors": 0,
+    "shared": "toxicity_bias"
+   }
+  }
+ }
+}

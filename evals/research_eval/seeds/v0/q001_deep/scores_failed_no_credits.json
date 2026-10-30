@@ -1,0 +1,4412 @@
+{
+ "run_id": "20261029T234921_q001_deep_ff96d2",
+ "question_id": "q001",
+ "mode": "deep",
+ "scorer_version": "0.1+d5e17daa",
+ "scored_at": "2026-10-30T00:11:30Z",
+ "judge_model": "gpt-6-luna",
+ "embedding_model": null,
+ "metrics": {
+  "decomposition_coverage": {
+   "name": "decomposition_coverage",
+   "category": "retrieval.query",
+   "version": "2",
+   "value": null,
+   "higher_is_better": true,
+   "details": {
+    "key_points": {
+     "source": "cache",
+     "prompt_version": "1",
+     "judge_model": "gpt-6-luna"
+    },
+    "error": "OpenAIRateLimitError: Error code: 429 - {'error': {'message': 'You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.', 'type': 'insufficient_quota', 'param': None, 'code': 'credit_balance_exhausted'}}",
+    "raw": ""
+   },
+   "skipped": "judge call failed",
+   "llm": {
+    "judge_model": "gpt-6-luna",
+    "prompts": {
+     "key_points": {
+      "version": "1",
+      "hash": "195a0aff2729"
+     },
+     "decomposition_coverage": {
+      "version": "1",
+      "hash": "f2ce0aba9e2e"
+     }
+    },
+    "requests": 1,
+    "cache_hits": 0,
+    "api_calls": 1,
+    "errors": 1
+   }
+  },
+  "subquery_redundancy": {
+   "name": "subquery_redundancy",
+   "category": "retrieval.query",
+   "version": "1",
+   "value": 0.0,
+   "higher_is_better": false,
+   "details": {
+    "threshold": 0.6,
+    "pairs": 24,
+    "duplicate_pairs": [],
+    "groups": [
+     {
+      "span_id": "s3",
+      "kind": "deep_plan",
+      "pairs": 3
+     },
+     {
+      "span_id": "s4",
+      "kind": "deep_level",
+      "pairs": 1
+     },
+     {
+      "span_id": "s7",
+      "kind": "plan",
+      "pairs": 3
+     },
+     {
+      "span_id": "s8",
+      "kind": "plan",
+      "pairs": 3
+     },
+     {
+      "span_id": "s19",
+      "kind": "deep_level",
+      "pairs": 1
+     },
+     {
+      "span_id": "s22",
+      "kind": "plan",
+      "pairs": 3
+     },
+     {
+      "span_id": "s23",
+      "kind": "plan",
+      "pairs": 3
+     },
+     {
+      "span_id": "s34",
+      "kind": "deep_level",
+      "pairs": 1
+     },
+     {
+      "span_id": "s37",
+      "kind": "plan",
+      "pairs": 3
+     },
+     {
+      "span_id": "s38",
+      "kind": "plan",
+      "pairs": 3
+     }
+    ]
+   },
+   "skipped": null,
+   "llm": null
+  },
+  "decomposition_tree_quality": {
+   "name": "decomposition_tree_quality",
+   "category": "retrieval.query",
+   "version": "1",
+   "value": null,
+   "higher_is_better": true,
+   "details": {
+    "per_parent": [
+     {
+      "span_id": "s3",
+      "kind": "deep_plan",
+      "parent": "What regulatory changes are affecting the crypto industry in Europe?",
+      "n_children": 3,
+      "score": null,
+      "rubric": null,
+      "error": "OpenAIRateLimitError: Error code: 429 - {'error': {'message': 'You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.', 'type': 'insufficient_quota', 'param': None, 'code': 'credit_balance_exhausted'}}"
+     },
+     {
+      "span_id": "s4",
+      "kind": "deep_level",
+      "parent": "\n        Initial Query: What regulatory changes are affecting the crypto industry in Europe?\nFollow - up Questions and Answers:\n\n        Q: How has the EU’s MiCA rollout—from its 2024 entry into force through the July 2026 end of national grandfathering periods—changed licensing, passporting, and compliance requirements for crypto-asset service providers and stablecoin issuers?\nA: Automatically proceeding with research\nQ: What regulatory changes beyond MiCA are affecting crypto firms in Europe in 2026, especially the Transfer of Funds ‘Travel Rule,’ AML/CFT obligations, and DORA operational resilience requirements?\nA: Automatically proceeding with research\nQ: Looking ahead from late 2026, what further EU regulatory developments are being discussed for areas MiCA only partly covers, such as DeFi, NFTs, hybrid token models, and stricter supervision of stablecoins and cross-border exchanges?\nA: Automatically proceeding with research",
+      "n_children": 2,
+      "score": null,
+      "rubric": null,
+      "error": "OpenAIRateLimitError: Error code: 429 - {'error': {'message': 'You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.', 'type': 'insufficient_quota', 'param': None, 'code': 'credit_balance_exhausted'}}"
+     },
+     {
+      "span_id": "s7",
+      "kind": "plan",
+      "parent": "EU MiCA rollout 2024 2026 licensing passporting CASP stablecoin issuer grandfathering July 2026 ESMA EBA national transition requirements",
+      "n_children": 3,
+      "score": null,
+      "rubric": null,
+      "error": "OpenAIRateLimitError: Error code: 429 - {'error': {'message': 'You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.', 'type': 'insufficient_quota', 'param': None, 'code': 'credit_balance_exhausted'}}"
+     },
+     {
+      "span_id": "s8",
+      "kind": "plan",
+      "parent": "Europe crypto regulation 2026 Travel Rule Transfer of Funds Regulation AML CFT DORA operational resilience crypto firms MiCA gaps DeFi NFTs hybrid tokens stablecoins cross-border exchanges EU proposals",
+      "n_children": 3,
+      "score": null,
+      "rubric": null,
+      "error": "OpenAIRateLimitError: Error code: 429 - {'error': {'message': 'You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.', 'type': 'insufficient_quota', 'param': None, 'code': 'credit_balance_exhausted'}}"
+     },
+     {
+      "span_id": "s19",
+      "kind": "deep_level",
+      "parent": "\n                Previous research goal: Research how MiCA’s phased rollout from 2024 to the end of national grandfathering in July 2026 changed authorization, passporting, reserve/governance/disclosure obligations, and supervisory expectations for crypto-asset service providers and stablecoin issuers across Europe.\n                Follow-up questions: What is the official ESMA country-by-country list of grandfathering end dates and competent authorities for the specific member states relevant to this business? For this firm's exact activities, which services require only MiCA CASP authorization and which also trigger PSD2 PI/EMI licensing because they involve EMT transfers or payment functionality? Did the firm's pre-December 30, 2024 operations qualify for grandfathering in each relevant jurisdiction, with sufficient evidence of lawful and continuous activity under national law?\n                ",
+      "n_children": 2,
+      "score": null,
+      "rubric": null,
+      "error": "OpenAIRateLimitError: Error code: 429 - {'error': {'message': 'You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.', 'type': 'insufficient_quota', 'param': None, 'code': 'credit_balance_exhausted'}}"
+     },
+     {
+      "span_id": "s22",
+      "kind": "plan",
+      "parent": "MiCA CASP authorization vs PSD2 payment institution EMI licensing EMT transfers payment functionality EBA ESMA guidance crypto-asset services electronic money tokens wallet transfers execution custody Europe",
+      "n_children": 3,
+      "score": null,
+      "rubric": null,
+      "error": "OpenAIRateLimitError: Error code: 429 - {'error': {'message': 'You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.', 'type': 'insufficient_quota', 'param': None, 'code': 'credit_balance_exhausted'}}"
+     },
+     {
+      "span_id": "s23",
+      "kind": "plan",
+      "parent": "ESMA MiCA grandfathering end dates by member state competent authorities official list July 2026 CASP transitional measures national authorities lawful continuous activity under national law",
+      "n_children": 3,
+      "score": null,
+      "rubric": null,
+      "error": "OpenAIRateLimitError: Error code: 429 - {'error': {'message': 'You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.', 'type': 'insufficient_quota', 'param': None, 'code': 'credit_balance_exhausted'}}"
+     },
+     {
+      "span_id": "s34",
+      "kind": "deep_level",
+      "parent": "\n                Previous research goal: Identify non-MiCA regulatory changes affecting European crypto firms in 2026, including Travel Rule, AML/CFT, and DORA compliance, and assess late-2026 policy debates and forthcoming EU measures for areas only partly covered by MiCA such as DeFi, NFTs, hybrid token models, stablecoins, and cross-border exchanges.\n                Follow-up questions: Which parts of our business model could be classified as CASP activity in the EU, and do any non-EU entities in our group still 'target' EU users despite geofencing or disclaimers? Do any of our tokens, listings, or partner assets risk reclassification as ARTs, EMTs, fractionalized NFTs, financial instruments, or other hybrid products outside standard MiCA treatment? How will we operationalize TFR compliance end-to-end, including zero-threshold Travel Rule messaging, sanctions/KYT checks, and self-hosted wallet ownership verification above EUR 1,000?\n                ",
+      "n_children": 2,
+      "score": null,
+      "rubric": null,
+      "error": "OpenAIRateLimitError: Error code: 429 - {'error': {'message': 'You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.', 'type': 'insufficient_quota', 'param': None, 'code': 'credit_balance_exhausted'}}"
+     },
+     {
+      "span_id": "s37",
+      "kind": "plan",
+      "parent": "EU MiCA CASP activity targeting EU users geofencing disclaimers reverse solicitation non-EU crypto firms ESMA EBA European Commission 2025 2026 guidance",
+      "n_children": 3,
+      "score": null,
+      "rubric": null,
+      "error": "OpenAIRateLimitError: Error code: 429 - {'error': {'message': 'You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.', 'type': 'insufficient_quota', 'param': None, 'code': 'credit_balance_exhausted'}}"
+     },
+     {
+      "span_id": "s38",
+      "kind": "plan",
+      "parent": "EU Transfer of Funds Regulation crypto Travel Rule zero-threshold self-hosted wallet verification above 1000 EUR sanctions KYT MiCA ART EMT fractionalized NFTs financial instruments hybrid tokens ESMA EBA 2025 2026",
+      "n_children": 3,
+      "score": null,
+      "rubric": null,
+      "error": "OpenAIRateLimitError: Error code: 429 - {'error': {'message': 'You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.', 'type': 'insufficient_quota', 'param': None, 'code': 'credit_balance_exhausted'}}"
+     }
+    ],
+    "scored_parents": 0
+   },
+   "skipped": "every judge call failed",
+   "llm": {
+    "judge_model": "gpt-6-luna",
+    "prompts": {
+     "tree_quality": {
+      "version": "1",
+      "hash": "80424032912f"
+     }
+    },
+    "requests": 10,
+    "cache_hits": 0,
+    "api_calls": 10,
+    "errors": 10
+   }
+  },
+  "plan_adherence": {
+   "name": "plan_adherence",
+   "category": "retrieval.query",
+   "version": "1",
+   "value": 1.0,
+   "higher_is_better": true,
+   "details": {
+    "planned": 24,
+    "delivered": 24,
+    "per_kind": {
+     "deep_level": {
+      "planned": 6,
+      "delivered": 6
+     },
+     "plan": {
+      "planned": 18,
+      "delivered": 18
+     }
+    },
+    "not_delivered": []
+   },
+   "skipped": null,
+   "llm": null
+  },
+  "source_authority": {
+   "name": "source_authority",
+   "category": "retrieval.source",
+   "version": "1",
+   "value": 0.516,
+   "higher_is_better": true,
+   "details": {
+    "n_sources": 68,
+    "breakdown": [
+     {
+      "domain": "esma.europa.eu",
+      "score": 1.0,
+      "tier": "llm:official EU securities markets regulator",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
+     },
+     {
+      "domain": "nortonrosefulbright.com",
+      "score": 0.85,
+      "tier": "llm:established international law firm with specialist legal expertise",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
+     },
+     {
+      "domain": "elliptic.co",
+      "score": 0.7,
+      "tier": "llm:established blockchain analytics and financial crime compliance specialist",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
+     },
+     {
+      "domain": "hacken.io",
+      "score": 0.7,
+      "tier": "llm:recognized blockchain cybersecurity and auditing firm",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
+     },
+     {
+      "domain": "innreg.com",
+      "score": 0.65,
+      "tier": "llm:Specialized fintech and financial-services regulatory consulting firm",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
+     },
+     {
+      "domain": "sumsub.com",
+      "score": 0.65,
+      "tier": "llm:established identity-verification and compliance provider with specialist industry expertise",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
+     },
+     {
+      "domain": "tech-insider.org",
+      "score": 0.65,
+      "tier": "nonprofit-org",
+      "basis": "fallback"
+     },
+     {
+      "domain": "cyfrin.io",
+      "score": 0.6,
+      "tier": "llm:specialist blockchain security and education firm",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
+     },
+     {
+      "domain": "cryptoforinnovation.org",
+      "score": 0.55,
+      "tier": "llm:crypto-industry advocacy source with a policy perspective",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
+     },
+     {
+      "domain": "notabene.id",
+      "score": 0.5,
+      "tier": "llm:specialized crypto compliance company; useful for industry and technical context",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
+     },
+     {
+      "domain": "blockzeit.com",
+      "score": 0.5,
+      "tier": "commercial",
+      "basis": "fallback"
+     },
+     {
+      "domain": "cliffordchance.com",
+      "score": 0.5,
+      "tier": "commercial",
+      "basis": "fallback"
+     },
+     {
+      "domain": "complyfactor.com",
+      "score": 0.5,
+      "tier": "commercial",
+      "basis": "fallback"
+     },
+     {
+      "domain": "cuatrecasas.com",
+      "score": 0.5,
+      "tier": "commercial",
+      "basis": "fallback"
+     },
+     {
+      "domain": "deloitte.com",
+      "score": 0.5,
+      "tier": "commercial",
+      "basis": "fallback"
+     },
+     {
+      "domain": "dlapiperintelligence.com",
+      "score": 0.5,
+      "tier": "commercial",
+      "basis": "fallback"
+     },
+     {
+      "domain": "dudkowiak.com",
+      "score": 0.5,
+      "tier": "commercial",
+      "basis": "fallback"
+     },
+     {
+      "domain": "financialregulation.linklaters.com",
+      "score": 0.5,
+      "tier": "commercial",
+      "basis": "fallback"
+     },
+     {
+      "domain": "finconduit.com",
+      "score": 0.5,
+      "tier": "commercial",
+      "basis": "fallback"
+     },
+     {
+      "domain": "finlexpro.com",
+      "score": 0.5,
+      "tier": "commercial",
+      "basis": "fallback"
+     },
+     {
+      "domain": "finreg.aoshearman.com",
+      "score": 0.5,
+      "tier": "commercial",
+      "basis": "fallback"
+     },
+     {
+      "domain": "globallawexperts.com",
+      "score": 0.5,
+      "tier": "commercial",
+      "basis": "fallback"
+     },
+     {
+      "domain": "hlc.com",
+      "score": 0.5,
+      "tier": "commercial",
+      "basis": "fallback"
+     },
+     {
+      "domain": "januar.com",
+      "score": 0.5,
+      "tier": "commercial",
+      "basis": "fallback"
+     },
+     {
+      "domain": "legalbison.com",
+      "score": 0.5,
+      "tier": "commercial",
+      "basis": "fallback"
+     },
+     {
+      "domain": "legasset.com",
+      "score": 0.5,
+      "tier": "commercial",
+      "basis": "fallback"
+     },
+     {
+      "domain": "maples.com",
+      "score": 0.5,
+      "tier": "commercial",
+      "basis": "fallback"
+     },
+     {
+      "domain": "mielogroup.com",
+      "score": 0.5,
+      "tier": "commercial",
+      "basis": "fallback"
+     },
+     {
+      "domain": "mokaair.com",
+      "score": 0.5,
+      "tier": "commercial",
+      "basis": "fallback"
+     },
+     {
+      "domain": "morganlewis.com",
+      "score": 0.5,
+      "tier": "commercial",
+      "basis": "fallback"
+     },
+     {
+      "domain": "ondato.com",
+      "score": 0.5,
+      "tier": "commercial",
+      "basis": "fallback"
+     },
+     {
+      "domain": "tazapay.com",
+      "score": 0.5,
+      "tier": "commercial",
+      "basis": "fallback"
+     },
+     {
+      "domain": "unknowngravity.com",
+      "score": 0.5,
+      "tier": "commercial",
+      "basis": "fallback"
+     },
+     {
+      "domain": "blog.amlbot.com",
+      "score": 0.45,
+      "tier": "llm:compliance software provider's blog with relevant industry expertise",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
+     },
+     {
+      "domain": "didit.me",
+      "score": 0.45,
+      "tier": "llm:identity-verification provider with relevant but commercially focused expertise",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
+     },
+     {
+      "domain": "micacryptoalliance.com",
+      "score": 0.45,
+      "tier": "llm:industry alliance focused on crypto regulation; may reflect member or advocacy perspectives",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
+     },
+     {
+      "domain": "zyphe.com",
+      "score": 0.4,
+      "tier": "llm:specialized crypto services source, but with limited independent institutional authority",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
+     },
+     {
+      "domain": "adamsmith.lt",
+      "score": 0.4,
+      "tier": "unknown",
+      "basis": "fallback"
+     },
+     {
+      "domain": "blog.cryptio.co",
+      "score": 0.4,
+      "tier": "unknown",
+      "basis": "fallback"
+     },
+     {
+      "domain": "casptracker.eu",
+      "score": 0.4,
+      "tier": "unknown",
+      "basis": "fallback"
+     },
+     {
+      "domain": "compliora.ai",
+      "score": 0.4,
+      "tier": "unknown",
+      "basis": "fallback"
+     },
+     {
+      "domain": "cryptoticker.io",
+      "score": 0.4,
+      "tier": "unknown",
+      "basis": "fallback"
+     },
+     {
+      "domain": "eba.europa.eu",
+      "score": 0.4,
+      "tier": "unknown",
+      "basis": "fallback"
+     },
+     {
+      "domain": "micahub.net",
+      "score": 0.4,
+      "tier": "unknown",
+      "basis": "fallback"
+     },
+     {
+      "domain": "northpoint.fi",
+      "score": 0.4,
+      "tier": "unknown",
+      "basis": "fallback"
+     },
+     {
+      "domain": "protofire.io",
+      "score": 0.4,
+      "tier": "unknown",
+      "basis": "fallback"
+     },
+     {
+      "domain": "trusty.report",
+      "score": 0.4,
+      "tier": "unknown",
+      "basis": "fallback"
+     },
+     {
+      "domain": "linkedin.com",
+      "score": 0.35,
+      "tier": "llm:professional networking platform, not an editorial or research institution",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
+     },
+     {
+      "domain": "thefutureofmoney.substack.com",
+      "score": 0.35,
+      "tier": "llm:individual newsletter; potentially useful commentary but limited institutional authority",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
+     },
+     {
+      "domain": "0xprocessing.com",
+      "score": 0.3,
+      "tier": "llm:crypto payments company; useful for company-specific information, but not an independent research authority",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
+     },
+     {
+      "domain": "eco.com",
+      "score": 0.3,
+      "tier": "llm:consumer-facing crypto and payments company; primarily a commercial source",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
+     },
+     {
+      "domain": "stablemint.io",
+      "score": 0.3,
+      "tier": "llm:specialized commercial source with limited independent research authority",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
+     },
+     {
+      "domain": "governancedocs.com",
+      "score": 0.25,
+      "tier": "llm:commercial governance resource with limited independent authority",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
+     }
+    ],
+    "fallback_domains": [
+     "adamsmith.lt",
+     "blockzeit.com",
+     "blog.cryptio.co",
+     "casptracker.eu",
+     "cliffordchance.com",
+     "compliora.ai",
+     "complyfactor.com",
+     "cryptoticker.io",
+     "cuatrecasas.com",
+     "deloitte.com",
+     "dlapiperintelligence.com",
+     "dudkowiak.com",
+     "eba.europa.eu",
+     "financialregulation.linklaters.com",
+     "finconduit.com",
+     "finlexpro.com",
+     "finreg.aoshearman.com",
+     "globallawexperts.com",
+     "hlc.com",
+     "januar.com",
+     "legalbison.com",
+     "legasset.com",
+     "maples.com",
+     "micahub.net",
+     "mielogroup.com",
+     "mokaair.com",
+     "morganlewis.com",
+     "northpoint.fi",
+     "ondato.com",
+     "protofire.io",
+     "tazapay.com",
+     "tech-insider.org",
+     "trusty.report",
+     "unknowngravity.com"
+    ]
+   },
+   "skipped": null,
+   "llm": {
+    "judge_model": "gpt-6-luna",
+    "prompts": {
+     "domain_authority": {
+      "version": "1",
+      "hash": "984dc57e13b9"
+     }
+    },
+    "requests": 1,
+    "cache_hits": 0,
+    "api_calls": 1,
+    "errors": 1
+   }
+  },
+  "source_diversity": {
+   "name": "source_diversity",
+   "category": "retrieval.source",
+   "version": "1",
+   "value": 0.779,
+   "higher_is_better": true,
+   "details": {
+    "total_sources": 68,
+    "unique_domains": 53,
+    "diversity_ratio": 0.779,
+    "domain_entropy": 5.514,
+    "top_domains": [
+     [
+      "esma.europa.eu",
+      6
+     ],
+     [
+      "eba.europa.eu",
+      4
+     ],
+     [
+      "eco.com",
+      3
+     ],
+     [
+      "compliora.ai",
+      3
+     ],
+     [
+      "sumsub.com",
+      2
+     ]
+    ]
+   },
+   "skipped": null,
+   "llm": null
+  },
+  "citation_utilization": {
+   "name": "citation_utilization",
+   "category": "retrieval.efficiency",
+   "version": "3",
+   "value": 0.221,
+   "higher_is_better": true,
+   "details": {
+    "retrieved_urls": 68,
+    "cited_retrieved_urls": 15,
+    "uncited_urls": [
+     "https://thefutureofmoney.substack.com/p/mica-regulation-2026-complete-casp",
+     "https://www.cyfrin.io/blog/mica-regulation-explained-a-guide-to-eu-crypto-compliance",
+     "https://tazapay.com/blog/mica-casp-authorization",
+     "https://notabene.id/world/eu",
+     "https://eco.com/support/en/articles/15210554-travel-rule-for-stablecoins-2026-compliance-guide",
+     "https://didit.me/blog/mica-regulation-eu-crypto-compliance-guide",
+     "https://compliora.ai/blog/mica-compliance-deadlines-2026",
+     "https://tech-insider.org/mica-regulation-explained",
+     "https://complyfactor.com/insights/mica-regulation-guide-2026-eu-crypto-asset-framework-explained",
+     "https://blockzeit.com/mica-tracker",
+     "https://legalbison.com/mica-regulation",
+     "https://adamsmith.lt/en/mica-license-2025",
+     "https://eco.com/support/en/articles/14814632-mica-stablecoin-regulation-2026-update",
+     "https://www.unknowngravity.com/en/articulos/mica-license-by-country",
+     "https://globallawexperts.com/mica-transitional-period-eu",
+     "https://stablemint.io/blog/mica-transitional-period-ended",
+     "https://notabene.id/post/what-the-end-of-mica-grandfathering-means-for-crypto-firms-in-europe",
+     "https://blog.amlbot.com/eu-crypto-aml-platform-guide",
+     "https://hacken.io/discover/mica-regulation",
+     "https://trusty.report/mica-compliance-for-casps",
+     "https://legasset.com/mica-guide-for-europe-in-2026",
+     "https://compliora.ai/blog/mica-grandfathering-period-ending-2026",
+     "https://governancedocs.com/mica-transitional-period-ended",
+     "https://protofire.io/guides/mica-license-routes",
+     "https://www.dudkowiak.com/blog/eba-on-the-end-of-the-psd2-mica-transitional-period-what-will-change-after-2-march-2026",
+     "https://www.eba.europa.eu/publications-and-media/press-releases/eba-publishes-no-action-letter-interplay-between-payment-services-directive-psd23-and-markets-crypto",
+     "https://cryptoforinnovation.org/what-the-end-of-micas-transition-period-means-for-crypto",
+     "https://www.linkedin.com/posts/gc-exchange_the-mica-transitional-period-ends-on-1-july-activity-7452608046280699904-5XWt",
+     "https://micahub.net/vasp-transition",
+     "https://www.zyphe.com/resources/news/mica-transitional-period-ends-july-2026",
+     "https://www.micacryptoalliance.com/news/micas-grandfathering-period-is-ending-what-does-it-actually-mean-for-eu-crypto-users",
+     "https://www.hlc.com/en/publications/interplay-between-micar-and-psd2-eba-on-the-end-of-the-no-action-letter-transition-period",
+     "https://www.cuatrecasas.com/en/global/financial-services-insurance/art/casps-emts-mica-providing-services",
+     "https://www.morganlewis.com/pubs/2026/02/eba-issues-supervisory-priorities-as-psd2-mica-transition-period-for-emt-activities-ends",
+     "https://www.januar.com/blog/navigating-the-mica-psd2-interplay-for-emts",
+     "https://financialregulation.linklaters.com/post/102kmq0/micar-and-payment-services-no-dual-authorisation-for-stablecoins-required-for-n",
+     "https://finconduit.com/resources/emi-psp-vasp-licence-comparison",
+     "https://www.nortonrosefulbright.com/en/knowledge/publications/2cec201e/regulating-crypto-assets-in-europe-practical-guide-to-mica",
+     "https://www.eba.europa.eu/regulation-and-policy/asset-referenced-and-e-money-tokens-mica",
+     "https://blog.cryptio.co/navigating-mica-a-guide-for-banks-entering-the-crypto-era",
+     "https://www.cliffordchance.com/content/dam/cliffordchance/briefings/2025/01/the-reverse-solicitation-exemption-under-mica.pdf",
+     "https://finlexpro.com/blog/mica-reverse-solicitation-non-eu-crypto-exchanges-eu-clients-2026",
+     "https://maples.com/knowledge/esma-issues-new-rules-for-non-eu-crypto-firms-engaging-eu-clients",
+     "https://finreg.aoshearman.com/European-Securitie",
+     "https://sumsub.com/blog/what-is-the-fatf-travel-rule",
+     "https://casptracker.eu/e-money-token-list-under-mica",
+     "https://eco.com/support/en/articles/15254022-mica-and-tokenized-rwas-2026-eu-regulatory-framework",
+     "https://ondato.com/blog/mica-regulation",
+     "https://cryptoticker.io/en/esma-reverse-solicitation-supervision-2027",
+     "https://www.esma.europa.eu/document/esma-public-statement-end-mica-transitional-period",
+     "https://mielogroup.com/reverse-solicitation-under-mica-what-crypto-firms-need-to-know",
+     "https://compliora.ai/blog/mica-reverse-solicitation-non-eu-firms",
+     "https://mokaair.com/en/life/crypto-news-binance-eu-mica-reverse-solicitation-20261001"
+    ],
+    "chunk_level": 0.053,
+    "chunks": 379,
+    "chunks_used": 20,
+    "chunks_echoed_uncited": 141,
+    "match_threshold": 0.5,
+    "per_chunk": [
+     {
+      "chunk_id": "cc00f718fee5d",
+      "url_cited": true,
+      "best_match": 0.36,
+      "used": false
+     },
+     {
+      "chunk_id": "cb75ba2768f22",
+      "url_cited": false,
+      "best_match": 0.595,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c33155952993c",
+      "url_cited": true,
+      "best_match": 0.265,
+      "used": false
+     },
+     {
+      "chunk_id": "ca161d91f7b16",
+      "url_cited": false,
+      "best_match": 0.492,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c349b5ec8a3c0",
+      "url_cited": true,
+      "best_match": 0.244,
+      "used": false
+     },
+     {
+      "chunk_id": "c0c48ba7e300d",
+      "url_cited": true,
+      "best_match": 0.691,
+      "used": true
+     },
+     {
+      "chunk_id": "c5d5d4bb95b2e",
+      "url_cited": false,
+      "best_match": 0.841,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c3f44ded3ea19",
+      "url_cited": false,
+      "best_match": 0.41,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "cc5c47402daa1",
+      "url_cited": false,
+      "best_match": 0.872,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c728a56c7ed57",
+      "url_cited": true,
+      "best_match": 0.584,
+      "used": true
+     },
+     {
+      "chunk_id": "c595890991463",
+      "url_cited": false,
+      "best_match": 1.0,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "cb8415f7d0179",
+      "url_cited": true,
+      "best_match": 0.617,
+      "used": true
+     },
+     {
+      "chunk_id": "cf4f8e5c573b0",
+      "url_cited": false,
+      "best_match": 0.4,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c56a2af87d5e1",
+      "url_cited": true,
+      "best_match": 0.246,
+      "used": false
+     },
+     {
+      "chunk_id": "ca04b504780f3",
+      "url_cited": true,
+      "best_match": 0.211,
+      "used": false
+     },
+     {
+      "chunk_id": "cc2c3d5646231",
+      "url_cited": true,
+      "best_match": 0.259,
+      "used": false
+     },
+     {
+      "chunk_id": "cdd88f19982f5",
+      "url_cited": false,
+      "best_match": 0.388,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "cbfc9a25f5110",
+      "url_cited": false,
+      "best_match": 0.537,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "ce90f3b3b3bac",
+      "url_cited": false,
+      "best_match": 0.214,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c3a4cfd62a091",
+      "url_cited": false,
+      "best_match": 0.235,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c44587c86c897",
+      "url_cited": true,
+      "best_match": 0.135,
+      "used": false
+     },
+     {
+      "chunk_id": "c933d879caa7b",
+      "url_cited": true,
+      "best_match": 0.261,
+      "used": false
+     },
+     {
+      "chunk_id": "c78d17864a77d",
+      "url_cited": false,
+      "best_match": 0.31,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c2adade5e4ca0",
+      "url_cited": true,
+      "best_match": 0.134,
+      "used": false
+     },
+     {
+      "chunk_id": "cac080e70da11",
+      "url_cited": true,
+      "best_match": 0.211,
+      "used": false
+     },
+     {
+      "chunk_id": "c6a459f17e1f9",
+      "url_cited": true,
+      "best_match": 0.285,
+      "used": false
+     },
+     {
+      "chunk_id": "c8c7b758666ff",
+      "url_cited": true,
+      "best_match": 0.854,
+      "used": true
+     },
+     {
+      "chunk_id": "c59977ab0e776",
+      "url_cited": true,
+      "best_match": 0.825,
+      "used": true
+     },
+     {
+      "chunk_id": "c58d151dd7f9c",
+      "url_cited": true,
+      "best_match": 0.728,
+      "used": true
+     },
+     {
+      "chunk_id": "c724705237224",
+      "url_cited": false,
+      "best_match": 0.475,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "ccff042573543",
+      "url_cited": true,
+      "best_match": 0.372,
+      "used": false
+     },
+     {
+      "chunk_id": "cb43a44bd54e5",
+      "url_cited": true,
+      "best_match": 0.422,
+      "used": false
+     },
+     {
+      "chunk_id": "ca15328b8a181",
+      "url_cited": true,
+      "best_match": 0.345,
+      "used": false
+     },
+     {
+      "chunk_id": "cf8d8f45eb761",
+      "url_cited": true,
+      "best_match": 0.234,
+      "used": false
+     },
+     {
+      "chunk_id": "cc4a925513305",
+      "url_cited": false,
+      "best_match": 1.0,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c2038b17354ff",
+      "url_cited": true,
+      "best_match": 0.205,
+      "used": false
+     },
+     {
+      "chunk_id": "c73801295da44",
+      "url_cited": true,
+      "best_match": 0.197,
+      "used": false
+     },
+     {
+      "chunk_id": "c6ca18d1dc4c0",
+      "url_cited": true,
+      "best_match": 0.345,
+      "used": false
+     },
+     {
+      "chunk_id": "c73396fc1ee22",
+      "url_cited": false,
+      "best_match": 0.627,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "ce1d54d9b69f0",
+      "url_cited": false,
+      "best_match": 0.493,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "cd0a99e871681",
+      "url_cited": false,
+      "best_match": 0.763,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "cd23fb73444e8",
+      "url_cited": false,
+      "best_match": 0.579,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c4886fea03e20",
+      "url_cited": false,
+      "best_match": 0.46,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "cab92f2177354",
+      "url_cited": false,
+      "best_match": 0.483,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c3676b6e89f0c",
+      "url_cited": false,
+      "best_match": 0.48,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c0822e089e754",
+      "url_cited": false,
+      "best_match": 0.434,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c3375ad863eae",
+      "url_cited": false,
+      "best_match": 0.662,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c226bc9df1208",
+      "url_cited": false,
+      "best_match": 0.453,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c2ebccaac149b",
+      "url_cited": false,
+      "best_match": 0.593,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c7f229218be63",
+      "url_cited": false,
+      "best_match": 0.666,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "cb31261005eb2",
+      "url_cited": false,
+      "best_match": 0.781,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "cd5159417aaba",
+      "url_cited": false,
+      "best_match": 0.503,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c6a8cfdfd7753",
+      "url_cited": false,
+      "best_match": 0.473,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "cf1c63ebc6caa",
+      "url_cited": false,
+      "best_match": 0.524,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "cdf43dd564151",
+      "url_cited": false,
+      "best_match": 0.465,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c7be697cc99b8",
+      "url_cited": false,
+      "best_match": 0.5,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c427e047d1fca",
+      "url_cited": false,
+      "best_match": 0.536,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c4bc5905c6a61",
+      "url_cited": false,
+      "best_match": 0.595,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c4761df014804",
+      "url_cited": false,
+      "best_match": 0.267,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "cc5e924aa7e43",
+      "url_cited": false,
+      "best_match": 0.452,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c09bd01198a99",
+      "url_cited": false,
+      "best_match": 0.465,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c8d93bbc09be2",
+      "url_cited": false,
+      "best_match": 0.721,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c987b0c6ece6d",
+      "url_cited": false,
+      "best_match": 0.662,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c91d5e1336d20",
+      "url_cited": false,
+      "best_match": 0.609,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c6ebf5076b82e",
+      "url_cited": false,
+      "best_match": 0.398,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c8ecd82c844a8",
+      "url_cited": false,
+      "best_match": 0.491,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "cb9ad99d0b6f8",
+      "url_cited": false,
+      "best_match": 0.341,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c6eb95c38ee1b",
+      "url_cited": false,
+      "best_match": 0.669,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "ce870cd94e06c",
+      "url_cited": false,
+      "best_match": 0.446,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c8865b20dcb91",
+      "url_cited": false,
+      "best_match": 0.483,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c826cb0936b74",
+      "url_cited": false,
+      "best_match": 0.384,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "cb681a25817f1",
+      "url_cited": false,
+      "best_match": 0.365,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c1cf457dcc241",
+      "url_cited": false,
+      "best_match": 0.721,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c997e1ef40c8f",
+      "url_cited": false,
+      "best_match": 0.483,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c7ac72cca9ae5",
+      "url_cited": false,
+      "best_match": 0.482,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "cf307158a84ab",
+      "url_cited": false,
+      "best_match": 0.666,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c8e6709a00d7f",
+      "url_cited": false,
+      "best_match": 0.365,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c13e424d9425e",
+      "url_cited": false,
+      "best_match": 0.543,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "cce6304810e72",
+      "url_cited": false,
+      "best_match": 0.315,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c3c6c1c88f7ae",
+      "url_cited": false,
+      "best_match": 0.332,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c99ba31d378b3",
+      "url_cited": false,
+      "best_match": 0.252,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "ccdd29d8f1501",
+      "url_cited": false,
+      "best_match": 0.401,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c25b8776d7807",
+      "url_cited": false,
+      "best_match": 0.434,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "ca70a0daaf3f9",
+      "url_cited": false,
+      "best_match": 0.531,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c189ae1337aab",
+      "url_cited": false,
+      "best_match": 0.662,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c06d73334eed8",
+      "url_cited": false,
+      "best_match": 0.352,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "cf7b49bd58af6",
+      "url_cited": false,
+      "best_match": 0.487,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "cc86bdbcc9d23",
+      "url_cited": false,
+      "best_match": 0.725,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c3f5726d2f512",
+      "url_cited": false,
+      "best_match": 0.412,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c5c04822c8fbf",
+      "url_cited": false,
+      "best_match": 0.39,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c9b094dd4b224",
+      "url_cited": false,
+      "best_match": 0.472,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "ce1e1444689b7",
+      "url_cited": false,
+      "best_match": 0.605,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c045d2fcbd347",
+      "url_cited": false,
+      "best_match": 0.433,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c84e560153838",
+      "url_cited": false,
+      "best_match": 0.454,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c78883b70718c",
+      "url_cited": false,
+      "best_match": 0.391,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c82a83c75373d",
+      "url_cited": false,
+      "best_match": 0.635,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "cac4f25981bbf",
+      "url_cited": false,
+      "best_match": 0.459,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "ce4d6f545248a",
+      "url_cited": false,
+      "best_match": 0.391,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c1246917274eb",
+      "url_cited": false,
+      "best_match": 0.467,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c0a40621618b8",
+      "url_cited": false,
+      "best_match": 0.415,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c728b6459b806",
+      "url_cited": false,
+      "best_match": 0.39,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c0f38a248f6f9",
+      "url_cited": false,
+      "best_match": 0.302,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "cdb4607c23d0d",
+      "url_cited": false,
+      "best_match": 0.326,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c012e87347683",
+      "url_cited": false,
+      "best_match": 0.573,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c5382c74d30c3",
+      "url_cited": false,
+      "best_match": 0.407,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c7adbf89e87b0",
+      "url_cited": false,
+      "best_match": 0.434,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c099184a6be44",
+      "url_cited": false,
+      "best_match": 0.552,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c5e2295197d37",
+      "url_cited": false,
+      "best_match": 0.447,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c929c6b6c6802",
+      "url_cited": false,
+      "best_match": 0.484,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c89510230b5e9",
+      "url_cited": false,
+      "best_match": 0.409,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "cda51b2334678",
+      "url_cited": false,
+      "best_match": 0.48,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c4919c2a185af",
+      "url_cited": false,
+      "best_match": 0.352,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "cb84d25adcad9",
+      "url_cited": false,
+      "best_match": 0.669,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "cbab554f2bbbd",
+      "url_cited": false,
+      "best_match": 0.463,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c47c9d8bce02f",
+      "url_cited": true,
+      "best_match": 0.429,
+      "used": false
+     },
+     {
+      "chunk_id": "cc77f32a6354f",
+      "url_cited": false,
+      "best_match": 0.725,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c645c7627b049",
+      "url_cited": true,
+      "best_match": 0.25,
+      "used": false
+     },
+     {
+      "chunk_id": "c63633b69660b",
+      "url_cited": true,
+      "best_match": 0.683,
+      "used": true
+     },
+     {
+      "chunk_id": "ca033a689bdf3",
+      "url_cited": true,
+      "best_match": 0.269,
+      "used": false
+     },
+     {
+      "chunk_id": "c3a48e5a091bb",
+      "url_cited": true,
+      "best_match": 0.48,
+      "used": false
+     },
+     {
+      "chunk_id": "c66287b534009",
+      "url_cited": true,
+      "best_match": 0.2,
+      "used": false
+     },
+     {
+      "chunk_id": "cca0e28d57cde",
+      "url_cited": true,
+      "best_match": 0.223,
+      "used": false
+     },
+     {
+      "chunk_id": "cd8ea2e1d49d1",
+      "url_cited": false,
+      "best_match": 0.355,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c7835a4a157a9",
+      "url_cited": true,
+      "best_match": 0.436,
+      "used": false
+     },
+     {
+      "chunk_id": "c76586dbd2aff",
+      "url_cited": false,
+      "best_match": 0.48,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c04c381ec45fb",
+      "url_cited": false,
+      "best_match": 0.475,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c301621bb565b",
+      "url_cited": false,
+      "best_match": 0.522,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c2e95d2d6ec38",
+      "url_cited": false,
+      "best_match": 0.671,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c08079b42d8a3",
+      "url_cited": true,
+      "best_match": 0.237,
+      "used": false
+     },
+     {
+      "chunk_id": "c9ae376e8c575",
+      "url_cited": true,
+      "best_match": 0.48,
+      "used": false
+     },
+     {
+      "chunk_id": "cefc7742bf72a",
+      "url_cited": false,
+      "best_match": 0.506,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "cba74b3290a72",
+      "url_cited": false,
+      "best_match": 0.541,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c1449fbf85f80",
+      "url_cited": false,
+      "best_match": 0.869,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c8b53fe520723",
+      "url_cited": false,
+      "best_match": 0.554,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c0761501a3d7e",
+      "url_cited": false,
+      "best_match": 0.869,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c53f296517531",
+      "url_cited": false,
+      "best_match": 0.299,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "ccb3dabb19f31",
+      "url_cited": false,
+      "best_match": 0.495,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c98ce8327b580",
+      "url_cited": false,
+      "best_match": 0.34,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c6f885861ad6c",
+      "url_cited": false,
+      "best_match": 0.817,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c5665a230f948",
+      "url_cited": false,
+      "best_match": 0.5,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c1c0644522ecf",
+      "url_cited": false,
+      "best_match": 0.666,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "cce310b09fbd0",
+      "url_cited": false,
+      "best_match": 0.464,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c289796f92e0c",
+      "url_cited": false,
+      "best_match": 0.884,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c53c5a10b093a",
+      "url_cited": false,
+      "best_match": 0.457,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "ce83c73ad0d57",
+      "url_cited": false,
+      "best_match": 0.365,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "ca7f1cda6b990",
+      "url_cited": false,
+      "best_match": 0.543,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c84d996b23a1e",
+      "url_cited": false,
+      "best_match": 0.356,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c252ba14dd0a5",
+      "url_cited": false,
+      "best_match": 0.679,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "ca53a969c0602",
+      "url_cited": false,
+      "best_match": 0.666,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "ce2e76a5345ea",
+      "url_cited": false,
+      "best_match": 0.387,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c934725954813",
+      "url_cited": false,
+      "best_match": 0.666,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c5cbe43af0d10",
+      "url_cited": false,
+      "best_match": 0.423,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c8533a04c2cfe",
+      "url_cited": false,
+      "best_match": 0.427,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c27a8751bb698",
+      "url_cited": false,
+      "best_match": 0.666,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "cd07083d90766",
+      "url_cited": false,
+      "best_match": 0.352,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c4314d9802d6b",
+      "url_cited": false,
+      "best_match": 0.319,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "cfa378cd49a1b",
+      "url_cited": false,
+      "best_match": 0.367,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "cd855b036fa6a",
+      "url_cited": false,
+      "best_match": 0.374,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "cb550730cc3e5",
+      "url_cited": false,
+      "best_match": 0.573,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c8286fad4fe55",
+      "url_cited": false,
+      "best_match": 0.451,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c141d9b63ab8b",
+      "url_cited": false,
+      "best_match": 0.61,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "cab000c89b54b",
+      "url_cited": false,
+      "best_match": 0.244,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "ca54613402821",
+      "url_cited": false,
+      "best_match": 0.795,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c55be8686a0fe",
+      "url_cited": false,
+      "best_match": 0.41,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c4e86514babac",
+      "url_cited": false,
+      "best_match": 0.795,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c1ef59f70554f",
+      "url_cited": false,
+      "best_match": 0.581,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "cc003c72b23c4",
+      "url_cited": false,
+      "best_match": 0.482,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "cec36cdfd5281",
+      "url_cited": false,
+      "best_match": 0.581,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c6934c4422f13",
+      "url_cited": true,
+      "best_match": 0.645,
+      "used": true
+     },
+     {
+      "chunk_id": "c48a0000d72e9",
+      "url_cited": true,
+      "best_match": 0.266,
+      "used": false
+     },
+     {
+      "chunk_id": "cd52c4403dcb5",
+      "url_cited": false,
+      "best_match": 0.385,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c2a16456cd3e1",
+      "url_cited": false,
+      "best_match": 0.437,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "cca94d3273a59",
+      "url_cited": false,
+      "best_match": 0.739,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c36c642255372",
+      "url_cited": false,
+      "best_match": 0.232,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c031f8bdda19d",
+      "url_cited": false,
+      "best_match": 0.347,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c92afce64e34c",
+      "url_cited": true,
+      "best_match": 0.299,
+      "used": false
+     },
+     {
+      "chunk_id": "ce5fa646b681f",
+      "url_cited": true,
+      "best_match": 0.178,
+      "used": false
+     },
+     {
+      "chunk_id": "c79826aac2462",
+      "url_cited": false,
+      "best_match": 0.473,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c67efb06f2956",
+      "url_cited": false,
+      "best_match": 0.387,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "cb882da3b7cf4",
+      "url_cited": false,
+      "best_match": 0.385,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "cdc1456c2c55c",
+      "url_cited": false,
+      "best_match": 0.533,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "cd756d587b3c3",
+      "url_cited": true,
+      "best_match": 0.422,
+      "used": false
+     },
+     {
+      "chunk_id": "cc3c5c39aaa84",
+      "url_cited": true,
+      "best_match": 0.389,
+      "used": false
+     },
+     {
+      "chunk_id": "ce5ba98291e34",
+      "url_cited": false,
+      "best_match": 0.203,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c4a1d2127f0da",
+      "url_cited": false,
+      "best_match": 0.481,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "cc3c2a17ca856",
+      "url_cited": false,
+      "best_match": 0.876,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "cbf2d43c85df3",
+      "url_cited": false,
+      "best_match": 0.407,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c96fe87be683f",
+      "url_cited": true,
+      "best_match": 0.178,
+      "used": false
+     },
+     {
+      "chunk_id": "cff21d4135c62",
+      "url_cited": true,
+      "best_match": 0.555,
+      "used": true
+     },
+     {
+      "chunk_id": "c21fe2d235c92",
+      "url_cited": true,
+      "best_match": 0.399,
+      "used": false
+     },
+     {
+      "chunk_id": "c7ed43d4b7961",
+      "url_cited": true,
+      "best_match": 0.351,
+      "used": false
+     },
+     {
+      "chunk_id": "c2481e987a189",
+      "url_cited": false,
+      "best_match": 0.458,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c1dbe00b25ec5",
+      "url_cited": false,
+      "best_match": 0.666,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "cbe228574231e",
+      "url_cited": true,
+      "best_match": 0.76,
+      "used": true
+     },
+     {
+      "chunk_id": "c8076730c0e16",
+      "url_cited": false,
+      "best_match": 0.483,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c54bf3c6fbcd1",
+      "url_cited": true,
+      "best_match": 0.186,
+      "used": false
+     },
+     {
+      "chunk_id": "cedd2cd492dab",
+      "url_cited": false,
+      "best_match": 0.817,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c39d310682f59",
+      "url_cited": true,
+      "best_match": 0.166,
+      "used": false
+     },
+     {
+      "chunk_id": "c9bb93c3f3afc",
+      "url_cited": false,
+      "best_match": 0.457,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "ca072d0331f85",
+      "url_cited": true,
+      "best_match": 0.262,
+      "used": false
+     },
+     {
+      "chunk_id": "c6f824a70abb9",
+      "url_cited": false,
+      "best_match": 0.449,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "cca6fef5b5dab",
+      "url_cited": false,
+      "best_match": 0.483,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "cb2ecb5bdcf89",
+      "url_cited": false,
+      "best_match": 0.666,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c383df8ef519b",
+      "url_cited": false,
+      "best_match": 0.666,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c57c4c708526c",
+      "url_cited": false,
+      "best_match": 0.666,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "ce1ced452d493",
+      "url_cited": false,
+      "best_match": 0.565,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "cca1dff5d12f0",
+      "url_cited": false,
+      "best_match": 0.483,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "ce9bd691662ef",
+      "url_cited": false,
+      "best_match": 0.386,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c2ef4595ce8a4",
+      "url_cited": false,
+      "best_match": 0.483,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "cd4285cfe37a9",
+      "url_cited": false,
+      "best_match": 0.72,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "ce726de8e3edd",
+      "url_cited": false,
+      "best_match": 0.596,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c8e0de51ff284",
+      "url_cited": false,
+      "best_match": 0.577,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c0d9f78c0410f",
+      "url_cited": false,
+      "best_match": 0.362,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c999acb0c9e12",
+      "url_cited": false,
+      "best_match": 0.3,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c3e029ce8cc21",
+      "url_cited": false,
+      "best_match": 0.473,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "cca6cd89eba44",
+      "url_cited": false,
+      "best_match": 0.561,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c6794810e1232",
+      "url_cited": false,
+      "best_match": 0.383,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c12afd15bdee6",
+      "url_cited": false,
+      "best_match": 0.441,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c3104c3314393",
+      "url_cited": false,
+      "best_match": 0.36,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "cbe5218eeed40",
+      "url_cited": false,
+      "best_match": 0.537,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c19eed8a91418",
+      "url_cited": false,
+      "best_match": 0.537,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "cb5699fffb745",
+      "url_cited": false,
+      "best_match": 0.384,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c19fe40c40eee",
+      "url_cited": false,
+      "best_match": 0.671,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "cb12a5f5ea6a4",
+      "url_cited": false,
+      "best_match": 0.477,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "cc2e4d9dce6a7",
+      "url_cited": false,
+      "best_match": 0.671,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c4bd48362f986",
+      "url_cited": false,
+      "best_match": 0.58,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c638635d23d1e",
+      "url_cited": false,
+      "best_match": 0.681,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c9ac7ed8fec6a",
+      "url_cited": true,
+      "best_match": 0.578,
+      "used": true
+     },
+     {
+      "chunk_id": "c7de68ce92709",
+      "url_cited": false,
+      "best_match": 0.671,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c703e5573aae0",
+      "url_cited": false,
+      "best_match": 0.876,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c8f7953353af7",
+      "url_cited": false,
+      "best_match": 0.46,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c5971ea7eca72",
+      "url_cited": false,
+      "best_match": 0.671,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c599b757a3971",
+      "url_cited": false,
+      "best_match": 0.422,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c17f805d42b59",
+      "url_cited": false,
+      "best_match": 0.588,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c65a2efe0aa30",
+      "url_cited": false,
+      "best_match": 0.41,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c369a8688e777",
+      "url_cited": false,
+      "best_match": 0.322,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c4d554602ebc7",
+      "url_cited": false,
+      "best_match": 0.507,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c9d0508794c45",
+      "url_cited": false,
+      "best_match": 0.414,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c790663a60eca",
+      "url_cited": false,
+      "best_match": 0.416,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c9096b2bb6525",
+      "url_cited": false,
+      "best_match": 0.467,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "cb07bc4a90b44",
+      "url_cited": false,
+      "best_match": 0.469,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c3b6b581a63ea",
+      "url_cited": false,
+      "best_match": 0.258,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "cd185cd11262f",
+      "url_cited": false,
+      "best_match": 0.412,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "cdda0eda343c3",
+      "url_cited": false,
+      "best_match": 0.307,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c64408981db24",
+      "url_cited": false,
+      "best_match": 0.436,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "cc10c75f16751",
+      "url_cited": false,
+      "best_match": 0.363,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "ca3f1b075e8b3",
+      "url_cited": false,
+      "best_match": 0.344,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "cd00d3efc8cd7",
+      "url_cited": false,
+      "best_match": 0.396,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "cd410469298ae",
+      "url_cited": false,
+      "best_match": 0.756,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c0c2cab8ee918",
+      "url_cited": false,
+      "best_match": 0.621,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c0280123064ca",
+      "url_cited": false,
+      "best_match": 0.582,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c5182014a37f9",
+      "url_cited": false,
+      "best_match": 0.582,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "ca9fa02322b4e",
+      "url_cited": false,
+      "best_match": 0.582,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "ca12033c0bc67",
+      "url_cited": false,
+      "best_match": 0.748,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c91e9acf4f81c",
+      "url_cited": false,
+      "best_match": 0.748,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c094b99a6bd0a",
+      "url_cited": false,
+      "best_match": 1.0,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "cbca390bedf91",
+      "url_cited": false,
+      "best_match": 0.571,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "ca28732b7e950",
+      "url_cited": false,
+      "best_match": 0.582,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "cd2b10b942220",
+      "url_cited": false,
+      "best_match": 0.817,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "cab4a357d355a",
+      "url_cited": false,
+      "best_match": 0.582,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c9943d95b2c2c",
+      "url_cited": false,
+      "best_match": 1.0,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c36b078301f91",
+      "url_cited": false,
+      "best_match": 0.548,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c7ae9101f29a4",
+      "url_cited": false,
+      "best_match": 0.748,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c60750b7b91c9",
+      "url_cited": false,
+      "best_match": 1.0,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c584801d99bc5",
+      "url_cited": true,
+      "best_match": 0.472,
+      "used": false
+     },
+     {
+      "chunk_id": "c660f10b6519b",
+      "url_cited": true,
+      "best_match": 0.799,
+      "used": true
+     },
+     {
+      "chunk_id": "c73ece1d2c5fd",
+      "url_cited": false,
+      "best_match": 0.744,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c307013c6ec94",
+      "url_cited": false,
+      "best_match": 0.635,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "cd64516461867",
+      "url_cited": false,
+      "best_match": 1.0,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c1fb2658f6e06",
+      "url_cited": false,
+      "best_match": 0.748,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c51c22e2fa946",
+      "url_cited": false,
+      "best_match": 1.0,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c4f82cb3dd667",
+      "url_cited": false,
+      "best_match": 0.582,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c615816c734d7",
+      "url_cited": false,
+      "best_match": 0.748,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "ca8ccde3da302",
+      "url_cited": false,
+      "best_match": 0.469,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c9ec2231f332b",
+      "url_cited": false,
+      "best_match": 0.582,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "ce87ef789fa7e",
+      "url_cited": false,
+      "best_match": 0.457,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c455714078a2e",
+      "url_cited": false,
+      "best_match": 1.0,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c9cde1af64761",
+      "url_cited": false,
+      "best_match": 1.0,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c90be6bbbf415",
+      "url_cited": false,
+      "best_match": 1.0,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c1e3ba64a7be8",
+      "url_cited": false,
+      "best_match": 1.0,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "ccecbf3789c3a",
+      "url_cited": false,
+      "best_match": 0.535,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c48fbf22fbe29",
+      "url_cited": false,
+      "best_match": 1.0,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "cde6606c43731",
+      "url_cited": false,
+      "best_match": 1.0,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "caf55e7c36592",
+      "url_cited": false,
+      "best_match": 1.0,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "cd30fa7a076bf",
+      "url_cited": false,
+      "best_match": 0.659,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "cb98287208d2b",
+      "url_cited": false,
+      "best_match": 1.0,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "cc1c599ab7d7f",
+      "url_cited": false,
+      "best_match": 0.659,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c380e4ec8ba51",
+      "url_cited": false,
+      "best_match": 1.0,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "cec49b60743b7",
+      "url_cited": false,
+      "best_match": 1.0,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "cf53f2030ef2d",
+      "url_cited": false,
+      "best_match": 1.0,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "cdb9737aafc2d",
+      "url_cited": false,
+      "best_match": 0.659,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "ce89a8a5c50b6",
+      "url_cited": false,
+      "best_match": 0.329,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c4c642abadd9a",
+      "url_cited": false,
+      "best_match": 0.354,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "cf48d399ba331",
+      "url_cited": false,
+      "best_match": 0.561,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c79bdfa76e78c",
+      "url_cited": false,
+      "best_match": 0.83,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "ccbcf8b6bd936",
+      "url_cited": false,
+      "best_match": 0.364,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "cf5f1464e57b9",
+      "url_cited": false,
+      "best_match": 0.561,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c5a862b452638",
+      "url_cited": false,
+      "best_match": 1.0,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "ced7ab99b9e33",
+      "url_cited": false,
+      "best_match": 1.0,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c48c7ef6e9ac5",
+      "url_cited": false,
+      "best_match": 1.0,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "cb934c5ce0a3f",
+      "url_cited": true,
+      "best_match": 0.492,
+      "used": false
+     },
+     {
+      "chunk_id": "c3914e82a9f5f",
+      "url_cited": true,
+      "best_match": 0.535,
+      "used": true
+     },
+     {
+      "chunk_id": "c04fe206ff98f",
+      "url_cited": true,
+      "best_match": 0.147,
+      "used": false
+     },
+     {
+      "chunk_id": "ce5a83de979df",
+      "url_cited": true,
+      "best_match": 0.315,
+      "used": false
+     },
+     {
+      "chunk_id": "c344171e70b25",
+      "url_cited": true,
+      "best_match": 0.2,
+      "used": false
+     },
+     {
+      "chunk_id": "c49a0f4ec3842",
+      "url_cited": true,
+      "best_match": 0.239,
+      "used": false
+     },
+     {
+      "chunk_id": "c83143081e30c",
+      "url_cited": true,
+      "best_match": 0.87,
+      "used": true
+     },
+     {
+      "chunk_id": "c601eaa5ebe0e",
+      "url_cited": true,
+      "best_match": 0.217,
+      "used": false
+     },
+     {
+      "chunk_id": "cf4b3db954f93",
+      "url_cited": true,
+      "best_match": 0.184,
+      "used": false
+     },
+     {
+      "chunk_id": "c76818813cfbd",
+      "url_cited": true,
+      "best_match": 0.108,
+      "used": false
+     },
+     {
+      "chunk_id": "c68265694e7d4",
+      "url_cited": true,
+      "best_match": 0.133,
+      "used": false
+     },
+     {
+      "chunk_id": "cbe626fb49c90",
+      "url_cited": true,
+      "best_match": 0.312,
+      "used": false
+     },
+     {
+      "chunk_id": "ceab4eee9cb42",
+      "url_cited": true,
+      "best_match": 0.008,
+      "used": false
+     },
+     {
+      "chunk_id": "ced4b29b954f8",
+      "url_cited": true,
+      "best_match": 0.154,
+      "used": false
+     },
+     {
+      "chunk_id": "ce50a1164ed57",
+      "url_cited": true,
+      "best_match": 0.24,
+      "used": false
+     },
+     {
+      "chunk_id": "c5cc4c1be0bc3",
+      "url_cited": true,
+      "best_match": 0.133,
+      "used": false
+     },
+     {
+      "chunk_id": "ca95500a10966",
+      "url_cited": true,
+      "best_match": 0.213,
+      "used": false
+     },
+     {
+      "chunk_id": "c41241bd398ff",
+      "url_cited": true,
+      "best_match": 0.337,
+      "used": false
+     },
+     {
+      "chunk_id": "c547da3a44e69",
+      "url_cited": true,
+      "best_match": 0.18,
+      "used": false
+     },
+     {
+      "chunk_id": "c698ba6895849",
+      "url_cited": true,
+      "best_match": 0.133,
+      "used": false
+     },
+     {
+      "chunk_id": "c087905588520",
+      "url_cited": true,
+      "best_match": 0.779,
+      "used": true
+     },
+     {
+      "chunk_id": "c49265a08f645",
+      "url_cited": false,
+      "best_match": 0.54,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "cd3770312c343",
+      "url_cited": false,
+      "best_match": 0.404,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c5ce7768305a7",
+      "url_cited": true,
+      "best_match": 0.264,
+      "used": false
+     },
+     {
+      "chunk_id": "cb58c51dff3e2",
+      "url_cited": false,
+      "best_match": 0.627,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c98c856af7f00",
+      "url_cited": false,
+      "best_match": 0.506,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c444115c8f8e9",
+      "url_cited": false,
+      "best_match": 0.388,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "cc5c122661930",
+      "url_cited": false,
+      "best_match": 1.0,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c9f07594c4f5d",
+      "url_cited": false,
+      "best_match": 0.788,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c53fe036242d1",
+      "url_cited": true,
+      "best_match": 0.547,
+      "used": true
+     },
+     {
+      "chunk_id": "c74e6eaf4cfcf",
+      "url_cited": true,
+      "best_match": 0.308,
+      "used": false
+     },
+     {
+      "chunk_id": "cdd23ec999af3",
+      "url_cited": false,
+      "best_match": 0.467,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "caf066ab46c79",
+      "url_cited": true,
+      "best_match": 0.328,
+      "used": false
+     },
+     {
+      "chunk_id": "c1eb257f3a7e6",
+      "url_cited": false,
+      "best_match": 0.524,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c5ea1ff068c6d",
+      "url_cited": false,
+      "best_match": 0.59,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "ce2aee8a3ef84",
+      "url_cited": true,
+      "best_match": 0.248,
+      "used": false
+     },
+     {
+      "chunk_id": "c573503d76fdb",
+      "url_cited": false,
+      "best_match": 0.748,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c865e28e7fe7a",
+      "url_cited": false,
+      "best_match": 0.505,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c3833e425c89f",
+      "url_cited": true,
+      "best_match": 0.87,
+      "used": true
+     },
+     {
+      "chunk_id": "cebe5aa157a33",
+      "url_cited": true,
+      "best_match": 0.294,
+      "used": false
+     },
+     {
+      "chunk_id": "cdffd7ec9ebef",
+      "url_cited": true,
+      "best_match": 0.216,
+      "used": false
+     },
+     {
+      "chunk_id": "c0a72fa5ce3c8",
+      "url_cited": true,
+      "best_match": 0.106,
+      "used": false
+     },
+     {
+      "chunk_id": "c245ba0deb89d",
+      "url_cited": true,
+      "best_match": 0.106,
+      "used": false
+     },
+     {
+      "chunk_id": "ca7eb7706bc6b",
+      "url_cited": true,
+      "best_match": 0.106,
+      "used": false
+     },
+     {
+      "chunk_id": "c3ce3fa5c9d66",
+      "url_cited": true,
+      "best_match": 0.16,
+      "used": false
+     },
+     {
+      "chunk_id": "cc058a996f965",
+      "url_cited": true,
+      "best_match": 0.151,
+      "used": false
+     },
+     {
+      "chunk_id": "cf97edec509f3",
+      "url_cited": true,
+      "best_match": 0.388,
+      "used": false
+     },
+     {
+      "chunk_id": "c34a87b220893",
+      "url_cited": true,
+      "best_match": 0.255,
+      "used": false
+     },
+     {
+      "chunk_id": "c2902518cc81b",
+      "url_cited": true,
+      "best_match": 0.129,
+      "used": false
+     },
+     {
+      "chunk_id": "c65f975d47395",
+      "url_cited": true,
+      "best_match": 0.159,
+      "used": false
+     },
+     {
+      "chunk_id": "c2b7c68ab366d",
+      "url_cited": true,
+      "best_match": 0.84,
+      "used": true
+     },
+     {
+      "chunk_id": "c28e6a3d4d3c1",
+      "url_cited": true,
+      "best_match": 0.206,
+      "used": false
+     },
+     {
+      "chunk_id": "c5c05f09fdd68",
+      "url_cited": true,
+      "best_match": 0.663,
+      "used": true
+     },
+     {
+      "chunk_id": "ce39e7a986ee6",
+      "url_cited": true,
+      "best_match": 0.154,
+      "used": false
+     },
+     {
+      "chunk_id": "c27f2e3d5ac73",
+      "url_cited": false,
+      "best_match": 0.28,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c21fbba7837f5",
+      "url_cited": true,
+      "best_match": 0.097,
+      "used": false
+     },
+     {
+      "chunk_id": "cdd6a8db7f53a",
+      "url_cited": true,
+      "best_match": 0.12,
+      "used": false
+     },
+     {
+      "chunk_id": "c00676cabd991",
+      "url_cited": false,
+      "best_match": 0.469,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c7d313436305e",
+      "url_cited": true,
+      "best_match": 0.119,
+      "used": false
+     },
+     {
+      "chunk_id": "c87f9374d485d",
+      "url_cited": false,
+      "best_match": 0.5,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c95450a38eebd",
+      "url_cited": false,
+      "best_match": 0.469,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c6951153f9cf8",
+      "url_cited": true,
+      "best_match": 0.357,
+      "used": false
+     },
+     {
+      "chunk_id": "cc2733690bdcb",
+      "url_cited": false,
+      "best_match": 0.748,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c4f454dd2415f",
+      "url_cited": false,
+      "best_match": 0.748,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "ce6e836002dc9",
+      "url_cited": false,
+      "best_match": 0.306,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c77ddc7347f70",
+      "url_cited": false,
+      "best_match": 0.748,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "cad957ab3c3f3",
+      "url_cited": false,
+      "best_match": 0.28,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "c3ffc06264505",
+      "url_cited": true,
+      "best_match": 0.107,
+      "used": false
+     },
+     {
+      "chunk_id": "ccbcc0fbd5f7d",
+      "url_cited": false,
+      "best_match": 0.288,
+      "used": false,
+      "echoed_uncited": false
+     },
+     {
+      "chunk_id": "cfc8f907f1c0d",
+      "url_cited": true,
+      "best_match": 0.102,
+      "used": false
+     },
+     {
+      "chunk_id": "ccb70f60e469a",
+      "url_cited": false,
+      "best_match": 0.582,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c2b0862426cd8",
+      "url_cited": true,
+      "best_match": 0.068,
+      "used": false
+     },
+     {
+      "chunk_id": "c814ca0d31bc3",
+      "url_cited": true,
+      "best_match": 0.113,
+      "used": false
+     },
+     {
+      "chunk_id": "ceade44555b95",
+      "url_cited": true,
+      "best_match": 0.237,
+      "used": false
+     },
+     {
+      "chunk_id": "ca03641922d39",
+      "url_cited": false,
+      "best_match": 0.748,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c1150587b3cb5",
+      "url_cited": false,
+      "best_match": 0.63,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "c071f7e56ff32",
+      "url_cited": true,
+      "best_match": 0.512,
+      "used": true
+     },
+     {
+      "chunk_id": "c13337fa51d5f",
+      "url_cited": false,
+      "best_match": 0.748,
+      "used": false,
+      "echoed_uncited": true
+     },
+     {
+      "chunk_id": "cac6da4141be9",
+      "url_cited": false,
+      "best_match": 0.748,
+      "used": false,
+      "echoed_uncited": true
+     }
+    ],
+    "chunk_level_judged": 0.0,
+    "chunks_used_judged": []
+   },
+   "skipped": null,
+   "llm": {
+    "judge_model": "gpt-6-luna",
+    "prompts": {
+     "paragraph_audit": {
+      "version": "2",
+      "hash": "ac5ed03a8d11"
+     }
+    },
+    "requests": 35,
+    "cache_hits": 0,
+    "api_calls": 35,
+    "errors": 35,
+    "shared": "citation_audit"
+   }
+  },
+  "query_relevance": {
+   "name": "query_relevance",
+   "category": "retrieval.efficiency",
+   "version": "2",
+   "value": null,
+   "higher_is_better": true,
+   "details": {
+    "key_points": {
+     "source": "cache",
+     "prompt_version": "1",
+     "judge_model": "gpt-6-luna"
+    },
+    "judged": 0,
+    "no_material": [
+     "EU MiCA rollout 2024 2026 licensing passporting CASP stablecoin issuer grandfathering July 2026 ESMA EBA national transition requirements",
+     "Europe crypto regulation 2026 Travel Rule Transfer of Funds Regulation AML CFT DORA operational resilience crypto firms MiCA gaps DeFi NFTs hybrid tokens stablecoins cross-border exchanges EU proposals",
+     "ESMA MiCA grandfathering end dates by member state competent authorities official list July 2026 CASP transitional measures national authorities lawful continuous activity under national law",
+     "MiCA CASP authorization vs PSD2 payment institution EMI licensing EMT transfers payment functionality EBA ESMA guidance crypto-asset services electronic money tokens wallet transfers execution custody Europe",
+     "EU Transfer of Funds Regulation crypto Travel Rule zero-threshold self-hosted wallet verification above 1000 EUR sanctions KYT MiCA ART EMT fractionalized NFTs financial instruments hybrid tokens ESMA EBA 2025 2026",
+     "EU MiCA CASP activity targeting EU users geofencing disclaimers reverse solicitation non-EU crypto firms ESMA EBA European Commission 2025 2026 guidance"
+    ],
+    "per_query": [
+     {
+      "span_id": "s9",
+      "kind": "initial_results",
+      "query": "EU MiCA rollout 2024 2026 licensing passporting CASP stablecoin issuer grandfathering July 2026 ESMA EBA national transition requirements",
+      "chunks": 25,
+      "urls_total": 5,
+      "urls_shown": 5,
+      "score": null,
+      "rubric": null,
+      "error": "OpenAIRateLimitError: Error code: 429 - {'error': {'message': 'You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.', 'type': 'insufficient_quota', 'param': None, 'code': 'credit_balance_exhausted'}}"
+     },
+     {
+      "span_id": "s10",
+      "kind": "initial_results",
+      "query": "Europe crypto regulation 2026 Travel Rule Transfer of Funds Regulation AML CFT DORA operational resilience crypto firms MiCA gaps DeFi NFTs hybrid tokens stablecoins cross-border exchanges EU proposals",
+      "chunks": 15,
+      "urls_total": 4,
+      "urls_shown": 4,
+      "score": null,
+      "rubric": null,
+      "error": "OpenAIRateLimitError: Error code: 429 - {'error': {'message': 'You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.', 'type': 'insufficient_quota', 'param': None, 'code': 'credit_balance_exhausted'}}"
+     },
+     {
+      "span_id": "s11",
+      "kind": "sub_query",
+      "query": "EU MiCA rollout timeline 2024 to 2026 CASP licensing passporting stablecoin issuer rules and July 2026 grandfathering deadline",
+      "chunks": 22,
+      "urls_total": 5,
+      "urls_shown": 5,
+      "score": null,
+      "rubric": null,
+      "error": "OpenAIRateLimitError: Error code: 429 - {'error': {'message': 'You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.', 'type': 'insufficient_quota', 'param': None, 'code': 'credit_balance_exhausted'}}"
+     },
+     {
+      "span_id": "s12",
+      "kind": "sub_query",
+      "query": "ESMA and EBA guidance on MiCA CASP authorization passporting stablecoin issuers and national transition requirements after July 2026",
+      "chunks": 25,
+      "urls_total": 3,
+      "urls_shown": 3,
+      "score": null,
+      "rubric": null,
+      "error": "OpenAIRateLimitError: Error code: 429 - {'error': {'message': 'You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.', 'type': 'insufficient_quota', 'param': None, 'code': 'credit_balance_exhausted'}}"
+     },
+     {
+      "span_id": "s13",
+      "kind": "sub_query",
+      "query": "MiCA grandfathering by EU member state before July 2026 national transition periods for existing CASPs and licensing requirements for stablecoin issuers",
+      "chunks": 25,
+      "urls_total": 3,
+      "urls_shown": 3,
+      "score": null,
+      "rubric": null,
+      "error": "OpenAIRateLimitError: Error code: 429 - {'error': {'message': 'You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.', 'type': 'insufficient_quota', 'param': None, 'code': 'credit_balance_exhausted'}}"
+     },
+     {
+      "span_id": "s15",
+      "kind": "sub_query",
+      "query": "EU crypto regulation 2026 MiCA Transfer of Funds Regulation Travel Rule DORA AML CFT rules for crypto firms and exchanges",
+      "chunks": 18,
+      "urls_total": 2,
+      "urls_shown": 2,
+      "score": null,
+      "rubric": null,
+      "error": "OpenAIRateLimitError: Error code: 429 - {'error': {'message': 'You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.', 'type': 'insufficient_quota', 'param': None, 'code': 'credit_balance_exhausted'}}"
+     },
+     {
+      "span_id": "s16",
+      "kind": "sub_query",
+      "query": "MiCA gaps in 2026 for DeFi NFTs hybrid tokens stablecoins and cross border crypto exchanges in Europe",
+      "chunks": 1,
+      "urls_total": 1,
+      "urls_shown": 1,
+      "score": null,
+      "rubric": null,
+      "error": "OpenAIRateLimitError: Error code: 429 - {'error': {'message': 'You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.', 'type': 'insufficient_quota', 'param': None, 'code': 'credit_balance_exhausted'}}"
+     },
+     {
+      "span_id": "s17",
+      "kind": "sub_query",
+      "query": "European Union crypto proposals in late 2026 AMLA AML Regulation MiCA review Travel Rule and operational resilience updates for CASPs",
+      "chunks": 6,
+      "urls_total": 1,
+      "urls_shown": 1,
+      "score": null,
+      "rubric": null,
+      "error": "OpenAIRateLimitError: Error code: 429 - {'error': {'message': 'You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.', 'type': 'insufficient_quota', 'param': None, 'code': 'credit_balance_exhausted'}}"
+     },
+     {
+      "span_id": "s24",
+      "kind": "initial_results",
+      "query": "ESMA MiCA grandfathering end dates by member state competent authorities official list July 2026 CASP transitional measures national authorities lawful continuous activity under national law",
+      "chunks": 25,
+      "urls_total": 3,
+      "urls_shown": 3,
+      "score": null,
+      "rubric": null,
+      "error": "OpenAIRateLimitError: Error code: 429 - {'error': {'message': 'You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.', 'type': 'insufficient_quota', 'param': None, 'code': 'credit_balance_exhausted'}}"
+     },
+     {
+      "span_id": "s25",
+      "kind": "initial_results",
+      "query": "MiCA CASP authorization vs PSD2 payment institution EMI licensing EMT transfers payment functionality EBA ESMA guidance crypto-asset services electronic money tokens wallet transfers execution custody Europe",
+      "chunks": 25,
+      "urls_total": 4,
+      "urls_shown": 4,
+      "score": null,
+      "rubric": null,
+      "error": "OpenAIRateLimitError: Error code: 429 - {'error': {'message': 'You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.', 'type': 'insufficient_quota', 'param': None, 'code': 'credit_balance_exhausted'}}"
+     },
+     {
+      "span_id": "s26",
+      "kind": "sub_query",
+      "query": "ESMA official list of MiCA Article 143 3 transitional periods and grandfathering end dates for crypto asset service providers by EU member state July 2026",
+      "chunks": 13,
+      "urls_total": 4,
+      "urls_shown": 4,
+      "score": null,
+      "rubric": null,
+      "error": "OpenAIRateLimitError: Error code: 429 - {'error': {'message': 'You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.', 'type': 'insufficient_quota', 'param': None, 'code': 'credit_balance_exhausted'}}"
+     },
+     {
+      "span_id": "s27",
+      "kind": "sub_query",
+      "query": "national competent authority MiCA transitional measures lawful continuous activity under national law CASP grandfathering end date member state official notice",
+      "chunks": 1,
+      "urls_total": 1,
+      "urls_shown": 1,
+      "score": null,
+      "rubric": null,
+      "error": "OpenAIRateLimitError: Error code: 429 - {'error': {'message': 'You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.', 'type': 'insufficient_quota', 'param': None, 'code': 'credit_balance_exhausted'}}"
+     },
+     {
+      "span_id": "s28",
+      "kind": "sub_query",
+      "query": "MiCA CASP grandfathering end dates by member state competent authorities ESMA July 1 2026 official transitional regime list",
+      "chunks": 11,
+      "urls_total": 2,
+      "urls_shown": 2,
+      "score": null,
+      "rubric": null,
+      "error": "OpenAIRateLimitError: Error code: 429 - {'error': {'message': 'You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.', 'type': 'insufficient_quota', 'param': None, 'code': 'credit_balance_exhausted'}}"
+     },
+     {
+      "span_id": "s30",
+      "kind": "sub_query",
+      "query": "EBA opinion February 2026 MiCA CASP versus PSD2 payment institution or e money institution authorization for electronic money token transfers in Europe",
+      "chunks": 10,
+      "urls_total": 3,
+      "urls_shown": 3,
+      "score": null,
+      "rubric": null,
+      "error": "OpenAIRateLimitError: Error code: 429 - {'error': {'message': 'You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.', 'type': 'insufficient_quota', 'param': None, 'code': 'credit_balance_exhausted'}}"
+     },
+     {
+      "span_id": "s31",
+      "kind": "sub_query",
+      "query": "MiCA CASP EMT wallet transfers execution custody payment functionality when a PSD2 payment license or EMI license is required for custodial wallets and third party payments",
+      "chunks": 13,
+      "urls_total": 4,
+      "urls_shown": 4,
+      "score": null,
+      "rubric": null,
+      "error": "OpenAIRateLimitError: Error code: 429 - {'error': {'message': 'You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.', 'type': 'insufficient_quota', 'param': None, 'code': 'credit_balance_exhausted'}}"
+     },
+     {
+      "span_id": "s32",
+      "kind": "sub_query",
+      "query": "ESMA and EBA guidance on MiCA crypto asset services electronic money tokens notification regime for credit institutions and EMIs and payment institution treatment in Europe",
+      "chunks": 15,
+      "urls_total": 3,
+      "urls_shown": 3,
+      "score": null,
+      "rubric": null,
+      "error": "OpenAIRateLimitError: Error code: 429 - {'error': {'message': 'You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.', 'type': 'insufficient_quota', 'param': None, 'code': 'credit_balance_exhausted'}}"
+     },
+     {
+      "span_id": "s39",
+      "kind": "initial_results",
+      "query": "EU MiCA CASP activity targeting EU users geofencing disclaimers reverse solicitation non-EU crypto firms ESMA EBA European Commission 2025 2026 guidance",
+      "chunks": 25,
+      "urls_total": 5,
+      "urls_shown": 5,
+      "score": null,
+      "rubric": null,
+      "error": "OpenAIRateLimitError: Error code: 429 - {'error': {'message': 'You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.', 'type': 'insufficient_quota', 'param': None, 'code': 'credit_balance_exhausted'}}"
+     },
+     {
+      "span_id": "s40",
+      "kind": "initial_results",
+      "query": "EU Transfer of Funds Regulation crypto Travel Rule zero-threshold self-hosted wallet verification above 1000 EUR sanctions KYT MiCA ART EMT fractionalized NFTs financial instruments hybrid tokens ESMA EBA 2025 2026",
+      "chunks": 25,
+      "urls_total": 1,
+      "urls_shown": 1,
+      "score": null,
+      "rubric": null,
+      "error": "OpenAIRateLimitError: Error code: 429 - {'error': {'message': 'You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.', 'type': 'insufficient_quota', 'param': None, 'code': 'credit_balance_exhausted'}}"
+     },
+     {
+      "span_id": "s41",
+      "kind": "sub_query",
+      "query": "EU Transfer of Funds Regulation 2023 1113 crypto Travel Rule zero threshold self hosted wallet verification above 1000 EUR sanctions screening and KYT guidance 2025 2026",
+      "chunks": 20,
+      "urls_total": 2,
+      "urls_shown": 2,
+      "score": null,
+      "rubric": null,
+      "error": "OpenAIRateLimitError: Error code: 429 - {'error': {'message': 'You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.', 'type': 'insufficient_quota', 'param': None, 'code': 'credit_balance_exhausted'}}"
+     },
+     {
+      "span_id": "s42",
+      "kind": "sub_query",
+      "query": "MiCA 2025 2026 ESMA EBA guidance on ART and EMT stablecoins reserve governance redemption own funds and crypto asset service provider compliance",
+      "chunks": 4,
+      "urls_total": 2,
+      "urls_shown": 2,
+      "score": null,
+      "rubric": null,
+      "error": "OpenAIRateLimitError: Error code: 429 - {'error': {'message': 'You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.', 'type': 'insufficient_quota', 'param': None, 'code': 'credit_balance_exhausted'}}"
+     },
+     {
+      "span_id": "s43",
+      "kind": "sub_query",
+      "query": "ESMA and EBA 2025 2026 guidance on fractionalized NFTs financial instruments hybrid tokens and when crypto assets fall under MiCA versus EU securities law",
+      "chunks": 11,
+      "urls_total": 3,
+      "urls_shown": 3,
+      "score": null,
+      "rubric": null,
+      "error": "OpenAIRateLimitError: Error code: 429 - {'error': {'message': 'You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.', 'type': 'insufficient_quota', 'param': None, 'code': 'credit_balance_exhausted'}}"
+     },
+     {
+      "span_id": "s45",
+      "kind": "sub_query",
+      "query": "ESMA MiCA reverse solicitation guidelines for third country crypto firms serving EU clients geofencing disclaimers 2025",
+      "chunks": 24,
+      "urls_total": 2,
+      "urls_shown": 2,
+      "score": null,
+      "rubric": null,
+      "error": "OpenAIRateLimitError: Error code: 429 - {'error': {'message': 'You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.', 'type': 'insufficient_quota', 'param': None, 'code': 'credit_balance_exhausted'}}"
+     },
+     {
+      "span_id": "s46",
+      "kind": "sub_query",
+      "query": "ESMA public statement on the end of the MiCA transitional period for unauthorised non EU CASPs targeting EU users 1 July 2026",
+      "chunks": 1,
+      "urls_total": 1,
+      "urls_shown": 1,
+      "score": null,
+      "rubric": null,
+      "error": "OpenAIRateLimitError: Error code: 429 - {'error': {'message': 'You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.', 'type': 'insufficient_quota', 'param': None, 'code': 'credit_balance_exhausted'}}"
+     },
+     {
+      "span_id": "s47",
+      "kind": "sub_query",
+      "query": "European Commission and EBA MiCA guidance on non EU crypto firms marketing to EU users reverse solicitation geofencing disclaimers 2025 2026",
+      "chunks": 19,
+      "urls_total": 4,
+      "urls_shown": 4,
+      "score": null,
+      "rubric": null,
+      "error": "OpenAIRateLimitError: Error code: 429 - {'error': {'message': 'You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.', 'type': 'insufficient_quota', 'param': None, 'code': 'credit_balance_exhausted'}}"
+     }
+    ]
+   },
+   "skipped": "every judge call failed",
+   "llm": {
+    "judge_model": "gpt-6-luna",
+    "prompts": {
+     "query_relevance": {
+      "version": "1",
+      "hash": "b3864e64006b"
+     },
+     "key_points": {
+      "version": "1",
+      "hash": "195a0aff2729"
+     }
+    },
+    "requests": 24,
+    "cache_hits": 0,
+    "api_calls": 24,
+    "errors": 24
+   }
+  },
+  "retrieval_overlap": {
+   "name": "retrieval_overlap",
+   "category": "retrieval.efficiency",
+   "version": "1",
+   "value": 0.533,
+   "higher_is_better": false,
+   "details": {
+    "proposed": 150,
+    "new": 70,
+    "duplicate": 80,
+    "per_unit": [
+     {
+      "span_id": "s9",
+      "query": "EU MiCA rollout 2024 2026 licensing passporting CASP stablecoin issuer grandfathering July 2026 ESMA EBA national transition requirements",
+      "proposed": 5,
+      "new": 5
+     },
+     {
+      "span_id": "s10",
+      "query": "Europe crypto regulation 2026 Travel Rule Transfer of Funds Regulation AML CFT DORA operational resilience crypto firms MiCA gaps DeFi NFTs hybrid tokens stablecoins cross-border exchanges EU proposals",
+      "proposed": 5,
+      "new": 4
+     },
+     {
+      "span_id": "s11",
+      "query": "EU MiCA rollout timeline 2024 to 2026 CASP licensing passporting stablecoin issuer rules and July 2026 grandfathering deadline",
+      "proposed": 5,
+      "new": 5
+     },
+     {
+      "span_id": "s12",
+      "query": "ESMA and EBA guidance on MiCA CASP authorization passporting stablecoin issuers and national transition requirements after July 2026",
+      "proposed": 5,
+      "new": 3
+     },
+     {
+      "span_id": "s13",
+      "query": "MiCA grandfathering by EU member state before July 2026 national transition periods for existing CASPs and licensing requirements for stablecoin issuers",
+      "proposed": 5,
+      "new": 3
+     },
+     {
+      "span_id": "s14",
+      "query": "EU MiCA rollout 2024 2026 licensing passporting CASP stablecoin issuer grandfathering July 2026 ESMA EBA national transition requirements",
+      "proposed": 5,
+      "new": 0
+     },
+     {
+      "span_id": "s15",
+      "query": "EU crypto regulation 2026 MiCA Transfer of Funds Regulation Travel Rule DORA AML CFT rules for crypto firms and exchanges",
+      "proposed": 5,
+      "new": 2
+     },
+     {
+      "span_id": "s16",
+      "query": "MiCA gaps in 2026 for DeFi NFTs hybrid tokens stablecoins and cross border crypto exchanges in Europe",
+      "proposed": 5,
+      "new": 1
+     },
+     {
+      "span_id": "s17",
+      "query": "European Union crypto proposals in late 2026 AMLA AML Regulation MiCA review Travel Rule and operational resilience updates for CASPs",
+      "proposed": 5,
+      "new": 1
+     },
+     {
+      "span_id": "s18",
+      "query": "Europe crypto regulation 2026 Travel Rule Transfer of Funds Regulation AML CFT DORA operational resilience crypto firms MiCA gaps DeFi NFTs hybrid tokens stablecoins cross-border exchanges EU proposals",
+      "proposed": 5,
+      "new": 0
+     },
+     {
+      "span_id": "s24",
+      "query": "ESMA MiCA grandfathering end dates by member state competent authorities official list July 2026 CASP transitional measures national authorities lawful continuous activity under national law",
+      "proposed": 5,
+      "new": 3
+     },
+     {
+      "span_id": "s25",
+      "query": "MiCA CASP authorization vs PSD2 payment institution EMI licensing EMT transfers payment functionality EBA ESMA guidance crypto-asset services electronic money tokens wallet transfers execution custody Europe",
+      "proposed": 5,
+      "new": 4
+     },
+     {
+      "span_id": "s26",
+      "query": "ESMA official list of MiCA Article 143 3 transitional periods and grandfathering end dates for crypto asset service providers by EU member state July 2026",
+      "proposed": 5,
+      "new": 4
+     },
+     {
+      "span_id": "s27",
+      "query": "national competent authority MiCA transitional measures lawful continuous activity under national law CASP grandfathering end date member state official notice",
+      "proposed": 5,
+      "new": 1
+     },
+     {
+      "span_id": "s28",
+      "query": "MiCA CASP grandfathering end dates by member state competent authorities ESMA July 1 2026 official transitional regime list",
+      "proposed": 5,
+      "new": 2
+     },
+     {
+      "span_id": "s29",
+      "query": "ESMA MiCA grandfathering end dates by member state competent authorities official list July 2026 CASP transitional measures national authorities lawful continuous activity under national law",
+      "proposed": 5,
+      "new": 0
+     },
+     {
+      "span_id": "s30",
+      "query": "EBA opinion February 2026 MiCA CASP versus PSD2 payment institution or e money institution authorization for electronic money token transfers in Europe",
+      "proposed": 5,
+      "new": 3
+     },
+     {
+      "span_id": "s31",
+      "query": "MiCA CASP EMT wallet transfers execution custody payment functionality when a PSD2 payment license or EMI license is required for custodial wallets and third party payments",
+      "proposed": 5,
+      "new": 5
+     },
+     {
+      "span_id": "s32",
+      "query": "ESMA and EBA guidance on MiCA crypto asset services electronic money tokens notification regime for credit institutions and EMIs and payment institution treatment in Europe",
+      "proposed": 5,
+      "new": 3
+     },
+     {
+      "span_id": "s33",
+      "query": "MiCA CASP authorization vs PSD2 payment institution EMI licensing EMT transfers payment functionality EBA ESMA guidance crypto-asset services electronic money tokens wallet transfers execution custody Europe",
+      "proposed": 5,
+      "new": 0
+     },
+     {
+      "span_id": "s39",
+      "query": "EU MiCA CASP activity targeting EU users geofencing disclaimers reverse solicitation non-EU crypto firms ESMA EBA European Commission 2025 2026 guidance",
+      "proposed": 5,
+      "new": 5
+     },
+     {
+      "span_id": "s40",
+      "query": "EU Transfer of Funds Regulation crypto Travel Rule zero-threshold self-hosted wallet verification above 1000 EUR sanctions KYT MiCA ART EMT fractionalized NFTs financial instruments hybrid tokens ESMA EBA 2025 2026",
+      "proposed": 5,
+      "new": 1
+     },
+     {
+      "span_id": "s41",
+      "query": "EU Transfer of Funds Regulation 2023 1113 crypto Travel Rule zero threshold self hosted wallet verification above 1000 EUR sanctions screening and KYT guidance 2025 2026",
+      "proposed": 5,
+      "new": 3
+     },
+     {
+      "span_id": "s42",
+      "query": "MiCA 2025 2026 ESMA EBA guidance on ART and EMT stablecoins reserve governance redemption own funds and crypto asset service provider compliance",
+      "proposed": 5,
+      "new": 2
+     },
+     {
+      "span_id": "s43",
+      "query": "ESMA and EBA 2025 2026 guidance on fractionalized NFTs financial instruments hybrid tokens and when crypto assets fall under MiCA versus EU securities law",
+      "proposed": 5,
+      "new": 3
+     },
+     {
+      "span_id": "s44",
+      "query": "EU Transfer of Funds Regulation crypto Travel Rule zero-threshold self-hosted wallet verification above 1000 EUR sanctions KYT MiCA ART EMT fractionalized NFTs financial instruments hybrid tokens ESMA EBA 2025 2026",
+      "proposed": 5,
+      "new": 0
+     },
+     {
+      "span_id": "s45",
+      "query": "ESMA MiCA reverse solicitation guidelines for third country crypto firms serving EU clients geofencing disclaimers 2025",
+      "proposed": 5,
+      "new": 2
+     },
+     {
+      "span_id": "s46",
+      "query": "ESMA public statement on the end of the MiCA transitional period for unauthorised non EU CASPs targeting EU users 1 July 2026",
+      "proposed": 5,
+      "new": 1
+     },
+     {
+      "span_id": "s47",
+      "query": "European Commission and EBA MiCA guidance on non EU crypto firms marketing to EU users reverse solicitation geofencing disclaimers 2025 2026",
+      "proposed": 5,
+      "new": 4
+     },
+     {
+      "span_id": "s48",
+      "query": "EU MiCA CASP activity targeting EU users geofencing disclaimers reverse solicitation non-EU crypto firms ESMA EBA European Commission 2025 2026 guidance",
+      "proposed": 5,
+      "new": 0
+     }
+    ]
+   },
+   "skipped": null,
+   "llm": null
+  },
+  "comprehensiveness": {
+   "name": "comprehensiveness",
+   "category": "generation.writing",
+   "version": "1",
+   "value": null,
+   "higher_is_better": true,
+   "details": {
+    "key_points": {
+     "source": "cache",
+     "prompt_version": "1",
+     "judge_model": "gpt-6-luna"
+    },
+    "error": "OpenAIRateLimitError: Error code: 429 - {'error': {'message': 'You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.', 'type': 'insufficient_quota', 'param': None, 'code': 'credit_balance_exhausted'}}"
+   },
+   "skipped": "judge call failed",
+   "llm": {
+    "judge_model": "gpt-6-luna",
+    "prompts": {
+     "comprehensiveness": {
+      "version": "1",
+      "hash": "1c90a75fcac6"
+     },
+     "key_points": {
+      "version": "1",
+      "hash": "195a0aff2729"
+     }
+    },
+    "requests": 1,
+    "cache_hits": 0,
+    "api_calls": 1,
+    "errors": 1
+   }
+  },
+  "insight": {
+   "name": "insight",
+   "category": "generation.writing",
+   "version": "1",
+   "value": null,
+   "higher_is_better": true,
+   "details": {},
+   "skipped": "scoring call failed: OpenAIRateLimitError: Error code: 429 - {'error': {'message': 'You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.', 'type': 'insufficient_quota', 'param': None, 'code': 'credit_balance_exhausted'}}",
+   "llm": {
+    "judge_model": "gpt-6-luna",
+    "prompts": {
+     "quality_rubric": {
+      "version": "1",
+      "hash": "33342be7d256"
+     },
+     "quality_score": {
+      "version": "1",
+      "hash": "27bcc4ec553f"
+     }
+    },
+    "requests": 2,
+    "cache_hits": 1,
+    "api_calls": 1,
+    "errors": 1,
+    "shared": "quality_scores"
+   }
+  },
+  "readability": {
+   "name": "readability",
+   "category": "generation.writing",
+   "version": "1",
+   "value": null,
+   "higher_is_better": true,
+   "details": {},
+   "skipped": "scoring call failed: OpenAIRateLimitError: Error code: 429 - {'error': {'message': 'You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.', 'type': 'insufficient_quota', 'param': None, 'code': 'credit_balance_exhausted'}}",
+   "llm": {
+    "judge_model": "gpt-6-luna",
+    "prompts": {
+     "quality_rubric": {
+      "version": "1",
+      "hash": "33342be7d256"
+     },
+     "quality_score": {
+      "version": "1",
+      "hash": "27bcc4ec553f"
+     }
+    },
+    "requests": 2,
+    "cache_hits": 1,
+    "api_calls": 1,
+    "errors": 1,
+    "shared": "quality_scores"
+   }
+  },
+  "instruction_following": {
+   "name": "instruction_following",
+   "category": "generation.writing",
+   "version": "1",
+   "value": 1.0,
+   "higher_is_better": true,
+   "details": {
+    "checks": {
+     "min_words": true,
+     "single_title": true,
+     "clean_headings": true,
+     "no_toc": true,
+     "references": true,
+     "in_text_citations": true,
+     "cites_only_retrieved": true
+    },
+    "words": 2267,
+    "min_words": 1200,
+    "parse_warnings": [],
+    "duplicate_references": 0,
+    "cited_not_retrieved": []
+   },
+   "skipped": null,
+   "llm": null
+  },
+  "topic_relevance": {
+   "name": "topic_relevance",
+   "category": "generation.writing",
+   "version": "1",
+   "value": null,
+   "higher_is_better": true,
+   "details": {},
+   "skipped": "every judge call failed",
+   "llm": {
+    "judge_model": "gpt-6-luna",
+    "prompts": {
+     "topic_relevance": {
+      "version": "1",
+      "hash": "a9aeb9774723"
+     }
+    },
+    "requests": 1,
+    "cache_hits": 0,
+    "api_calls": 1,
+    "errors": 1
+   }
+  },
+  "citation_recall": {
+   "name": "citation_recall",
+   "category": "generation.citation",
+   "version": "1",
+   "value": null,
+   "higher_is_better": true,
+   "details": {
+    "failed_paragraphs": [
+     "sec2-p1",
+     "sec3-p1",
+     "sec3-p2",
+     "sec4-p1",
+     "sec5-p1",
+     "sec5-p2",
+     "sec6-p1",
+     "sec6-p2",
+     "sec6-p3",
+     "sec6-p4",
+     "sec7-p1",
+     "sec8-p1",
+     "sec8-p2",
+     "sec9-p1",
+     "sec9-p2",
+     "sec10-p1",
+     "sec11-p1",
+     "sec11-p2",
+     "sec12-p1",
+     "sec12-p2",
+     "sec13-p1",
+     "sec13-p2",
+     "sec14-p1",
+     "sec14-p2",
+     "sec14-p3",
+     "sec15-p1",
+     "sec15-p2",
+     "sec16-p1",
+     "sec16-p2",
+     "sec16-p3",
+     "sec17-p1",
+     "sec17-p2",
+     "sec18-p1",
+     "sec18-p2",
+     "sec18-p3"
+    ]
+   },
+   "skipped": "no citing sentences",
+   "llm": {
+    "judge_model": "gpt-6-luna",
+    "prompts": {
+     "paragraph_audit": {
+      "version": "2",
+      "hash": "ac5ed03a8d11"
+     }
+    },
+    "requests": 35,
+    "cache_hits": 0,
+    "api_calls": 35,
+    "errors": 35,
+    "shared": "citation_audit"
+   }
+  },
+  "citation_precision": {
+   "name": "citation_precision",
+   "category": "generation.citation",
+   "version": "1",
+   "value": null,
+   "higher_is_better": true,
+   "details": {
+    "failed_paragraphs": [
+     "sec2-p1",
+     "sec3-p1",
+     "sec3-p2",
+     "sec4-p1",
+     "sec5-p1",
+     "sec5-p2",
+     "sec6-p1",
+     "sec6-p2",
+     "sec6-p3",
+     "sec6-p4",
+     "sec7-p1",
+     "sec8-p1",
+     "sec8-p2",
+     "sec9-p1",
+     "sec9-p2",
+     "sec10-p1",
+     "sec11-p1",
+     "sec11-p2",
+     "sec12-p1",
+     "sec12-p2",
+     "sec13-p1",
+     "sec13-p2",
+     "sec14-p1",
+     "sec14-p2",
+     "sec14-p3",
+     "sec15-p1",
+     "sec15-p2",
+     "sec16-p1",
+     "sec16-p2",
+     "sec16-p3",
+     "sec17-p1",
+     "sec17-p2",
+     "sec18-p1",
+     "sec18-p2",
+     "sec18-p3"
+    ]
+   },
+   "skipped": "no citations",
+   "llm": {
+    "judge_model": "gpt-6-luna",
+    "prompts": {
+     "paragraph_audit": {
+      "version": "2",
+      "hash": "ac5ed03a8d11"
+     }
+    },
+    "requests": 35,
+    "cache_hits": 0,
+    "api_calls": 35,
+    "errors": 35,
+    "shared": "citation_audit"
+   }
+  },
+  "citation_coverage": {
+   "name": "citation_coverage",
+   "category": "generation.citation",
+   "version": "1",
+   "value": 1.0,
+   "higher_is_better": true,
+   "details": {
+    "references": 15,
+    "cited_in_body": 15,
+    "references_not_cited": [],
+    "body_not_in_references": []
+   },
+   "skipped": null,
+   "llm": null
+  },
+  "effective_citations": {
+   "name": "effective_citations",
+   "category": "generation.citation",
+   "version": "1",
+   "value": null,
+   "higher_is_better": true,
+   "details": {
+    "failed_paragraphs": [
+     "sec2-p1",
+     "sec3-p1",
+     "sec3-p2",
+     "sec4-p1",
+     "sec5-p1",
+     "sec5-p2",
+     "sec6-p1",
+     "sec6-p2",
+     "sec6-p3",
+     "sec6-p4",
+     "sec7-p1",
+     "sec8-p1",
+     "sec8-p2",
+     "sec9-p1",
+     "sec9-p2",
+     "sec10-p1",
+     "sec11-p1",
+     "sec11-p2",
+     "sec12-p1",
+     "sec12-p2",
+     "sec13-p1",
+     "sec13-p2",
+     "sec14-p1",
+     "sec14-p2",
+     "sec14-p3",
+     "sec15-p1",
+     "sec15-p2",
+     "sec16-p1",
+     "sec16-p2",
+     "sec16-p3",
+     "sec17-p1",
+     "sec17-p2",
+     "sec18-p1",
+     "sec18-p2",
+     "sec18-p3"
+    ]
+   },
+   "skipped": "no citations",
+   "llm": {
+    "judge_model": "gpt-6-luna",
+    "prompts": {
+     "paragraph_audit": {
+      "version": "2",
+      "hash": "ac5ed03a8d11"
+     }
+    },
+    "requests": 35,
+    "cache_hits": 0,
+    "api_calls": 35,
+    "errors": 35,
+    "shared": "citation_audit"
+   }
+  },
+  "faithfulness": {
+   "name": "faithfulness",
+   "category": "generation.hallucination",
+   "version": "1",
+   "value": null,
+   "higher_is_better": true,
+   "details": {
+    "failed_paragraphs": [
+     "sec2-p1",
+     "sec3-p1",
+     "sec3-p2",
+     "sec4-p1",
+     "sec5-p1",
+     "sec5-p2",
+     "sec6-p1",
+     "sec6-p2",
+     "sec6-p3",
+     "sec6-p4",
+     "sec7-p1",
+     "sec8-p1",
+     "sec8-p2",
+     "sec9-p1",
+     "sec9-p2",
+     "sec10-p1",
+     "sec11-p1",
+     "sec11-p2",
+     "sec12-p1",
+     "sec12-p2",
+     "sec13-p1",
+     "sec13-p2",
+     "sec14-p1",
+     "sec14-p2",
+     "sec14-p3",
+     "sec15-p1",
+     "sec15-p2",
+     "sec16-p1",
+     "sec16-p2",
+     "sec16-p3",
+     "sec17-p1",
+     "sec17-p2",
+     "sec18-p1",
+     "sec18-p2",
+     "sec18-p3"
+    ]
+   },
+   "skipped": "no factual claims judged",
+   "llm": {
+    "judge_model": "gpt-6-luna",
+    "prompts": {
+     "paragraph_audit": {
+      "version": "2",
+      "hash": "ac5ed03a8d11"
+     }
+    },
+    "requests": 35,
+    "cache_hits": 0,
+    "api_calls": 35,
+    "errors": 35,
+    "shared": "citation_audit"
+   }
+  },
+  "fact_grounding": {
+   "name": "fact_grounding",
+   "category": "generation.hallucination",
+   "version": "1",
+   "value": 0.933,
+   "higher_is_better": true,
+   "details": {
+    "checked": 149,
+    "found": 139,
+    "paragraphs": 22,
+    "per_paragraph": [
+     {
+      "para_id": "sec2-p1",
+      "checked": 17,
+      "missing": [
+       "EU Travel Rule"
+      ]
+     },
+     {
+      "para_id": "sec3-p1",
+      "checked": 11,
+      "missing": [
+       "EMT"
+      ]
+     },
+     {
+      "para_id": "sec6-p1",
+      "checked": 10,
+      "missing": []
+     },
+     {
+      "para_id": "sec6-p2",
+      "checked": 8,
+      "missing": []
+     },
+     {
+      "para_id": "sec6-p3",
+      "checked": 8,
+      "missing": []
+     },
+     {
+      "para_id": "sec6-p4",
+      "checked": 10,
+      "missing": []
+     },
+     {
+      "para_id": "sec7-p1",
+      "checked": 2,
+      "missing": []
+     },
+     {
+      "para_id": "sec8-p1",
+      "checked": 6,
+      "missing": []
+     },
+     {
+      "para_id": "sec8-p2",
+      "checked": 4,
+      "missing": []
+     },
+     {
+      "para_id": "sec9-p1",
+      "checked": 4,
+      "missing": [
+       "1000",
+       "EU CASPs"
+      ]
+     },
+     {
+      "para_id": "sec9-p2",
+      "checked": 4,
+      "missing": []
+     },
+     {
+      "para_id": "sec10-p1",
+      "checked": 3,
+      "missing": []
+     },
+     {
+      "para_id": "sec11-p1",
+      "checked": 6,
+      "missing": [
+       "February"
+      ]
+     },
+     {
+      "para_id": "sec11-p2",
+      "checked": 1,
+      "missing": []
+     },
+     {
+      "para_id": "sec12-p1",
+      "checked": 7,
+      "missing": []
+     },
+     {
+      "para_id": "sec13-p1",
+      "checked": 9,
+      "missing": []
+     },
+     {
+      "para_id": "sec13-p2",
+      "checked": 13,
+      "missing": [
+       "January",
+       "MiCA Titles III"
+      ]
+     },
+     {
+      "para_id": "sec14-p1",
+      "checked": 6,
+      "missing": [
+       "MiCA Article"
+      ]
+     },
+     {
+      "para_id": "sec14-p2",
+      "checked": 4,
+      "missing": []
+     },
+     {
+      "para_id": "sec15-p1",
+      "checked": 7,
+      "missing": []
+     },
+     {
+      "para_id": "sec16-p1",
+      "checked": 6,
+      "missing": [
+       "MiFID II",
+       "March"
+      ]
+     },
+     {
+      "para_id": "sec16-p3",
+      "checked": 3,
+      "missing": []
+     }
+    ]
+   },
+   "skipped": null,
+   "llm": null
+  },
+  "toxicity": {
+   "name": "toxicity",
+   "category": "other.safety",
+   "version": "1",
+   "value": null,
+   "higher_is_better": false,
+   "details": {},
+   "skipped": "every judge call failed",
+   "llm": {
+    "judge_model": "gpt-6-luna",
+    "prompts": {
+     "toxicity_bias": {
+      "version": "1",
+      "hash": "967f8bd15e0c"
+     }
+    },
+    "requests": 2,
+    "cache_hits": 0,
+    "api_calls": 2,
+    "errors": 2,
+    "shared": "toxicity_bias"
+   }
+  },
+  "bias": {
+   "name": "bias",
+   "category": "other.safety",
+   "version": "1",
+   "value": null,
+   "higher_is_better": false,
+   "details": {},
+   "skipped": "every judge call failed",
+   "llm": {
+    "judge_model": "gpt-6-luna",
+    "prompts": {
+     "toxicity_bias": {
+      "version": "1",
+      "hash": "967f8bd15e0c"
+     }
+    },
+    "requests": 2,
+    "cache_hits": 0,
+    "api_calls": 2,
+    "errors": 2,
+    "shared": "toxicity_bias"
+   }
+  }
+ }
+}

@@ -25,8 +25,12 @@ class _AuditMetric(Metric):
         if not body_paragraphs(archive.report):
             return self.skip("empty report")
         audit = await citation_audit(archive, ctx)
-        res = self.from_audit(audit, archive)
         failed = [p.para_id for p in audit.paragraphs if p.error]
+        if failed and not audit.judged:
+            # Otherwise the skip reason would read "no citations" for a report full of them.
+            res = self.skip("every judge call failed", failed_paragraphs=failed)
+        else:
+            res = self.from_audit(audit, archive)
         if failed:
             res.details["failed_paragraphs"] = failed
         # Every audit metric reports the same shared calls; count them once.

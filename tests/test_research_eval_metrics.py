@@ -226,6 +226,15 @@ async def test_source_authority_without_judge_falls_back():
     assert r.details["fallback_domains"] == ["weather-blog.com"]
 
 
+async def test_source_authority_judge_failure_is_skipped(ctx):
+    async def broke(prompt):
+        raise RuntimeError("429 no credits")
+    ctx.judge = Judge(ctx.cache, model="judge-y", complete=broke)
+    r = await SourceAuthority().score(make_archive(), ctx)
+    assert r.value is None and r.skipped == "judge call failed"
+    assert r.details["unscored_domains"] == ["weather-blog.com"]
+
+
 async def test_citation_utilization_is_url_level_and_rule_based():
     ctx = ScoringContext(cache=EvalCache(":memory:"))       # --rules-only: no judge
     r = await CitationUtilization().score(make_archive(), ctx)

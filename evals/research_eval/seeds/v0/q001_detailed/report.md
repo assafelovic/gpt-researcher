@@ -1,0 +1,413 @@
+# Regulatory Changes Shaping the Crypto Industry in Europe
+
+Europe’s crypto regulatory landscape has shifted from fragmented national supervision to a far more centralized and rules-based framework. The core driver of this change is the EU’s Markets in Crypto-Assets Regulation (MiCA), Regulation (EU) 2023/1114, which created the first EU-wide regime for crypto-asset issuance, public offerings, trading admission, and crypto-asset service providers (CASPs). MiCA was designed to replace uneven national approaches with a single rulebook that reduces legal uncertainty, limits regulatory arbitrage, and brings much of the crypto sector closer to mainstream financial regulation. ([Norton Rose Fulbright, n.d.](https://www.nortonrosefulbright.com/en/knowledge/publications/2cec201e/regulating-crypto-assets-in-europe-practical-guide-to-mica); [Sumsub, 2026](https://sumsub.com/blog/crypto-regulations-in-the-european-union-markets-in-crypto-assets-mica); [Legal Nodes, 2026](https://legalnodes.com/article/mica-regulation-explained))
+
+By October 2026, the most important regulatory change is that MiCA is no longer a transition project but a live enforcement regime. Its stablecoin rules for asset-referenced tokens (ARTs) and e-money tokens (EMTs) began to apply on 30 June 2024, while the broader CASP framework became fully applicable on 30 December 2024. The temporary grandfathering period for existing providers has now ended across the EU, with 1 July 2026 operating as the final hard stop: firms providing in-scope crypto-asset services to EU clients without MiCA authorization are now exposed to enforcement and may be listed as non-compliant providers. Grandfathering also never conferred full MiCA status, meaning firms relying on it could not benefit from EU passporting rights. ([Norton Rose Fulbright, n.d.](https://www.nortonrosefulbright.com/en/knowledge/publications/2cec201e/regulating-crypto-assets-in-europe-practical-guide-to-mica); [Legal Nodes, 2026](https://legalnodes.com/article/mica-regulation-explained); [Unit21, 2026](https://www.unit21.ai/blog/mica-regulation-2026-faqs-what-crypto-compliance-teams-need-to-know))
+
+This new regime materially changes the compliance burden for crypto businesses operating in or into Europe. CASPs must now assess whether their activities fall within MiCA’s authorization perimeter, establish appropriate governance, policies, controls, and operational arrangements, and obtain approval from a national competent authority before serving the EU market on a durable basis. In exchange, authorized firms can use a passportable license to offer services across the bloc, which is a major structural shift for exchanges, custodians, brokers, and other intermediaries. The framework also reaches non-EU firms if they provide services to EU-based clients, making Europe’s regulatory changes highly relevant to UK, US, and other third-country crypto businesses. ([Norton Rose Fulbright, n.d.](https://www.nortonrosefulbright.com/en/knowledge/publications/2cec201e/regulating-crypto-assets-in-europe-practical-guide-to-mica); [ACFCS, 2023](https://www.acfcs.org/eu-passes-landmark-crypto-regulation); [0xProcessing, 2026](https://0xprocessing.com/blog/mica-regulation-crypto-payments-eu))
+
+Another major development is the tighter regulation of stablecoins. MiCA distinguishes between EMTs, typically pegged to a single fiat currency, and ARTs, which reference a basket of assets or other values, and imposes authorization, reserve, governance, disclosure, and redemption requirements on issuers. In practice, this has reshaped the availability of stablecoins in the EU market: authorized products such as USDC and EURC have become key compliant options, while non-authorized tokens such as USDT have faced delistings on regulated EU platforms even though self-custody and certain on-chain uses remain possible. This reflects a broader policy objective of reducing prudential and consumer risks associated with large-scale stablecoin circulation. ([Eco, 2026](https://eco.com/support/en/articles/14814632-mica-stablecoin-regulation-2026-update); [0xProcessing, 2026](https://0xprocessing.com/blog/mica-regulation-crypto-payments-eu))
+
+MiCA is also being reinforced by adjacent EU rules that expand compliance expectations beyond licensing alone. The recast Transfer of Funds Regulation has brought the crypto “Travel Rule” into force, requiring originator and beneficiary information to accompany crypto transfers, with significant implications for onboarding, transaction monitoring, and wallet screening. In parallel, the Digital Operational Resilience Act (DORA) is increasing expectations around ICT risk management, third-party service oversight, testing, and incident reporting, while DAC8 introduces crypto-related tax reporting obligations that will increase transparency between service providers and tax authorities. Together, these measures are turning European crypto regulation into a broader system of prudential, AML/CFT, operational resilience, and tax transparency controls. ([BVNK, 2024](https://www.bvnk.com/blog/the-travel-rule-crypto-eu); [Unit21, 2026](https://www.unit21.ai/blog/mica-regulation-2026-faqs-what-crypto-compliance-teams-need-to-know); [InnReg, 2026](https://www.innreg.com/blog/eu-crypto-regulation-guide); [0xProcessing, 2026](https://0xprocessing.com/blog/mica-regulation-crypto-payments-eu))
+
+At the same time, Europe’s regime is still evolving. Regulators and market participants are already identifying boundary issues around non-EU issuers, reverse solicitation, dual-licensing questions where products intersect with e-money or payment services law, and the possible future treatment of DeFi, NFTs, and AI-enabled crypto platforms. As a result, the regulatory changes affecting the crypto industry in Europe are not limited to MiCA’s formal start dates; they represent an ongoing shift toward deeper supervision, narrower gray areas, and higher expectations for firms seeking durable access to the European market. ([InnReg, 2026](https://www.innreg.com/blog/eu-crypto-regulation-guide); [0xProcessing, 2026](https://0xprocessing.com/blog/mica-regulation-crypto-payments-eu); [Finance Yahoo / Euronews summary, 2026](https://finance.yahoo.com/markets/crypto/articles/watch-brand-european-crypto-regulations-070110178.html))
+
+## Table of Contents
+
+- MiCA’s Rollout in Europe and the Core Rule Changes for Issuers, Stablecoins, and CASPs
+    - From phased application to full enforcement: how MiCA moved from transition to a live EU rulebook
+    - What changed for crypto-asset issuers outside stablecoins
+    - Stablecoins under MiCA: the decisive split between ARTs and EMTs
+    - CASPs after MiCA: authorization, passporting, and the widening compliance perimeter
+    - The 2026 implementation turn: dual licensing risk, enforcement exposure, and market restructuring
+- End of grandfathering: post-transition licensing and cross-border access for firms serving EU clients
+    - Jurisdictional cut-offs and the loss of any “application pending” safety net
+    - Post-expiry legal status depends on the specific entity, not the brand or group
+    - Cross-border servicing now turns on passportable substance, and non-EU firms have few lawful routes
+    - Wind-down is a regulated process, not a regulatory vacuum
+    - Market access is concentrating in fewer licensed firms, with sharper pressure on smaller and offshore operators
+- Other European regulatory changes reshaping crypto operations
+    - Transfer-data controls now sit alongside AML, sanctions, and wallet-risk management
+    - Digital resilience has become a separate supervisory stack, not just a MiCA side issue
+    - DAC8 turns crypto tax compliance into continuous data capture from 2026 onward
+    - Current exclusions are becoming the next perimeter debates: DeFi, NFTs, and self-custody
+    - Payments and e-money law remain a parallel perimeter for certain crypto business models
+
+
+
+
+
+## MiCA’s Rollout in Europe and the Core Rule Changes for Issuers, Stablecoins, and CASPs
+
+### From phased application to full enforcement: how MiCA moved from transition to a live EU rulebook
+
+MiCA—Regulation (EU) 2023/1114—entered into force in June 2023, but its legal effects were staged rather than immediate. The EU applied the stablecoin titles first, making the rules for asset-referenced tokens (ARTs) and e-money tokens (EMTs) applicable from **30 June 2024**. The broader regime for crypto-asset service providers (CASPs), token offers, trading admissions, and market conduct followed on **30 December 2024**. This sequencing matters because stablecoin issuance was regulated earlier and more strictly than general crypto intermediation from the outset ([Squire Patton Boggs, 2025](https://www.squirepattonboggs.com/media/yvspymyt/mica-legal-framework-how-to-comply-with-the-eus-crypto-asset-rules.pdf); [Cyfrin, 2025](https://www.cyfrin.io/blog/mica-regulation-explained-a-guide-to-eu-crypto-compliance)).
+
+MiCA also allowed a **transitional period** for pre-existing CASPs under Article 143(3), but only for services already lawfully provided before 30 December 2024. Member States could choose a period of up to **18 months**, creating a temporary patchwork across Europe rather than a single hard cut-off on day one. By **1 July 2026**, however, all such grandfathering had expired across the EU. After that date, any entity providing in-scope crypto-asset services to EU clients without MiCA authorization was expected to cease those services ([Stable Mint, 2026](https://stablemint.io/blog/mica-transitional-period-ended); [Didit, 2026](https://didit.me/blog/mica-regulation-eu-crypto-compliance-guide)).
+
+The rollout therefore had two practical consequences. First, businesses could no longer rely on uneven national temporary regimes after mid-2026. Second, MiCA changed the European crypto market from a licensing mosaic into a more centralized compliance architecture anchored in direct-effect EU law, ESMA coordination, and—where stablecoins are systemic—EBA supervision ([LCX, 2026](https://lcx.com/en/mica-regulation-the-complete-guide); [Stable Mint, 2026](https://stablemint.io/blog/mica-transitional-period-ended)).
+
+| Date | Regulatory milestone | Practical effect |
+|---|---|---|
+| 29 June 2023 | MiCA entered into force | Start of implementation countdown |
+| 30 June 2024 | ART and EMT rules apply | Stablecoin issuers must already comply |
+| 30 December 2024 | Main MiCA regime applies | CASP licensing, white paper, and conduct rules go live |
+| 2025–2026 | National transition windows run | Existing CASPs may continue temporarily in some states |
+| 1 July 2026 | Final EU transitional deadline | No grandfathering remains for CASP activity |
+| From July 2026 onward | Enforcement consistency phase | Firms need full licensing or must exit EU-facing activity |
+
+([LCX, 2026](https://lcx.com/en/mica-regulation-the-complete-guide); [Stable Mint, 2026](https://stablemint.io/blog/mica-transitional-period-ended); [Didit, 2026](https://didit.me/blog/mica-regulation-eu-crypto-compliance-guide))
+
+National implementation choices were not identical before the final deadline. The Netherlands reportedly used a shorter window ending around **1 July 2025**, while Germany and Ireland ended their transitional periods by **31 December 2025**, and some jurisdictions used the full 18 months to **1 July 2026**. This created a period in which the same business model could still be transitional in one Member State but already unlawful in another unless licensed ([LCX, 2026](https://lcx.com/en/mica-regulation-the-complete-guide); [Stable Mint, 2026](https://stablemint.io/blog/mica-transitional-period-ended); [Didit, 2026](https://didit.me/blog/mica-regulation-eu-crypto-compliance-guide)).
+
+### What changed for crypto-asset issuers outside stablecoins
+
+For issuers and offerors of crypto-assets that are **not** ARTs or EMTs, MiCA introduced a structured disclosure system centered on the **crypto-asset white paper**. Any person making a public offer or seeking admission to trading must publish a white paper unless a specific exemption applies. The white paper functions as MiCA’s core disclosure document and must include information on the issuer, the project, the rights and obligations attached to the token, risks, the underlying technology, and the use of proceeds where relevant ([LCX, 2026](https://lcx.com/en/mica-regulation-the-complete-guide); [Squire Patton Boggs, 2025](https://www.squirepattonboggs.com/media/yvspymyt/mica-legal-framework-how-to-comply-with-the-eus-crypto-asset-rules.pdf)).
+
+MiCA does not treat every digital asset alike. It distinguishes between three regulated classes—ARTs, EMTs, and “other crypto-assets”—while excluding several categories from its direct scope. Financial instruments already covered by MiFID II remain outside MiCA. Deposits and structured deposits are regulated under other banking laws. NFTs are generally excluded, but tokens marketed in a fungible or fractionalized way may still be caught through a substance-over-form analysis. Bitcoin and Ethereum protocols themselves are not regulated as issuers under MiCA, but firms offering exchange, custody, or trading services in relation to BTC or ETH are regulated as CASPs ([LCX, 2026](https://lcx.com/en/mica-regulation-the-complete-guide); [Squire Patton Boggs, 2025](https://www.squirepattonboggs.com/media/yvspymyt/mica-legal-framework-how-to-comply-with-the-eus-crypto-asset-rules.pdf)).
+
+MiCA’s white paper regime also became more technically demanding during implementation. ESMA clarified data standards and formatting expectations, and by 2025–2026, market practice had begun moving toward **XBRL/iXBRL** formats for MiCA-compliant white papers. By mid-to-late 2026, multiple token white papers were being published in iXBRL to support admission to trading, illustrating that MiCA compliance had become both a legal and data-formatting exercise, not merely a narrative disclosure exercise ([Crypto Risk Metrics, 2026](https://crypto-risk-metrics.com/en/mica-white-paper-obligations-for-casps); [MiCA Crypto Alliance, 2026](https://www.micacryptoalliance.com/white-papers)).
+
+The white paper obligation is not absolute. MiCA recognizes exemptions, including offers to fewer than **150 persons per Member State**, offers totaling under **€1 million over 12 months**, and offers addressed only to qualified investors. Even where exemptions remove a white paper requirement for the initial offer, CASPs operating trading platforms still face separate obligations concerning admission to trading and ongoing disclosure access for clients ([LCX, 2026](https://lcx.com/en/mica-regulation-the-complete-guide); [Crypto Risk Metrics, 2026](https://crypto-risk-metrics.com/en/mica-white-paper-obligations-for-casps)).
+
+A further implementation issue concerned tokens with **no identifiable issuer**. The European Commission’s 2026 clarification, as summarized by compliance commentary, indicated that where no identifiable issuer exists, Title II white paper obligations do not automatically arise simply because a CASP admits the asset to trading. Even so, trading platform operators remain subject to authorization, suitability assessments, surveillance obligations, and the duty to determine whether an issuer can in fact be identified. MiCA therefore did not create a blanket “issuerless asset” safe harbor for platforms; it narrowed the white paper question without removing general CASP obligations ([Crypto Risk Metrics, 2026](https://crypto-risk-metrics.com/en/mica-white-paper-obligations-for-casps)).
+
+### Stablecoins under MiCA: the decisive split between ARTs and EMTs
+
+MiCA’s most consequential rule changes concern stablecoins, which the regulation splits into **asset-referenced tokens (ARTs)** and **e-money tokens (EMTs)**. That classification determines the authorization route, reserve model, supervisory intensity, and growth constraints. An EMT references a **single official currency**, such as the euro or the U.S. dollar. An ART references **anything else**: a basket of currencies, commodities such as gold, or a combination of assets ([Allium, 2026](https://allium.so/blog/mica-and-stablecoins-what-the-rules-require); [LCX, 2026](https://lcx.com/en/mica-regulation-the-complete-guide)).
+
+For **EMTs**, MiCA effectively imports an e-money-style regime into crypto. An issuer must be a **credit institution** or an **authorized electronic money institution (EMI)**. EMTs must be backed by reserves, generally on a **1:1 basis**, with safeguarding and segregation expectations, and holders must be able to redeem at par value. MiCA also prohibits issuers of EMTs and ARTs from paying **interest** simply for holding the token, pushing yield generation outside the token itself and into separate service layers ([Allium, 2026](https://allium.so/blog/mica-and-stablecoins-what-the-rules-require); [Stable Mint, 2026](https://stablemint.io/blog/mica-transitional-period-ended)).
+
+For **ARTs**, the route is heavier. Issuers need express authorization from a national competent authority, must maintain reserve assets, comply with own-funds and governance obligations, and publish a detailed white paper. The regime is more bespoke and more prudentially intensive because ARTs can reference multiple assets and may create broader monetary and financial stability concerns than single-currency EMTs ([Allium, 2026](https://allium.so/blog/mica-and-stablecoins-what-the-rules-require); [LCX, 2026](https://lcx.com/en/mica-regulation-the-complete-guide)).
+
+MiCA also created a **“significant”** classification for ARTs and EMTs. A token may be considered significant if it meets at least **three** of several criteria, including more than **10 million holders**, market capitalization or reserve value above **€5 billion**, more than **2.5 million transactions per day** or **€500 million** in daily transaction volume, use in at least **seven** Member States, or significant interconnectedness with the financial system. Significant stablecoins are supervised directly by the **European Banking Authority (EBA)** rather than only by national regulators, and significant ARTs face higher capital requirements—reported as **3%** of average reserves compared with **2%** for standard ARTs ([LCX, 2026](https://lcx.com/en/mica-regulation-the-complete-guide)).
+
+The regulation is also explicitly protective of euro-area monetary sovereignty. For **non-EU currency stablecoins**, such as USD-backed EMTs used as a means of exchange in the EU, MiCA imposes a cap of **1 million transactions per day** or **€200 million in daily value**, whichever is reached first. This means a USD stablecoin may be lawful in the EU if properly issued, but its role in mass in-EU payments is structurally constrained relative to euro-denominated alternatives ([LCX, 2026](https://lcx.com/en/mica-regulation-the-complete-guide); [Allium, 2026](https://allium.so/blog/mica-and-stablecoins-what-the-rules-require)).
+
+MiCA also effectively excludes **algorithmic stablecoins** that attempt to maintain value without reserve backing. Secondary analyses characterize this as a de facto ban on that design category for the EU market because MiCA’s stablecoin framework is built around redeemability and reserve assets rather than algorithmic stabilization mechanics ([LCX, 2026](https://lcx.com/en/mica-regulation-the-complete-guide)).
+
+| Feature | EMT | ART |
+|---|---|---|
+| Reference | One official currency | Basket of assets or non-currency asset(s) |
+| Typical issuer | Credit institution or EMI | Authorized legal entity under MiCA |
+| Reserve model | 1:1-style backing with referenced currency and safeguarding | Reserve assets with dedicated prudential rules |
+| Redemption | At par value | Subject to MiCA reserve/redeemability framework |
+| Interest to holders | Prohibited | Prohibited |
+| Supervisory intensity | High | Generally higher and more bespoke |
+| Significant-token oversight | EBA if significant | EBA if significant |
+| Market pattern by 2026 | Main stablecoin pathway | Very limited uptake |
+
+([Allium, 2026](https://allium.so/blog/mica-and-stablecoins-what-the-rules-require); [LCX, 2026](https://lcx.com/en/mica-regulation-the-complete-guide))
+
+By March 2026, implementation data cited in market commentary suggested **19 authorized EMT issuers**, **29 e-money tokens issued**, **11 countries** granting EMT licenses, and **0 authorized ARTs**. Those figures indicated not only faster EMT adaptation but also that ARTs had become commercially and operationally difficult to launch in practice under MiCA’s design ([The Future of Money, 2026](https://thefutureofmoney.substack.com/p/mica-regulation-2026-complete-casp)).
+
+### CASPs after MiCA: authorization, passporting, and the widening compliance perimeter
+
+MiCA changed crypto intermediation in Europe by making authorization mandatory for any legal person providing in-scope crypto-asset services on a professional basis. Covered services include custody and administration, operation of a trading platform, exchange of crypto-assets for funds or other crypto-assets, execution of orders, placing, reception and transmission of orders, advice, portfolio management, and transfer services on behalf of clients ([The Future of Money, 2026](https://thefutureofmoney.substack.com/p/mica-regulation-2026-complete-casp); [LCX, 2026](https://lcx.com/en/mica-regulation-the-complete-guide)).
+
+One of MiCA’s central rule changes is the **passporting model**. A CASP authorized in one Member State can notify and provide services across the EU without seeking a full second license in each country. This transforms licensing from a national market-entry exercise into a regional one and helps explain why firms concentrated applications in perceived favorable jurisdictions such as Luxembourg, Malta, Ireland, Lithuania, Austria, and Spain ([LCX, 2026](https://lcx.com/en/mica-regulation-the-complete-guide)).
+
+Authorization is not the end of the obligation set. CASPs must segregate client crypto-assets from company assets, perform daily reconciliations, maintain capital under MiCA’s prudential rules, operate robust AML/KYC and Travel Rule controls, and implement operational resilience, complaints handling, business continuity, and custody safeguards. Market-practice summaries also point to requirements for secure key management, use of cold storage or multi-signature controls, and restrictions on outsourcing custody to non-authorized parties ([LCX, 2026](https://lcx.com/en/mica-regulation-the-complete-guide); [Didit, 2026](https://didit.me/blog/mica-regulation-eu-crypto-compliance-guide)).
+
+Not every regulated financial firm must obtain a separate CASP authorization. MiCA gives an important route for certain existing institutions—such as **credit institutions, investment firms, market operators, and central securities depositories**—to provide many crypto-asset services through notification-based pathways rather than full stand-alone CASP licensing. This creates a structural advantage for incumbents that already hold broader EU financial licenses ([LCX, 2026](https://lcx.com/en/mica-regulation-the-complete-guide)).
+
+The perimeter question has also expanded beyond “core” service entities. Commentary on MiCA implementation highlights an **interface problem**: a protocol may argue it is decentralized, yet front-end operators offering hosted web interfaces, mobile apps, onboarding flows, or APIs may still fall within the CASP concept if they are the practical service provider to EU users. MiCA’s decentralization exemption is therefore narrow and turns on whether the arrangement is “technical and governance-wise decentralized.” Treasury multisigs, upgrade keys, or identifiable interface teams can undermine reliance on the exemption ([The Future of Money, 2026](https://thefutureofmoney.substack.com/p/mica-regulation-2026-complete-casp); [LCX, 2026](https://lcx.com/en/mica-regulation-the-complete-guide)).
+
+### The 2026 implementation turn: dual licensing risk, enforcement exposure, and market restructuring
+
+By 2026, MiCA’s core rules were no longer only about initial authorization; they were also about how MiCA interacts with adjacent EU financial regimes. The most commercially important example concerned **EMT transfers and custody**. Following an **EBA Opinion issued on 12 February 2026** and the expiry of a tolerance or no-action period on **2 March 2026**, CASPs handling EMT transfer services could in some cases need not only MiCA authorization but also a separate **PSD2 payment services authorization**. Industry summaries described this as a major cost inflection point because it can require crypto firms to add a second licensing stack or partner with regulated payment institutions ([The Future of Money, 2026](https://thefutureofmoney.substack.com/p/mica-regulation-2026-complete-casp); [LCX, 2026](https://lcx.com/en/mica-regulation-the-complete-guide)).
+
+This dual-licensing issue is especially relevant because EMTs are the main lawful route for large fiat-pegged stablecoins in Europe. The result has been a selective market adaptation: some CASPs pursued both authorizations, some partnered with payment service providers, and others exited EMT-related activity. Commentary cited France as a notable early hub because several licensed stablecoin issuers there also held payment-services permissions, allowing them to operate more smoothly at the MiCA-PSD2 boundary ([The Future of Money, 2026](https://thefutureofmoney.substack.com/p/mica-regulation-2026-complete-casp)).
+
+MiCA’s enforcement toolkit is substantial. Reported sanction ranges in secondary summaries include up to **€5 million or 10% of annual turnover** for unauthorized CASP activity and up to **12.5% of annual turnover** for certain manipulation or fraud-related breaches, with additional powers such as license revocation, temporary suspension, asset freezes, public censure, and personal bans for executives. Even where exact sanctions depend on the legal basis and national implementation, the regulatory direction is clear: MiCA is not a disclosure-only framework but a licensing-and-enforcement regime with meaningful prudential consequences ([LCX, 2026](https://lcx.com/en/mica-regulation-the-complete-guide)).
+
+Finally, MiCA has begun to reshape market structure. By March 2026, market commentary reported that only **3 of the top 50 global stablecoins** were MiCA-compliant and that **USDT** remained non-compliant for the EU market, prompting delistings by some exchanges and liquidity fragmentation between compliant and offshore pools. Institutional investors, by contrast, were described as increasing exposure where regulated custodians and compliant stablecoins were available, suggesting that MiCA’s stricter framework may suppress some retail-facing token models while making the market more usable for regulated treasury and payments activity ([The Future of Money, 2026](https://thefutureofmoney.substack.com/p/mica-regulation-2026-complete-casp); [Allium, 2026](https://allium.so/blog/mica-and-stablecoins-what-the-rules-require)).
+
+
+## End of grandfathering: post-transition licensing and cross-border access for firms serving EU clients
+
+### Jurisdictional cut-offs and the loss of any “application pending” safety net
+
+While the earlier report described grandfathering as part of MiCA’s rollout timeline, this section focuses more narrowly on the legal mechanics of expiry and why firms faced different effective cut-off dates depending on where they operated. Article 143(3) did not create a single operating permission valid everywhere in the Union until 1 July 2026. It created an outer limit, while allowing each Member State to shorten or decline the transitional window. That design turned market access in 2025–2026 into a jurisdiction-by-jurisdiction compliance exercise rather than a uniform EU grace period ([Zyphe, 2026](https://www.zyphe.com/resources/news/mica-transitional-period-ends-july-2026); [ESMA, 2023](https://www.esma.europa.eu/sites/default/files/2023-10/ESMA74-449133380-441_Statement_on_MiCA_Supervisory_Convergence.pdf)).
+
+The practical legal test under Article 143(3) had three cumulative features. First, the firm had to be providing services lawfully before 30 December 2024. Second, it could continue only until the earlier of authorization, refusal, or the applicable national end date. Third, that transitional position did not itself create passporting rights into other Member States. Once the relevant deadline expired, the baseline MiCA prohibition in Article 59 fully applied: a person could not provide crypto-asset services within the Union unless authorized as a CASP under Article 63 or covered by another lawful route such as Article 60 for certain regulated financial entities ([MiCA Crypto Alliance, 2026](https://www.micacryptoalliance.com/news/micas-grandfathering-period-is-ending-what-does-it-actually-mean-for-eu-crypto-users); [Elliptic, 2026](https://www.elliptic.co/insights/what-the-end-of-micas-transitional-period-means-for-crypto-businesses)).
+
+ESMA removed residual ambiguity in its 17 April 2026 statement. It said the transitional period would “officially expire across the EU on 1 July 2026” and that, after that date, any entity providing crypto-asset services to EU clients without a MiCA licence would be in breach of EU law and must cease offering those services. ESMA also stressed that this supervisory expectation applied regardless of the implementation status of national law in individual Member States ([ESMA, 2026](https://www.esma.europa.eu/sites/default/files/2026-04/ESMA75-113276571-1679_Statement_on_the_end_of_transitional_periods_under_MiCA.pdf)).
+
+A crucial consequence is that a pending MiCA application did not preserve business continuity. Several market commentaries repeated the same point because it was commercially misunderstood: “application pending” was not a legal basis to continue serving EU clients once the relevant transitional period expired. Firms awaiting a decision moved, legally, into the same category as any other unauthorized provider for purposes of EU-facing services ([Governance Docs, 2026](https://governancedocs.com/mica-transitional-period-ended); [Zyphe, 2026](https://www.zyphe.com/resources/news/mica-transitional-period-ends-july-2026); [Yahoo Finance, 2026](https://finance.yahoo.com/markets/crypto/articles/83-europe-crypto-firms-not-133100256.html)).
+
+| Member State approach or example | Reported end date | Post-deadline effect |
+|---|---:|---|
+| Outer-limit jurisdictions using full window | 1 July 2026 | Firms without authorization lost grandfathering on that date |
+| Germany and Ireland | 31 December 2025 | Transitional cover ended six months before the EU outer limit |
+| Netherlands, Poland, Latvia, Hungary, Slovenia | About 6 months after 30 December 2024 | Some firms lost cover as early as mid-2025 |
+| Sweden | 30 September 2025 | Nine-month period reported in market commentary |
+| Any firm refused authorization before the outer limit | Earlier refusal date | Transitional permission ended immediately on refusal |
+
+([Zyphe, 2026](https://www.zyphe.com/resources/news/mica-transitional-period-ends-july-2026); [Elliptic, 2026](https://www.elliptic.co/insights/what-the-end-of-micas-transitional-period-means-for-crypto-businesses); [ESMA, 2023](https://www.esma.europa.eu/sites/default/files/2023-10/ESMA74-449133380-441_Statement_on_MiCA_Supervisory_Convergence.pdf))
+
+For firms operating across several Member States under pre-MiCA national registrations, the decisive date was often the earliest national deadline affecting the jurisdictions served. This meant some businesses faced a “compliance cliff” well before 1 July 2026, especially if they marketed cross-border but lacked a single authorized MiCA entity capable of passporting later ([Zyphe, 2026](https://www.zyphe.com/resources/news/mica-transitional-period-ends-july-2026)).
+
+### Post-expiry legal status depends on the specific entity, not the brand or group
+
+Unlike the earlier report’s broader discussion of CASP authorization, this section examines the narrower post-transition question: which firms could legally keep serving European clients after grandfathering ended, and on what basis. ESMA’s consumer warning and private-sector guidance align on one core principle: MiCA protections and permissions attach to the specific authorized legal entity, not to a trading name, app brand, parent group, or non-EU affiliate ([ESMA, 2026](https://www.esma.europa.eu/sites/default/files/2026-04/ESMA75-113276571-1679_Statement_on_the_end_of_transitional_periods_under_MiCA.pdf); [Governance Docs, 2026](https://governancedocs.com/mica-transitional-period-ended)).
+
+This entity-specific approach mattered because many crypto groups had historically served EU customers through layered structures: one entity for onboarding, another for custody, another for derivatives or liquidity, and a global parent controlling the user-facing brand. After the end of grandfathering, those structures became legally fragile unless the exact EU entity performing the regulated service held the required authorization. A group could not “borrow” authorization from an affiliate. Shared ownership and common branding were not enough ([Governance Docs, 2026](https://governancedocs.com/mica-transitional-period-ended); [ESMA, 2026](https://www.esma.europa.eu/sites/default/files/2026-04/ESMA75-113276571-1679_Statement_on_the_end_of_transitional_periods_under_MiCA.pdf)).
+
+The main post-expiry positions can be summarized as follows:
+
+| Firm or customer status after grandfathering | Legal position after relevant deadline | Core implication |
+|---|---|---|
+| Authorized CASP | May continue providing services within scope of its authorization and use MiCA passporting | Must maintain ongoing compliance and entity-specific service delivery |
+| Applied but awaiting decision | No automatic right to continue EU-facing services | Must follow NCA instructions and implement wind-down if not authorized in time |
+| Never applied or ineligible for transition | Cannot lawfully continue in-scope services to EU clients | Must cease or complete orderly exit |
+| Unauthorized group affiliate of authorized firm | Not covered by affiliate’s license | Must stop unless it has its own lawful basis |
+| Client of unauthorized provider | Faces provider offboarding, withdrawal, or asset-transfer process | Should verify provider on the ESMA register and confirm contract entity |
+
+([Governance Docs, 2026](https://governancedocs.com/mica-transitional-period-ended); [MiCA Crypto Alliance, 2026](https://www.micacryptoalliance.com/news/micas-grandfathering-period-is-ending-what-does-it-actually-mean-for-eu-crypto-users); [ESMA, 2026](https://www.esma.europa.eu/sites/default/files/2026-04/ESMA75-113276571-1679_Statement_on_the_end_of_transitional_periods_under_MiCA.pdf))
+
+For clients, the regulatory change was not that “crypto became illegal” in the EU. Rather, the compliance question shifted to whether the exact entity holding the account and performing the service remained lawfully entitled to do so. Industry guidance advised users to ask which legal entity contracts with them, whether that entity is authorized for the specific service used, and whether any proposed migration sends them to an authorized EU provider or instead to a non-EU affiliate beyond MiCA’s protections ([MiCA Crypto Alliance, 2026](https://www.micacryptoalliance.com/news/micas-grandfathering-period-is-ending-what-does-it-actually-mean-for-eu-crypto-users)).
+
+The result is that post-1 July 2026 compliance due diligence became more granular. Counterparties, institutional clients, vendors, and consumers were expected not merely to ask whether a group “has a license somewhere,” but whether the right entity has the right authorization for the right service. ESMA explicitly recommended checking the Interim MiCA Register before investing or transferring funds ([ESMA, 2026](https://www.esma.europa.eu/sites/default/files/2026-04/ESMA75-113276571-1679_Statement_on_the_end_of_transitional_periods_under_MiCA.pdf)).
+
+### Cross-border servicing now turns on passportable substance, and non-EU firms have few lawful routes
+
+The earlier report already explained MiCA’s passporting model in general terms. This section is different: it focuses on how the end of grandfathering changed cross-border market access in practice for both EU and non-EU firms. One of the most important post-transition effects is that local national registrations ceased to be viable stepping stones for pan-European operations. A firm operating solely under grandfathering could continue only where local law still allowed it, and ESMA noted that such a firm could not use the transitional regime as a passport into other Member States ([Elliptic, 2026](https://www.elliptic.co/insights/what-the-end-of-micas-transitional-period-means-for-crypto-businesses); [ESMA, 2023](https://www.esma.europa.eu/sites/default/files/2023-10/ESMA74-449133380-441_Statement_on_MiCA_Supervisory_Convergence.pdf)).
+
+After expiry, lawful cross-border access narrowed to a small number of routes:
+
+1. **MiCA CASP authorization with passporting** through the licensed entity.  
+2. **Article 60 notification pathways** for certain already-regulated financial entities.  
+3. **Reverse solicitation**, but only in genuinely narrow circumstances where the EU client acts exclusively on its own initiative.  
+
+([MiCA Crypto Alliance, 2026](https://www.micacryptoalliance.com/news/micas-grandfathering-period-is-ending-what-does-it-actually-mean-for-eu-crypto-users); [ESMA, 2023](https://www.esma.europa.eu/sites/default/files/2023-10/ESMA74-449133380-441_Statement_on_MiCA_Supervisory_Convergence.pdf))
+
+For non-EU exchanges and brokers, the regulatory shift was especially significant because MiCA’s scope is linked to serving EU clients, not to the firm’s headquarters. Commentary emphasized that non-EU global exchanges without an authorized EU subsidiary faced the same core prohibition as domestic unauthorized operators once the transition ended. This is why offshore status, by itself, does not remove a firm from MiCA’s servicing restrictions ([Yahoo Finance, 2026](https://finance.yahoo.com/markets/crypto/articles/83-europe-crypto-firms-not-133100256.html); [Bit.com, 2026](https://www.bit.com/knowledge-hub/mica)).
+
+Reverse solicitation also offers less room than some market participants had assumed. ESMA previously signaled that the exemption should be understood very narrowly and must not be used to circumvent MiCA. Elliptic’s summary captures the operating consequence: EU-facing advertising, app listings, affiliate arrangements, influencer campaigns, or search marketing can undermine any claim that the client came on its own exclusive initiative ([ESMA, 2023](https://www.esma.europa.eu/sites/default/files/2023-10/ESMA74-449133380-441_Statement_on_MiCA_Supervisory_Convergence.pdf); [Elliptic, 2026](https://www.elliptic.co/insights/what-the-end-of-micas-transitional-period-means-for-crypto-businesses)).
+
+Another important constraint is that later authorization does not retroactively legalize prior unauthorized activity in another market. Zyphe noted that a licence obtained in one Member State does not cure the period during which a firm was serving another Member State without a valid legal basis. This matters for supervisory risk, private-law disputes, and internal record retention because firms may later be asked to evidence when they stopped onboarding and where they restricted services ([Zyphe, 2026](https://www.zyphe.com/resources/news/mica-transitional-period-ends-july-2026)).
+
+| Business model after grandfathering | EU legal vulnerability | Practical impact |
+|---|---|---|
+| EU-based firm with granted CASP license | Lower, if services stay within permission scope | Can serve across the EU through passporting |
+| EU-based firm with pending application only | High | Must not continue ordinary EU-facing services |
+| Non-EU firm serving EU retail clients directly | High | Requires authorized EU route or narrow reverse-solicitation facts |
+| Group using non-EU affiliate after EU wind-down | High | Client migration may reduce MiCA protections and draw scrutiny |
+| Multi-entity group with one licensed EU subsidiary | Medium | Must ensure actual service provision occurs through the licensed entity with real substance |
+
+([ESMA, 2026](https://www.esma.europa.eu/sites/default/files/2026-04/ESMA75-113276571-1679_Statement_on_the_end_of_transitional_periods_under_MiCA.pdf); [Governance Docs, 2026](https://governancedocs.com/mica-transitional-period-ended); [Elliptic, 2026](https://www.elliptic.co/insights/what-the-end-of-micas-transitional-period-means-for-crypto-businesses))
+
+### Wind-down is a regulated process, not a regulatory vacuum
+
+A distinct post-transition issue, not covered in the earlier rollout discussion, is that firms losing grandfathered status do not enter an unregulated exit phase. ESMA expected unauthorized CASPs to have orderly wind-down plans ready for implementation before the relevant national deadline and, by 1 July 2026, to have implemented those plans across the EU. Wind-down planning was therefore treated as part of regulatory compliance, not as a mere commercial contingency ([ESMA, 2026](https://www.esma.europa.eu/sites/default/files/2026-04/ESMA75-113276571-1679_Statement_on_the_end_of_transitional_periods_under_MiCA.pdf)).
+
+ESMA’s expectations were concrete. Wind-down plans should avoid undue economic harm to clients, include prior notice to existing customers, and facilitate offboarding, including transfers of client crypto-assets either to an authorized CASP or to a self-hosted wallet. The plans should also be credible, operational, and immediately executable. In other words, supervisors were not looking for high-level board memos; they were looking for a practical exit process that could be activated on time ([ESMA, 2026](https://www.esma.europa.eu/sites/default/files/2026-04/ESMA75-113276571-1679_Statement_on_the_end_of_transitional_periods_under_MiCA.pdf); [Governance Docs, 2026](https://governancedocs.com/mica-transitional-period-ended)).
+
+AML/CFT obligations remain particularly important during this stage. Zyphe highlighted that CASPs are obliged entities for anti-money laundering purposes, so a lapsed authorization intensifies scrutiny of KYC, sanctions screening, suspicious activity reporting, and the Travel Rule rather than pausing them. The Transfer of Funds Regulation, Regulation (EU) 2023/1113, has applied crypto transfer information requirements since 30 December 2024. A firm in wind-down still has to manage flagged transfers lawfully and preserve records showing when onboarding stopped and what customer due diligence decisions were made ([Zyphe, 2026](https://www.zyphe.com/resources/news/mica-transitional-period-ends-july-2026)).
+
+| Wind-down control area | Regulatory expectation after expiry | Why it matters |
+|---|---|---|
+| Client notification | Prior notice before implementation | Supports consumer protection and reduces disorderly exits |
+| Asset return or transfer | Move assets to authorized CASP or self-hosted wallet where appropriate | Limits client harm and custody disputes |
+| Onboarding restrictions | Stop new EU-facing business-as-usual activity | Prevents continuing unauthorized services |
+| AML/CFT controls | Keep KYC, sanctions, monitoring, SAR, and Travel Rule processes active | Exit activity can generate elevated financial crime risk |
+| Record retention | Maintain exportable evidence trail | Needed for later supervisory review or enforcement |
+
+([ESMA, 2026](https://www.esma.europa.eu/sites/default/files/2026-04/ESMA75-113276571-1679_Statement_on_the_end_of_transitional_periods_under_MiCA.pdf); [Zyphe, 2026](https://www.zyphe.com/resources/news/mica-transitional-period-ends-july-2026); [AMLBot, 2026](https://blog.amlbot.com/mica-transition-period-ends-july-2026))
+
+The end of grandfathering therefore affected more than front-end licensing. It altered how firms had to handle customer exits, vendor oversight, wallet screening, and communications with national competent authorities. ESMA also warned NCAs to treat last-minute applications with caution rather than using them as a basis to tolerate continued unlicensed activity, which further reduced the value of delay strategies ([Zyphe, 2026](https://www.zyphe.com/resources/news/mica-transitional-period-ends-july-2026)).
+
+### Market access is concentrating in fewer licensed firms, with sharper pressure on smaller and offshore operators
+
+The final post-transition effect is structural. Once grandfathering ended, the European crypto market became more clearly divided between a relatively small pool of authorized operators and a much larger population of firms that either exited, were still awaiting decisions, or could no longer lawfully serve EU customers. Multiple market sources cited a similar order of magnitude: more than 1,200 entities had some form of prior national VASP registration across Europe, but only around 210 had obtained full CASP authorization by May or June 2026, implying that roughly 83% had not converted in time ([Yahoo Finance, 2026](https://finance.yahoo.com/markets/crypto/articles/83-europe-crypto-firms-not-133100256.html); [AMLBot, 2026](https://blog.amlbot.com/mica-transition-period-ends-july-2026)).
+
+Elliptic reported that ESMA’s interim register showed 213 CASP entries across 23 jurisdictions around late June 2026, and that authorization was highly concentrated geographically. Germany led numerically with 55 entries, followed by the Netherlands with 26, France with 19, Malta with 15, and Ireland and Cyprus with 12 each. The five largest jurisdictions accounted for about 127 of 213 entries, close to 60% of the total ([Elliptic, 2026](https://www.elliptic.co/insights/what-the-end-of-micas-transitional-period-means-for-crypto-businesses)).
+
+| Indicator of post-grandfathering market structure | Reported figure |
+|---|---:|
+| Prior national VASP registrations in Europe | 1,200+ |
+| Estimated CASP authorizations by May/June 2026 | ~210–213 |
+| Approximate conversion rate | ~17% |
+| Jurisdictions with registered CASP authorizations in ESMA data | 23 |
+| Germany authorizations in Elliptic snapshot | 55 |
+| Netherlands authorizations in Elliptic snapshot | 26 |
+| France authorizations in Elliptic snapshot | 19 |
+| Malta authorizations in Elliptic snapshot | 15 |
+
+([Yahoo Finance, 2026](https://finance.yahoo.com/markets/crypto/articles/83-europe-crypto-firms-not-133100256.html); [Elliptic, 2026](https://www.elliptic.co/insights/what-the-end-of-micas-transitional-period-means-for-crypto-businesses))
+
+This concentration has several regulatory consequences. First, early licensees gain a large distribution advantage because one authorization can open the entire EU single market. Second, unlicensed smaller exchanges and non-EU platforms become more vulnerable not only to direct supervisory intervention, but also to commercial exclusion through banking, payments, institutional due diligence, and counterparty risk controls. AMLBot noted that authorization status now affects banking relationships, payment-provider onboarding, investor reviews, and business partnerships, not only formal regulatory permission ([AMLBot, 2026](https://blog.amlbot.com/mica-transition-period-ends-july-2026)).
+
+Third, the register itself has become part of market discipline. ESMA’s public instruction to consumers and counterparties to verify authorization means the register is now a practical gatekeeping tool, not just an informational database. Firms absent from it face reputational and operational constraints even before any formal sanction is imposed ([ESMA, 2026](https://www.esma.europa.eu/sites/default/files/2026-04/ESMA75-113276571-1679_Statement_on_the_end_of_transitional_periods_under_MiCA.pdf)).
+
+For non-EU firms in particular, the post-grandfathering environment is therefore less about abstract legal exposure and more about the disappearance of distribution channels into Europe unless they establish an authorized, substantively compliant servicing model. For EU-incorporated firms, the key issue is not merely obtaining a license, but ensuring that the licensed entity genuinely performs the regulated functions for European customers. In both cases, the end of grandfathering has converted MiCA from a future-entry regime into an immediate market-access test.
+
+
+## Other European regulatory changes reshaping crypto operations
+
+### Transfer-data controls now sit alongside AML, sanctions, and wallet-risk management
+
+Unlike the previous subtopic reports, which focused mainly on authorization, grandfathering, and passporting under MiCA, this section addresses the **post-licensing operating rules** that now govern how crypto firms move customer assets and information across the EU. The most immediate of these is the EU’s crypto **Travel Rule**, implemented through the recast Transfer of Funds Regulation framework and treated by market guidance as already live for EU crypto businesses from **30 December 2024**, with no transitional period for firms that fall within scope ([Sumsub, 2026](https://sumsub.com/blog/global-crypto-regulations); [VoltLegal, 2026](https://voltlegal.com/aml-dora-compliance)).
+
+For crypto businesses, the rule is not just a recordkeeping obligation. It requires operational capability to **collect, verify, transmit, and retain originator and beneficiary information at the time of transfer** for qualifying crypto-asset transfers. In practice, this turns compliance into a systems problem: firms need counterparty discovery, message-routing capability, exception handling, and procedures for transfers involving self-hosted wallets or unreachable counterparties ([VoltLegal, 2026](https://voltlegal.com/aml-dora-compliance)).
+
+Industry guidance consistently identifies four implementation burdens that many CASPs underestimated:
+
+| Travel Rule implementation area | What the business must do | Operational consequence |
+|---|---|---|
+| Counterparty connectivity | Connect to a protocol or vendor network to exchange required transfer data | Requires technical integration and vendor due diligence |
+| Data collection and validation | Obtain originator/beneficiary identifiers and validate them before transfer execution | Slows straight-through processing if controls are weak |
+| Unhosted-wallet policy | Define how ownership evidence, screening, and risk scoring will be handled | Introduces additional friction for customer withdrawals |
+| Non-compliant counterparty handling | Decide when to request more data, hold, reject, or return a transfer | Requires documented risk-based escalation rules |
+
+([VoltLegal, 2026](https://voltlegal.com/aml-dora-compliance); [Notabene, 2026](https://notabene.id/crypto-travel-rule-101/what-is-the-crypto-travel-rule))
+
+The EU approach also matters because it is more operationally demanding than the simplified way the Travel Rule is sometimes described under FATF guidance. FATF materials are often summarized around a **USD/EUR 1,000 threshold**, but EU implementation guidance for crypto firms has centered on compliance for **all qualifying transfers**, not merely large ones, which means even routine retail withdrawals can become compliance-sensitive events ([Notabene, 2026](https://notabene.id/crypto-travel-rule-101/what-is-the-crypto-travel-rule); [VoltLegal, 2026](https://voltlegal.com/aml-dora-compliance)).
+
+Important perimeter limits remain. Financial instruments are governed under existing securities law, and NFTs are generally outside the Travel Rule’s scope **unless their structure or function makes them comparable to security tokens or related instruments**. DeFi and DAOs are also described in current commentary as largely outside the direct perimeter, though that does not remove obligations from any centralized or identifiable service provider involved in an on-ramp, off-ramp, brokerage, or custodial leg of the transaction ([CIAT, 2024/2026](https://www.ciat.org/carf-mica-dac-8-the-travel-rule-move-towards-greater-transparency-in-the-crypto-asset-market?lang=en); [Notabene, 2026](https://notabene.id/crypto-travel-rule-101/what-is-the-crypto-travel-rule)).
+
+A further practical issue is the so-called **“sunrise problem”**: many counterparties worldwide still do not exchange Travel Rule data reliably. In that environment, compliant EU firms must still meet their own obligations, which can mean enhanced due diligence, transfer delays, or returns. Industry commentary notes that repeated failures by a counterparty may itself become a matter for escalation to supervisors under EU expectations ([Notabene, 2026](https://notabene.id/crypto-travel-rule-101/what-is-the-crypto-travel-rule)).
+
+### Digital resilience has become a separate supervisory stack, not just a MiCA side issue
+
+This section differs from the earlier MiCA discussion by focusing not on market entry, but on the **ongoing technology-governance obligations** that apply after a firm is authorized. In the EU, that role is now played by **DORA**—the Digital Operational Resilience Act—which has applied since **17 January 2025** and expressly covers **MiCA-authorized CASPs** and **issuers of asset-referenced tokens** as financial entities under Article 2(1)(f) ([Regulation DORA, 2026](https://www.regulation-dora.eu/crypto-casp)).
+
+For crypto firms, DORA is significant because it does not operate as a light-touch overlay. Sector guidance states that CASPs are subject to the **full ICT risk management framework**, with proportionality affecting complexity rather than removing the obligation altogether. In other words, a smaller crypto adviser may have a simpler framework than a major exchange, but it does not receive a blanket exemption from the core duties ([Regulation DORA, 2026](https://www.regulation-dora.eu/crypto-casp); [Konfer, 2026](https://konfer.ai/resources/blog/dora-compliance-guide-leaders-financial-institutions-2026)).
+
+Key DORA requirements for crypto businesses include:
+
+| DORA pillar for crypto firms | What it requires | Why it is especially significant for CASPs |
+|---|---|---|
+| ICT risk governance | Board-approved framework, clear accountability, training, controls, continuity planning | Crypto markets operate 24/7 and failures can trigger immediate asset-loss exposure |
+| Incident reporting | Structured regulatory reporting for major ICT incidents | Exchange outages, wallet compromises, and chain-integrated failures can become reportable incidents |
+| Resilience testing | Testing of systems and recovery capability; some entities may face advanced testing | Custody, key management, and order-routing resilience become auditable |
+| Third-party risk management | Register of outsourcing, contractual controls, oversight of cloud and software vendors | Many crypto firms depend heavily on custody, analytics, cloud, and compliance vendors |
+| Information-sharing and remediation | Governance around lessons learned and supervisory follow-up | Regulators can demand evidence, remediation, and stronger controls |
+
+([Regulation DORA, 2026](https://www.regulation-dora.eu/crypto-casp); [Konfer, 2026](https://konfer.ai/resources/blog/dora-compliance-guide-leaders-financial-institutions-2026); [VoltLegal, 2026](https://voltlegal.com/aml-dora-compliance))
+
+A particularly concrete compliance feature is the incident timeline highlighted in crypto-sector DORA guidance: **initial major incident reporting within 4 hours, follow-up within 72 hours, and a final report within 1 month**. Even where those timings are summarized through guidance rather than quoted from the legal text itself, they illustrate that DORA reporting is designed for near-real-time supervisory response rather than periodic disclosure ([Regulation DORA, 2026](https://www.regulation-dora.eu/crypto-casp)).
+
+For CASPs, one of the biggest risks is assuming that existing security certifications solve the problem. Industry guidance expressly warns that **ISO 27001 or SOC 2 may help, but do not by themselves satisfy DORA**, because DORA includes specific regulatory notification duties, registers of ICT third-party arrangements, and mandatory contractual and governance features for outsourced services ([VoltLegal, 2026](https://voltlegal.com/aml-dora-compliance)).
+
+This becomes more severe in crypto because technology failure can immediately become a **customer-asset** problem. Guidance aimed at CASPs emphasizes that DORA must be mapped to private-key custody, always-on trading, smart-contract dependencies, node infrastructure, and hot-wallet controls. Traditional financial institutions may have settlement windows or operational pauses; crypto firms often do not. That makes recovery-time expectations, vendor contingency planning, and privileged-access security materially more important for EU supervisors reviewing digital-asset firms ([Regulation DORA, 2026](https://www.regulation-dora.eu/crypto-casp); [Konfer, 2026](https://konfer.ai/resources/blog/dora-compliance-guide-leaders-financial-institutions-2026)).
+
+### DAC8 turns crypto tax compliance into continuous data capture from 2026 onward
+
+A separate regulatory track—distinct from prudential and AML supervision—is the EU’s tax-transparency regime under **DAC8**, the eighth amendment to the Directive on Administrative Cooperation. DAC8 began applying from **1 January 2026**, making the **2026 calendar year the first reporting period**, with most first reports due in **2027** and cross-border information exchange following thereafter ([21bitcoin, 2026](https://21bitcoin.app/en/blog/what-is-dac8); [FREYGNER Insights, 2026](https://freygner.com/en/insights/dac8-krypto-meldepflichten-selbstanzeige); [ITA Tax Advisor, 2026](https://www.itataxadvisor.com/dac8-crypto-reporting-rules-2026-italy-eu)).
+
+The central policy change is that crypto taxation in Europe is no longer meant to rely mainly on taxpayer self-reporting. Instead, **Reporting Crypto-Asset Service Providers (RCASPs)** must identify reportable users, determine tax residence, classify relevant entities and controlling persons where necessary, capture reportable transaction data, and submit that data to the relevant tax authority for onward exchange with other EU states ([CoinTracking, 2026](https://cointracking.info/es/aprender/dac8-crypto-regulation); [ITA Tax Advisor, 2026](https://www.itataxadvisor.com/dac8-crypto-reporting-rules-2026-italy-eu)).
+
+The scope is deliberately broad. According to industry explanations, a platform does **not** need to be incorporated in the EU to be caught. If it serves EU-resident users, it may need either MiCA authorization or registration with a competent authority in at least one Member State, and many non-EU exchanges with substantial EU customer bases are expected to fall within scope ([CoinTracking, 2026](https://cointracking.info/es/aprender/dac8-crypto-regulation); [Blockpit, 2026](https://www.blockpit.io/tax-guides/tax-authorities-will-get-your-crypto-data)).
+
+The reported dataset is also extensive:
+
+| DAC8 reporting element | Examples from 2026 guidance |
+|---|---|
+| User identity data | Name, address, date of birth, nationality, tax ID |
+| Transaction data | Crypto-to-fiat trades, crypto-to-crypto swaps, brokered transactions |
+| Wallet-related data | Deposits, withdrawals, and whether an external wallet is self-hosted or third-party |
+| Transfer metrics | Aggregate fair market value, asset type, and number of units transferred |
+| Asset scope | BTC, ETH, altcoins, stablecoins, e-money tokens; NFTs conditionally when traded for profit |
+
+([CoinTracking, 2026](https://cointracking.info/es/aprender/dac8-crypto-regulation); [Blockpit, 2026](https://www.blockpit.io/tax-guides/tax-authorities-will-get-your-crypto-data))
+
+Several practical features make DAC8 especially important for crypto businesses:
+
+1. **No minimum transaction threshold** is highlighted in market guidance; even very small trades may be reportable if they fall within scope ([CoinTracking, 2026](https://cointracking.info/es/aprender/dac8-crypto-regulation)).
+2. The regime is **not a new crypto tax**; it is a due-diligence and reporting architecture that strengthens tax enforcement ([ITA Tax Advisor, 2026](https://www.itataxadvisor.com/dac8-crypto-reporting-rules-2026-italy-eu)).
+3. Firms that failed to begin collecting the required fields from the start of 2026 face a serious **retroactive data problem**, because reconstructing transaction classification, wallet ownership status, and tax residence after the fact is operationally difficult ([VoltLegal, 2026](https://voltlegal.com/aml-dora-compliance)).
+
+Implementation remains uneven at Member State level. For example, Italy is described as having transposed DAC8 through **Legislative Decree No. 194/2025**, with a first provider filing generally due by **30 June 2027**, while Austrian commentary states that reports for 2026 are generally due by **31 July 2027** under national implementing rules. Spain and Poland were described in 2026 commentary as still finalizing transposition after missing the December 2025 deadline ([ITA Tax Advisor, 2026](https://www.itataxadvisor.com/dac8-crypto-reporting-rules-2026-italy-eu); [FREYGNER Insights, 2026](https://freygner.com/en/insights/dac8-krypto-meldepflichten-selbstanzeige); [CoinTracking, 2026](https://cointracking.info/es/aprender/dac8-crypto-regulation)).
+
+### Current exclusions are becoming the next perimeter debates: DeFi, NFTs, and self-custody
+
+Europe’s crypto framework is now more comprehensive, but it still leaves notable gaps. Current commentary on MiCA and related measures repeatedly notes that **DeFi, DAOs, and many NFTs** are not yet fully regulated in the same way as centralized intermediaries, particularly where no identifiable issuer, operator, or service provider can be linked to the activity ([CIAT, 2024/2026](https://www.ciat.org/carf-mica-dac-8-the-travel-rule-move-towards-greater-transparency-in-the-crypto-asset-market?lang=en); [European Papers, 2023](https://www.europeanpapers.eu/system/files/pdf_version/EP_eJ_2023_2_SS1_6_Nikita_Divissenko_00681.pdf)).
+
+That does **not** mean these areas are legally irrelevant. Instead, three more precise observations are emerging.
+
+First, **NFTs are not automatically exempt everywhere**. Under DAC8, NFTs can be reportable when traded for profit, while under broader EU perimeter analysis they can fall back into regulation if their design or economic function makes them equivalent to securities or other in-scope instruments ([CoinTracking, 2026](https://cointracking.info/es/aprender/dac8-crypto-regulation); [CIAT, 2024/2026](https://www.ciat.org/carf-mica-dac-8-the-travel-rule-move-towards-greater-transparency-in-the-crypto-asset-market?lang=en)).
+
+Second, **self-custody buys time, not invisibility**. Several DAC8-focused analyses stress that fully decentralized wallets and protocols may sit outside the direct reporting obligation, but once gains move through a regulated exchange, broker, or fiat off-ramp, that activity can become visible through both AML records and tax reporting. Self-hosted wallet transfers therefore remain a compliance touchpoint even when the wallet itself is not a regulated entity ([CoinTracking, 2026](https://cointracking.info/es/aprender/dac8-crypto-regulation); [Blockpit, 2026](https://www.blockpit.io/tax-guides/tax-authorities-will-get-your-crypto-data)).
+
+Third, DeFi remains an **active future-rule candidate** because EU legal scholarship has already identified it as a source of unresolved consumer-protection and financial-stability risk. Commentary on the future-proofing of MiCA warns that the expansion of DeFi could expose weaknesses in a framework built primarily around identifiable issuers and intermediaries. That suggests future EU reform pressure may focus less on “code as such” and more on **front ends, governance participants, fee-taking operators, orchestrators, or other controllable points of intermediation** ([European Papers, 2023](https://www.europeanpapers.eu/system/files/pdf_version/EP_eJ_2023_2_SS1_6_Nikita_Divissenko_00681.pdf); [Notabene, 2026](https://notabene.id/crypto-travel-rule-101/what-is-the-crypto-travel-rule)).
+
+### Payments and e-money law remain a parallel perimeter for certain crypto business models
+
+This final section intentionally avoids repeating the earlier detailed discussion of the **specific 2026 EMT transfer/PSD2 issue**. Instead, it expands the point by addressing the broader regulatory pattern: in Europe, some crypto firms now face not only MiCA-type obligations, but also the possibility that parts of their business will be characterized under **payments, e-money, or adjacent financial-services law**.
+
+The clearest policy signal is that firms dealing in **e-money tokens** and payment-like crypto arrangements cannot assume MiCA is their sole rulebook. DAC8 commentary, for example, expressly includes **e-money issuers dealing in crypto products** within relevant reporting populations, while EU regulatory analysis continues to distinguish crypto-assets from financial instruments only where the substance of the product does not already place it under another regime ([CoinTracking, 2026](https://cointracking.info/es/aprender/dac8-crypto-regulation); [CIAT, 2024/2026](https://www.ciat.org/carf-mica-dac-8-the-travel-rule-move-towards-greater-transparency-in-the-crypto-asset-market?lang=en)).
+
+For businesses, the practical question is not whether “crypto” is regulated, but **which function is being performed**. If a service resembles money remittance, payment execution, stored-value issuance, or safeguarded customer funds, supervisors may assess it through a payments or e-money lens in addition to MiCA. That risk is strongest where the product is used for settlement or routine payments rather than speculation, and where redemption, safeguarding, and operational continuity resemble traditional payment-institution functions.
+
+A simplified compliance matrix illustrates the issue:
+
+| Business feature | MiCA relevance | Possible additional EU-law concern |
+|---|---|---|
+| Trading and custody of general crypto-assets | Core CASP perimeter | AML, Travel Rule, DORA, DAC8 |
+| EMT issuance or handling in payment flows | Crypto-specific regime applies | Possible overlap with e-money and payment-services requirements |
+| Fiat-backed wallet or payments functionality | May involve crypto and non-crypto services | Safeguarding, execution, or payment-institution analysis |
+| Stablecoin use in merchant settlement | MiCA stablecoin rules relevant | Payment-system or e-money supervisory expectations may also arise |
+| Platform offers both exchange and fiat payment rails | Mixed perimeter business model | Dual or layered authorizations may be required |
+
+([CoinTracking, 2026](https://cointracking.info/es/aprender/dac8-crypto-regulation); [VoltLegal, 2026](https://voltlegal.com/aml-dora-compliance); [CIAT, 2024/2026](https://www.ciat.org/carf-mica-dac-8-the-travel-rule-move-towards-greater-transparency-in-the-crypto-asset-market?lang=en))
+
+The broader regulatory implication is that Europe is moving toward **functional convergence**: crypto firms are increasingly assessed by reference to the risks they create—payments risk, custody risk, ICT risk, tax-reporting risk, and AML risk—rather than by whether they describe themselves as “just a crypto platform.” That trend increases legal complexity for business models that combine exchange, custody, payment rails, yield features, or tokenized settlement, because the future European perimeter may be built less around labels and more around the economic substance of each service line.
+
+## Conclusion
+
+Europe’s crypto regulatory landscape has shifted from fragmented national rules to a fully operational EU-wide framework centered on MiCA, with stablecoin rules applying from 30 June 2024, the broader CASP regime from 30 December 2024, and all transitional grandfathering effectively ending by 1 July 2026. The main changes are clear: crypto-asset issuers now face structured disclosure obligations through MiCA white papers; stablecoins are subject to stricter classification and prudential rules, especially for EMTs and ARTs; and CASPs must obtain authorization, meet conduct, custody, governance, and prudential requirements, and rely on passporting rather than patchwork national registrations. ESMA and the EBA have also become central supervisory actors, particularly for cross-border enforcement and significant stablecoins. ([ESMA, 2026](https://www.esma.europa.eu/sites/default/files/2026-04/ESMA75-113276571-1679_Statement_on_the_end_of_transitional_periods_under_MiCA.pdf); [LCX, 2026](https://lcx.com/en/mica-regulation-the-complete-guide); [Allium, 2026](https://allium.so/blog/mica-and-stablecoins-what-the-rules-require))
+
+The most important findings are that compliance is now a market-access condition, not a future planning issue, and that stablecoins face the heaviest regulatory burden. EMTs have emerged as the main lawful stablecoin pathway, while ARTs remain difficult to launch in practice and algorithmic stablecoins are effectively excluded. At the same time, the end of grandfathering has removed any “application pending” safety net, meaning firms without the right entity-level authorization must stop serving EU clients or execute a supervised wind-down. This has already led to market concentration in a smaller pool of licensed firms, delistings or restrictions for non-compliant stablecoins, and greater legal exposure for offshore or multi-entity groups that cannot show that the licensed EU entity is the one actually providing the regulated service. ([ESMA, 2026](https://www.esma.europa.eu/sites/default/files/2026-04/ESMA75-113276571-1679_Statement_on_the_end_of_transitional_periods_under_MiCA.pdf); [Elliptic, 2026](https://www.elliptic.co/insights/what-the-end-of-micas-transitional-period-means-for-crypto-businesses); [The Future of Money, 2026](https://thefutureofmoney.substack.com/p/mica-regulation-2026-complete-casp))
+
+Looking ahead, firms operating in Europe must treat MiCA as only one part of a broader compliance stack. The EU Travel Rule, DORA, DAC8, and possible PSD2/e-money overlap for payment-like crypto activities mean businesses need integrated licensing, AML/data-sharing, cyber-resilience, tax-reporting, and operational governance frameworks. The next practical steps for firms are to verify entity-specific authorization, reassess stablecoin and payments-related business lines, strengthen transfer-data and ICT controls, and prepare for tighter scrutiny around DeFi interfaces, self-hosted wallet flows, and tax transparency. In short, Europe is not banning crypto, but it is forcing the industry into a more regulated, institutionally integrated, and function-based model. ([VoltLegal, 2026](https://voltlegal.com/aml-dora-compliance); [CoinTracking, 2026](https://cointracking.info/es/aprender/dac8-crypto-regulation); [ESMA, 2023](https://www.esma.europa.eu/sites/default/files/2023-10/ESMA74-449133380-441_Statement_on_MiCA_Supervisory_Convergence.pdf))
+
+
+## References
+
+- [https://0xprocessing.com/blog/mica-regulation-crypto-payments-eu](https://0xprocessing.com/blog/mica-regulation-crypto-payments-eu)
+- [https://21bitcoin.app/en/blog/what-is-dac8](https://21bitcoin.app/en/blog/what-is-dac8)
+- [https://allium.so/blog/mica-and-stablecoins-what-the-rules-require](https://allium.so/blog/mica-and-stablecoins-what-the-rules-require)
+- [https://blog.amlbot.com/mica-transition-period-ends-july-2026](https://blog.amlbot.com/mica-transition-period-ends-july-2026)
+- [https://cointracking.info/es/aprender/dac8-crypto-regulation](https://cointracking.info/es/aprender/dac8-crypto-regulation)
+- [https://crypto-risk-metrics.com/en/mica-white-paper-obligations-for-casps](https://crypto-risk-metrics.com/en/mica-white-paper-obligations-for-casps)
+- [https://cryptoforinnovation.org/what-the-end-of-micas-transition-period-means-for-crypto](https://cryptoforinnovation.org/what-the-end-of-micas-transition-period-means-for-crypto)
+- [https://didit.me/blog/mica-regulation-eu-crypto-compliance-guide](https://didit.me/blog/mica-regulation-eu-crypto-compliance-guide)
+- [https://eco.com/support/en/articles/14814632-mica-stablecoin-regulation-2026-update](https://eco.com/support/en/articles/14814632-mica-stablecoin-regulation-2026-update)
+- [https://finance.yahoo.com/markets/crypto/articles/83-europe-crypto-firms-not-133100256.html](https://finance.yahoo.com/markets/crypto/articles/83-europe-crypto-firms-not-133100256.html)
+- [https://finance.yahoo.com/markets/crypto/articles/watch-brand-european-crypto-regulations-070110178.html](https://finance.yahoo.com/markets/crypto/articles/watch-brand-european-crypto-regulations-070110178.html)
+- [https://financialcrimeacademy.org/cryptocurrency-in-europe](https://financialcrimeacademy.org/cryptocurrency-in-europe)
+- [https://freygner.com/en/insights/dac8-krypto-meldepflichten-selbstanzeige](https://freygner.com/en/insights/dac8-krypto-meldepflichten-selbstanzeige)
+- [https://governancedocs.com/mica-transitional-period-ended](https://governancedocs.com/mica-transitional-period-ended)
+- [https://hacken.io/discover/mica-regulation](https://hacken.io/discover/mica-regulation)
+- [https://konfer.ai/resources/blog/dora-compliance-guide-leaders-financial-institutions-2026](https://konfer.ai/resources/blog/dora-compliance-guide-leaders-financial-institutions-2026)
+- [https://lcx.com/en/mica-regulation-the-complete-guide](https://lcx.com/en/mica-regulation-the-complete-guide)
+- [https://legalnodes.com/article/mica-regulation-explained](https://legalnodes.com/article/mica-regulation-explained)
+- [https://notabene.id/crypto-travel-rule-101/what-is-the-crypto-travel-rule](https://notabene.id/crypto-travel-rule-101/what-is-the-crypto-travel-rule)
+- [https://proofoftalk.io/blog/travel-rule-aml-compliance-in-practice](https://proofoftalk.io/blog/travel-rule-aml-compliance-in-practice)
+- [https://stablemint.io/blog/mica-transitional-period-ended](https://stablemint.io/blog/mica-transitional-period-ended)
+- [https://sumsub.com/blog/crypto-regulations-in-the-european-union-markets-in-crypto-assets-mica](https://sumsub.com/blog/crypto-regulations-in-the-european-union-markets-in-crypto-assets-mica)
+- [https://sumsub.com/blog/global-crypto-regulations](https://sumsub.com/blog/global-crypto-regulations)
+- [https://thefutureofmoney.substack.com/p/mica-regulation-2026-complete-casp](https://thefutureofmoney.substack.com/p/mica-regulation-2026-complete-casp)
+- [https://voltlegal.com/aml-dora-compliance](https://voltlegal.com/aml-dora-compliance)
+- [https://www.acfcs.org/eu-passes-landmark-crypto-regulation](https://www.acfcs.org/eu-passes-landmark-crypto-regulation)
+- [https://www.bit.com/knowledge-hub/mica](https://www.bit.com/knowledge-hub/mica)
+- [https://www.blockpit.io/tax-guides/tax-authorities-will-get-your-crypto-data](https://www.blockpit.io/tax-guides/tax-authorities-will-get-your-crypto-data)
+- [https://www.bvnk.com/blog/the-travel-rule-crypto-eu](https://www.bvnk.com/blog/the-travel-rule-crypto-eu)
+- [https://www.ciat.org/carf-mica-dac-8-the-travel-rule-move-towards-greater-transparency-in-the-crypto-asset-market?lang=en](https://www.ciat.org/carf-mica-dac-8-the-travel-rule-move-towards-greater-transparency-in-the-crypto-asset-market?lang=en)
+- [https://www.cyfrin.io/blog/mica-regulation-explained-a-guide-to-eu-crypto-compliance](https://www.cyfrin.io/blog/mica-regulation-explained-a-guide-to-eu-crypto-compliance)
+- [https://www.elliptic.co/insights/what-the-end-of-micas-transitional-period-means-for-crypto-businesses](https://www.elliptic.co/insights/what-the-end-of-micas-transitional-period-means-for-crypto-businesses)
+- [https://www.esma.europa.eu/sites/default/files/2023-10/ESMA74-449133380-441_Statement_on_MiCA_Supervisory_Convergence.pdf](https://www.esma.europa.eu/sites/default/files/2023-10/ESMA74-449133380-441_Statement_on_MiCA_Supervisory_Convergence.pdf)
+- [https://www.esma.europa.eu/sites/default/files/2026-04/ESMA75-113276571-1679_Statement_on_the_end_of_transitional_periods_under_MiCA.pdf](https://www.esma.europa.eu/sites/default/files/2026-04/ESMA75-113276571-1679_Statement_on_the_end_of_transitional_periods_under_MiCA.pdf)
+- [https://www.europeanpapers.eu/system/files/pdf_version/EP_eJ_2023_2_SS1_6_Nikita_Divissenko_00681.pdf](https://www.europeanpapers.eu/system/files/pdf_version/EP_eJ_2023_2_SS1_6_Nikita_Divissenko_00681.pdf)
+- [https://www.facebook.com/KPMGCyprus/posts/from-1-july-2026-firms-providing-crypto-asset-services-to-eu-clients-will-need-a/2154923725362082](https://www.facebook.com/KPMGCyprus/posts/from-1-july-2026-firms-providing-crypto-asset-services-to-eu-clients-will-need-a/2154923725362082)
+- [https://www.innreg.com/blog/eu-crypto-regulation-guide](https://www.innreg.com/blog/eu-crypto-regulation-guide)
+- [https://www.itataxadvisor.com/dac8-crypto-reporting-rules-2026-italy-eu](https://www.itataxadvisor.com/dac8-crypto-reporting-rules-2026-italy-eu)
+- [https://www.micacryptoalliance.com/news/micas-grandfathering-period-is-ending-what-does-it-actually-mean-for-eu-crypto-users](https://www.micacryptoalliance.com/news/micas-grandfathering-period-is-ending-what-does-it-actually-mean-for-eu-crypto-users)
+- [https://www.micacryptoalliance.com/white-papers](https://www.micacryptoalliance.com/white-papers)
+- [https://www.nortonrosefulbright.com/en/knowledge/publications/2cec201e/regulating-crypto-assets-in-europe-practical-guide-to-mica](https://www.nortonrosefulbright.com/en/knowledge/publications/2cec201e/regulating-crypto-assets-in-europe-practical-guide-to-mica)
+- [https://www.regulation-dora.eu/crypto-casp](https://www.regulation-dora.eu/crypto-casp)
+- [https://www.squirepattonboggs.com/media/yvspymyt/mica-legal-framework-how-to-comply-with-the-eus-crypto-asset-rules.pdf](https://www.squirepattonboggs.com/media/yvspymyt/mica-legal-framework-how-to-comply-with-the-eus-crypto-asset-rules.pdf)
+- [https://www.unit21.ai/blog/mica-regulation-2026-faqs-what-crypto-compliance-teams-need-to-know](https://www.unit21.ai/blog/mica-regulation-2026-faqs-what-crypto-compliance-teams-need-to-know)
+- [https://www.zyphe.com/resources/news/mica-transitional-period-ends-july-2026](https://www.zyphe.com/resources/news/mica-transitional-period-ends-july-2026)
