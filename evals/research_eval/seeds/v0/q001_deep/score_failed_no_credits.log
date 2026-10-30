@@ -1,0 +1,25 @@
+
+== 20261029T234921_q001_deep_ff96d2  (scorer 0.1+d5e17daa)
+   decomposition_coverage             —  judge call failed
+   subquery_redundancy            0.000  lower is better
+   decomposition_tree_quality         —  every judge call failed
+   plan_adherence                 1.000  
+   source_authority               0.516  
+   source_diversity               0.779  
+   citation_utilization           0.221  
+   query_relevance                    —  every judge call failed
+   retrieval_overlap              0.533  lower is better
+   comprehensiveness                  —  judge call failed
+   insight                            —  scoring call failed: OpenAIRateLimitError: Error code: 429 - {'error': {'message': 'You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.', 'type': 'insufficient_quota', 'param': None, 'code': 'credit_balance_exhausted'}}
+   readability                        —  scoring call failed: OpenAIRateLimitError: Error code: 429 - {'error': {'message': 'You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.', 'type': 'insufficient_quota', 'param': None, 'code': 'credit_balance_exhausted'}}
+   instruction_following          1.000  
+   topic_relevance                    —  every judge call failed
+   citation_recall                    —  no citing sentences
+   citation_precision                 —  no citations
+   citation_coverage              1.000  
+   effective_citations                —  no citations
+   faithfulness                       —  no factual claims judged
+   fact_grounding                 0.933  
+   toxicity                           —  every judge call failed
+   bias                               —  every judge call failed
+   -> /Users/sean/Develop/gpt-researcher-eval/gpt-researcher/evals/research_eval/results/20261029T234921_q001_deep_ff96d2/0.1+d5e17daa.json

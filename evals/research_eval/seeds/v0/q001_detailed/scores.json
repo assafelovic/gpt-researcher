@@ -2,8 +2,8 @@
  "run_id": "20261029T234235_q001_detailed_2cfdba",
  "question_id": "q001",
  "mode": "detailed",
- "scorer_version": "0.1+d5e17daa",
- "scored_at": "2026-10-30T02:48:05Z",
+ "scorer_version": "0.1+de8e14ec",
+ "scored_at": "2026-10-30T02:49:43Z",
  "judge_model": "gpt-6-luna",
  "embedding_model": null,
  "metrics": {
@@ -689,7 +689,7 @@
   "citation_utilization": {
    "name": "citation_utilization",
    "category": "retrieval.efficiency",
-   "version": "3",
+   "version": "3.audit3",
    "value": 0.93,
    "higher_is_better": true,
    "details": {
@@ -3863,7 +3863,7 @@
   "citation_recall": {
    "name": "citation_recall",
    "category": "generation.citation",
-   "version": "1",
+   "version": "1.audit3",
    "value": 0.382,
    "higher_is_better": true,
    "details": {
@@ -4377,7 +4377,7 @@
   "citation_precision": {
    "name": "citation_precision",
    "category": "generation.citation",
-   "version": "1",
+   "version": "1.audit3",
    "value": 0.368,
    "higher_is_better": true,
    "details": {
@@ -4462,7 +4462,7 @@
   "effective_citations": {
    "name": "effective_citations",
    "category": "generation.citation",
-   "version": "1",
+   "version": "1.audit3",
    "value": 45.0,
    "higher_is_better": true,
    "details": {
@@ -4488,7 +4488,7 @@
   "faithfulness": {
    "name": "faithfulness",
    "category": "generation.hallucination",
-   "version": "1",
+   "version": "1.audit3",
    "value": 0.667,
    "higher_is_better": true,
    "details": {

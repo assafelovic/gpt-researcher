@@ -8,7 +8,7 @@ versions of the evaluator can be compared on identical input.
 All three runs: question q001 ("What regulatory changes are affecting the crypto
 industry in Europe?"), `questions_v0`, agent commit `d06123bf` (`-dirty` only because
 of untracked run files), worker models `openai:gpt-5.4` (smart / fast / strategic),
-Tavily retriever, 1200 target words. Judge `gpt-6-luna`, scorer `0.1+d5e17daa`.
+Tavily retriever, 1200 target words. Judge `gpt-6-luna`, scorer `0.1+de8e14ec` (citation audit v3).
 
 | Sample | run_id | Duration | Worker cost | Report words | Chunks | Judge errors |
 |---|---|---|---|---|---|---|
@@ -28,7 +28,7 @@ cost is higher.
 | `q001_*/archive.json` | Run archive (schema 1.0): meta, spans, chunks, report. Input to `score.py`. |
 | `q001_*/report.md` | The report, extracted from the archive for reading. |
 | `q001_*/scores.json` | Full scoring record: 22 metrics with details, judge prompts and call counts. |
-| `q001_deep/scores_failed_no_credits.json` | First deep scoring, cut off when the OpenAI account ran out of credits (429). Kept as a judge-failure sample: it exposed `source_authority` scoring 34 of 53 domains with rule fallbacks and reporting 0.516 instead of skipping, and the audit metrics skipping with a misleading reason ("no citations"). Both fixed. |
+| `q001_deep/scores_failed_no_credits.json` | First deep scoring (scorer `0.1+d5e17daa`), cut off when the OpenAI account ran out of credits (429). Kept as a judge-failure sample: it exposed `source_authority` scoring 34 of 53 domains with rule fallbacks and reporting 0.516 instead of skipping, and the audit metrics skipping with a misleading reason ("no citations"). Both fixed. |
 | `q001_deep/score_failed_no_credits.log` | Console output of that run. |
 | `run_default_detailed.log`, `q001_deep/run.log` | Agent console logs (default and detailed ran in one process; stdout and stderr interleave). |
 | `score.log` | Console output of the final scoring of all three. |
@@ -60,8 +60,8 @@ cost is higher.
 | toxicity (lower better) | 0.000 | 0.000 | 0.000 |
 | bias (lower better) | 0.000 | 0.000 | 0.000 |
 
-Re-scoring default and detailed replayed every judge call from the cache and gave
-identical numbers. These scores are not yet checked by hand; that review, and
+Re-scoring all three (after the audit version bump, scorer `0.1+d5e17daa` -> `0.1+de8e14ec`)
+replayed every judge call from the cache and gave identical numbers. These scores are not yet checked by hand; that review, and
 human labels, are what turn these seeds into benchmark items.
 
 ## Re-scoring

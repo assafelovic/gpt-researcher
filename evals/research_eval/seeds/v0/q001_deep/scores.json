@@ -2,8 +2,8 @@
  "run_id": "20261029T234921_q001_deep_ff96d2",
  "question_id": "q001",
  "mode": "deep",
- "scorer_version": "0.1+d5e17daa",
- "scored_at": "2026-10-30T02:48:04Z",
+ "scorer_version": "0.1+de8e14ec",
+ "scored_at": "2026-10-30T02:49:44Z",
  "judge_model": "gpt-6-luna",
  "embedding_model": null,
  "metrics": {
@@ -128,8 +128,8 @@
      }
     },
     "requests": 1,
-    "cache_hits": 0,
-    "api_calls": 1,
+    "cache_hits": 1,
+    "api_calls": 0,
     "errors": 0
    }
   },
@@ -490,8 +490,8 @@
      }
     },
     "requests": 10,
-    "cache_hits": 0,
-    "api_calls": 10,
+    "cache_hits": 10,
+    "api_calls": 0,
     "errors": 0
    }
   },
@@ -540,28 +540,56 @@
       "score": 0.99,
       "tier": "llm:official European Union banking regulator",
       "judge_model": "gpt-6-luna",
-      "basis": "judge"
+      "basis": "domain_cache"
      },
      {
       "domain": "deloitte.com",
       "score": 0.95,
       "tier": "llm:major global professional-services firm with extensive research and industry expertise",
       "judge_model": "gpt-6-luna",
-      "basis": "judge"
+      "basis": "domain_cache"
      },
      {
       "domain": "cliffordchance.com",
       "score": 0.9,
       "tier": "llm:leading international law firm with substantial legal expertise",
       "judge_model": "gpt-6-luna",
-      "basis": "judge"
+      "basis": "domain_cache"
      },
      {
       "domain": "morganlewis.com",
       "score": 0.9,
       "tier": "llm:leading international law firm with substantial subject-matter expertise",
       "judge_model": "gpt-6-luna",
-      "basis": "judge"
+      "basis": "domain_cache"
+     },
+     {
+      "domain": "cuatrecasas.com",
+      "score": 0.85,
+      "tier": "llm:large established international law firm with strong legal expertise",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
+     },
+     {
+      "domain": "dlapiperintelligence.com",
+      "score": 0.85,
+      "tier": "llm:legal insights published by the established international law firm DLA Piper",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
+     },
+     {
+      "domain": "financialregulation.linklaters.com",
+      "score": 0.85,
+      "tier": "llm:financial regulation analysis from the established law firm Linklaters",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
+     },
+     {
+      "domain": "finreg.aoshearman.com",
+      "score": 0.85,
+      "tier": "llm:financial regulation insights from the established international law firm A&O Shearman",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
      },
      {
       "domain": "nortonrosefulbright.com",
@@ -571,39 +599,11 @@
       "basis": "domain_cache"
      },
      {
-      "domain": "cuatrecasas.com",
-      "score": 0.85,
-      "tier": "llm:large established international law firm with strong legal expertise",
-      "judge_model": "gpt-6-luna",
-      "basis": "judge"
-     },
-     {
-      "domain": "dlapiperintelligence.com",
-      "score": 0.85,
-      "tier": "llm:legal insights published by the established international law firm DLA Piper",
-      "judge_model": "gpt-6-luna",
-      "basis": "judge"
-     },
-     {
-      "domain": "financialregulation.linklaters.com",
-      "score": 0.85,
-      "tier": "llm:financial regulation analysis from the established law firm Linklaters",
-      "judge_model": "gpt-6-luna",
-      "basis": "judge"
-     },
-     {
-      "domain": "finreg.aoshearman.com",
-      "score": 0.85,
-      "tier": "llm:financial regulation insights from the established international law firm A&O Shearman",
-      "judge_model": "gpt-6-luna",
-      "basis": "judge"
-     },
-     {
       "domain": "maples.com",
       "score": 0.8,
       "tier": "llm:established international law and financial-services group",
       "judge_model": "gpt-6-luna",
-      "basis": "judge"
+      "basis": "domain_cache"
      },
      {
       "domain": "elliptic.co",
@@ -645,7 +645,14 @@
       "score": 0.6,
       "tier": "llm:established regional law firm with relevant specialist legal expertise",
       "judge_model": "gpt-6-luna",
-      "basis": "judge"
+      "basis": "domain_cache"
+     },
+     {
+      "domain": "casptracker.eu",
+      "score": 0.55,
+      "tier": "llm:specialized resource tracking EU crypto-asset service providers",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
      },
      {
       "domain": "cryptoforinnovation.org",
@@ -655,18 +662,25 @@
       "basis": "domain_cache"
      },
      {
-      "domain": "casptracker.eu",
-      "score": 0.55,
-      "tier": "llm:specialized resource tracking EU crypto-asset service providers",
-      "judge_model": "gpt-6-luna",
-      "basis": "judge"
-     },
-     {
       "domain": "ondato.com",
       "score": 0.55,
       "tier": "llm:established identity-verification and compliance technology provider with relevant expertise",
       "judge_model": "gpt-6-luna",
-      "basis": "judge"
+      "basis": "domain_cache"
+     },
+     {
+      "domain": "adamsmith.lt",
+      "score": 0.5,
+      "tier": "llm:specialized Lithuanian legal source, but limited international research profile",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
+     },
+     {
+      "domain": "januar.com",
+      "score": 0.5,
+      "tier": "llm:specialized digital-asset financial services company with relevant industry expertise",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
      },
      {
       "domain": "notabene.id",
@@ -676,18 +690,11 @@
       "basis": "domain_cache"
      },
      {
-      "domain": "adamsmith.lt",
-      "score": 0.5,
-      "tier": "llm:specialized Lithuanian legal source, but limited international research profile",
+      "domain": "blockzeit.com",
+      "score": 0.45,
+      "tier": "llm:crypto-focused news and analysis outlet with limited institutional authority",
       "judge_model": "gpt-6-luna",
-      "basis": "judge"
-     },
-     {
-      "domain": "januar.com",
-      "score": 0.5,
-      "tier": "llm:specialized digital-asset financial services company with relevant industry expertise",
-      "judge_model": "gpt-6-luna",
-      "basis": "judge"
+      "basis": "domain_cache"
      },
      {
       "domain": "blog.amlbot.com",
@@ -711,18 +718,53 @@
       "basis": "domain_cache"
      },
      {
-      "domain": "blockzeit.com",
-      "score": 0.45,
-      "tier": "llm:crypto-focused news and analysis outlet with limited institutional authority",
-      "judge_model": "gpt-6-luna",
-      "basis": "judge"
-     },
-     {
       "domain": "protofire.io",
       "score": 0.45,
       "tier": "llm:specialist blockchain development company with technical expertise but limited independent research authority",
       "judge_model": "gpt-6-luna",
-      "basis": "judge"
+      "basis": "domain_cache"
+     },
+     {
+      "domain": "complyfactor.com",
+      "score": 0.4,
+      "tier": "llm:specialist compliance resource with limited broader institutional recognition",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
+     },
+     {
+      "domain": "cryptoticker.io",
+      "score": 0.4,
+      "tier": "llm:crypto news outlet, but not a major established financial news organization",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
+     },
+     {
+      "domain": "globallawexperts.com",
+      "score": 0.4,
+      "tier": "llm:legal information and expert directory, rather than a primary research institution",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
+     },
+     {
+      "domain": "legalbison.com",
+      "score": 0.4,
+      "tier": "llm:specialized legal services provider, with limited independent research authority",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
+     },
+     {
+      "domain": "micahub.net",
+      "score": 0.4,
+      "tier": "llm:specialist resource on crypto regulation, but with limited institutional authority",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
+     },
+     {
+      "domain": "tazapay.com",
+      "score": 0.4,
+      "tier": "llm:payments technology company with relevant industry knowledge, but limited independent research authority",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
      },
      {
       "domain": "zyphe.com",
@@ -732,46 +774,18 @@
       "basis": "domain_cache"
      },
      {
-      "domain": "complyfactor.com",
-      "score": 0.4,
-      "tier": "llm:specialist compliance resource with limited broader institutional recognition",
+      "domain": "blog.cryptio.co",
+      "score": 0.35,
+      "tier": "llm:company blog offering specialist industry commentary rather than independent research",
       "judge_model": "gpt-6-luna",
-      "basis": "judge"
+      "basis": "domain_cache"
      },
      {
-      "domain": "cryptoticker.io",
-      "score": 0.4,
-      "tier": "llm:crypto news outlet, but not a major established financial news organization",
+      "domain": "compliora.ai",
+      "score": 0.35,
+      "tier": "llm:compliance technology provider, not an established independent research publisher",
       "judge_model": "gpt-6-luna",
-      "basis": "judge"
-     },
-     {
-      "domain": "globallawexperts.com",
-      "score": 0.4,
-      "tier": "llm:legal information and expert directory, rather than a primary research institution",
-      "judge_model": "gpt-6-luna",
-      "basis": "judge"
-     },
-     {
-      "domain": "legalbison.com",
-      "score": 0.4,
-      "tier": "llm:specialized legal services provider, with limited independent research authority",
-      "judge_model": "gpt-6-luna",
-      "basis": "judge"
-     },
-     {
-      "domain": "micahub.net",
-      "score": 0.4,
-      "tier": "llm:specialist resource on crypto regulation, but with limited institutional authority",
-      "judge_model": "gpt-6-luna",
-      "basis": "judge"
-     },
-     {
-      "domain": "tazapay.com",
-      "score": 0.4,
-      "tier": "llm:payments technology company with relevant industry knowledge, but limited independent research authority",
-      "judge_model": "gpt-6-luna",
-      "basis": "judge"
+      "basis": "domain_cache"
      },
      {
       "domain": "linkedin.com",
@@ -781,32 +795,18 @@
       "basis": "domain_cache"
      },
      {
+      "domain": "northpoint.fi",
+      "score": 0.35,
+      "tier": "llm:regional specialist source with limited broader research recognition",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
+     },
+     {
       "domain": "thefutureofmoney.substack.com",
       "score": 0.35,
       "tier": "llm:individual newsletter; potentially useful commentary but limited institutional authority",
       "judge_model": "gpt-6-luna",
       "basis": "domain_cache"
-     },
-     {
-      "domain": "blog.cryptio.co",
-      "score": 0.35,
-      "tier": "llm:company blog offering specialist industry commentary rather than independent research",
-      "judge_model": "gpt-6-luna",
-      "basis": "judge"
-     },
-     {
-      "domain": "compliora.ai",
-      "score": 0.35,
-      "tier": "llm:compliance technology provider, not an established independent research publisher",
-      "judge_model": "gpt-6-luna",
-      "basis": "judge"
-     },
-     {
-      "domain": "northpoint.fi",
-      "score": 0.35,
-      "tier": "llm:regional specialist source with limited broader research recognition",
-      "judge_model": "gpt-6-luna",
-      "basis": "judge"
      },
      {
       "domain": "0xprocessing.com",
@@ -823,6 +823,34 @@
       "basis": "domain_cache"
      },
      {
+      "domain": "finconduit.com",
+      "score": 0.3,
+      "tier": "llm:limited evidence of broad institutional or independent research authority",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
+     },
+     {
+      "domain": "finlexpro.com",
+      "score": 0.3,
+      "tier": "llm:specialist legal or financial resource with limited established research credentials",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
+     },
+     {
+      "domain": "legasset.com",
+      "score": 0.3,
+      "tier": "llm:limited evidence of established institutional research credentials",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
+     },
+     {
+      "domain": "mielogroup.com",
+      "score": 0.3,
+      "tier": "llm:limited evidence of broad recognition or independent research standing",
+      "judge_model": "gpt-6-luna",
+      "basis": "domain_cache"
+     },
+     {
       "domain": "stablemint.io",
       "score": 0.3,
       "tier": "llm:specialized commercial source with limited independent research authority",
@@ -830,39 +858,11 @@
       "basis": "domain_cache"
      },
      {
-      "domain": "finconduit.com",
-      "score": 0.3,
-      "tier": "llm:limited evidence of broad institutional or independent research authority",
-      "judge_model": "gpt-6-luna",
-      "basis": "judge"
-     },
-     {
-      "domain": "finlexpro.com",
-      "score": 0.3,
-      "tier": "llm:specialist legal or financial resource with limited established research credentials",
-      "judge_model": "gpt-6-luna",
-      "basis": "judge"
-     },
-     {
-      "domain": "legasset.com",
-      "score": 0.3,
-      "tier": "llm:limited evidence of established institutional research credentials",
-      "judge_model": "gpt-6-luna",
-      "basis": "judge"
-     },
-     {
-      "domain": "mielogroup.com",
-      "score": 0.3,
-      "tier": "llm:limited evidence of broad recognition or independent research standing",
-      "judge_model": "gpt-6-luna",
-      "basis": "judge"
-     },
-     {
       "domain": "tech-insider.org",
       "score": 0.3,
       "tier": "llm:technology publication with limited evidence of established editorial authority",
       "judge_model": "gpt-6-luna",
-      "basis": "judge"
+      "basis": "domain_cache"
      },
      {
       "domain": "governancedocs.com",
@@ -876,28 +876,28 @@
       "score": 0.25,
       "tier": "llm:domain identity and recognized research credentials are unclear",
       "judge_model": "gpt-6-luna",
-      "basis": "judge"
+      "basis": "domain_cache"
      },
      {
       "domain": "trusty.report",
       "score": 0.25,
       "tier": "llm:limited evidence of established independent research credentials",
       "judge_model": "gpt-6-luna",
-      "basis": "judge"
+      "basis": "domain_cache"
      },
      {
       "domain": "mokaair.com",
       "score": 0.2,
       "tier": "llm:limited evidence of relevance as an established research source",
       "judge_model": "gpt-6-luna",
-      "basis": "judge"
+      "basis": "domain_cache"
      },
      {
       "domain": "unknowngravity.com",
       "score": 0.2,
       "tier": "llm:limited evidence of recognized expertise or research authority",
       "judge_model": "gpt-6-luna",
-      "basis": "judge"
+      "basis": "domain_cache"
      }
     ],
     "fallback_domains": []
@@ -911,9 +911,9 @@
       "hash": "984dc57e13b9"
      }
     },
-    "requests": 1,
+    "requests": 0,
     "cache_hits": 0,
-    "api_calls": 1,
+    "api_calls": 0,
     "errors": 0
    }
   },
@@ -957,7 +957,7 @@
   "citation_utilization": {
    "name": "citation_utilization",
    "category": "retrieval.efficiency",
-   "version": "3",
+   "version": "3.audit3",
    "value": 0.221,
    "higher_is_better": true,
    "details": {
@@ -3672,8 +3672,8 @@
      }
     },
     "requests": 35,
-    "cache_hits": 0,
-    "api_calls": 35,
+    "cache_hits": 35,
+    "api_calls": 0,
     "errors": 0,
     "shared": "citation_audit"
    }
@@ -4562,8 +4562,8 @@
      }
     },
     "requests": 24,
-    "cache_hits": 0,
-    "api_calls": 24,
+    "cache_hits": 24,
+    "api_calls": 0,
     "errors": 0
    }
   },
@@ -4846,8 +4846,8 @@
      }
     },
     "requests": 1,
-    "cache_hits": 0,
-    "api_calls": 1,
+    "cache_hits": 1,
+    "api_calls": 0,
     "errors": 0
    }
   },
@@ -4912,8 +4912,8 @@
      }
     },
     "requests": 2,
-    "cache_hits": 1,
-    "api_calls": 1,
+    "cache_hits": 2,
+    "api_calls": 0,
     "errors": 0,
     "shared": "quality_scores"
    }
@@ -4979,8 +4979,8 @@
      }
     },
     "requests": 2,
-    "cache_hits": 1,
-    "api_calls": 1,
+    "cache_hits": 2,
+    "api_calls": 0,
     "errors": 0,
     "shared": "quality_scores"
    }
@@ -5213,15 +5213,15 @@
      }
     },
     "requests": 1,
-    "cache_hits": 0,
-    "api_calls": 1,
+    "cache_hits": 1,
+    "api_calls": 0,
     "errors": 0
    }
   },
   "citation_recall": {
    "name": "citation_recall",
    "category": "generation.citation",
-   "version": "1",
+   "version": "1.audit3",
    "value": 0.417,
    "higher_is_better": true,
    "details": {
@@ -5361,8 +5361,8 @@
      }
     },
     "requests": 35,
-    "cache_hits": 0,
-    "api_calls": 35,
+    "cache_hits": 35,
+    "api_calls": 0,
     "errors": 0,
     "shared": "citation_audit"
    }
@@ -5370,7 +5370,7 @@
   "citation_precision": {
    "name": "citation_precision",
    "category": "generation.citation",
-   "version": "1",
+   "version": "1.audit3",
    "value": 0.359,
    "higher_is_better": true,
    "details": {
@@ -5400,8 +5400,8 @@
      }
     },
     "requests": 35,
-    "cache_hits": 0,
-    "api_calls": 35,
+    "cache_hits": 35,
+    "api_calls": 0,
     "errors": 0,
     "shared": "citation_audit"
    }
@@ -5424,7 +5424,7 @@
   "effective_citations": {
    "name": "effective_citations",
    "category": "generation.citation",
-   "version": "1",
+   "version": "1.audit3",
    "value": 9.0,
    "higher_is_better": true,
    "details": {
@@ -5441,8 +5441,8 @@
      }
     },
     "requests": 35,
-    "cache_hits": 0,
-    "api_calls": 35,
+    "cache_hits": 35,
+    "api_calls": 0,
     "errors": 0,
     "shared": "citation_audit"
    }
@@ -5450,7 +5450,7 @@
   "faithfulness": {
    "name": "faithfulness",
    "category": "generation.hallucination",
-   "version": "1",
+   "version": "1.audit3",
    "value": 0.614,
    "higher_is_better": true,
    "details": {
@@ -6020,8 +6020,8 @@
      }
     },
     "requests": 35,
-    "cache_hits": 0,
-    "api_calls": 35,
+    "cache_hits": 35,
+    "api_calls": 0,
     "errors": 0,
     "shared": "citation_audit"
    }
@@ -6189,8 +6189,8 @@
      }
     },
     "requests": 2,
-    "cache_hits": 0,
-    "api_calls": 2,
+    "cache_hits": 2,
+    "api_calls": 0,
     "errors": 0,
     "shared": "toxicity_bias"
    }
@@ -6215,8 +6215,8 @@
      }
     },
     "requests": 2,
-    "cache_hits": 0,
-    "api_calls": 2,
+    "cache_hits": 2,
+    "api_calls": 0,
     "errors": 0,
     "shared": "toxicity_bias"
    }
