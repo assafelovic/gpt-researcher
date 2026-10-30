@@ -96,7 +96,8 @@ class Metric:
         return r
 
     def llm_record(self, ctx: ScoringContext, responses: list["JudgeResponse"]) -> dict:
-        return {
+        errors = [r.error for r in responses if r.error is not None]
+        record = {
             "judge_model": ctx.judge.model if ctx.judge else None,
             "prompts": {p.id: {"version": p.version, "hash": p.hash} for p in self.prompts},
             # requests = judge requests made by the metric; api_calls = the
@@ -104,8 +105,12 @@ class Metric:
             "requests": len(responses),
             "cache_hits": sum(r.cache_hit for r in responses),
             "api_calls": sum(not r.cache_hit for r in responses),
-            "errors": sum(r.error is not None for r in responses),
+            "errors": len(errors),
         }
+        if errors:
+            # What went wrong (429, timeout, unparseable reply), not just how often.
+            record["error_messages"] = sorted({e[:300] for e in errors})
+        return record
 
 
 def rounded(x: float | None, nd: int = 3) -> float | None:

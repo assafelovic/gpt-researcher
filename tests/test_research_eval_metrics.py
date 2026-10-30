@@ -261,6 +261,7 @@ async def test_source_authority_judge_failure_is_skipped(ctx):
     ctx.judge = Judge(ctx.cache, model="judge-y", complete=broke)
     r = await SourceAuthority().score(make_archive(), ctx)
     assert r.value is None and r.skipped == "judge call failed"
+    assert r.llm["errors"] == 1 and r.llm["error_messages"] == ["RuntimeError: 429 no credits"]
     assert r.details["unscored_domains"] == ["weather-blog.com"]
 
 
