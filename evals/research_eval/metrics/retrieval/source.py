@@ -48,24 +48,22 @@ def concentration(domains: list[str]) -> dict:
 
 
 class SourceDiversity(Metric):
-    """Normalised Shannon entropy of the domains the report body cites.
+    """Shannon entropy, in bits, of the domains the report body cites.
 
         p_i   = share of body citations (one per paragraph-URL pair) from domain i
-        H     = -Σ p_i·log2 p_i
-        value = H / log2(n citations)
+        value = H = -Σ p_i·log2 p_i
 
-    The divisor is the most entropy n citations can have (each from its own
-    domain), so a report leaning on one or two sites scores low however even
-    their split, while concentrating on several sites is only mildly
-    penalised. `details.evenness` is Pielou's H / log2(domains). With no body
-    citations the retrieved sources are used (`details.basis`). Both
-    distributions' measures are in `details.cited` / `details.retrieved`
-    (`concentration`); `diversity_ratio` = distinct retrieved domains /
-    retrieved sources was the v1 value.
+    2^H (`details.equivalent_domains`) reads as "as diverse as citing this
+    many domains equally": one domain gives 0 bits, two even ones 1 bit, eight
+    even ones 3 bits. Not bounded above, so compare runs on the same question.
+    With no body citations the retrieved sources are used (`details.basis`).
+    Both distributions' measures (Pielou evenness, HHI, ...) are in
+    `details.cited` / `details.retrieved` (`concentration`); `diversity_ratio`
+    = distinct retrieved domains / retrieved sources was the v1 value.
     """
 
     name, category = "source_diversity", "retrieval.source"
-    version = "3"           # 3: normalised entropy of cited domains
+    version = "3"           # 3: entropy of cited domains
 
     async def score(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:
         retrieved = [d for d in (domain_of(u) for u in archive.retrieved_urls) if d]
@@ -75,9 +73,9 @@ class SourceDiversity(Metric):
             return self.skip("no sources")
         basis, domains = ("cited", cited) if cited else ("retrieved", retrieved)
         c = concentration(domains)
-        value = 0.0 if len(domains) < 2 else c["entropy"] / math.log2(len(domains))
         rc = concentration(retrieved) if retrieved else None
-        return self.result(rounded(value), basis=basis, entropy=c["entropy"],
+        return self.result(c["entropy"], basis=basis,
+                           equivalent_domains=rounded(2 ** c["entropy"]),
                            evenness=c["evenness"], n=len(domains), domains=c["domains"],
                            cited=concentration(cited) if cited else None, retrieved=rc,
                            diversity_ratio=rounded(rc["domains"] / rc["n"]) if rc else None)

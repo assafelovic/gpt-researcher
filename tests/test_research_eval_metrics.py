@@ -228,11 +228,11 @@ async def test_source_diversity(ctx):
     even8 = "".join(f"P{i} ([s](https://site{i}.com/x)).\n\n" for i in range(8))
     lean = await SourceDiversity().score(make_archive("# R\n\n## S\n\n" + two_sites), ctx)
     wide = await SourceDiversity().score(make_archive("# R\n\n## S\n\n" + even8), ctx)
-    # Two sites split evenly: Pielou evenness is 1, but the value is H / log2(8) = 1/3.
-    assert lean.details["evenness"] == 1.0 and lean.value == pytest.approx(1 / 3, abs=1e-3)
-    assert wide.value == 1.0
+    # Two sites split evenly: 1 bit (as diverse as 2 even domains); eight: 3 bits.
+    assert lean.value == 1.0 and lean.details["equivalent_domains"] == 2
+    assert wide.value == 3.0 and wide.details["equivalent_domains"] == 8
     uncited = await SourceDiversity().score(make_archive("# R\n\n## S\n\nNo links.\n"), ctx)
-    assert uncited.details["basis"] == "retrieved" and uncited.value == 1.0
+    assert uncited.details["basis"] == "retrieved" and uncited.value == pytest.approx(1.585, abs=1e-3)
     assert r.details["retrieved"]["entropy"] == pytest.approx(1.585, abs=1e-3)
 
 
