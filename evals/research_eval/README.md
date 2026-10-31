@@ -105,8 +105,8 @@ whose follow-up questions produced it (matched by the research goal in its query
 | Query | `decomposition_tree_quality` | mean of judge total / 10 per parent (coverage, specificity, searchability, relevance to the parent, relevance to the original question) | 1 per parent |
 | Query | `plan_adherence` | planned sub-queries that returned chunks / planned | 0 |
 | Source | `source_authority` | mean authority over the report's citations (one per paragraph-URL pair); mean over all retrieved sources in `details.retrieved_mean`; rule tiers (subdomains included), then global domain cache, then one batched call | <= 1, tends to 0 |
-| Source | `source_diversity` | distinct domains / sources; entropy in details | 0 |
-| Efficiency | `citation_utilization` | retrieved URLs the body cites / retrieved URLs; chunk level in details (judged via the citation audit when a judge is set, else rule-based) | 0 (audit shared) |
+| Source | `source_diversity` | distinct domains / sources; details give HHI, effective domains (1/HHI), entropy and evenness for retrieved sources and for body citations | 0 |
+| Efficiency | `citation_utilization` | retrieved URLs the body cites / retrieved URLs; chunk level in details (judged via the citation audit when a judge is set, else rule-based); deep research adds `details.reasoning`: chunks that reach the report through a learning | 0 (audit shared) |
 | Efficiency | `query_relevance` | mean of judge total / 10 per search step + material (Q1-Q5 rubric); steps = sub-queries + each initial search; material = one best chunk per URL, 12k chars | 1 per step with material |
 | Efficiency | `retrieval_overlap` | search results already seen / proposed (lower is better) | 0 |
 

@@ -27,6 +27,10 @@ class CitationUtilization(Metric):
       chunk_level_judged  retrieved chunks some judged claim rests on / retrieved
                           chunks; `chunks_used_judged` lists them.
 
+    Deep research runs also get `details.reasoning` (see `_reasoning_chain`):
+    chunks that reach the report through a learning, and `chunk_level` =
+    chunks used directly or through a learning / chunks.
+
     Without a judge (--rules-only) `details` keeps the rule-based diagnostic.
     Neither is part of the value:
 
@@ -42,7 +46,7 @@ class CitationUtilization(Metric):
     """
 
     name, category = "citation_utilization", "retrieval.efficiency"
-    version = f"3.audit{AUDIT_VERSION}"
+    version = f"4.audit{AUDIT_VERSION}"     # 4: deep-research reasoning chain
     prompts = (PARAGRAPH_AUDIT,)
     MATCH, MIN_TERMS = 0.5, 5
 
@@ -91,6 +95,12 @@ class CitationUtilization(Metric):
                           chunk_level=rounded(used / len(per_chunk)) if per_chunk else None,
                           chunks=len(per_chunk), chunks_used=used, chunks_echoed_uncited=echoed,
                           match_threshold=threshold, per_chunk=per_chunk)
+        reasoning = self._reasoning_chain(archive, idf, all_sentences, threshold)
+        if reasoning is not None:
+            direct = {e["chunk_id"] for e in per_chunk if e["used"]}
+            via = set(reasoning.pop("chunk_ids"))
+            reasoning["chunk_level"] = rounded(len(direct | via) / len(chunk_ids))
+            res.details["reasoning"] = reasoning
         if ctx.judge is not None and chunk_ids:
             audit = await citation_audit(archive, ctx)
             judged_used = [c for c in chunk_ids if c in audit.used_chunk_ids]
@@ -98,6 +108,47 @@ class CitationUtilization(Metric):
                                chunks_used_judged=judged_used)
             res.llm = {**self.llm_record(ctx, audit.responses), "shared": "citation_audit"}
         return res
+
+
+    def _reasoning_chain(self, archive: RunArchive, idf: dict, sentences: list[str],
+                         threshold: float) -> dict | None:
+        """Deep research only: chunk -> learning -> report.
+
+        Deep research distils each search step into a few "learnings" and
+        writes the report from them, so a chunk can shape the report without
+        its URL being cited. A learning rests on the chunk of its step (the
+        recorded source URL's chunks when the archive has one) that holds
+        >= `match` of its BM25-weighted terms; it reaches the report when a
+        report sentence does. None for runs without learnings (default and
+        detailed modes write straight from the retrieved material).
+        """
+        steps = [s for s in archive.spans if s["name"] == "research" and s["attributes"].get("learnings")]
+        if not steps:
+            return None
+        retrieved = set(archive.retrieved_chunk_ids)
+        n_learnings = in_report = 0
+        distilled, reached = set(), set()
+        for step in steps:
+            a = step["attributes"]
+            own = [c for c in archive.subtree_chunk_ids(step["span_id"]) if c in retrieved]
+            sources = a.get("learning_sources") or {}
+            for learning in a["learnings"]:
+                n_learnings += 1
+                url = sources.get(learning)
+                pool = [c for c in own if url and normalize_url(archive.chunks[c].get("url") or "")
+                        == normalize_url(url)] or own
+                rests_on = {c for c in pool
+                            if weighted_overlap(learning, set(tokenize(archive.chunks[c]["content"])),
+                                                idf) >= threshold}
+                used = any(weighted_overlap(learning, set(tokenize(x)), idf) >= threshold
+                           for x in sentences)
+                in_report += used
+                distilled |= rests_on
+                if used:
+                    reached |= rests_on
+        return {"learnings": n_learnings, "learnings_in_report": in_report,
+                "chunks_distilled": len(distilled), "chunks_via_learnings": len(reached),
+                "chunk_ids": sorted(reached)}
 
 
 class QueryRelevance(Metric):

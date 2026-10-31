@@ -424,3 +424,38 @@ async def test_query_relevance_compares_only_the_same_layer(ctx):
                             ).split("same level of the plan:")[1].split("Sub-query under review")[0]
     assert "cobalt mine ownership" not in others("cobalt supply concentration")
     assert others("cobalt mine ownership Congo").strip() == "(none)"
+
+
+def test_concentration_measures():
+    from evals.research_eval.metrics.retrieval.source import concentration
+    even = concentration(["a", "b", "c", "d"])
+    assert even["hhi"] == 0.25 and even["effective"] == 4 and even["entropy"] == 2 and even["evenness"] == 1
+    skewed = concentration(["a"] * 8 + ["b", "c"])          # shares .8 .1 .1
+    assert skewed["hhi"] == pytest.approx(0.66) and skewed["effective"] == pytest.approx(1.515, abs=1e-3)
+    assert skewed["gini_simpson"] == pytest.approx(0.34)
+    assert skewed["entropy"] == pytest.approx(0.922, abs=1e-3)
+
+
+async def test_source_diversity_reports_retrieved_and_cited_concentration():
+    r = await SourceDiversity().score(make_archive(), ScoringContext(cache=EvalCache(":memory:")))
+    assert r.details["retrieved"]["domains"] == r.details["unique_domains"]
+    assert r.details["cited"]["n"] == 1 and r.details["cited"]["hhi"] == 1
+
+
+async def test_citation_utilization_reasoning_chain_for_deep_research():
+    rules_ctx = ScoringContext(cache=EvalCache(":memory:"))
+    a = make_archive("# R\n\n## S\n\n"
+                     "Lithium refining capacity sits mostly in China, according to agency data from 2024.\n\n"
+                     "Cobalt mining is concentrated in Congo and creates supply risk for battery makers, "
+                     "but this paragraph cites [Weather](https://weather-blog.com/rain).\n")
+    assert "reasoning" not in (await CitationUtilization().score(a, rules_ctx)).details
+    a.data["spans"][1]["attributes"]["learnings"] = [
+        "Lithium refining capacity sits mostly in China.",          # rests on the lithium chunk
+        "Rain is expected across northern regions this weekend."]   # rests on the weather chunk
+    a = RunArchive(a.data)
+    r = await CitationUtilization().score(a, rules_ctx)
+    chain = r.details["reasoning"]
+    assert chain["learnings"] == 2 and chain["chunks_distilled"] == 2
+    # Only the lithium learning reaches the report, so only its chunk counts.
+    assert chain["learnings_in_report"] == 1 and chain["chunks_via_learnings"] == 1
+    assert chain["chunk_level"] == pytest.approx(1 / 3, abs=1e-3)

@@ -298,6 +298,7 @@ class RunCapture:
             if sp is not None and sp.attributes.get("query") == query:
                 sp.attributes["learnings"] = list((out or {}).get("learnings") or [])
                 sp.attributes["follow_ups"] = list((out or {}).get("followUpQuestions") or [])
+                sp.attributes["learning_sources"] = dict((out or {}).get("citations") or {})
             return out
 
         self._patch(DeepResearchSkill, "process_research_results", process_research_results)
