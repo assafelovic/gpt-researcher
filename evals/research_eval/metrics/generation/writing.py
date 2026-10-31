@@ -37,7 +37,7 @@ class Comprehensiveness(Metric):
     """
 
     name, category = "comprehensiveness", "generation.writing"
-    version = "2"           # 2: reads the report's own Markdown (common.report_text)
+    version = "3"           # 3: records the insights the judge found
     uses_llm = True
     prompts = (COMPREHENSIVENESS, KEY_POINTS)
     HINT = 0.6
@@ -141,6 +141,8 @@ async def quality_scores(archive: RunArchive, ctx: ScoringContext) -> dict:
             wsum = len(scored)
         value = sum(r["weight"] * r["score"] for r in scored) / wsum / 10 if scored else None
         out["dims"][dim] = {"value": value, "criteria": rows, "report_truncated": truncated}
+    found = (sc.parsed or {}).get("insights") if isinstance(sc.parsed, dict) else None
+    out["insights_found"] = [i for i in found or [] if isinstance(i, dict)]
     if not scores:
         out["error"] = "scoring call failed: " + (sc.error or "no scores")
     memo[key] = out
@@ -153,10 +155,13 @@ class _RubricDimension(Metric):
     The rubric (3-5 weighted criteria per dimension) is generated once per
     question and cached; insight and readability are scored in the same call.
         value = sum(weight * score) / sum(weight) / 10
+    `details.criteria` keeps the rubric with each criterion's score and the
+    judge's evidence; insight also keeps `insights_found`, the insights the
+    judge read in the report, so the judge itself can be reviewed run by run.
     """
 
     category = "generation.writing"
-    version = "2"           # 2: reads the report's own Markdown (common.report_text)
+    version = "3"           # 3: records the insights the judge found
     uses_llm = True
     prompts = (QUALITY_RUBRIC, QUALITY_SCORE)
     dimension = ""
@@ -173,6 +178,8 @@ class _RubricDimension(Metric):
         else:
             res = self.result(rounded(dim["value"]), criteria=dim["criteria"],
                               report_truncated=dim["report_truncated"])
+            if self.dimension == "insight":
+                res.details["insights_found"] = q.get("insights_found", [])
         res.llm = {**self.llm_record(ctx, q["responses"]), "shared": "quality_scores"}
         return res
 
@@ -194,13 +201,15 @@ class InstructionFollowing(Metric):
                          else option `min_words`, default 1200)
     single_title         exactly one level-1 heading
     clean_headings       a section heading exists, no level jumps, no content before it
-    no_toc               no table-of-contents section
+    no_toc               no table-of-contents section (not checked in detailed mode,
+                         where DetailedReport inserts the table of contents itself)
     references           a references section that lists links, without duplicates
     in_text_citations    the body carries hyperlinked citations
     cites_only_retrieved every URL cited in the body was retrieved by the agent
     """
 
     name, category = "instruction_following", "generation.writing"
+    version = "2"           # 2: no_toc skipped in detailed mode
     MIN_WORDS = 1200
 
     async def score(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:
@@ -220,7 +229,9 @@ class InstructionFollowing(Metric):
             "single_title": not ({"no_title", "multiple_titles"} & set(w)),
             "clean_headings": bool(headings) and not ({"heading_level_jump",
                                                         "content_before_first_heading"} & set(w)),
-            "no_toc": not any(TOC_HEADING.match(h) for h in headings),
+            # Detailed reports get their table of contents from code, not the writer.
+            **({} if cfg.get("mode") == "detailed"
+               else {"no_toc": not any(TOC_HEADING.match(h) for h in headings)}),
             "references": bool(refs) and len(set(refs)) == len(refs),
             "in_text_citations": bool(cited),
             "cites_only_retrieved": not not_retrieved,

@@ -101,7 +101,7 @@ whose follow-up questions produced it (matched by the research goal in its query
 | Category | Metric | Value | LLM cost per run |
 |---|---|---|---|
 | Query | `decomposition_coverage` | key points some sub-query is aimed at / K; one judge call maps key points to sub-queries (embedding cosine only as a no-judge fallback) | key points: 1 per question, cached; mapping: 1 |
-| Query | `subquery_redundancy` | search steps `query_relevance` judged not unique (its Q4) / steps answered (lower is better); without a judge, sibling pairs with symmetric BM25-weighted overlap >= 0.6 / pairs (`details.method`) | 0, reads `query_relevance` |
+| Query | `subquery_redundancy` | search steps `query_relevance` judged not unique (its Q4, against steps at the same layer of the query tree only) / steps answered (lower is better); without a judge, sibling pairs with symmetric BM25-weighted overlap >= 0.6 / pairs (`details.method`) | 0, reads `query_relevance` |
 | Query | `decomposition_tree_quality` | mean of judge total / 10 per parent (coverage, specificity, searchability, relevance to the parent, relevance to the original question) | 1 per parent |
 | Query | `plan_adherence` | planned sub-queries that returned chunks / planned | 0 |
 | Source | `source_authority` | mean authority over the report's citations (one per paragraph-URL pair); mean over all retrieved sources in `details.retrieved_mean`; rule tiers (subdomains included), then global domain cache, then one batched call | <= 1, tends to 0 |
@@ -174,9 +174,9 @@ can legitimately differ: material on a key point can arrive from a search not ai
 | Category | Metric | Value | LLM cost per run |
 |---|---|---|---|
 | Writing | `comprehensiveness` | (full + 0.5 partial key points) / K; uncovered points that a retrieved chunk seems to discuss are listed as `omitted_but_retrieved` | 1 (+ key points, shared) |
-| Writing | `insight` | weighted rubric score / 10; rubric (3-5 criteria) generated once per question | rubric: 1 per question, cached; scoring: 1, shared with readability |
+| Writing | `insight` | weighted rubric score / 10; rubric (3-5 criteria) generated once per question; `details.insights_found` records the insights the judge read | rubric: 1 per question, cached; scoring: 1, shared with readability |
 | Writing | `readability` | same, readability criteria | shared |
-| Writing | `instruction_following` | passed / 7 rule checks: min words, one title, clean headings, no TOC, references, in-text citations, cites only retrieved URLs | 0 |
+| Writing | `instruction_following` | passed / 7 rule checks (6 in detailed mode, whose TOC is inserted by code): min words, one title, clean headings, no TOC, references, in-text citations, cites only retrieved URLs | 0 |
 | Writing | `topic_relevance` | (yes + idk) / paragraphs | 1 per ~20k chars |
 | Citation | `citation_recall` | ALCE: citing sentences supported by their own sources / citing sentences | audit (below) |
 | Citation | `citation_precision` | ALCE: precise citations / citations (sentence-URL pairs) | audit |

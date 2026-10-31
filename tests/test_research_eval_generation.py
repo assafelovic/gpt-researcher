@@ -120,7 +120,8 @@ class ScriptedJudge:
                                "readability": [{"criterion": "flow"}, {"criterion": "terms"}]})
         if "grading a research report on an absolute scale" in prompt:
             return json.dumps({"scores": [{"id": "I1", "score": 8}, {"id": "I2", "score": 4},
-                                          {"id": "R1", "score": 6}, {"id": "R2", "score": 9}]})
+                                          {"id": "R1", "score": 6}, {"id": "R2", "score": 9}],
+                               "insights": [{"insight": "Supply risk is regional.", "quote": "Congo"}]})
         if "whether each paragraph of a research report" in prompt:
             n = len(re.findall(r"^\d+\. ", prompt.split("Paragraphs:")[1], re.M))
             v = ["yes", "no", "idk"] + ["yes"] * n
@@ -278,6 +279,9 @@ async def test_instruction_following(ctx):
     assert r.value == pytest.approx(6 / 7, abs=1e-3)
     long = await InstructionFollowing().score(make_archive(config={"mode": "default"}), ctx)
     assert long.details["min_words"] == 1200 and long.details["checks"]["min_words"] is False
+    # Detailed reports get their table of contents from code: not held against the writer.
+    detailed = await InstructionFollowing().score(make_archive(config={"mode": "detailed"}), ctx)
+    assert "no_toc" not in detailed.details["checks"] and len(detailed.details["checks"]) == 6
 
 
 # --- judged writing metrics ----------------------------------------------------
@@ -300,6 +304,8 @@ async def test_insight_and_readability_share_one_rubric_and_call(ctx):
     assert r.value == pytest.approx((6 + 9) / 2 / 10)      # no weights -> equal
     assert sum("grading a research report" in p for p in ctx.fake.prompts) == 1
     assert sum("preparing a grading rubric" in p for p in ctx.fake.prompts) == 1
+    assert i.details["insights_found"] == [{"insight": "Supply risk is regional.", "quote": "Congo"}]
+    assert "insights_found" not in r.details
 
 
 async def test_topic_relevance_idk_counts_as_relevant(ctx):

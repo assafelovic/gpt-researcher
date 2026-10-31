@@ -105,9 +105,11 @@ class SubqueryRedundancy(Metric):
     """Share of search steps that ask what another step already asks (lower is better).
 
     With a judge: read from query_relevance's Q4 ("compared with the other
-    sub-queries, does this one go after something they do not?"), which sees
-    every sub-query of the run, across branches and depths, and is already
-    paid for. value = steps judged not unique / steps with a Q4 answer.
+    sub-queries, does this one go after something they do not?"), which is
+    already paid for. Each step is compared with the steps at the same layer
+    of the query tree only (`RunArchive.query_layer`), across branches: a
+    parent and its own children overlap by design. value = steps judged not
+    unique / steps with a Q4 answer.
 
     Without a judge (`details.method` = "lexical"): sibling pairs whose
     symmetric BM25-weighted term overlap reaches the threshold, IDF over the
@@ -117,7 +119,7 @@ class SubqueryRedundancy(Metric):
     """
 
     name, category = "subquery_redundancy", "retrieval.query"
-    version = "2"
+    version = "3"           # 3: same-layer comparison
     higher_is_better = False
     DEFAULT_THRESHOLD = 0.6
 

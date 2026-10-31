@@ -111,7 +111,7 @@ Return ONLY JSON:
 """.strip())
 
 
-QUERY_RELEVANCE = Prompt("query_relevance", "1", """
+QUERY_RELEVANCE = Prompt("query_relevance", "2", """
 You are auditing one retrieval step of a research agent. The agent searched the
 web with a sub-query and kept the material shown below. Judge the sub-query and
 its material TOGETHER as one unit, against the core research question. Answer
@@ -123,8 +123,10 @@ Q2 Key points: which of the numbered key points does the material give real
    information about? List their numbers (may be empty).
 Q3 Specificity: is the material concrete (facts, figures, named entities,
    dates) rather than generic? 0 / 1 / 2.
-Q4 Uniqueness: compared with the other sub-queries listed, does this one go
-   after something they do not? true / false.
+Q4 Uniqueness: compared with the other sub-queries listed (the ones at the same
+   level of the research plan), does this one go after something they do not?
+   A different angle or a narrower part of the same topic counts as unique.
+   true / false.
 Q5 Usability: could a writer cite this material directly in the report? 0 / 1 / 2.
 
 Then give "total" from 0 to 10: your overall judgement of how much this unit
@@ -146,7 +148,7 @@ Core question:
 Key points:
 {key_points}
 
-Other sub-queries in this run:
+Other sub-queries at the same level of the plan:
 {other_queries}
 
 Sub-query under review:
@@ -279,7 +281,7 @@ Return ONLY JSON:
 """.strip())
 
 
-QUALITY_SCORE = Prompt("quality_score", "1", """
+QUALITY_SCORE = Prompt("quality_score", "2", """
 You are grading a research report on an absolute scale. Score every criterion
 below from 0 to 10 using these anchors:
   0-2  absent or badly done;
@@ -299,8 +301,13 @@ Criteria:
 Report:
 {report}
 
-Return ONLY JSON, one entry per criterion id, in order:
-{{"scores": [{{"id": "I1", "evidence": "...", "score": 0}}]}}
+Also list the report's insights as you read them: each conclusion, comparison
+or implication that goes beyond restating a source, in one sentence, with the
+report text it comes from. Use an empty list if there are none.
+
+Return ONLY JSON, one score entry per criterion id, in order:
+{{"scores": [{{"id": "I1", "evidence": "...", "score": 0}}],
+  "insights": [{{"insight": "...", "quote": "..."}}]}}
 """.strip())
 
 

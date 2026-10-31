@@ -309,7 +309,7 @@ async def test_query_relevance(ctx):
     assert r.value == pytest.approx(0.6)
     prompt = next(p for p in ctx.fake.prompts if "Sub-query under review:\ncobalt" in p)
     assert "1. cobalt supply" in prompt and "- lithium refining capacity" in prompt
-    assert CORE not in prompt.split("Other sub-queries in this run:")[1].split("Sub-query under review")[0]
+    assert CORE not in prompt.split("Other sub-queries at the same level of the plan:")[1].split("Sub-query under review")[0]
 
 
 async def test_query_relevance_material_and_initial_search(ctx):
@@ -379,3 +379,48 @@ async def test_metric_crash_is_recorded_not_raised(ctx):
 
     rec = await score_archive(make_archive(), [Broken()], ctx)
     assert rec["metrics"]["broken"]["skipped"].startswith("error: RuntimeError")
+
+
+def test_query_layer_counts_researchers_and_plans():
+    spans = [
+        {"span_id": "r0", "parent_id": None, "name": "research", "attributes": {"query": CORE}},
+        {"span_id": "p0", "parent_id": "r0", "name": "plan", "attributes": {"query": CORE}},
+        {"span_id": "q1", "parent_id": "p0", "name": "sub_query", "attributes": {"query": "a"}},
+        {"span_id": "q0", "parent_id": "p0", "name": "sub_query", "attributes": {"query": CORE}},
+        {"span_id": "d1", "parent_id": "r0", "name": "deep_level", "attributes": {"query": CORE}},
+        {"span_id": "r1", "parent_id": "d1", "name": "research", "attributes": {"query": "a"}},
+        {"span_id": "i1", "parent_id": "r1", "name": "initial_results", "attributes": {"query": "a"}},
+        {"span_id": "p1", "parent_id": "r1", "name": "plan", "attributes": {"query": "a"}},
+        {"span_id": "q2", "parent_id": "p1", "name": "sub_query", "attributes": {"query": "a"}},
+        {"span_id": "q3", "parent_id": "p1", "name": "sub_query", "attributes": {"query": "a.1"}},
+        # A detailed report's subtopic researcher: a root span with parent_query.
+        {"span_id": "r2", "parent_id": None, "name": "research",
+         "attributes": {"query": "b", "parent_query": CORE}},
+        {"span_id": "p2", "parent_id": "r2", "name": "plan", "attributes": {"query": "b"}},
+        {"span_id": "q4", "parent_id": "p2", "name": "sub_query", "attributes": {"query": "b.1"}},
+    ]
+    a = RunArchive(build_archive(meta={"run_id": "t", "query": CORE}, spans=spans,
+                                 chunks={}, report_markdown="# t\n"))
+    layers = {s: a.query_layer(s) for s in ("q0", "q1", "i1", "q2", "q3", "q4")}
+    assert layers == {"q0": 0, "q1": 1, "i1": 1, "q2": 1, "q3": 2, "q4": 2}
+
+
+async def test_query_relevance_compares_only_the_same_layer(ctx):
+    a = make_archive()
+    cid = {k: _chunk(k)[0] for k in CHUNK_TEXT}
+    a.data["spans"] += [
+        {"span_id": "s8", "parent_id": "s2", "name": "research",
+         "attributes": {"query": "cobalt supply concentration"}},
+        {"span_id": "s9", "parent_id": "s8", "name": "plan", "attributes": {"query": "cobalt"}},
+        {"span_id": "s10", "parent_id": "s9", "name": "sub_query", "attributes": {
+            "query": "cobalt mine ownership Congo", "chunk_ids": [cid["cobalt"]]}},
+    ]
+    a = RunArchive(a.data)
+    r = await QueryRelevance().score(a, ctx)
+    layer = {q["query"]: q["layer"] for q in r.details["per_query"]}
+    assert layer == {"cobalt supply concentration": 1, "lithium refining capacity": 1,
+                     "cobalt mine ownership Congo": 2}
+    others = lambda q: next(p for p in ctx.fake.prompts if f"Sub-query under review:\n{q}" in p
+                            ).split("same level of the plan:")[1].split("Sub-query under review")[0]
+    assert "cobalt mine ownership" not in others("cobalt supply concentration")
+    assert others("cobalt mine ownership Congo").strip() == "(none)"

@@ -120,7 +120,7 @@ class QueryRelevance(Metric):
     """
 
     name, category = "query_relevance", "retrieval.efficiency"
-    version = "2"
+    version = "3"           # 3: Q4 compares a step only with its own layer
     uses_llm = True
     prompts = (QUERY_RELEVANCE, KEY_POINTS)
     CHUNK_CHARS, MATERIAL_CHARS = 1500, 12000
@@ -146,7 +146,13 @@ class QueryRelevance(Metric):
             return self.skip("no key points", key_points=provenance)
         judged = [u for u in units if u.chunk_ids]
         empty = [u.query for u in units if not u.chunk_ids]
-        all_queries = list(dict.fromkeys(u.query for u in units if u.kind == "sub_query"))
+        # Uniqueness (Q4) is judged against the same layer of the query tree
+        # only: a parent and its own children overlap by design.
+        layer = {u.span_id: archive.query_layer(u.span_id) for u in units}
+        by_layer: dict[int, list[str]] = {}
+        for u in units:
+            if u.kind == "sub_query":
+                by_layer.setdefault(layer[u.span_id], []).append(u.query)
 
         async def judge_one(u):
             material, shown = self._material(archive, u)
@@ -155,7 +161,8 @@ class QueryRelevance(Metric):
             prompt = QUERY_RELEVANCE.render(
                 question=archive.query,
                 key_points="\n".join(f"{i}. {p}" for i, p in enumerate(points, 1)),
-                other_queries="\n".join(f"- {q}" for q in all_queries if q != u.query) or "(none)",
+                other_queries="\n".join(f"- {q}" for q in dict.fromkeys(by_layer.get(layer[u.span_id], []))
+                                         if q != u.query) or "(none)",
                 query=label, material=material)
             return u, shown, await ctx.judge.ask(QUERY_RELEVANCE.id, QUERY_RELEVANCE.version, prompt)
 
@@ -170,6 +177,7 @@ class QueryRelevance(Metric):
             if norm is not None:
                 scores.append(norm)
             per_query.append({"span_id": u.span_id, "kind": u.kind, "query": u.query,
+                              "layer": layer[u.span_id],
                               "chunks": len(u.chunk_ids), **shown,
                               "score": rounded(norm), "rubric": r.parsed, "error": r.error})
         res = self.result(rounded(sum(scores) / len(scores)) if scores else None,

@@ -169,6 +169,29 @@ class RunArchive:
             ))
         return out
 
+    def query_layer(self, span_id: str) -> int:
+        """Depth of a search step in the query tree (0 = the run's question).
+
+        Each researcher adds a layer: its own query and initial search sit at
+        the researcher's depth, its planned sub-queries one deeper. A detailed
+        report's subtopic researchers (`parent_query` set) run beside the main
+        one in the trace but are its children, so they start at layer 1.
+        """
+        span = self.span_by_id[span_id]
+        researchers, cur = [], span
+        while cur is not None:
+            if cur["name"] == "research":
+                researchers.append(cur)
+            cur = self.span_by_id.get(cur["parent_id"])
+        layer = max(len(researchers) - 1, 0)
+        if researchers and researchers[-1]["attributes"].get("parent_query"):
+            layer += 1
+        own = span["attributes"].get("query", "").strip()
+        is_root = bool(researchers) and own == researchers[0]["attributes"].get("query", "").strip()
+        if span["name"] == "sub_query" and not is_root:
+            layer += 1
+        return layer
+
     @cached_property
     def issued_subqueries(self) -> list[str]:
         """Distinct queries actually searched, excluding the run's core query.
