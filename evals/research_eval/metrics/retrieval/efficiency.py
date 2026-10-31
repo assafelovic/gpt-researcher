@@ -171,7 +171,7 @@ class QueryRelevance(Metric):
     """
 
     name, category = "query_relevance", "retrieval.efficiency"
-    version = "3"           # 3: Q4 compares a step only with its own layer
+    version = "4"           # 4: Q4 counts only reworded requests for the same facts
     uses_llm = True
     prompts = (QUERY_RELEVANCE, KEY_POINTS)
     CHUNK_CHARS, MATERIAL_CHARS = 1500, 12000

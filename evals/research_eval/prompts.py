@@ -116,7 +116,7 @@ Return ONLY JSON:
 """.strip())
 
 
-QUERY_RELEVANCE = Prompt("query_relevance", "2", """
+QUERY_RELEVANCE = Prompt("query_relevance", "3", """
 You are auditing one retrieval step of a research agent. The agent searched the
 web with a sub-query and kept the material shown below. Judge the sub-query and
 its material TOGETHER as one unit, against the core research question. Answer
@@ -130,8 +130,11 @@ Q3 Specificity: is the material concrete (facts, figures, named entities,
    dates) rather than generic? 0 / 1 / 2.
 Q4 Uniqueness: compared with the other sub-queries listed (the ones at the same
    level of the research plan), does this one go after something they do not?
-   A different angle or a narrower part of the same topic counts as unique.
-   true / false.
+   Answer false ONLY when another listed sub-query asks for the same
+   information in other words, so that both would be answered by the same
+   facts. A different perspective, a different source or authority, or a
+   separate subtopic about the same object counts as unique, even when the
+   wording overlaps heavily. true / false.
 Q5 Usability: could a writer cite this material directly in the report? 0 / 1 / 2.
 
 Then give "total" from 0 to 10: your overall judgement of how much this unit
