@@ -164,7 +164,7 @@ class Config:
                     print(f"Do you mean '{config_path}.json'?")
             return deepcopy(DEFAULT_CONFIG)
 
-        with open(config_path, "r") as f:
+        with open(config_path, "r", encoding="utf-8") as f:
             custom_config = json.load(f)
 
         # Merge with default config to ensure all keys are present
