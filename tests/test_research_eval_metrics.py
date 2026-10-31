@@ -526,3 +526,20 @@ async def test_judge_counts_tokens_from_usage_metadata():
     j._add_usage({"input_tokens": 10, "output_tokens": 3})
     j._add_usage(None)
     assert j.usage() == {"model": "m", "calls": 0, "cache_hits": 0, "input_tokens": 10, "output_tokens": 3}
+
+
+async def test_reasoning_chain_leaves_out_chunks_of_deeper_levels():
+    rules_ctx = ScoringContext(cache=EvalCache(":memory:"))
+    a = make_archive("# R\n\n## S\n\n"
+                     "Lithium refining capacity sits mostly in China, according to agency data from 2024.\n")
+    a.data["spans"][1]["attributes"]["learnings"] = ["Lithium refining capacity sits mostly in China."]
+    base = (await CitationUtilization().score(RunArchive(a.data), rules_ctx)).details["reasoning"]
+    assert base["chunks_distilled"] == 1
+    # Move the lithium sub-query under a deeper level of the same step: its chunk
+    # was retrieved after the learning was written, so it cannot back it.
+    a.data["spans"].append({"span_id": "dl", "parent_id": "s2", "name": "deep_level", "attributes": {"query": CORE}})
+    for sp in a.data["spans"]:
+        if sp["span_id"] == "s5":
+            sp["parent_id"] = "dl"
+    chain = (await CitationUtilization().score(RunArchive(a.data), rules_ctx)).details["reasoning"]
+    assert chain["chunks_distilled"] == 0

@@ -46,7 +46,7 @@ class CitationUtilization(Metric):
     """
 
     name, category = "citation_utilization", "retrieval.efficiency"
-    version = f"5.audit{AUDIT_VERSION}"     # 4: deep-research reasoning chain; 5: URL-level funnel
+    version = f"6.audit{AUDIT_VERSION}"     # 4: deep-research reasoning chain; 5: URL-level funnel; 6: step chunks exclude deeper levels
     prompts = (PARAGRAPH_AUDIT,)
     MATCH, MIN_TERMS = 0.5, 5
 
@@ -133,7 +133,12 @@ class CitationUtilization(Metric):
         distilled, reached = set(), set()
         for step in steps:
             a = step["attributes"]
-            own = [c for c in archive.subtree_chunk_ids(step["span_id"]) if c in retrieved]
+            # The step's own chunks: deeper levels hang under the step's research
+            # span but run after its learnings were written, so they are left out.
+            later = {c for d in archive.descendants(step["span_id"]) if d["name"] == "deep_level"
+                     for c in archive.subtree_chunk_ids(d["span_id"])}
+            own = [c for c in archive.subtree_chunk_ids(step["span_id"])
+                   if c in retrieved and c not in later]
             sources = a.get("learning_sources") or {}
             for learning in a["learnings"]:
                 n_learnings += 1
