@@ -220,8 +220,20 @@ async def test_plan_adherence_counts_empty_and_unexecuted(ctx):
 
 async def test_source_diversity(ctx):
     r = await SourceDiversity().score(make_archive(), ctx)
-    assert r.details["unique_domains"] == 3 and r.value == 1.0
-    assert r.details["domain_entropy"] == pytest.approx(1.585, abs=1e-3)
+    # One body citation: nothing to spread over.
+    assert r.details["basis"] == "cited" and r.value == 0.0
+    assert r.details["retrieved"]["domains"] == 3 and r.details["diversity_ratio"] == 1.0
+    two_sites = "".join(f"P{i} ([a](https://a.com/{i})).\n\n" if i % 2 else f"P{i} ([b](https://b.org/{i})).\n\n"
+                        for i in range(8))
+    even8 = "".join(f"P{i} ([s](https://site{i}.com/x)).\n\n" for i in range(8))
+    lean = await SourceDiversity().score(make_archive("# R\n\n## S\n\n" + two_sites), ctx)
+    wide = await SourceDiversity().score(make_archive("# R\n\n## S\n\n" + even8), ctx)
+    # Two sites split evenly: Pielou evenness is 1, but the value is H / log2(8) = 1/3.
+    assert lean.details["evenness"] == 1.0 and lean.value == pytest.approx(1 / 3, abs=1e-3)
+    assert wide.value == 1.0
+    uncited = await SourceDiversity().score(make_archive("# R\n\n## S\n\nNo links.\n"), ctx)
+    assert uncited.details["basis"] == "retrieved" and uncited.value == 1.0
+    assert r.details["retrieved"]["entropy"] == pytest.approx(1.585, abs=1e-3)
 
 
 async def test_source_authority_rules_judge_and_domain_cache(ctx):
@@ -438,7 +450,7 @@ def test_concentration_measures():
 
 async def test_source_diversity_reports_retrieved_and_cited_concentration():
     r = await SourceDiversity().score(make_archive(), ScoringContext(cache=EvalCache(":memory:")))
-    assert r.details["retrieved"]["domains"] == r.details["unique_domains"]
+    assert r.details["retrieved"]["domains"] == 3
     assert r.details["cited"]["n"] == 1 and r.details["cited"]["hhi"] == 1
 
 

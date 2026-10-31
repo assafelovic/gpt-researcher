@@ -268,4 +268,4 @@ async def test_captured_archive_scores_with_rule_metrics(fake_env):
     # page per aspect; the core sub-query repeats the initial search entirely.
     assert m["retrieval_overlap"]["details"]["proposed"] == 8
     assert m["retrieval_overlap"]["value"] == 0.5
-    assert m["source_diversity"]["details"]["total_sources"] == 4
+    assert m["source_diversity"]["details"]["retrieved"]["n"] == 4

@@ -48,33 +48,39 @@ def concentration(domains: list[str]) -> dict:
 
 
 class SourceDiversity(Metric):
-    """diversity_ratio = distinct domains / sources (the value).
+    """Normalised Shannon entropy of the domains the report body cites.
 
-    `details.retrieved` and `details.cited` give concentration measures
-    (`concentration`: HHI, effective domains, entropy) for the retrieved
-    sources and for the body's citations (one per paragraph-URL pair).
+        p_i   = share of body citations (one per paragraph-URL pair) from domain i
+        H     = -Σ p_i·log2 p_i
+        value = H / log2(n citations)
+
+    The divisor is the most entropy n citations can have (each from its own
+    domain), so a report leaning on one or two sites scores low however even
+    their split, while concentrating on several sites is only mildly
+    penalised. `details.evenness` is Pielou's H / log2(domains). With no body
+    citations the retrieved sources are used (`details.basis`). Both
+    distributions' measures are in `details.cited` / `details.retrieved`
+    (`concentration`); `diversity_ratio` = distinct retrieved domains /
+    retrieved sources was the v1 value.
     """
 
     name, category = "source_diversity", "retrieval.source"
-    version = "2"           # 2: concentration measures in details
+    version = "3"           # 3: normalised entropy of cited domains
 
     async def score(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:
-        domains = [domain_of(u) for u in archive.retrieved_urls]
-        domains = [d for d in domains if d]
-        if not domains:
-            return self.skip("no retrieved sources")
-        counts = Counter(domains)
-        total = len(domains)
-        retrieved = concentration(domains)
-        cited = [domain_of(c["url"]) for p in body_paragraphs(archive.report)
-                 for c in p["citations"]]
-        cited = [d for d in cited if d]
-        return self.result(rounded(len(counts) / total),
-                           total_sources=total, unique_domains=len(counts),
-                           diversity_ratio=rounded(len(counts) / total),
-                           domain_entropy=retrieved["entropy"],
-                           top_domains=retrieved["top_domains"],
-                           retrieved=retrieved, cited=concentration(cited) if cited else None)
+        retrieved = [d for d in (domain_of(u) for u in archive.retrieved_urls) if d]
+        cited = [d for d in (domain_of(c["url"]) for p in body_paragraphs(archive.report)
+                             for c in p["citations"]) if d]
+        if not retrieved and not cited:
+            return self.skip("no sources")
+        basis, domains = ("cited", cited) if cited else ("retrieved", retrieved)
+        c = concentration(domains)
+        value = 0.0 if len(domains) < 2 else c["entropy"] / math.log2(len(domains))
+        rc = concentration(retrieved) if retrieved else None
+        return self.result(rounded(value), basis=basis, entropy=c["entropy"],
+                           evenness=c["evenness"], n=len(domains), domains=c["domains"],
+                           cited=concentration(cited) if cited else None, retrieved=rc,
+                           diversity_ratio=rounded(rc["domains"] / rc["n"]) if rc else None)
 
 
 _HIGH_AUTHORITY_DOMAINS = {
