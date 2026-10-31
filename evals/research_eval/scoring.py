@@ -18,8 +18,9 @@ from .archive import RunArchive
 from .cache import stable_hash
 from .citation_audit import AUDIT_VERSION
 from .metrics.base import Metric, MetricResult, ScoringContext
+from .report_parser import body_paragraphs
 
-SCORER_BASE_VERSION = "0.1"
+SCORER_BASE_VERSION = "0.2"      # 0.2: failed runs are skipped
 RESULTS_DIR = Path(__file__).parent / "results"
 
 
@@ -29,10 +30,38 @@ def scorer_version(metrics: list[Metric]) -> str:
     return f"{SCORER_BASE_VERSION}+{fingerprint[:8]}"
 
 
+MIN_REPORT_CHARS = 1000
+
+
+def run_failure(archive: RunArchive) -> str | None:
+    """Why a run is not worth scoring, or None.
+
+    A run fails when the agent raised (meta.status != "ok") or when it finished
+    without a real report: no citations at all and under MIN_REPORT_CHARS of
+    text, e.g. deep research's fallback sentence after every sub-query failed.
+    Scoring such a run only drags the averages down with numbers about nothing.
+    """
+    status = archive.meta.get("status", "ok")
+    if status != "ok":
+        return f"run status {status}: {archive.meta.get('error') or 'no error message'}"
+    parsed = archive.report
+    has_citations = bool(parsed.get("references")) or any(
+        p["citations"] for p in body_paragraphs(parsed))
+    text = archive.report_markdown.strip()
+    if not has_citations and len(text) < MIN_REPORT_CHARS:
+        return f"no real report ({len(text)} chars, no citations)"
+    return None
+
+
 async def score_archive(archive: RunArchive, metrics: list[Metric],
-                        ctx: ScoringContext) -> dict:
+                        ctx: ScoringContext, *, score_failed: bool = False) -> dict:
     results: dict[str, dict] = {}
+    failure = run_failure(archive)
     for m in metrics:
+        if failure and not score_failed:
+            results[m.name] = MetricResult(m.name, m.category, m.version, None, m.higher_is_better,
+                                           {}, skipped=f"failed run: {failure}").to_dict()
+            continue
         try:
             r = await m.score(archive, ctx)
         except Exception as e:
@@ -48,6 +77,8 @@ async def score_archive(archive: RunArchive, metrics: list[Metric],
         "scored_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "judge_model": ctx.judge.model if ctx.judge else None,
         "embedding_model": ctx.embedder.model if ctx.embedder else None,
+        "run_status": "failed" if failure else "ok",
+        "failure": failure,
         "metrics": results,
     }
     audit = ctx.archive_memo(archive).get("citation_audit")

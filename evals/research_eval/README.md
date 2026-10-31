@@ -59,6 +59,15 @@ python -m evals.research_eval.score RUN.json --metrics plan_adherence,query_rele
 
 The judge model is `EVAL_JUDGE_MODEL` (default in `evals/judge.py`). Re-scoring an
 archive with unchanged metrics replays every judge and embedding call from the cache.
+At the end, `score` prints the judge's call count, cache hits and the input / output
+tokens of uncached calls (from the provider's usage metadata), so scoring cost is
+measured rather than guessed.
+
+Failed runs are not scored: when the agent raised (`meta.status != "ok"`) or finished
+without a real report (no citations and under 1,000 characters, e.g. deep research's
+fallback sentence after every sub-query failed), every metric is skipped with
+`failed run: <reason>` and the record carries `run_status: "failed"`. `--score-failed`
+scores them anyway.
 
 ## Archive (schema 1.0)
 
@@ -106,7 +115,7 @@ whose follow-up questions produced it (matched by the research goal in its query
 | Query | `plan_adherence` | planned sub-queries that returned chunks / planned | 0 |
 | Source | `source_authority` | mean authority over the report's citations (one per paragraph-URL pair); mean over all retrieved sources in `details.retrieved_mean`; rule tiers (subdomains included), then global domain cache, then one batched call | <= 1, tends to 0 |
 | Source | `source_diversity` | Shannon entropy (bits) of cited domains, citation = paragraph-URL pair (retrieved sources if nothing is cited); 2^H = equivalent number of evenly cited domains; details give entropy, Pielou evenness, HHI and effective domains for citations and retrieved sources | 0 |
-| Efficiency | `citation_utilization` | retrieved URLs the body cites / retrieved URLs; chunk level in details (judged via the citation audit when a judge is set, else rule-based); deep research adds `details.reasoning`: chunks that reach the report through a learning | 0 (audit shared) |
+| Efficiency | `citation_utilization` | retrieved URLs the body cites / retrieved URLs; chunk level in details (judged via the citation audit when a judge is set, else rule-based); deep research adds `details.reasoning`: the URL funnel (retrieved URLs → URLs a learning names as its source → those the report cites) and chunks that reach the report through a learning | 0 (audit shared) |
 | Efficiency | `query_relevance` | mean of judge total / 10 per search step + material (Q1-Q5 rubric); steps = sub-queries + each initial search; material = one best chunk per URL, 12k chars | 1 per step with material |
 | Efficiency | `retrieval_overlap` | search results already seen / proposed (lower is better), leaving out each researcher's repeat search of its own question; `details.with_core_repeats` keeps the old rate | 0 |
 
@@ -261,12 +270,19 @@ made the judge call passporting unsupported although the cited page states it.
 
 ## Not yet done
 
+- Citation recall / precision / faithfulness granularity: the unit is a citing sentence
+  span, which in practice is often a whole paragraph with 3–6 claims; under strict ALCE one
+  inferred claim fails the unit. To be redefined in this stage.
+- Insight / readability judge prompt: scores barely separate the modes (0.68 / 0.69 / 0.68
+  over five questions); polish the prompt later.
+
 - Source diversity formulation (domain ratio saturates; under research).
 - Generation metrics: validated on one archive only (q001, below).
 - Per-paragraph sampling twice for a more stable faithfulness verdict (design §5).
 - Perturbation tests on a frozen archive (does each metric move the expected way when a
   known problem is injected), then judge calibration with a small human-labelled set.
 - More real runs: one each of default, detailed and deep (q001) are saved as seed samples in
-  `seeds/v0/` (archive, report, scores, logs), not yet reviewed by hand.
-- Question set size and composition (`dataset/questions_v0.jsonl` is a placeholder).
+  `seeds/v0/` (archive, report, scores, logs), not yet reviewed by hand. q002–q005 were run
+  once per mode on 2026-10-31; their archives are not in the repo.
+- Question set size and composition (`dataset/questions_v0.jsonl` has five questions).
 - Old-vs-new comparison against `quality_eval`; evaluator stability benchmarks.

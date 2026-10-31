@@ -487,3 +487,42 @@ async def test_citation_utilization_reasoning_chain_for_deep_research():
     # Only the lithium learning reaches the report, so only its chunk counts.
     assert chain["learnings_in_report"] == 1 and chain["chunks_via_learnings"] == 1
     assert chain["chunk_level"] == pytest.approx(1 / 3, abs=1e-3)
+    # Without learning_sources there is no URL-level funnel.
+    assert chain["learning_urls"] is None
+
+
+async def test_citation_utilization_url_funnel_for_deep_research():
+    rules_ctx = ScoringContext(cache=EvalCache(":memory:"))
+    a = make_archive("# R\n\n## S\n\n"
+                     "Lithium refining capacity sits mostly in China, according to agency data from 2024 "
+                     f"([lithium]({URLS['lithium']})).\n")
+    lithium = "Lithium refining capacity sits mostly in China."
+    cobalt = "Cobalt mining is concentrated in Congo."
+    a.data["spans"][1]["attributes"]["learnings"] = [lithium, cobalt]
+    a.data["spans"][1]["attributes"]["learning_sources"] = {
+        lithium: URLS["lithium"], cobalt: URLS["cobalt"]}
+    chain = (await CitationUtilization().score(RunArchive(a.data), rules_ctx)).details["reasoning"]
+    assert chain["retrieved_urls"] == 3
+    assert chain["learning_urls"] == 2 and chain["cited_learning_urls"] == 1
+    assert chain["cited_other_urls"] == 0
+
+
+async def test_failed_runs_are_skipped_unless_asked(ctx):
+    from evals.research_eval.scoring import run_failure
+    a = make_archive("# R\n\nI could not gather any source material for this question.\n")
+    assert "no real report" in run_failure(a)
+    record = await score_archive(a, all_metrics(), ctx)
+    assert record["run_status"] == "failed"
+    assert all(r["value"] is None and r["skipped"].startswith("failed run") for r in record["metrics"].values())
+    record = await score_archive(a, [m for m in all_metrics() if m.name == "plan_adherence"], ctx, score_failed=True)
+    assert record["metrics"]["plan_adherence"]["value"] is not None
+    a.data["meta"]["status"], a.data["meta"]["error"] = "error", "boom"
+    assert "boom" in run_failure(RunArchive(a.data))
+    assert run_failure(make_archive()) is None
+
+
+async def test_judge_counts_tokens_from_usage_metadata():
+    j = Judge(EvalCache(":memory:"), model="m", complete=lambda p: None)
+    j._add_usage({"input_tokens": 10, "output_tokens": 3})
+    j._add_usage(None)
+    assert j.usage() == {"model": "m", "calls": 0, "cache_hits": 0, "input_tokens": 10, "output_tokens": 3}

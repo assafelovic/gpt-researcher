@@ -31,6 +31,8 @@ async def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--cache", default=str(DEFAULT_CACHE_PATH))
     ap.add_argument("--results-dir", default=str(RESULTS_DIR))
     ap.add_argument("--concurrency", type=int, default=4)
+    ap.add_argument("--score-failed", action="store_true",
+                    help="score runs that failed (agent error or no real report) instead of skipping them")
     args = ap.parse_args(argv)
 
     from dotenv import load_dotenv
@@ -56,12 +58,18 @@ async def main(argv: list[str] | None = None) -> int:
                          max_concurrency=args.concurrency)
     for path in args.archives:
         archive = RunArchive.load(path)
-        record = await score_archive(archive, metrics, ctx)
+        record = await score_archive(archive, metrics, ctx, score_failed=args.score_failed)
         out = save_results(record, args.results_dir)
         print(f"\n== {archive.run_id}  (scorer {record['scorer_version']})")
+        if record["failure"]:
+            print(f"   FAILED RUN: {record['failure']}")
         for name, value, note in summary_rows(record):
             print(f"   {name:<28} {value:>7}  {note}")
         print(f"   -> {out}")
+    if ctx.judge is not None:
+        u = ctx.judge.usage()
+        print(f"\n== judge {u['model']}: {u['calls']} calls ({u['cache_hits']} cache hits), "
+              f"{u['input_tokens']} input / {u['output_tokens']} output tokens (uncached calls)")
     cache.close()
     return 0
 

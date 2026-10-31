@@ -17,3 +17,7 @@ instead of the cached judge output.
 stays: the question says Europe, not the EU. Without a frozen file, re-scoring
 without the cache regenerated the list (7 points in one rep) and moved
 comprehensiveness and decomposition coverage by up to 0.29 between reps.
+
+`key_points/q002.json`–`q005.json` freeze the judge-generated lists (judge
+gpt-6-luna, prompt v1) used in the 2026-10-31 five-question scores, so later
+re-scores compare against the same points. Not yet reviewed item by item.

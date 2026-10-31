@@ -46,7 +46,7 @@ class CitationUtilization(Metric):
     """
 
     name, category = "citation_utilization", "retrieval.efficiency"
-    version = f"4.audit{AUDIT_VERSION}"     # 4: deep-research reasoning chain
+    version = f"5.audit{AUDIT_VERSION}"     # 4: deep-research reasoning chain; 5: URL-level funnel
     prompts = (PARAGRAPH_AUDIT,)
     MATCH, MIN_TERMS = 0.5, 5
 
@@ -126,6 +126,9 @@ class CitationUtilization(Metric):
         if not steps:
             return None
         retrieved = set(archive.retrieved_chunk_ids)
+        retrieved_urls = {normalize_url(u) for u in archive.retrieved_urls}
+        cited = {normalize_url(u) for u in cited_urls(archive.report)}
+        learning_urls: set[str] = set()
         n_learnings = in_report = 0
         distilled, reached = set(), set()
         for step in steps:
@@ -135,6 +138,8 @@ class CitationUtilization(Metric):
             for learning in a["learnings"]:
                 n_learnings += 1
                 url = sources.get(learning)
+                if url:
+                    learning_urls.add(normalize_url(url))
                 pool = [c for c in own if url and normalize_url(archive.chunks[c].get("url") or "")
                         == normalize_url(url)] or own
                 rests_on = {c for c in pool
@@ -146,9 +151,21 @@ class CitationUtilization(Metric):
                 distilled |= rests_on
                 if used:
                     reached |= rests_on
-        return {"learnings": n_learnings, "learnings_in_report": in_report,
+        # URL-level funnel: retrieved URLs -> URLs some learning names as its
+        # source -> those the report cites. Empty when the archive predates
+        # learning_sources.
+        learning_urls &= retrieved_urls
+        return {"retrieved_urls": len(retrieved_urls),
+                "learning_urls": len(learning_urls) if sources_seen(steps) else None,
+                "cited_learning_urls": len(learning_urls & cited) if sources_seen(steps) else None,
+                "cited_other_urls": len((cited & retrieved_urls) - learning_urls) if sources_seen(steps) else None,
+                "learnings": n_learnings, "learnings_in_report": in_report,
                 "chunks_distilled": len(distilled), "chunks_via_learnings": len(reached),
                 "chunk_ids": sorted(reached)}
+
+
+def sources_seen(steps: list[dict]) -> bool:
+    return any(s["attributes"].get("learning_sources") for s in steps)
 
 
 class QueryRelevance(Metric):

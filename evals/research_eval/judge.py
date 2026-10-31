@@ -66,6 +66,8 @@ class Judge:
         self._complete = complete
         self.calls = 0
         self.cache_hits = 0
+        self.input_tokens = 0       # summed from the provider's usage metadata,
+        self.output_tokens = 0      # uncached calls only (reasoning tokens included)
 
     async def _call(self, prompt: str) -> str:
         if self._complete is None:
@@ -74,10 +76,20 @@ class Judge:
 
             async def complete(p: str) -> str:
                 resp = await llm.ainvoke(p)
+                self._add_usage(getattr(resp, "usage_metadata", None))
                 return resp.content if isinstance(resp.content, str) else str(resp.content)
 
             self._complete = complete
         return await self._complete(prompt)
+
+    def _add_usage(self, usage: dict | None) -> None:
+        if usage:
+            self.input_tokens += int(usage.get("input_tokens") or 0)
+            self.output_tokens += int(usage.get("output_tokens") or 0)
+
+    def usage(self) -> dict:
+        return {"model": self.model, "calls": self.calls, "cache_hits": self.cache_hits,
+                "input_tokens": self.input_tokens, "output_tokens": self.output_tokens}
 
     async def ask(self, prompt_id: str, prompt_version: str, prompt: str,
                   **params: Any) -> JudgeResponse:
