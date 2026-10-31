@@ -192,6 +192,26 @@ class RunArchive:
             layer += 1
         return layer
 
+    def query_path(self, span_id: str) -> list[str]:
+        """Queries from the run's question down to this span's own query.
+
+        One entry per distinct query on the span's ancestor chain (researcher,
+        deep-research level, plan, ...), consecutive repeats folded; starts
+        with the run's question even where the trace starts a new root (a
+        detailed report's subtopic researchers).
+        """
+        chain, cur = [], self.span_by_id.get(span_id)
+        while cur is not None:
+            q = (cur["attributes"].get("query") or "").strip()
+            if q:
+                chain.append(q)
+            cur = self.span_by_id.get(cur["parent_id"])
+        path = [self.query.strip()]
+        for q in reversed(chain):
+            if q != path[-1]:
+                path.append(q)
+        return path
+
     @cached_property
     def issued_subqueries(self) -> list[str]:
         """Distinct queries actually searched, excluding the run's core query.

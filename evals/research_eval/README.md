@@ -102,13 +102,13 @@ whose follow-up questions produced it (matched by the research goal in its query
 |---|---|---|---|
 | Query | `decomposition_coverage` | key points some sub-query is aimed at / K; one judge call maps key points to sub-queries (embedding cosine only as a no-judge fallback) | key points: 1 per question, cached; mapping: 1 |
 | Query | `subquery_redundancy` | search steps `query_relevance` judged not unique (its Q4, against steps at the same layer of the query tree only) / steps answered (lower is better); without a judge, sibling pairs with symmetric BM25-weighted overlap >= 0.6 / pairs (`details.method`) | 0, reads `query_relevance` |
-| Query | `decomposition_tree_quality` | mean of judge total / 10 per parent (coverage, specificity, searchability, relevance to the parent, relevance to the original question) | 1 per parent |
+| Query | `decomposition_tree_quality` | mean of judge total / 10 per parent (coverage, specificity, searchability, relevance to the parent, relevance to the original question); the judge sees the whole path from the question down to the parent | 1 per parent |
 | Query | `plan_adherence` | planned sub-queries that returned chunks / planned | 0 |
 | Source | `source_authority` | mean authority over the report's citations (one per paragraph-URL pair); mean over all retrieved sources in `details.retrieved_mean`; rule tiers (subdomains included), then global domain cache, then one batched call | <= 1, tends to 0 |
 | Source | `source_diversity` | Shannon entropy (bits) of cited domains, citation = paragraph-URL pair (retrieved sources if nothing is cited); 2^H = equivalent number of evenly cited domains; details give entropy, Pielou evenness, HHI and effective domains for citations and retrieved sources | 0 |
 | Efficiency | `citation_utilization` | retrieved URLs the body cites / retrieved URLs; chunk level in details (judged via the citation audit when a judge is set, else rule-based); deep research adds `details.reasoning`: chunks that reach the report through a learning | 0 (audit shared) |
 | Efficiency | `query_relevance` | mean of judge total / 10 per search step + material (Q1-Q5 rubric); steps = sub-queries + each initial search; material = one best chunk per URL, 12k chars | 1 per step with material |
-| Efficiency | `retrieval_overlap` | search results already seen / proposed (lower is better) | 0 |
+| Efficiency | `retrieval_overlap` | search results already seen / proposed (lower is better), leaving out each researcher's repeat search of its own question; `details.with_core_repeats` keeps the old rate | 0 |
 
 Every result carries `version`, `higher_is_better`, `details`, `skipped` (a reason,
 when it could not run) and, for LLM metrics, `llm` (judge model, prompt versions and

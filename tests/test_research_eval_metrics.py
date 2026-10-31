@@ -206,9 +206,25 @@ async def test_tree_quality_uses_judge_total(ctx):
     r = await DecompositionTreeQuality().score(make_archive(), ctx)
     assert r.value == 0.8                                   # 8 / 10
     assert r.llm["requests"] == r.llm["api_calls"] == 1 and r.llm["judge_model"] == "judge-x"
-    assert r.llm["prompts"]["tree_quality"]["version"] == "2"
-    prompt = next(p for p in ctx.fake.prompts if "how a research agent split a query" in p)
+    assert r.llm["prompts"]["tree_quality"]["version"] == "3"
+    prompt = next(p for p in ctx.fake.prompts if "Path from the original question" in p)
+    assert f"0. {CORE}" in prompt and r.details["per_parent"][0]["depth"] == 0
     assert f"Original research question (the root of the whole search tree):\n{CORE}" in prompt
+
+
+def test_query_path_runs_from_the_question_down():
+    spans = [
+        {"span_id": "r0", "parent_id": None, "name": "research", "attributes": {"query": CORE}},
+        {"span_id": "d1", "parent_id": "r0", "name": "deep_level", "attributes": {"query": CORE}},
+        {"span_id": "r1", "parent_id": "d1", "name": "research", "attributes": {"query": "a"}},
+        {"span_id": "p1", "parent_id": "r1", "name": "plan", "attributes": {"query": "a"}},
+        {"span_id": "r2", "parent_id": None, "name": "research",
+         "attributes": {"query": "b", "parent_query": CORE}},
+    ]
+    a = RunArchive(build_archive(meta={"run_id": "t", "query": CORE}, spans=spans,
+                                 chunks={}, report_markdown="# t\n"))
+    assert a.query_path("p1") == [CORE, "a"]
+    assert a.query_path("r2") == [CORE, "b"]
 
 
 async def test_plan_adherence_counts_empty_and_unexecuted(ctx):

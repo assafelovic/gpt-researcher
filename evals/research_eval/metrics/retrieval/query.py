@@ -176,12 +176,14 @@ class DecompositionTreeQuality(Metric):
     relevance to the parent, and relevance to the original question (Q5, which
     catches a deep tree drifting away from the question one level at a time).
 
-    One call per decomposition (parent + all its children). Each call returns a
-    0-10 total; the value is the mean of total/10 over parents.
+    One call per decomposition (parent + all its children). The judge also sees
+    the whole path from the original question down to the parent
+    (`RunArchive.query_path`), so Q5 can follow drift across levels. Each call
+    returns a 0-10 total; the value is the mean of total/10 over parents.
     """
 
     name, category = "decomposition_tree_quality", "retrieval.query"
-    version = "2"
+    version = "3"           # 3: the judge sees the root-to-parent path
     MAX_TOTAL = 10
     uses_llm = True
     prompts = (TREE_QUALITY,)
@@ -194,8 +196,12 @@ class DecompositionTreeQuality(Metric):
             return self.skip("no decompositions")
 
         async def judge_one(d):
+            path = archive.query_path(d.span_id)
+            if path[-1] != d.parent_query.strip():
+                path.append(d.parent_query.strip())
             prompt = TREE_QUALITY.render(
                 question=archive.query.strip(),
+                path="\n".join(f"{i}. {self._short(q)}" for i, q in enumerate(path)),
                 parent=d.parent_query.strip(),
                 children="\n".join(f"- {c}" for c in d.child_queries))
             return d, await ctx.judge.ask(TREE_QUALITY.id, TREE_QUALITY.version, prompt)
@@ -208,6 +214,7 @@ class DecompositionTreeQuality(Metric):
             if norm is not None:
                 scores.append(norm)
             per_parent.append({"span_id": d.span_id, "kind": d.kind, "parent": d.parent_query,
+                               "depth": len(archive.query_path(d.span_id)) - 1,
                                "n_children": len(d.child_queries), "score": rounded(norm),
                                "rubric": r.parsed, "error": r.error})
         res = self.result(rounded(sum(scores) / len(scores)) if scores else None,
@@ -216,6 +223,13 @@ class DecompositionTreeQuality(Metric):
             res.skipped = "every judge call failed"
         res.llm = self.llm_record(ctx, [r for _, r in results])
         return res
+
+    PATH_CHARS = 400
+
+    @classmethod
+    def _short(cls, q: str) -> str:
+        q = " ".join(q.split())
+        return q if len(q) <= cls.PATH_CHARS else q[:cls.PATH_CHARS] + " ..."
 
 
 class PlanAdherence(Metric):

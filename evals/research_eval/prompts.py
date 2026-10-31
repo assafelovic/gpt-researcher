@@ -69,13 +69,17 @@ Return ONLY JSON, one entry per key point, in order:
 """.strip())
 
 
-TREE_QUALITY = Prompt("tree_quality", "2", """
+TREE_QUALITY = Prompt("tree_quality", "3", """
 You are auditing how a research agent split a query into sub-queries before
 searching the web. Judge the split below. Answer the five questions IN ORDER;
 for each, quote the parent or child text your answer rests on, then score it.
 
 Original research question (the root of the whole search tree):
 {question}
+
+Path from the original question (0) down to the parent (last line), one query
+per level; long queries are cut:
+{path}
 
 Parent query:
 {parent}
@@ -95,8 +99,9 @@ Q4 Relevance: does every child serve the parent? Moderate extension beyond the
 Q5 Root relevance: do the children still serve the ORIGINAL research question?
    A deep tree can stay faithful to each parent while drifting away from the
    question step by step, for example toward one firm's business situation or a
-   detail the question never asked about. If the parent is the original
-   question itself, score Q5 the same as Q4.
+   detail the question never asked about. Use the path above to see how far
+   the branch has already moved. If the parent is the original question
+   itself, score Q5 the same as Q4.
    2 = all serve it, 1 = one or two have drifted, 0 = several have drifted.
 
 Finally give "total", the sum of the five scores (0-10).

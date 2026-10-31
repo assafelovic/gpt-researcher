@@ -266,6 +266,9 @@ async def test_captured_archive_scores_with_rule_metrics(fake_env):
     assert m["plan_adherence"]["value"] == 1.0
     # 4 searches x 2 results. New: the initial search's two pages and one own
     # page per aspect; the core sub-query repeats the initial search entirely.
-    assert m["retrieval_overlap"]["details"]["proposed"] == 8
-    assert m["retrieval_overlap"]["value"] == 0.5
+    # The core sub-query's repeat of the initial search is left out.
+    assert m["retrieval_overlap"]["details"]["proposed"] == 6
+    assert m["retrieval_overlap"]["details"]["core_repeats"] == 1
+    assert m["retrieval_overlap"]["details"]["with_core_repeats"] == 0.5
+    assert m["retrieval_overlap"]["value"] == pytest.approx(1 / 3, abs=1e-3)
     assert m["source_diversity"]["details"]["retrieved"]["n"] == 4

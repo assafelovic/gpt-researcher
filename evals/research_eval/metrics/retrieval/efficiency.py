@@ -266,19 +266,32 @@ class RetrievalOverlap(Metric):
 
     Measured at URL de-duplication (`_get_new_urls`): the only point where the
     overlap is still visible, since everything downstream sees disjoint sets.
+    The repeat search of each researcher's own question (`is_core_query`
+    sub-queries, all duplicate by design) is left out; `details` keeps the
+    rate with it as `with_core_repeats`.
     Pre-fetched results from retrievers that return content bypass that step
     and are not counted.
     """
 
     name, category = "retrieval_overlap", "retrieval.efficiency"
+    version = "2"           # 2: core-question repeat searches left out
     higher_is_better = False
 
     async def score(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:
-        proposed = sum(len(u.proposed_urls) for u in archive.retrieval_units)
-        accepted = sum(len(u.new_urls) for u in archive.retrieval_units)
+        units = [u for u in archive.retrieval_units if u.proposed_urls]
+        # gpt-researcher searches each researcher's own question once more after its
+        # sub-queries; that repeat of the initial search is all duplicate by design.
+        repeat = [u for u in units if u.kind == "sub_query" and u.is_core_query]
+        counted = [u for u in units if u not in repeat]
+        proposed = sum(len(u.proposed_urls) for u in counted)
+        accepted = sum(len(u.new_urls) for u in counted)
         if not proposed:
             return self.skip("no search results recorded")
         per_unit = [{"span_id": u.span_id, "query": u.query, "proposed": len(u.proposed_urls),
-                     "new": len(u.new_urls)} for u in archive.retrieval_units if u.proposed_urls]
+                     "new": len(u.new_urls), "core_repeat": u in repeat} for u in units]
+        all_p = proposed + sum(len(u.proposed_urls) for u in repeat)
+        all_a = accepted + sum(len(u.new_urls) for u in repeat)
         return self.result(rounded((proposed - accepted) / proposed), proposed=proposed,
-                           new=accepted, duplicate=proposed - accepted, per_unit=per_unit)
+                           new=accepted, duplicate=proposed - accepted,
+                           core_repeats=len(repeat),
+                           with_core_repeats=rounded((all_p - all_a) / all_p), per_unit=per_unit)
