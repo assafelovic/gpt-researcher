@@ -50,11 +50,11 @@ class ImageGenerator:
     def _init_provider(self):
         """Initialize the image generation provider from config."""
         try:
-            enabled = getattr(self.cfg, 'IMAGE_GENERATION_ENABLED', False)
+            enabled = getattr(self.cfg, 'image_generation_enabled', False)
             if not enabled:
                 return
-            provider_name = getattr(self.cfg, 'IMAGE_GENERATION_PROVIDER', 'google')
-            model = getattr(self.cfg, 'IMAGE_GENERATION_MODEL', None)
+            provider_name = getattr(self.cfg, 'image_generation_provider', 'google')
+            model = getattr(self.cfg, 'image_generation_model', None)
             if provider_name == 'modelslab':
                 provider = ModelsLabImageGeneratorProvider(model_id=model)
             else:
