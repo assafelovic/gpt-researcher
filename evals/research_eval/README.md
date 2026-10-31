@@ -179,9 +179,9 @@ can legitimately differ: material on a key point can arrive from a search not ai
 | Writing | `instruction_following` | passed / 7 rule checks (6 in detailed mode, whose TOC is inserted by code): min words, one title, clean headings, no TOC, references, in-text citations, cites only retrieved URLs | 0 |
 | Writing | `topic_relevance` | (yes + idk) / paragraphs | 1 per ~20k chars |
 | Citation | `citation_recall` | ALCE: citing sentences supported by their own sources / citing sentences | audit (below) |
-| Citation | `citation_precision` | ALCE: precise citations / citations (sentence-URL pairs) | audit |
+| Citation | `citation_precision` | ALCE: precise citations / citations (sentence-URL pairs; in a table, each URL once per table, precise if it is for any row) | audit |
 | Citation | `citation_coverage` | references cited in the body / references (URL level; formerly `citation_faithfulness`) | 0 |
-| Citation | `effective_citations` | count of citations their source supports (FACT style) | audit |
+| Citation | `effective_citations` | count of citations their source supports (FACT style); a table counts each URL once | audit |
 | Hallucination | `faithfulness` | mean claim score in [-1, 1]: supported 1, inferred 0.5 / 0.4 / 0.3, unsupported 0, contradicted -1 | audit |
 | Hallucination | `fact_grounding` | numbers and capitalised names found in the cited chunks / checked (names: singular ~ plural, leading "the" ignored, 3+ word names ~ their acronym); numbers and names counted separately in `details` | 0 |
 | Other | `toxicity` | flagged opinions / opinions (lower is better) | 1 per ~15k chars, shared with bias |

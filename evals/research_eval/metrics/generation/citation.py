@@ -67,7 +67,8 @@ class CitationRecall(_AuditMetric):
 class CitationPrecision(_AuditMetric):
     """ALCE citation precision, as in its reference implementation.
 
-        value = precise citations / citations   (citation = one sentence-URL pair)
+        value = precise citations / citations   (citation = one sentence-URL pair;
+                                                 in a table, one table-URL pair)
 
     Irrelevant citation: does not support its sentence alone, and the sentence's
     other citations support it without it. As in ALCE, citations of a sentence
@@ -78,12 +79,12 @@ class CitationPrecision(_AuditMetric):
     name = "citation_precision"
 
     def from_audit(self, audit, archive):
-        cites = [(s, c) for s in audit.sentence_checks if s["judged"] for c in s["citations"]]
+        cites = audit.citations
         if not cites:
             return self.skip("no citations")
-        precise = sum(c["precise"] for _, c in cites)
-        over = [{"para_id": s["para_id"], "sentence": s["sentence"], "url": c["url"]}
-                for s, c in cites if s["supported"] and not c["precise"]]
+        precise = sum(c["precise"] for c in cites)
+        over = [{"para_id": c["para_id"], "sentence": c["sentence"], "url": c["url"]}
+                for c in cites if c["supported"] and not c["precise"]]
         return self.result(rounded(precise / len(cites)), citations=len(cites), precise=precise,
                            over_citations=len(over), irrelevant=over)
 
@@ -94,6 +95,7 @@ class EffectiveCitations(_AuditMetric):
         value = sentence-URL citations whose source supports the sentence
                 (alone, or as the only citation of a supported sentence)
 
+    In a table each URL counts once (see `CitationAudit.citations`).
     A count, not a ratio: a report with three correct citations scores 100% on
     the ratios but much lower here than one with forty.
     """
@@ -101,7 +103,7 @@ class EffectiveCitations(_AuditMetric):
     name = "effective_citations"
 
     def from_audit(self, audit, archive):
-        cites = [c for s in audit.sentence_checks if s["judged"] for c in s["citations"]]
+        cites = audit.citations
         if not cites:
             return self.skip("no citations")
         eff = [c for c in cites if c["effective"]]

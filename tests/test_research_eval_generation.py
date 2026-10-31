@@ -425,3 +425,27 @@ async def test_score_record_keeps_the_full_citation_audit(ctx):
     json.dumps(rec)                                     # serialisable as saved
     rules = await score_archive(make_archive(), [FactGrounding()], ctx)
     assert "citation_audit" not in rules
+
+
+def test_table_citations_count_once_per_table():
+    from evals.research_eval.citation_audit import CitationAudit, ParagraphAudit
+
+    def cite(url, alone, precise):
+        return {"url": url, "found": True, "alone": alone, "rest_suffice": not alone,
+                "precise": precise, "effective": alone}
+
+    def row(i, a, b, table=True):
+        return {"para_id": "t", "sentence": i, "text": f"row {i}", "judged": True,
+                "supported": True, "table": table,
+                "citations": [cite("https://a", a, a), cite("https://b", b, b),
+                              cite("https://c", False, False)]}
+
+    table = ParagraphAudit("t", [], "cited", [], [], table=True,
+                           sentence_checks=[row(1, True, False), row(2, False, True)])
+    cites = CitationAudit([table]).citations
+    # 2 rows x 3 URLs would be 6 pairs (2 precise); per table it is 3 URLs, 2 precise.
+    assert [(c["url"], c["precise"], c["effective"], c["sentence"]) for c in cites] == [
+        ("https://a", True, True, [1, 2]), ("https://b", True, True, [1, 2]),
+        ("https://c", False, False, [1, 2])]
+    text = ParagraphAudit("p", [], "cited", [], [], sentence_checks=[row(1, True, False, table=False)])
+    assert len(CitationAudit([text]).citations) == 3

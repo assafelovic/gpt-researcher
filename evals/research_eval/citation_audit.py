@@ -46,7 +46,7 @@ if TYPE_CHECKING:
 # Bump when the audit's material or unit logic changes (prompt changes bump the
 # prompt version instead); every metric that reads the audit carries it in its
 # version, so the scorer version changes and old results are not overwritten.
-AUDIT_VERSION = "5"
+AUDIT_VERSION = "6"
 
 # Faithfulness points per verdict (eval-design/generation-metrics.md §3.2 B).
 VERDICT_SCORES = {"supported": 1.0, "inferred_a": 0.5, "inferred_b": 0.4, "inferred_c": 0.3,
@@ -72,6 +72,7 @@ class ParagraphAudit:
     claims: list[dict] = field(default_factory=list)
     sentence_checks: list[dict] = field(default_factory=list)
     error: str | None = None
+    table: bool = False                         # rows are units; citations belong to the table
 
     def to_dict(self) -> dict:
         return {"para_id": self.para_id, "heading_path": self.heading_path, "mode": self.mode,
@@ -103,6 +104,37 @@ class CitationAudit:
     @property
     def sentence_checks(self) -> list[dict]:
         return [s for p in self.judged for s in p.sentence_checks]
+
+    @property
+    def citations(self) -> list[dict]:
+        """Judged citations for precision and effective-citation counts.
+
+        A sentence-URL pair each, except in tables: a table's source line
+        cites the whole table, so every row carries every URL. There each URL
+        counts once per table, precise / effective when it is so for any row
+        (`sentence` lists the rows). Recall still counts each row.
+        """
+        out, tables = [], {}
+        for s in self.sentence_checks:
+            if not s["judged"]:
+                continue
+            for c in s["citations"]:
+                if not s.get("table"):
+                    out.append({"para_id": s["para_id"], "sentence": s["sentence"],
+                                "supported": s["supported"], **c})
+                    continue
+                key = (s["para_id"], c["url"])
+                if key not in tables:
+                    tables[key] = {"para_id": s["para_id"], "sentence": [], "supported": False,
+                                   "url": c["url"], "found": c["found"],
+                                   "precise": False, "effective": False}
+                    out.append(tables[key])
+                t = tables[key]
+                t["sentence"].append(s["sentence"])
+                t["supported"] |= s["supported"]
+                t["precise"] |= c["precise"]
+                t["effective"] |= c["effective"]
+        return out
 
 
 async def citation_audit(archive: "RunArchive", ctx: "ScoringContext") -> CitationAudit:
@@ -213,7 +245,8 @@ def prepare(archive: "RunArchive", paragraph: dict, idf: dict,
         top = _rank(paragraph["text"], archive.retrieved_chunk_ids, archive, idf)[:UNCITED_PASSAGES]
         sources = [{"n": n, "url": archive.chunks[c].get("url"), "found": True,
                     "passages": [{"id": f"{n}a", "chunk_id": c}]} for n, c in enumerate(top, 1)]
-    return ParagraphAudit(paragraph["para_id"], [], mode, sents, sources)
+    return ParagraphAudit(paragraph["para_id"], [], mode, sents, sources,
+                          table=paragraph.get("type") == "table")
 
 
 def render(archive: "RunArchive", pa: ParagraphAudit) -> str:
@@ -292,7 +325,8 @@ def interpret(pa: ParagraphAudit) -> None:
             checks.append({"url": u, "found": src["found"], "alone": alone, "rest_suffice": rest})
         _alce(supported, checks)
         pa.sentence_checks.append({"para_id": pa.para_id, "sentence": i, "text": sent["text"],
-                                   "judged": judged, "supported": supported, "citations": checks})
+                                   "judged": judged, "supported": supported, "citations": checks,
+                                   "table": pa.table})
 
 
 def _alce(supported: bool, checks: list[dict]) -> None:
