@@ -385,11 +385,12 @@ def claim_level(pa: ParagraphAudit) -> None:
         if not units:
             continue        # from uncited sentences after the last citation
         urls = list(dict.fromkeys(u for n in units for u in unit_urls[n]))
-        backing = list(dict.fromkeys(chunk_url[cid] for cid in c["chunk_ids"]
-                                     if chunk_url.get(cid) in urls))
+        backing_chunks = [cid for cid in dict.fromkeys(c["chunk_ids"]) if chunk_url.get(cid) in urls]
+        backing = list(dict.fromkeys(chunk_url[cid] for cid in backing_chunks))
         pa.claim_checks.append({
             "para_id": pa.para_id, "claim": c["claim"], "units": units, "urls": urls,
-            "verdict": c["verdict"], "backing_urls": backing, "units_guessed": guessed,
+            "verdict": c["verdict"], "backing_urls": backing, "backing_chunks": backing_chunks,
+            "units_guessed": guessed,
             "supported": c["verdict"] == "supported" and bool(backing)})
     for n, urls in unit_urls.items():
         mine = [cc for cc in pa.claim_checks if n in cc["units"]]

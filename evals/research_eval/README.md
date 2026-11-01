@@ -190,7 +190,7 @@ can legitimately differ: material on a key point can arrive from a search not ai
 | Citation | `citation_recall` | per claim: cited claims supported by their own citations / cited claims. Claims come from the audit (one may span several sentences); supported = verdict "supported" (strict) and a passage it rests on is from a URL its own item cites. `details.unit_level` keeps the former ALCE per-citing-unit value | audit (below) |
 | Citation | `citation_precision` | per claim: citations that back a supported claim of their item / citations (item-URL pairs; items with no factual claim left out; in a table, each URL once per table, precise if it is for any row). `details.unit_level` keeps the ALCE value | audit |
 | Citation | `citation_coverage` | references cited in the body / references (URL level; formerly `citation_faithfulness`) | 0 |
-| Citation | `effective_citations` | count of precise citations (FACT style); a table counts each URL once | audit |
+| Citation | `effective_citations` | distinct pieces of evidence cited correctly: retrieved chunks a supported cited claim rests on through its own citations, near-duplicate chunks merged (symmetric BM25 overlap >= 0.8, no judge call); details keep citation pairs and distinct URLs | audit |
 | Hallucination | `faithfulness` | mean claim score in [-1, 1]: supported 1, inferred 0.5 / 0.4 / 0.3, unsupported 0, contradicted -1 | audit |
 | Hallucination | `fact_grounding` | numbers and capitalised names found in the cited chunks / checked (names: singular ~ plural, leading "the" ignored, 3+ word names ~ their acronym); numbers and names counted separately in `details` | 0 |
 | Other | `toxicity` | flagged opinions / opinions (lower is better) | 1 per ~15k chars, shared with bias |

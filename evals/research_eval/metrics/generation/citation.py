@@ -13,6 +13,7 @@ from ...citation_audit import AUDIT_VERSION, CitationAudit, citation_audit
 from ...prompts import PARAGRAPH_AUDIT
 from ...report_parser import body_paragraphs, cited_urls
 from ..base import Metric, MetricResult, ScoringContext, rounded
+from ..lexical import idf_table, symmetric_overlap
 
 
 class _AuditMetric(Metric):
@@ -103,22 +104,40 @@ class CitationPrecision(_AuditMetric):
 
 
 class EffectiveCitations(_AuditMetric):
-    """Number of citations that back a claim (DeepResearch Bench FACT style).
+    """Number of distinct pieces of evidence the report cites correctly.
 
-        value = precise citations (item-URL pairs; a table's URL counts once)
+        value = distinct retrieved chunks that a "supported" cited claim rests
+                on through its own citations, near-duplicates merged
 
-    A count, not a ratio: a report with three correct citations scores 100% on
-    the ratios but much lower here than one with forty.
+    Evidence, not pages or citation pairs: a page cited correctly in ten
+    paragraphs for the same passage counts once, and two passages of one page
+    backing different claims count twice. Near-duplicate chunks (syndicated
+    copies of the same text on different sites; BM25-weighted symmetric
+    overlap >= `DUPLICATE`) are merged, by rule, with no judge call.
+    `details` keeps the citation-pair count and the distinct URL count.
     """
 
     name = "effective_citations"
+    version = f"2.audit{AUDIT_VERSION}"     # 2: distinct evidence chunks, not citation pairs
+    DUPLICATE = 0.8
 
     def from_audit(self, audit, archive):
         cites = audit.citations
         if not cites:
             return self.skip("no citations of factual claims")
         eff = [c for c in cites if c["effective"]]
-        return self.result(float(len(eff)), citations=len(cites),
+        chunks = list(dict.fromkeys(cid for c in audit.claim_checks if c["supported"]
+                                    for cid in c["backing_chunks"] if cid in archive.chunks))
+        idf = idf_table([archive.chunks[c]["content"] for c in archive.retrieved_chunk_ids])
+        groups: list[str] = []          # one representative chunk per piece of evidence
+        for cid in chunks:
+            text = archive.chunks[cid]["content"]
+            if not any(symmetric_overlap(text, archive.chunks[g]["content"], idf) >= self.DUPLICATE
+                       for g in groups):
+                groups.append(cid)
+        return self.result(float(len(groups)), evidence_chunks=len(chunks),
+                           merged_duplicates=len(chunks) - len(groups),
+                           effective_pairs=len(eff), citations=len(cites),
                            effective_urls=len({normalize_url(c["url"]) for c in eff}))
 
 

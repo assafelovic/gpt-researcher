@@ -220,8 +220,32 @@ async def test_citation_precision_is_per_claim(ctx):
 
 async def test_effective_citations_is_a_count(ctx):
     r = await EffectiveCitations().score(make_archive(), ctx)
-    # reuters in S1 and recycle in P2; the ghost URL cannot be effective.
+    # Evidence: the reuters passage behind Congo and the recycle passage behind
+    # 2027; the ghost URL cannot be effective.
     assert r.value == 2.0 and r.details["effective_urls"] == 2
+    assert (r.details["evidence_chunks"], r.details["effective_pairs"]) == (2, 2)
+
+
+def test_effective_citations_merges_near_duplicate_evidence():
+    from evals.research_eval.citation_audit import CitationAudit, ParagraphAudit
+    copy = "Congo produced 74% of mined cobalt in 2023 and Glencore is the largest producer."
+    archive = RunArchive(build_archive(
+        meta={"run_id": "r", "query": "q"},
+        spans=[{"span_id": "s", "parent_id": None, "name": "run",
+                "attributes": {"chunk_ids": ["c1", "c2", "c3"]}}],
+        chunks={"c1": {"url": "https://a", "content": copy},
+                "c2": {"url": "https://b", "content": copy + " Reported by wire."},
+                "c3": {"url": "https://a", "content": "China refines about 65% of the world's lithium."}},
+        report_markdown="# R"))
+    pa = ParagraphAudit("p", [], "cited", [], [])
+    pa.claim_checks = [{"supported": True, "backing_chunks": ["c1", "c2"]},
+                       {"supported": True, "backing_chunks": ["c3", "c1"]},
+                       {"supported": False, "backing_chunks": ["c9"]}]
+    pa.citation_checks = [{"para_id": "p", "sentence": 1, "url": "https://a", "claims": 2,
+                           "no_claims": False, "precise": True}]
+    r = EffectiveCitations().from_audit(CitationAudit([pa]), archive)
+    # c1 and c2 are the same text on two sites: one piece of evidence; c3 another.
+    assert r.value == 2.0 and r.details["merged_duplicates"] == 1
 
 
 async def test_faithfulness(ctx):
