@@ -1,4 +1,5 @@
 import re
+from html import unescape
 import markdown
 from typing import List, Dict
 
@@ -60,10 +61,12 @@ def extract_sections(markdown_text: str) -> List[Dict[str, str]]:
     matches = re.findall(pattern, parsed_md, re.DOTALL)
     
     for title, content in matches:
-        clean_content = re.sub(r'<.*?>', '', content).strip()
+        # Decode after stripping tags so escaped code such as &lt;tag&gt;
+        # remains visible text rather than being mistaken for HTML markup.
+        clean_content = unescape(re.sub(r'<.*?>', '', content)).strip()
         if clean_content:
             sections.append({
-                "section_title": title.strip(),
+                "section_title": unescape(re.sub(r'<.*?>', '', title)).strip(),
                 "written_content": clean_content
             })
     
