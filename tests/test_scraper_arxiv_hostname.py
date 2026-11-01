@@ -15,6 +15,7 @@ from gpt_researcher.scraper.scraper import Scraper
         "https://notarxiv.org/abs/2601.12345",
         "https://arxiv.org.example.com/abs/2601.12345",
         "https://arxiv.org@example.com/abs/2601.12345",
+        "https://arxiv.org.example.com./abs/2601.12345",
     ],
 )
 def test_arxiv_mentions_on_other_hosts_use_configured_scraper(url):
@@ -28,6 +29,8 @@ def test_arxiv_mentions_on_other_hosts_use_configured_scraper(url):
         "https://arxiv.org/abs/2601.12345",
         "https://export.arxiv.org/abs/2601.12345",
         "https://ARXIV.ORG/abs/2601.12345",
+        "https://arxiv.org./abs/2601.12345",
+        "https://export.arxiv.org./abs/2601.12345",
     ],
 )
 def test_arxiv_hostnames_use_arxiv_scraper(url):
