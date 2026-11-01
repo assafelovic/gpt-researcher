@@ -152,6 +152,8 @@ class DetailedReport:
             tone=self.tone,
             complement_source_urls=self.complement_source_urls,
             source_urls=self.source_urls,
+            document_urls=self.document_urls,
+            config_path=self.config_path,
             # Propagate MCP configuration so follow-up researchers can use MCP
             mcp_configs=self.gpt_researcher.mcp_configs,
             mcp_strategy=self.gpt_researcher.mcp_strategy
