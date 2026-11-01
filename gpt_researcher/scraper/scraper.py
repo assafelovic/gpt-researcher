@@ -337,10 +337,13 @@ class Scraper:
         # Inspect only the path component so query strings / fragments don't
         # hide the extension (e.g. signed CDN/S3 links like "…/doc.pdf?sig=…").
         # Match case-insensitively because ".PDF" is a perfectly valid suffix.
-        path = urlparse(link).path
+        parsed_url = urlparse(link)
+        path = parsed_url.path
         if path.lower().endswith(".pdf"):
             scraper_key = "pdf"
-        elif "arxiv.org" in link:
+        elif parsed_url.hostname == "arxiv.org" or (
+            parsed_url.hostname and parsed_url.hostname.endswith(".arxiv.org")
+        ):
             scraper_key = "arxiv"
         else:
             scraper_key = self.scraper
