@@ -126,6 +126,7 @@ def parse_report(markdown_text: str, chunks_by_url: dict[str, list[str]] | None 
     warnings: list[str] = []
     title = None
     references: list[str] = []
+    listed: list[str] = []          # references as written, duplicates kept
     sections: list[dict] = []
     path: list[tuple[int, str]] = []
     in_refs = False
@@ -165,6 +166,11 @@ def parse_report(markdown_text: str, chunks_by_url: dict[str, list[str]] | None 
             continue
         cites = _citations(block)
         if in_refs:
+            # One entry per link (a list renders as one block); a bare URL that is
+            # also a link's text is the same entry, not a duplicate.
+            for c in cites:
+                n = sum(1 for link in block["links"] if link["url"] == c["url"]) or 1
+                listed.extend([c["url"]] * n)
             references.extend(c["url"] for c in cites if c["url"] not in references)
             continue
         if not block["text"]:
@@ -196,7 +202,7 @@ def parse_report(markdown_text: str, chunks_by_url: dict[str, list[str]] | None 
     elif not references:
         _add(warnings, "references_without_links")
 
-    return {"title": title, "references": references,
+    return {"title": title, "references": references, "references_listed": listed,
             "parse_warnings": warnings, "sections": sections}
 
 

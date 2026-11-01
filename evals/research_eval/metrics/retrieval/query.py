@@ -15,9 +15,14 @@ from ..lexical import idf_table, symmetric_overlap
 
 
 def all_subqueries(archive: RunArchive) -> list[str]:
-    """Every child query the run produced or searched, minus the core query."""
+    """Every child query the run produced or searched, minus the core query.
+
+    Deep research's clarifying questions (deep_plan) are left out: they are
+    folded into one combined query, never searched one by one.
+    """
     seen, out = {archive.query.strip()}, []
-    for q in [c for d in archive.decompositions for c in d.child_queries] + archive.issued_subqueries:
+    planned = [c for d in archive.decompositions if d.kind != "deep_plan" for c in d.child_queries]
+    for q in planned + archive.issued_subqueries:
         q = (q or "").strip()
         if q and q not in seen:
             seen.add(q)
@@ -38,7 +43,7 @@ class DecompositionCoverage(Metric):
     """
 
     name, category = "decomposition_coverage", "retrieval.query"
-    version = "2"
+    version = "3"           # 3: deep clarifying questions are not sub-queries
     uses_llm = True
     prompts = (KEY_POINTS, DECOMPOSITION_COVERAGE)
     EMBEDDING_THRESHOLD = 0.5
@@ -246,6 +251,7 @@ class PlanAdherence(Metric):
     """
 
     name, category = "plan_adherence", "retrieval.query"
+    version = "2"           # 2: deep steps with material but no learnings in details
 
     async def score(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:
         planned = delivered = 0
@@ -264,8 +270,21 @@ class PlanAdherence(Metric):
                     failures.append({"span_id": d.span_id, "kind": d.kind, "query": q})
         if not planned:
             return self.skip("no plan recorded")
+        # Deep research: a step can return material and still produce no
+        # learnings (e.g. the LLM answered empty), so it never feeds the next
+        # level. Retrieval delivery stays the value; this is shown beside it.
+        steps = [s for s in archive.spans if s["name"] == "research"
+                 and (archive.span_by_id.get(s["parent_id"]) or {}).get("name") == "deep_level"]
+        extra = {}
+        if steps:
+            with_material = [s for s in steps if archive.subtree_chunk_ids(s["span_id"])]
+            no_learnings = [s["attributes"].get("query") for s in with_material
+                            if not s["attributes"].get("learnings")]
+            extra = {"deep_steps": len(steps), "deep_steps_with_material": len(with_material),
+                     "deep_steps_with_learnings": len(with_material) - len(no_learnings),
+                     "deep_steps_material_but_no_learnings": no_learnings}
         return self.result(rounded(delivered / planned), planned=planned, delivered=delivered,
-                           per_kind=per_kind, not_delivered=failures)
+                           per_kind=per_kind, not_delivered=failures, **extra)
 
     @staticmethod
     def _delivered(archive: RunArchive, d, query: str) -> bool:

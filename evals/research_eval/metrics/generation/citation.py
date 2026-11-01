@@ -13,6 +13,7 @@ from ...citation_audit import AUDIT_VERSION, CitationAudit, citation_audit
 from ...prompts import PARAGRAPH_AUDIT
 from ...report_parser import body_paragraphs, cited_urls
 from ..base import Metric, MetricResult, ScoringContext, rounded
+from .common import body_word_count
 from ..lexical import idf_table, symmetric_overlap
 
 
@@ -60,15 +61,20 @@ class CitationRecall(_AuditMetric):
     """
 
     name = "citation_recall"
+    version = f"2.audit{AUDIT_VERSION}"     # 2: claim citation share in details
 
     def from_audit(self, audit, archive):
         claims = audit.claim_checks
         if not claims:
             return self.skip("no cited claims")
         ok = sum(c["supported"] for c in claims)
+        factual = sum(len(p.claims) for p in audit.judged if p.kind == "factual")
         units = [s for s in audit.sentence_checks if s["judged"]]
         unit_ok = sum(s["supported"] for s in units)
         return self.result(rounded(ok / len(claims)), cited_claims=len(claims), supported=ok,
+                           factual_claims=factual,
+                           cited_share=rounded(len(claims) / factual) if factual else None,
+                           supported_of_all_claims=rounded(ok / factual) if factual else None,
                            verdicts=dict(Counter(c["verdict"] for c in claims)),
                            supported_elsewhere=sum(c["verdict"] == "supported" and not c["backing_urls"]
                                                    for c in claims),
@@ -90,6 +96,7 @@ class CitationPrecision(_AuditMetric):
     """
 
     name = "citation_precision"
+    version = f"2.audit{AUDIT_VERSION}"     # 2: redundant citations in details
 
     def from_audit(self, audit, archive):
         cites = audit.citations
@@ -97,10 +104,30 @@ class CitationPrecision(_AuditMetric):
             return self.skip("no citations of factual claims")
         precise = sum(c["precise"] for c in cites)
         old = audit.unit_citations
+        redundant = _redundant(audit)
         return self.result(rounded(precise / len(cites)), citations=len(cites), precise=precise,
                            unit_level=rounded(sum(c["precise"] for c in old) / len(old)) if old else None,
+                           redundant=len(redundant), redundant_rate=rounded(len(redundant) / len(cites)),
+                           redundant_citations=redundant,
                            imprecise=[{k: c[k] for k in ("para_id", "sentence", "url")}
                                       for c in cites if not c["precise"]])
+
+
+def _redundant(audit: CitationAudit) -> list[dict]:
+    """Precise citations that add nothing: every supported claim they back is
+    also backed by another URL of the same item (the claim-level form of
+    ALCE's "the rest suffice"). Corroboration, not an error, so it is shown
+    beside precision rather than taken out of it."""
+    out = []
+    for p in audit.judged:
+        for c in p.citation_checks:
+            if not c["precise"]:
+                continue
+            backed = [cc for cc in p.claim_checks if cc["supported"] and c["sentence"] in cc["units"]
+                      and c["url"] in cc["backing_urls"]]
+            if backed and all(len(cc["backing_urls"]) > 1 for cc in backed):
+                out.append({"para_id": p.para_id, "sentence": c["sentence"], "url": c["url"]})
+    return out
 
 
 class EffectiveCitations(_AuditMetric):
@@ -118,7 +145,7 @@ class EffectiveCitations(_AuditMetric):
     """
 
     name = "effective_citations"
-    version = f"2.audit{AUDIT_VERSION}"     # 2: distinct evidence chunks, not citation pairs
+    version = f"3.audit{AUDIT_VERSION}"     # 2: distinct evidence chunks; 3: per 1k words
     DUPLICATE = 0.8
 
     def from_audit(self, audit, archive):
@@ -135,7 +162,9 @@ class EffectiveCitations(_AuditMetric):
             if not any(symmetric_overlap(text, archive.chunks[g]["content"], idf) >= self.DUPLICATE
                        for g in groups):
                 groups.append(cid)
+        words = body_word_count(archive)
         return self.result(float(len(groups)), evidence_chunks=len(chunks),
+                           words=words, per_1k_words=rounded(1000 * len(groups) / words) if words else None,
                            merged_duplicates=len(chunks) - len(groups),
                            effective_pairs=len(eff), citations=len(cites),
                            effective_urls=len({normalize_url(c["url"]) for c in eff}))

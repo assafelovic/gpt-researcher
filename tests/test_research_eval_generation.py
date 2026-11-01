@@ -207,6 +207,9 @@ async def test_citation_recall_is_per_claim(ctx):
         "China refines 65%", "Glencore dominates", "prices triple"}
     # Former ALCE per citing unit: 2 of 4 units supported.
     assert r.details["unit_level"] == 0.5
+    # 6 factual claims in all (the uncited paragraph's one included).
+    assert (r.details["factual_claims"], r.details["cited_share"]) == (6, 0.833)
+    assert r.details["supported_of_all_claims"] == 0.333
 
 
 async def test_citation_precision_is_per_claim(ctx):
@@ -502,3 +505,27 @@ def test_supported_claim_needs_a_passage_from_its_own_citations():
         ("x", False, False), ("y", True, False), ("z", True, True)]
     assert [(c["sentence"], c["url"], c["precise"]) for c in pa.citation_checks] == [
         (1, "https://a", True), (2, "https://b", True)]
+
+
+def test_parser_keeps_duplicate_references_for_instruction_following():
+    md = "# T\n\n## S\n\nText ([A](https://a.com)).\n\n## References\n\n- [A](https://a.com)\n- [A again](https://a.com)\n"
+    parsed = parse_report(md)
+    assert parsed["references"] == ["https://a.com"]
+    assert parsed["references_listed"] == ["https://a.com", "https://a.com"]
+    # A URL written as its own link text is one reference, not two.
+    md = "# T\n\n## S\n\nText ([A](https://a.com)).\n\n## References\n\n- [https://a.com](https://a.com)\n- [B](https://b.com)\n"
+    assert parse_report(md)["references_listed"] == ["https://a.com", "https://b.com"]
+
+
+def test_precision_flags_redundant_citations():
+    from evals.research_eval.citation_audit import CitationAudit, ParagraphAudit, claim_level
+    pa = ParagraphAudit("p", [], "cited",
+                        [{"text": "A and B", "urls": ["https://a", "https://b"]}],
+                        [{"n": 1, "url": "https://a", "found": True, "passages": [{"id": "1a", "chunk_id": "ca"}]},
+                         {"n": 2, "url": "https://b", "found": True, "passages": [{"id": "2a", "chunk_id": "cb"}]}])
+    pa.claims = [{"claim": "x", "verdict": "supported", "sentences": [1], "chunk_ids": ["ca", "cb"]},
+                 {"claim": "y", "verdict": "supported", "sentences": [1], "chunk_ids": ["ca"]}]
+    claim_level(pa)
+    from evals.research_eval.metrics.generation.citation import _redundant
+    # b only backs x, which a also backs: redundant. a backs y alone: needed.
+    assert _redundant(CitationAudit([pa])) == [{"para_id": "p", "sentence": 1, "url": "https://b"}]

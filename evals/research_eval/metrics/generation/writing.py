@@ -209,7 +209,7 @@ class InstructionFollowing(Metric):
     """
 
     name, category = "instruction_following", "generation.writing"
-    version = "2"           # 2: no_toc skipped in detailed mode
+    version = "3"           # 2: no_toc skipped in detailed mode; 3: duplicate references detectable
     MIN_WORDS = 1200
 
     async def score(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:
@@ -221,7 +221,8 @@ class InstructionFollowing(Metric):
         min_words = cfg.get("total_words") or ctx.option("min_words", self.MIN_WORDS)
         words = body_word_count(archive)
         cited = cited_urls(parsed)
-        refs = [normalize_url(u) for u in parsed["references"]]
+        # references_listed keeps duplicates; `references` is already deduplicated.
+        refs = [normalize_url(u) for u in parsed.get("references_listed", parsed["references"])]
         not_retrieved = [u for u in cited if normalize_url(u) not in archive.chunks_by_url]
         headings = {h for s in parsed["sections"] for h in s["heading_path"]}
         checks = {
