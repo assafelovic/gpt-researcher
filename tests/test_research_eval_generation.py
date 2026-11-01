@@ -76,8 +76,10 @@ def audit_reply(prompt):
     para = prompt.split("Paragraph (numbered items")[1].split("Material:")[0]
     if "Congo produced" in para:
         return {"kind": "factual",
-                "claims": [{"claim": "Congo 74% cobalt", "verdict": "supported", "passages": ["1a"]},
-                           {"claim": "China refines 65%", "verdict": "inferred_b", "passages": ["2a"]}],
+                "claims": [{"claim": "Congo 74% cobalt", "sentences": [1], "verdict": "supported",
+                            "passages": ["1a"]},
+                           {"claim": "China refines 65%", "sentences": [2], "verdict": "inferred_b",
+                            "passages": ["2a"]}],
                 "sentences": [
                     {"sentence": 1, "supported": True, "citations": [{"source": 1, "alone": True}]},
                     {"sentence": 2, "supported": True, "citations": [
@@ -85,9 +87,12 @@ def audit_reply(prompt):
                         {"source": 1, "alone": False, "rest_suffice": True}]}]}
     if "Recycling mandates" in para:
         return {"kind": "factual",
-                "claims": [{"claim": "starts 2027", "verdict": "supported", "passages": ["1a"]},
-                           {"claim": "Glencore dominates", "verdict": "contradicted", "passages": ["1a"]},
-                           {"claim": "prices triple", "verdict": "unsupported", "passages": []}],
+                "claims": [{"claim": "starts 2027", "sentences": [1], "verdict": "supported",
+                            "passages": ["1a"]},
+                           {"claim": "Glencore dominates", "sentences": [1], "verdict": "contradicted",
+                            "passages": ["1a"]},
+                           {"claim": "prices triple", "sentences": [2], "verdict": "unsupported",
+                            "passages": []}],
                 # The judge wrongly calls sentence 2 supported: its only source was never retrieved.
                 "sentences": [
                     {"sentence": 1, "supported": False, "citations": [{"source": 1, "alone": False}]},
@@ -189,26 +194,33 @@ async def test_audit_is_shared_across_metrics(ctx):
     assert len(audit_prompts(ctx)) == 4          # one call per audited paragraph, once
 
 
-async def test_citation_recall(ctx):
+async def test_citation_recall_is_per_claim(ctx):
     r = await CitationRecall().score(make_archive(), ctx)
-    # 4 citing sentences; recycling sentence 1 not supported; the ghost-URL
-    # sentence is forced unsupported although the judge said supported.
-    assert (r.details["citing_sentences"], r.details["supported"]) == (4, 2)
-    assert r.value == 0.5
-    assert {u["urls"][0] for u in r.details["unsupported"]} == {URL["recycling"], URL["ghost"]}
-
-
-async def test_citation_precision_follows_alce(ctx):
-    r = await CitationPrecision().score(make_archive(), ctx)
-    # Citations: S1 reuters (precise), S2 doe (precise) + reuters (irrelevant:
-    # not alone, rest suffice), recycling (sentence unsupported), ghost (unsupported).
-    assert (r.details["citations"], r.details["precise"], r.details["over_citations"]) == (5, 2, 1)
+    # 5 cited claims (the uncited paragraph's claim is left to faithfulness).
+    # Supported: Congo (reuters) and 2027 (recycle). Not: China (inferred_b:
+    # strict), Glencore (contradicted), prices (unsupported; its only source
+    # was never retrieved).
+    assert (r.details["cited_claims"], r.details["supported"]) == (5, 2)
     assert r.value == 0.4
+    assert r.details["supported_elsewhere"] == 0
+    assert {u["claim"] for u in r.details["unsupported"]} == {
+        "China refines 65%", "Glencore dominates", "prices triple"}
+    # Former ALCE per citing unit: 2 of 4 units supported.
+    assert r.details["unit_level"] == 0.5
+
+
+async def test_citation_precision_is_per_claim(ctx):
+    r = await CitationPrecision().score(make_archive(), ctx)
+    # Item-URL pairs: S1 reuters (backs Congo), S2 doe + reuters (back no
+    # supported claim of S2), recycle (backs 2027), ghost (never retrieved).
+    assert (r.details["citations"], r.details["precise"]) == (5, 2)
+    assert r.value == 0.4
+    assert r.details["unit_level"] == 0.4
 
 
 async def test_effective_citations_is_a_count(ctx):
     r = await EffectiveCitations().score(make_archive(), ctx)
-    # reuters in S1 and doe in S2; the ghost URL cannot be effective.
+    # reuters in S1 and recycle in P2; the ghost URL cannot be effective.
     assert r.value == 2.0 and r.details["effective_urls"] == 2
 
 
@@ -430,22 +442,39 @@ async def test_score_record_keeps_the_full_citation_audit(ctx):
 def test_table_citations_count_once_per_table():
     from evals.research_eval.citation_audit import CitationAudit, ParagraphAudit
 
-    def cite(url, alone, precise):
-        return {"url": url, "found": True, "alone": alone, "rest_suffice": not alone,
-                "precise": precise, "effective": alone}
+    def pair(row, url, precise, no_claims=False):
+        return {"para_id": "t", "sentence": row, "url": url, "claims": 0 if no_claims else 1,
+                "no_claims": no_claims, "precise": precise}
 
-    def row(i, a, b, table=True):
-        return {"para_id": "t", "sentence": i, "text": f"row {i}", "judged": True,
-                "supported": True, "table": table,
-                "citations": [cite("https://a", a, a), cite("https://b", b, b),
-                              cite("https://c", False, False)]}
-
-    table = ParagraphAudit("t", [], "cited", [], [], table=True,
-                           sentence_checks=[row(1, True, False), row(2, False, True)])
+    checks = [pair(1, "https://a", True), pair(1, "https://b", False), pair(1, "https://c", False),
+              pair(2, "https://a", False), pair(2, "https://b", True), pair(2, "https://c", False)]
+    table = ParagraphAudit("t", [], "cited", [], [], table=True, citation_checks=checks)
     cites = CitationAudit([table]).citations
     # 2 rows x 3 URLs would be 6 pairs (2 precise); per table it is 3 URLs, 2 precise.
     assert [(c["url"], c["precise"], c["effective"], c["sentence"]) for c in cites] == [
         ("https://a", True, True, [1, 2]), ("https://b", True, True, [1, 2]),
         ("https://c", False, False, [1, 2])]
-    text = ParagraphAudit("p", [], "cited", [], [], sentence_checks=[row(1, True, False, table=False)])
+    text = ParagraphAudit("p", [], "cited", [], [], citation_checks=checks[:3] + [
+        pair(2, "https://d", False, no_claims=True)])
+    # Not a table: every pair counts, except the one whose item has no claim.
     assert len(CitationAudit([text]).citations) == 3
+
+
+def test_supported_claim_needs_a_passage_from_its_own_citations():
+    from evals.research_eval.citation_audit import ParagraphAudit, claim_level
+    pa = ParagraphAudit("p", [], "cited",
+                        [{"text": "A", "urls": ["https://a"]}, {"text": "B", "urls": ["https://b"]}],
+                        [{"n": 1, "url": "https://a", "found": True, "passages": [{"id": "1a", "chunk_id": "ca"}]},
+                         {"n": 2, "url": "https://b", "found": True, "passages": [{"id": "2a", "chunk_id": "cb"}]}])
+    pa.claims = [
+        # Backed by A, but it sits in item 2, which cites only B.
+        {"claim": "x", "verdict": "supported", "sentences": [2], "chunk_ids": ["ca"]},
+        # Spans both items: either citation may back it.
+        {"claim": "y", "verdict": "supported", "sentences": [1, 2], "chunk_ids": ["cb"]},
+        # No item named: any citation of the paragraph may cover it.
+        {"claim": "z", "verdict": "supported", "sentences": [], "chunk_ids": ["ca"]}]
+    claim_level(pa)
+    assert [(c["claim"], c["supported"], c["units_guessed"]) for c in pa.claim_checks] == [
+        ("x", False, False), ("y", True, False), ("z", True, True)]
+    assert [(c["sentence"], c["url"], c["precise"]) for c in pa.citation_checks] == [
+        (1, "https://a", True), (2, "https://b", True)]

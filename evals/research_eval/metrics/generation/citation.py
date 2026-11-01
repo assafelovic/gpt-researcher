@@ -6,6 +6,8 @@ shared citation audit (one judge call per paragraph, see citation_audit.py).
 
 from __future__ import annotations
 
+from collections import Counter
+
 from ...archive import RunArchive, normalize_url
 from ...citation_audit import AUDIT_VERSION, CitationAudit, citation_audit
 from ...prompts import PARAGRAPH_AUDIT
@@ -42,38 +44,48 @@ class _AuditMetric(Metric):
 
 
 class CitationRecall(_AuditMetric):
-    """ALCE citation recall: citing sentences fully supported by their own sources.
+    """Citation recall per claim: cited claims that their own citations support.
 
-        value = supported citing sentences / judged citing sentences
+        value = supported cited claims / cited claims
 
-    Sentences without a citation are not in the denominator (they are covered
-    by faithfulness). A sentence whose sources were never retrieved counts as
-    unsupported without asking the judge.
+    Claims come from the citation audit (the judge splits each paragraph into
+    claims; one claim may span several sentences). A claim is cited when an
+    item it comes from cites a source, and supported when its verdict is
+    "supported" (strict: inferences do not count) and a passage it rests on
+    belongs to one of those cited URLs (`citation_audit.claim_level`). Claims
+    in uncited paragraphs or after a paragraph's last citation are left to
+    faithfulness. `details.unit_level` keeps the former ALCE per-citing-unit
+    value, where one unsupported claim failed a whole paragraph-long unit.
     """
 
     name = "citation_recall"
 
     def from_audit(self, audit, archive):
-        sents = [s for s in audit.sentence_checks if s["judged"]]
-        if not sents:
-            return self.skip("no citing sentences")
-        ok = sum(s["supported"] for s in sents)
-        return self.result(rounded(ok / len(sents)), citing_sentences=len(sents), supported=ok,
-                           unsupported=[{k: s[k] for k in ("para_id", "sentence", "text")}
-                                        | {"urls": [c["url"] for c in s["citations"]]}
-                                        for s in sents if not s["supported"]])
+        claims = audit.claim_checks
+        if not claims:
+            return self.skip("no cited claims")
+        ok = sum(c["supported"] for c in claims)
+        units = [s for s in audit.sentence_checks if s["judged"]]
+        unit_ok = sum(s["supported"] for s in units)
+        return self.result(rounded(ok / len(claims)), cited_claims=len(claims), supported=ok,
+                           verdicts=dict(Counter(c["verdict"] for c in claims)),
+                           supported_elsewhere=sum(c["verdict"] == "supported" and not c["backing_urls"]
+                                                   for c in claims),
+                           unit_level=rounded(unit_ok / len(units)) if units else None,
+                           unsupported=[{k: c[k] for k in ("para_id", "claim", "verdict", "urls")}
+                                        for c in claims if not c["supported"]])
 
 
 class CitationPrecision(_AuditMetric):
-    """ALCE citation precision, as in its reference implementation.
+    """Citation precision per claim: citations that back a claim of their item.
 
-        value = precise citations / citations   (citation = one sentence-URL pair;
+        value = precise citations / citations   (citation = one item-URL pair;
                                                  in a table, one table-URL pair)
 
-    Irrelevant citation: does not support its sentence alone, and the sentence's
-    other citations support it without it. As in ALCE, citations of a sentence
-    that is not supported at all count as imprecise, so precision also drops
-    with recall; `details.over_citations` counts only the irrelevant ones.
+    Precise: the URL holds a passage that a "supported" claim of the same item
+    rests on. Citations of items without any factual claim are not counted.
+    A URL that was never retrieved can back nothing. `details.unit_level`
+    keeps the former ALCE value.
     """
 
     name = "citation_precision"
@@ -81,21 +93,20 @@ class CitationPrecision(_AuditMetric):
     def from_audit(self, audit, archive):
         cites = audit.citations
         if not cites:
-            return self.skip("no citations")
+            return self.skip("no citations of factual claims")
         precise = sum(c["precise"] for c in cites)
-        over = [{"para_id": c["para_id"], "sentence": c["sentence"], "url": c["url"]}
-                for c in cites if c["supported"] and not c["precise"]]
+        old = audit.unit_citations
         return self.result(rounded(precise / len(cites)), citations=len(cites), precise=precise,
-                           over_citations=len(over), irrelevant=over)
+                           unit_level=rounded(sum(c["precise"] for c in old) / len(old)) if old else None,
+                           imprecise=[{k: c[k] for k in ("para_id", "sentence", "url")}
+                                      for c in cites if not c["precise"]])
 
 
 class EffectiveCitations(_AuditMetric):
-    """Number of citations backed by their source (DeepResearch Bench FACT style).
+    """Number of citations that back a claim (DeepResearch Bench FACT style).
 
-        value = sentence-URL citations whose source supports the sentence
-                (alone, or as the only citation of a supported sentence)
+        value = precise citations (item-URL pairs; a table's URL counts once)
 
-    In a table each URL counts once (see `CitationAudit.citations`).
     A count, not a ratio: a report with three correct citations scores 100% on
     the ratios but much lower here than one with forty.
     """
@@ -105,7 +116,7 @@ class EffectiveCitations(_AuditMetric):
     def from_audit(self, audit, archive):
         cites = audit.citations
         if not cites:
-            return self.skip("no citations")
+            return self.skip("no citations of factual claims")
         eff = [c for c in cites if c["effective"]]
         return self.result(float(len(eff)), citations=len(cites),
                            effective_urls=len({normalize_url(c["url"]) for c in eff}))

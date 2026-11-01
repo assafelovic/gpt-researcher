@@ -46,7 +46,7 @@ if TYPE_CHECKING:
 # Bump when the audit's material or unit logic changes (prompt changes bump the
 # prompt version instead); every metric that reads the audit carries it in its
 # version, so the scorer version changes and old results are not overwritten.
-AUDIT_VERSION = "6"
+AUDIT_VERSION = "7"     # 7: recall / precision per claim
 
 # Faithfulness points per verdict (eval-design/generation-metrics.md §3.2 B).
 VERDICT_SCORES = {"supported": 1.0, "inferred_a": 0.5, "inferred_b": 0.4, "inferred_c": 0.3,
@@ -70,13 +70,16 @@ class ParagraphAudit:
     response: "JudgeResponse | None" = None
     kind: str | None = None                     # factual | non_factual
     claims: list[dict] = field(default_factory=list)
-    sentence_checks: list[dict] = field(default_factory=list)
+    sentence_checks: list[dict] = field(default_factory=list)   # unit level (judge step 3)
+    claim_checks: list[dict] = field(default_factory=list)      # claim level, see claim_level()
+    citation_checks: list[dict] = field(default_factory=list)   # unit-URL pairs, claim level
     error: str | None = None
     table: bool = False                         # rows are units; citations belong to the table
 
     def to_dict(self) -> dict:
         return {"para_id": self.para_id, "heading_path": self.heading_path, "mode": self.mode,
                 "kind": self.kind, "claims": self.claims, "sentences": self.sentence_checks,
+                "claim_checks": self.claim_checks, "citation_checks": self.citation_checks,
                 "sources": [{"n": s["n"], "url": s["url"], "found": s["found"],
                              "chunk_ids": [p["chunk_id"] for p in s["passages"]]}
                             for s in self.sources],
@@ -106,14 +109,41 @@ class CitationAudit:
         return [s for p in self.judged for s in p.sentence_checks]
 
     @property
-    def citations(self) -> list[dict]:
-        """Judged citations for precision and effective-citation counts.
+    def claim_checks(self) -> list[dict]:
+        return [c for p in self.judged for c in p.claim_checks]
 
-        A sentence-URL pair each, except in tables: a table's source line
-        cites the whole table, so every row carries every URL. There each URL
-        counts once per table, precise / effective when it is so for any row
-        (`sentence` lists the rows). Recall still counts each row.
+    @property
+    def citations(self) -> list[dict]:
+        """Claim-level citations for precision and effective-citation counts.
+
+        A unit-URL pair each, except in tables: a table's source line cites
+        the whole table, so every row carries every URL. There each URL counts
+        once per table, precise when it backs a claim of any row. Pairs whose
+        unit holds no factual claim (opinion, transition) are left out: there
+        is nothing for the citation to back.
         """
+        out, tables = [], {}
+        for p in self.judged:
+            for c in p.citation_checks:
+                if c["no_claims"]:
+                    continue
+                if not p.table:
+                    out.append(c)
+                    continue
+                key = (p.para_id, c["url"])
+                if key not in tables:
+                    tables[key] = {**c, "sentence": [], "precise": False}
+                    out.append(tables[key])
+                t = tables[key]
+                t["sentence"].append(c["sentence"])
+                t["precise"] |= c["precise"]
+        for c in out:
+            c["effective"] = c["precise"]
+        return out
+
+    @property
+    def unit_citations(self) -> list[dict]:
+        """The former unit-level (ALCE per citing unit) citations, for details."""
         out, tables = [], {}
         for s in self.sentence_checks:
             if not s["judged"]:
@@ -125,15 +155,9 @@ class CitationAudit:
                     continue
                 key = (s["para_id"], c["url"])
                 if key not in tables:
-                    tables[key] = {"para_id": s["para_id"], "sentence": [], "supported": False,
-                                   "url": c["url"], "found": c["found"],
-                                   "precise": False, "effective": False}
+                    tables[key] = {"para_id": s["para_id"], "url": c["url"], "precise": False}
                     out.append(tables[key])
-                t = tables[key]
-                t["sentence"].append(s["sentence"])
-                t["supported"] |= s["supported"]
-                t["precise"] |= c["precise"]
-                t["effective"] |= c["effective"]
+                tables[key]["precise"] |= c["precise"]
         return out
 
 
@@ -327,6 +351,53 @@ def interpret(pa: ParagraphAudit) -> None:
         pa.sentence_checks.append({"para_id": pa.para_id, "sentence": i, "text": sent["text"],
                                    "judged": judged, "supported": supported, "citations": checks,
                                    "table": pa.table})
+    claim_level(pa)
+
+
+def claim_level(pa: ParagraphAudit) -> None:
+    """Citation recall / precision per claim instead of per citing unit.
+
+    The judge already splits the paragraph into claims (a claim may span
+    several sentences) and names the passages each rests on. A claim is
+    *cited* when one of the items it comes from cites a source; it is
+    *supported by its citations* when its verdict is "supported" (strict:
+    inferences do not count) and at least one passage it rests on belongs to
+    a URL cited by its own items. A citation (item-URL pair) is precise when
+    it backs at least one claim of its item. No extra judge call: this reads
+    the same answer faithfulness uses.
+    """
+    if pa.mode != "cited":
+        return
+    unit_urls = {i: s["urls"] for i, s in enumerate(pa.sentences, 1) if s["urls"]}
+    chunk_url = {p["chunk_id"]: s["url"] for s in pa.sources for p in s["passages"]}
+    for c in pa.claims:
+        units = []
+        for x in c["sentences"]:
+            try:
+                n = int(x)
+            except (TypeError, ValueError):
+                continue
+            if n in unit_urls and n not in units:
+                units.append(n)
+        guessed = not c["sentences"]
+        if guessed:
+            units = list(unit_urls)     # the judge named no item: any citation may cover it
+        if not units:
+            continue        # from uncited sentences after the last citation
+        urls = list(dict.fromkeys(u for n in units for u in unit_urls[n]))
+        backing = list(dict.fromkeys(chunk_url[cid] for cid in c["chunk_ids"]
+                                     if chunk_url.get(cid) in urls))
+        pa.claim_checks.append({
+            "para_id": pa.para_id, "claim": c["claim"], "units": units, "urls": urls,
+            "verdict": c["verdict"], "backing_urls": backing, "units_guessed": guessed,
+            "supported": c["verdict"] == "supported" and bool(backing)})
+    for n, urls in unit_urls.items():
+        mine = [cc for cc in pa.claim_checks if n in cc["units"]]
+        for u in urls:
+            pa.citation_checks.append({
+                "para_id": pa.para_id, "sentence": n, "url": u, "claims": len(mine),
+                "no_claims": not mine,
+                "precise": any(cc["supported"] and u in cc["backing_urls"] for cc in mine)})
 
 
 def _alce(supported: bool, checks: list[dict]) -> None:
