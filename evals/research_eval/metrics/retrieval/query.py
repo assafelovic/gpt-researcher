@@ -240,58 +240,82 @@ class DecompositionTreeQuality(Metric):
 
 
 class PlanAdherence(Metric):
-    """Share of planned sub-queries that came back with material.
+    """Share of planned sub-queries whose step was carried out: it came back
+    with material, and that material went on to the rest of the pipeline.
+
+        value = completed planned sub-queries / planned sub-queries
 
     A planned child counts when the step that executed it ended with at least
     one chunk: for a "plan" node, its sub_query span; for a deep-research
     level, the nested researcher (any chunk in its subtree); for detailed
-    subtopics, the subtopic researcher. A child that was never executed counts
-    as not delivered. Deep-research clarifying questions are folded into a
-    combined query rather than searched one by one, so they are not counted.
+    subtopics, the subtopic researcher. A deep-research step must also not
+    have failed afterwards: when processing its results raises, the step is
+    dropped (process_query returns None) and none of its material reaches the
+    next level or the writer (`RunArchive.failed_deep_steps`), so it counts as
+    not completed. A child that was never executed counts as not completed.
+    Deep-research clarifying questions are folded into a combined query
+    rather than searched one by one, so they are not counted.
+
+    `details.retrieval_delivery` = planned sub-queries that came back with
+    material / planned, the v2 value; `failed_after_retrieval` lists the
+    steps that make the difference.
     """
 
     name, category = "plan_adherence", "retrieval.query"
-    version = "2"           # 2: deep steps with material but no learnings in details
+    version = "3"           # 2: deep steps with material but no learnings in details; 3: failed deep steps count as not completed
 
     async def score(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:
-        planned = delivered = 0
-        failures, per_kind = [], {}
+        lost = {s["span_id"] for s in archive.failed_deep_steps}
+        planned = delivered = completed = 0
+        failures, failed_after, per_kind = [], [], {}
         for d in archive.decompositions:
             if d.kind == "deep_plan":
                 continue
             for q in d.child_queries:
-                ok = self._delivered(archive, d, q)
+                spans = self._delivering(archive, d, q)
+                ok = bool(spans)
+                done = any(s["span_id"] not in lost for s in spans)
                 planned += 1
                 delivered += ok
-                k = per_kind.setdefault(d.kind, {"planned": 0, "delivered": 0})
+                completed += done
+                k = per_kind.setdefault(d.kind, {"planned": 0, "delivered": 0, "completed": 0})
                 k["planned"] += 1
                 k["delivered"] += ok
+                k["completed"] += done
                 if not ok:
                     failures.append({"span_id": d.span_id, "kind": d.kind, "query": q})
+                elif not done:
+                    failed_after.append({"span_id": d.span_id, "kind": d.kind, "query": q,
+                                         "error": next((s["attributes"].get("process_error")
+                                                        for s in spans if s["attributes"].get("process_error")),
+                                                       None)})
         if not planned:
             return self.skip("no plan recorded")
-        # Deep research: a step can return material and still produce no
-        # learnings (e.g. the LLM answered empty), so it never feeds the next
-        # level. Retrieval delivery stays the value; this is shown beside it.
+        # Deep research: a step can also finish with material but no learnings
+        # (e.g. the LLM answered empty). Its material still reaches the writer,
+        # so it counts as completed; it is listed here.
         steps = [s for s in archive.spans if s["name"] == "research"
                  and (archive.span_by_id.get(s["parent_id"]) or {}).get("name") == "deep_level"]
         extra = {}
         if steps:
             with_material = [s for s in steps if archive.subtree_chunk_ids(s["span_id"])]
             no_learnings = [s["attributes"].get("query") for s in with_material
-                            if not s["attributes"].get("learnings")]
+                            if s["span_id"] not in lost and not s["attributes"].get("learnings")]
             extra = {"deep_steps": len(steps), "deep_steps_with_material": len(with_material),
-                     "deep_steps_with_learnings": len(with_material) - len(no_learnings),
+                     "deep_steps_failed": len(lost),
                      "deep_steps_material_but_no_learnings": no_learnings}
-        return self.result(rounded(delivered / planned), planned=planned, delivered=delivered,
-                           per_kind=per_kind, not_delivered=failures, **extra)
+        return self.result(rounded(completed / planned), planned=planned, delivered=delivered,
+                           completed=completed, retrieval_delivery=rounded(delivered / planned),
+                           per_kind=per_kind, not_delivered=failures,
+                           failed_after_retrieval=failed_after, **extra)
 
     @staticmethod
-    def _delivered(archive: RunArchive, d, query: str) -> bool:
+    def _delivering(archive: RunArchive, d, query: str) -> list[dict]:
+        """The spans that executed `query` for `d` and came back with chunks."""
         if d.kind == "plan":
             spans = [s for s in archive.children.get(d.span_id, [])
                      if s["name"] == "sub_query" and s["attributes"].get("query") == query]
-            return any(s["attributes"].get("chunk_ids") for s in spans)
+            return [s for s in spans if s["attributes"].get("chunk_ids")]
         if d.kind == "deep_level":
             spans = [s for s in archive.children.get(d.span_id, [])
                      if s["name"] == "research" and s["attributes"].get("query") == query]
@@ -299,7 +323,7 @@ class PlanAdherence(Metric):
             spans = [s for s in archive.spans
                      if s["name"] == "research" and s["attributes"].get("query") == query
                      and s["attributes"].get("parent_query")]
-        return any(archive.subtree_chunk_ids(s["span_id"]) for s in spans)
+        return [s for s in spans if archive.subtree_chunk_ids(s["span_id"])]
 
 
 def _number(x) -> float | None:

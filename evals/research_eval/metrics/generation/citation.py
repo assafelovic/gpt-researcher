@@ -143,21 +143,25 @@ def _redundant(audit: CitationAudit) -> list[dict]:
 
 
 class EffectiveCitations(_AuditMetric):
-    """Number of distinct pieces of evidence the report cites correctly.
+    """Distinct pieces of evidence the report cites correctly, per 1,000 words
+    of report body.
 
-        value = distinct retrieved chunks that a "supported" cited claim rests
-                on through its own citations, near-duplicates merged
+        value = 1000 × distinct retrieved chunks that a "supported" fact claim
+                rests on through its own citations (near-duplicates merged)
+                / body words
 
     Evidence, not pages or citation pairs: a page cited correctly in ten
     paragraphs for the same passage counts once, and two passages of one page
     backing different claims count twice. Near-duplicate chunks (syndicated
     copies of the same text on different sites; BM25-weighted symmetric
-    overlap >= `DUPLICATE`) are merged, by rule, with no judge call.
-    `details` keeps the citation-pair count and the distinct URL count.
+    overlap >= `DUPLICATE`) are merged, by rule, with no judge call. Per 1,000
+    words because the raw count grows with report length (a report twice as
+    long cites about twice as much); the count, the v3 value, is
+    `details.evidence`, beside the citation-pair and distinct URL counts.
     """
 
     name = "effective_citations"
-    version = f"3.audit{AUDIT_VERSION}"     # 2: distinct evidence chunks; 3: per 1k words
+    version = f"4.audit{AUDIT_VERSION}"     # 2: distinct evidence chunks; 4: per 1k words as value
     DUPLICATE = 0.8
 
     def from_audit(self, audit, archive):
@@ -175,8 +179,10 @@ class EffectiveCitations(_AuditMetric):
                        for g in groups):
                 groups.append(cid)
         words = body_word_count(archive)
-        return self.result(float(len(groups)), evidence_chunks=len(chunks),
-                           words=words, per_1k_words=rounded(1000 * len(groups) / words) if words else None,
+        if not words:
+            return self.skip("empty report body")
+        return self.result(rounded(1000 * len(groups) / words), evidence=len(groups),
+                           evidence_chunks=len(chunks), words=words,
                            merged_duplicates=len(chunks) - len(groups),
                            effective_pairs=len(eff), citations=len(cites),
                            effective_urls=len({normalize_url(c["url"]) for c in eff}))

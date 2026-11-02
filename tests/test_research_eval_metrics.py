@@ -244,11 +244,20 @@ async def test_source_diversity(ctx):
     even8 = "".join(f"P{i} ([s](https://site{i}.com/x)).\n\n" for i in range(8))
     lean = await SourceDiversity().score(make_archive("# R\n\n## S\n\n" + two_sites), ctx)
     wide = await SourceDiversity().score(make_archive("# R\n\n## S\n\n" + even8), ctx)
-    # Two sites split evenly: 1 bit (as diverse as 2 even domains); eight: 3 bits.
-    assert lean.value == 1.0 and lean.details["equivalent_domains"] == 2
-    assert wide.value == 3.0 and wide.details["equivalent_domains"] == 8
+    # Two sites split evenly: two random citations differ 4 times in 7
+    # (8/7 x 0.5); eight different sites: always. Both are perfectly even, so
+    # evenness alone would score them the same.
+    assert lean.value == pytest.approx(0.571, abs=1e-3) and lean.details["equivalent_domains"] == 2
+    assert wide.value == 1.0 and wide.details["equivalent_domains"] == 8
+    assert lean.details["evenness"] == wide.details["evenness"] == 1.0
+    assert (lean.details["entropy"], wide.details["entropy"]) == (1.0, 3.0)
+    # Twice as long with the same two-site split: about the same, not higher.
+    two_sites16 = "".join(f"P{i} ([a](https://a.com/{i})).\n\n" if i % 2 else f"P{i} ([b](https://b.org/{i})).\n\n"
+                          for i in range(16))
+    twice = await SourceDiversity().score(make_archive("# R\n\n## S\n\n" + two_sites16), ctx)
+    assert twice.value == pytest.approx(0.533, abs=1e-3)
     uncited = await SourceDiversity().score(make_archive("# R\n\n## S\n\nNo links.\n"), ctx)
-    assert uncited.details["basis"] == "retrieved" and uncited.value == pytest.approx(1.585, abs=1e-3)
+    assert uncited.details["basis"] == "retrieved" and uncited.value == 1.0
     assert r.details["retrieved"]["entropy"] == pytest.approx(1.585, abs=1e-3)
 
 
@@ -561,3 +570,30 @@ def test_failed_deep_step_material_is_not_counted_as_reaching_the_writer():
     assert [s["span_id"] for s in a.failed_deep_steps] == ["r2"]
     # cobalt also came back in the ok step, so it still reaches the writer
     assert a.writer_chunk_ids == [ca[0]]
+
+
+async def test_plan_adherence_counts_a_failed_deep_step_as_not_completed():
+    ca, cb = _chunk("cobalt"), _chunk("lithium")
+    spans = [
+        {"span_id": "r0", "parent_id": None, "name": "research", "attributes": {"query": CORE}},
+        {"span_id": "d1", "parent_id": "r0", "name": "deep_level",
+         "attributes": {"query": CORE, "serp_queries": [{"query": "a"}, {"query": "b"}, {"query": "c"}]}},
+        {"span_id": "r1", "parent_id": "d1", "name": "research", "attributes": {"query": "a", "learnings": []}},
+        {"span_id": "q1", "parent_id": "r1", "name": "sub_query", "attributes": {"query": "a", "chunk_ids": [ca[0]]}},
+        # b came back with material, then processing raised: nothing went on
+        {"span_id": "r2", "parent_id": "d1", "name": "research",
+         "attributes": {"query": "b", "process_error": "ValueError: empty"}},
+        {"span_id": "q2", "parent_id": "r2", "name": "sub_query", "attributes": {"query": "b", "chunk_ids": [cb[0]]}},
+        # c returned nothing
+        {"span_id": "r3", "parent_id": "d1", "name": "research", "attributes": {"query": "c", "learnings": []}},
+    ]
+    a = RunArchive(build_archive(meta={"run_id": "t", "query": CORE}, spans=spans,
+                                 chunks={ca[0]: ca[1], cb[0]: cb[1]}, report_markdown="# t\n"))
+    r = await PlanAdherence().score(a, ScoringContext(cache=EvalCache(":memory:")))
+    assert (r.details["planned"], r.details["delivered"], r.details["completed"]) == (3, 2, 1)
+    assert r.value == pytest.approx(1 / 3, abs=1e-3)
+    assert r.details["retrieval_delivery"] == pytest.approx(2 / 3, abs=1e-3)
+    assert [f["query"] for f in r.details["failed_after_retrieval"]] == ["b"]
+    assert r.details["failed_after_retrieval"][0]["error"] == "ValueError: empty"
+    assert [f["query"] for f in r.details["not_delivered"]] == ["c"]
+    assert r.details["deep_steps_failed"] == 1

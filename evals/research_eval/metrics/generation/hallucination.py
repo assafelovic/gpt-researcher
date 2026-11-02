@@ -10,30 +10,38 @@ import re
 from collections import Counter
 
 from ...archive import RunArchive, normalize_url
-from ...citation_audit import VERDICT_SCORES, CitationAudit, audited_paragraphs
+from ...citation_audit import AUDIT_VERSION, VERDICT_SCORES, CitationAudit, audited_paragraphs
 from ..base import Metric, MetricResult, ScoringContext, rounded
 from .citation import _AuditMetric
 
 
 class Faithfulness(_AuditMetric):
-    """Mean verdict score of the report's factual claims, in [-1, 1].
+    """Mean verdict score of the report's fact claims, in [-1, 1].
 
     Claims are extracted per paragraph by the judge (not taken as the cited
-    sentences), and checked against the paragraph's cited passages (or, for a
-    paragraph without citations, the 4 best-matching retrieved passages); a
-    fact claim they do not support is checked again against up to 6 passages
-    the checker picks itself from the retrieved material not yet shown, and becomes
-    "supported" only when one of them plainly states it (so a claim is not
-    judged only on what the agent chose to cite); paragraphs with no citations
-    are checked against the BM25 top passages of everything retrieved, and skipped when the judge finds them non-factual.
+    sentences) and typed `fact` or `analysis`. Each is checked against the
+    paragraph's cited passages (for a paragraph without citations, the 4
+    best-matching retrieved passages; a paragraph the judge finds non-factual
+    is skipped). A fact claim they do not support is checked again against up
+    to 6 passages the checker picks itself from the retrieved material not yet
+    shown, and becomes "supported" only when one of them plainly states it, so
+    a claim is not judged only on what the agent chose to cite.
 
         supported 1 | inferred 0.5 / 0.4 / 0.3 | unsupported 0 | contradicted -1
+
+    Only fact claims make the value. An analysis claim is the writer's own
+    evaluation or conclusion, which a source rarely states outright, so
+    averaging it in would lower the score for every analysis the report adds,
+    against what insight rewards. Analysis is reported beside it
+    (`details.by_type.analysis`, `analysis_contradicted`), and the mean over
+    all claims, the v1 value, is `details.all_claims`.
 
     Known gap: a claim citing A but backed by B in the same paragraph passes
     here; citation recall / precision catch it.
     """
 
     name, category = "faithfulness", "generation.hallucination"
+    version = f"2.audit{AUDIT_VERSION}"     # 2: fact claims only; analysis in details
 
     def from_audit(self, audit: CitationAudit, archive: RunArchive) -> MetricResult:
         claims = [(p, c) for p in audit.judged for c in p.claims]
@@ -41,8 +49,10 @@ class Faithfulness(_AuditMetric):
                        "verdict": c.get("faith_verdict", c["verdict"]),
                        "score": c.get("faith_score", c["score"])}) for p, c in claims]
         scored = [c["score"] for _, c in claims if c["score"] is not None]
-        if not scored:
-            return self.skip("no factual claims judged")
+        facts = [c["score"] for _, c in claims
+                 if c.get("type", "fact") == "fact" and c["score"] is not None]
+        if not facts:
+            return self.skip("no fact claims judged")
         verdicts = Counter(c["verdict"] for _, c in claims)
         by_type = {}
         for t in ("fact", "analysis"):
@@ -54,9 +64,15 @@ class Faithfulness(_AuditMetric):
                  if c.get("faith_score", c["score"]) is not None]
             per_para.append({"para_id": p.para_id, "mode": p.mode, "kind": p.kind,
                              "claims": len(p.claims), "score": rounded(sum(s) / len(s)) if s else None})
-        flagged = [{"para_id": p.para_id, "mode": p.mode, **{k: c[k] for k in ("claim", "verdict", "evidence")}}
+        flagged = [{"para_id": p.para_id, "mode": p.mode, "type": c.get("type", "fact"),
+                    **{k: c[k] for k in ("claim", "verdict", "evidence")}}
                    for p, c in claims if (c["score"] if c["score"] is not None else 0) <= 0]
-        return self.result(rounded(sum(scored) / len(scored)), claims=len(scored), by_type=by_type,
+        return self.result(rounded(sum(facts) / len(facts)), fact_claims=len(facts),
+                           claims=len(scored), all_claims=rounded(sum(scored) / len(scored)),
+                           by_type=by_type,
+                           analysis_contradicted=sum(c.get("type") == "analysis"
+                                                     and c["verdict"] == "contradicted"
+                                                     for _, c in claims),
                            verdicts=dict(verdicts),
                            rechecked=sum("elsewhere_verdict" in c for _, c in claims),
                            upgraded_by_recheck=sum(c["verdict"] != c.get("cited_verdict", c["verdict"])
