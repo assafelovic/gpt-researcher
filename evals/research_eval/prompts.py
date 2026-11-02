@@ -192,7 +192,7 @@ Return ONLY a JSON array in this exact format, one entry per domain:
 
 # --- generation metrics ------------------------------------------------------
 
-PARAGRAPH_AUDIT = Prompt("paragraph_audit", "2", """
+PARAGRAPH_AUDIT = Prompt("paragraph_audit", "3", """
 You are checking one paragraph of a research report against the source material
 the writer had. Work only from the material shown; do not use outside knowledge.
 
@@ -212,8 +212,27 @@ Do the following IN ORDER.
    "non_factual" if it is only opinion, recommendation, transition or structure.
    For a non_factual paragraph return an empty "claims" list (still do step 3).
 
-2. claims: split the paragraph into its distinct factual claims (one claim per
-   fact; a sentence may hold several; sentences without a citation count too).
+2. claims: split the paragraph into claims. A claim is
+   - checkable: someone holding the right source could say whether it is true;
+   - atomic: one piece of information (split "A and B" when each can be checked
+     on its own; keep a figure together with what it measures);
+   - self-contained: understandable without the paragraph (replace pronouns).
+   Sentences without a citation count too. Give each claim a type:
+   - "fact": an event, number, date, an entity's action or property, or what a
+     named source found or said. A source could state it word for word.
+     "Gartner ranks Zipline first" is a fact: that Gartner says so is checkable.
+   - "analysis": the writer's own evaluation, ranking, comparison, prediction,
+     recommendation or conclusion, or a statement about the report or its
+     sources. No source would state it as such; at best it follows from them.
+   Examples:
+     "Zipline has completed over one million deliveries."              -> fact
+     "Zipline has completed over one million deliveries, the most of
+      any operator."  -> two claims, both fact if the material ranks them
+     "Zipline has the strongest claim to leadership in drone delivery." -> analysis
+     "Banks should start with low-risk chatbot use cases."              -> analysis
+     "Both sources agree on the timeline."                              -> analysis
+     "Revenue doubled from 2023 to 2024." (from two figures)             -> fact
+   A sentence holding both kinds is split into a fact and an analysis claim.
    Judge each claim against ALL the material above and give one verdict:
    - "supported": the material states it.
    - "inferred_a": the conclusion is partly supported, and the reasoning to it is
@@ -224,8 +243,8 @@ Do the following IN ORDER.
      toward it is strongly supported or clearly sound.
    - "unsupported": the material does not say this (anything weaker than the above).
    - "contradicted": the material says the opposite.
-   For each claim list the passage ids (e.g. "1a") it rests on and quote the
-   material words your verdict rests on.
+   For each claim list the item numbers it comes from, the passage ids (e.g.
+   "1a") it rests on, and quote the material words your verdict rests on.
 
 3. sentences: ONLY for the numbered items that cite sources (listed with "cites");
    "sentence" is the item number. "The sentence" below means the whole item.
@@ -238,7 +257,7 @@ Do the following IN ORDER.
 
 Return ONLY JSON:
 {{"kind": "factual",
-  "claims": [{{"claim": "...", "sentences": [1], "verdict": "supported",
+  "claims": [{{"claim": "...", "type": "fact", "sentences": [1], "verdict": "supported",
                "passages": ["1a"], "evidence": "..."}}],
   "sentences": [{{"sentence": 1, "supported": true,
                   "citations": [{{"source": 1, "alone": true, "rest_suffice": false}}]}}]}}

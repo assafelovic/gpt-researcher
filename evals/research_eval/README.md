@@ -115,7 +115,7 @@ whose follow-up questions produced it (matched by the research goal in its query
 | Query | `plan_adherence` | retrieval delivery: planned sub-queries that returned chunks / planned; deep runs add the research steps that returned material but produced no learnings | 0 |
 | Source | `source_authority` | mean authority over the report's citations (one per paragraph-URL pair); mean over all retrieved sources in `details.retrieved_mean`; rule tiers (subdomains included), then global domain cache, then one batched call | <= 1, tends to 0 |
 | Source | `source_diversity` | Shannon entropy (bits) of cited domains, citation = paragraph-URL pair (retrieved sources if nothing is cited); 2^H = equivalent number of evenly cited domains; details give entropy, Pielou evenness, HHI and effective domains for citations and retrieved sources | 0 |
-| Efficiency | `citation_utilization` | retrieved URLs the body cites / retrieved URLs; chunk level in details (judged via the citation audit when a judge is set, else rule-based); deep research adds `details.reasoning`: the URL funnel (retrieved URLs → URLs a learning names as its source → those the report cites) and chunks that reach the report through a learning | 0 (audit shared) |
+| Efficiency | `source_utilization` (formerly `citation_utilization`) | retrieved URLs the body cites / retrieved URLs ("used" = cited: actual use cannot be told from the report); chunk level in details (judged via the citation audit when a judge is set, else rule-based); deep research adds `details.reasoning`: the URL funnel (retrieved URLs → URLs a learning names as its source → those the report cites) and chunks that reach the report through a learning | 0 (audit shared) |
 | Efficiency | `query_relevance` | mean of judge total / 10 per search step + material (Q1-Q5 rubric); steps = sub-queries + each initial search; material = one best chunk per URL, 12k chars | 1 per step with material |
 | Efficiency | `retrieval_overlap` | search results already seen / proposed (lower is better), leaving out each researcher's repeat search of its own question; `details.with_core_repeats` keeps the old rate | 0 |
 
@@ -171,7 +171,7 @@ Each metric's score was checked by hand against the report, spans and chunks.
 | `subquery_redundancy` | 0.000 | Correct for 3 sub-queries; sample too small to judge |
 | `decomposition_coverage` | 0.625 | Correct after v2 (v1 embedding matching had 3 of 8 points wrong) |
 | `query_relevance` | 0.800 | v2 shows the judge every source URL (v1 saw 5-7 of 11-23 chunks) and scores the initial search |
-| `citation_utilization` | 0.692 | 9 of 13 retrieved URLs cited; v1's LLM chunk level marked uncited sources as used |
+| `source_utilization` | 0.692 | 9 of 13 retrieved URLs cited; v1's LLM chunk level marked uncited sources as used |
 | `source_diversity` | 1.000 | Computed correctly but saturates; formulation open |
 
 Re-scoring the same archive replays every judge call from the cache and gives identical
@@ -187,7 +187,7 @@ can legitimately differ: material on a key point can arrive from a search not ai
 | Writing | `readability` | same, readability criteria | shared |
 | Writing | `instruction_following` | passed / 7 rule checks (6 in detailed mode, whose TOC is inserted by code): min words, one title, clean headings, no TOC, references, in-text citations, cites only retrieved URLs | 0 |
 | Writing | `topic_relevance` | (yes + idk) / paragraphs | 1 per ~20k chars |
-| Citation | `citation_recall` | per claim: cited claims supported by their own citations / cited claims. Claims come from the audit (one may span several sentences); supported = verdict "supported" (strict) and a passage it rests on is from a URL its own item cites. `details.unit_level` keeps the former ALCE per-citing-unit value; `details.cited_share` = cited claims / all factual claims and `supported_of_all_claims` = supported cited claims / all factual claims | audit (below) |
+| Citation | `citation_recall` | per claim: cited fact claims supported by their own citations / cited fact claims. Claims come from the audit (checkable, atomic, self-contained; typed `fact` or `analysis`: the writer's own evaluation, ranking, recommendation or conclusion, which recall / precision / effective citations leave out and faithfulness still scores); supported = verdict "supported" (strict) and a passage it rests on is from a URL its own item cites. `details.unit_level` keeps the former ALCE per-citing-unit value; `details.cited_share` = cited claims / all factual claims and `supported_of_all_claims` = supported cited claims / all factual claims | audit (below) |
 | Citation | `citation_precision` | per claim: citations that back a supported claim of their item / citations (item-URL pairs; items with no factual claim left out; in a table, each URL once per table, precise if it is for any row). `details.unit_level` keeps the ALCE value; `details.redundant_rate`: precise citations whose every backed claim another URL of the item also backs (corroboration, kept out of the value) | audit |
 | Citation | `citation_coverage` | references cited in the body / references (URL level; formerly `citation_faithfulness`) | 0 |
 | Citation | `effective_citations` | distinct pieces of evidence cited correctly: retrieved chunks a supported cited claim rests on through its own citations, near-duplicate chunks merged (symmetric BM25 overlap >= 0.8, no judge call); details keep citation pairs, distinct URLs and evidence per 1,000 words | audit |
@@ -197,7 +197,7 @@ can legitimately differ: material on a key point can arrive from a search not ai
 | Other | `bias` | same, bias flag (gender, politics, race, religion, geography) | shared |
 
 **Citation audit** (`citation_audit.py`), one judge call per paragraph, shared by the
-citation and faithfulness metrics and by `citation_utilization`:
+citation and faithfulness metrics and by `source_utilization`:
 
 - Citations are placed per sentence by link position (`report_parser.cited_sentences`;
   a citation after the full stop, e.g. APA style "... rose. (Didit, 2026; Norton, n.d.)",

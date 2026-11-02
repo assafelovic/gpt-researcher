@@ -16,7 +16,7 @@ from evals.research_eval.judge import Embedder, Judge
 from evals.research_eval.metrics import all_metrics
 from evals.research_eval.metrics.base import ScoringContext
 from evals.research_eval.metrics.retrieval import (
-    CitationUtilization, DecompositionCoverage, DecompositionTreeQuality, PlanAdherence,
+    SourceUtilization, DecompositionCoverage, DecompositionTreeQuality, PlanAdherence,
     QueryRelevance, RetrievalOverlap, SourceAuthority, SourceDiversity, SubqueryRedundancy)
 from evals.research_eval.scoring import save_results, score_archive, scorer_version
 
@@ -293,20 +293,20 @@ async def test_source_authority_judge_failure_is_skipped(ctx):
     assert r.details["unscored_domains"] == ["weather-blog.com"]
 
 
-async def test_citation_utilization_is_url_level_and_rule_based():
+async def test_source_utilization_is_url_level_and_rule_based():
     ctx = ScoringContext(cache=EvalCache(":memory:"))       # --rules-only: no judge
-    r = await CitationUtilization().score(make_archive(), ctx)
+    r = await SourceUtilization().score(make_archive(), ctx)
     assert r.value == pytest.approx(1 / 3, abs=1e-3)
     assert r.details["uncited_urls"] == [URLS["lithium"], URLS["unused"]]
-    assert r.llm is None and not CitationUtilization.uses_llm
+    assert r.llm is None and not SourceUtilization.uses_llm
     used = {c["chunk_id"]: c["used"] for c in r.details["per_chunk"]}
     cid = {k: _chunk(k)[0] for k in CHUNK_TEXT}
     assert used == {cid["cobalt"]: True, cid["lithium"]: False, cid["unused"]: False}
     assert r.details["chunk_level"] == pytest.approx(1 / 3, abs=1e-3)
 
 
-async def test_citation_utilization_reads_judged_chunks_from_citation_audit(ctx):
-    r = await CitationUtilization().score(make_archive(), ctx)
+async def test_source_utilization_reads_judged_chunks_from_citation_audit(ctx):
+    r = await SourceUtilization().score(make_archive(), ctx)
     cid = {k: _chunk(k)[0] for k in CHUNK_TEXT}
     assert r.value == pytest.approx(1 / 3, abs=1e-3)          # value stays URL-level
     assert r.details["chunks_used_judged"] == [cid["cobalt"]]
@@ -314,12 +314,12 @@ async def test_citation_utilization_reads_judged_chunks_from_citation_audit(ctx)
     assert r.llm["shared"] == "citation_audit"
 
 
-async def test_citation_utilization_uncited_overlap_is_echo_not_use(ctx):
+async def test_source_utilization_uncited_overlap_is_echo_not_use(ctx):
     report = ("# R\n\n## S\n\n"
               "Lithium refining capacity sits mostly in China, according to agency data from 2024.\n\n"
               "Cobalt mining is concentrated in Congo and creates supply risk for battery makers, "
               "but this paragraph cites [Weather](https://weather-blog.com/rain).\n")
-    r = await CitationUtilization().score(make_archive(report), ctx)
+    r = await SourceUtilization().score(make_archive(report), ctx)
     by = {c["chunk_id"]: c for c in r.details["per_chunk"]}
     cid = {k: _chunk(k)[0] for k in CHUNK_TEXT}
     # Lithium text is reproduced but its URL is never cited: echoed, not used.
@@ -470,18 +470,18 @@ async def test_source_diversity_reports_retrieved_and_cited_concentration():
     assert r.details["cited"]["n"] == 1 and r.details["cited"]["hhi"] == 1
 
 
-async def test_citation_utilization_reasoning_chain_for_deep_research():
+async def test_source_utilization_reasoning_chain_for_deep_research():
     rules_ctx = ScoringContext(cache=EvalCache(":memory:"))
     a = make_archive("# R\n\n## S\n\n"
                      "Lithium refining capacity sits mostly in China, according to agency data from 2024.\n\n"
                      "Cobalt mining is concentrated in Congo and creates supply risk for battery makers, "
                      "but this paragraph cites [Weather](https://weather-blog.com/rain).\n")
-    assert "reasoning" not in (await CitationUtilization().score(a, rules_ctx)).details
+    assert "reasoning" not in (await SourceUtilization().score(a, rules_ctx)).details
     a.data["spans"][1]["attributes"]["learnings"] = [
         "Lithium refining capacity sits mostly in China.",          # rests on the lithium chunk
         "Rain is expected across northern regions this weekend."]   # rests on the weather chunk
     a = RunArchive(a.data)
-    r = await CitationUtilization().score(a, rules_ctx)
+    r = await SourceUtilization().score(a, rules_ctx)
     chain = r.details["reasoning"]
     assert chain["learnings"] == 2 and chain["chunks_distilled"] == 2
     # Only the lithium learning reaches the report, so only its chunk counts.
@@ -491,7 +491,7 @@ async def test_citation_utilization_reasoning_chain_for_deep_research():
     assert chain["learning_urls"] is None
 
 
-async def test_citation_utilization_url_funnel_for_deep_research():
+async def test_source_utilization_url_funnel_for_deep_research():
     rules_ctx = ScoringContext(cache=EvalCache(":memory:"))
     a = make_archive("# R\n\n## S\n\n"
                      "Lithium refining capacity sits mostly in China, according to agency data from 2024 "
@@ -501,7 +501,7 @@ async def test_citation_utilization_url_funnel_for_deep_research():
     a.data["spans"][1]["attributes"]["learnings"] = [lithium, cobalt]
     a.data["spans"][1]["attributes"]["learning_sources"] = {
         lithium: URLS["lithium"], cobalt: URLS["cobalt"]}
-    chain = (await CitationUtilization().score(RunArchive(a.data), rules_ctx)).details["reasoning"]
+    chain = (await SourceUtilization().score(RunArchive(a.data), rules_ctx)).details["reasoning"]
     assert chain["retrieved_urls"] == 3
     assert chain["learning_urls"] == 2 and chain["cited_learning_urls"] == 1
     assert chain["cited_other_urls"] == 0
@@ -533,7 +533,7 @@ async def test_reasoning_chain_leaves_out_chunks_of_deeper_levels():
     a = make_archive("# R\n\n## S\n\n"
                      "Lithium refining capacity sits mostly in China, according to agency data from 2024.\n")
     a.data["spans"][1]["attributes"]["learnings"] = ["Lithium refining capacity sits mostly in China."]
-    base = (await CitationUtilization().score(RunArchive(a.data), rules_ctx)).details["reasoning"]
+    base = (await SourceUtilization().score(RunArchive(a.data), rules_ctx)).details["reasoning"]
     assert base["chunks_distilled"] == 1
     # Move the lithium sub-query under a deeper level of the same step: its chunk
     # was retrieved after the learning was written, so it cannot back it.
@@ -541,5 +541,5 @@ async def test_reasoning_chain_leaves_out_chunks_of_deeper_levels():
     for sp in a.data["spans"]:
         if sp["span_id"] == "s5":
             sp["parent_id"] = "dl"
-    chain = (await CitationUtilization().score(RunArchive(a.data), rules_ctx)).details["reasoning"]
+    chain = (await SourceUtilization().score(RunArchive(a.data), rules_ctx)).details["reasoning"]
     assert chain["chunks_distilled"] == 0

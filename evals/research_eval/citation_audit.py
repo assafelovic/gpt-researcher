@@ -2,7 +2,7 @@
 Citation audit: which source passages each part of the report rests on.
 -----------------------------------------------------------------------
 Shared by the generation metrics (ALCE citation recall / precision, effective
-citations, faithfulness) and by the retrieval side's `citation_utilization`,
+citations, faithfulness) and by the retrieval side's `source_utilization`,
 which reads `used_chunk_ids` for its chunk-level view. One judge call per
 paragraph does all of it, so running several of these metrics costs the same
 as running one: the audit is memoised on the ScoringContext and every call is
@@ -46,7 +46,7 @@ if TYPE_CHECKING:
 # Bump when the audit's material or unit logic changes (prompt changes bump the
 # prompt version instead); every metric that reads the audit carries it in its
 # version, so the scorer version changes and old results are not overwritten.
-AUDIT_VERSION = "7"     # 7: recall / precision per claim
+AUDIT_VERSION = "8"     # 7: recall / precision per claim; 8: fact / analysis claims
 
 # Faithfulness points per verdict (eval-design/generation-metrics.md §3.2 B).
 VERDICT_SCORES = {"supported": 1.0, "inferred_a": 0.5, "inferred_b": 0.4, "inferred_c": 0.3,
@@ -310,8 +310,11 @@ def interpret(pa: ParagraphAudit) -> None:
         if not isinstance(c, dict):
             continue
         verdict = str(c.get("verdict", "")).strip().lower()
+        ctype = str(c.get("type", "")).strip().lower()
         pa.claims.append({
             "claim": c.get("claim", ""), "verdict": verdict, "score": VERDICT_SCORES.get(verdict),
+            # Older prompts did not type claims: treat those as facts.
+            "type": ctype if ctype in ("fact", "analysis") else "fact",
             "sentences": c.get("sentences") or [],
             "chunk_ids": [passage_chunk[str(x)] for x in c.get("passages") or []
                           if str(x) in passage_chunk],
@@ -368,9 +371,13 @@ def claim_level(pa: ParagraphAudit) -> None:
     """
     if pa.mode != "cited":
         return
+    # Only facts: an analysis claim is the writer's own conclusion, which no
+    # citation can state (faithfulness still scores it).
     unit_urls = {i: s["urls"] for i, s in enumerate(pa.sentences, 1) if s["urls"]}
     chunk_url = {p["chunk_id"]: s["url"] for s in pa.sources for p in s["passages"]}
     for c in pa.claims:
+        if c.get("type", "fact") != "fact":
+            continue
         units = []
         for x in c["sentences"]:
             try:

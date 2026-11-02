@@ -15,8 +15,13 @@ from ..lexical import idf_table, weighted_overlap
 from gpt_researcher.context.lexical import tokenize
 
 
-class CitationUtilization(Metric):
+class SourceUtilization(Metric):
     """Share of retrieved source URLs that the report cites (rule-based, no LLM).
+
+    "Used" means cited in the report. Whether the writer actually drew on a
+    source it did not cite cannot be told from the finished report, so the
+    value does not try; `details` shows judged and rule-based chunk views.
+    (Named `citation_utilization` before 2026-11-02.)
 
         value = cited URLs ∩ retrieved URLs / retrieved URLs
 
@@ -45,7 +50,7 @@ class CitationUtilization(Metric):
                        writer either took without citing or got elsewhere.
     """
 
-    name, category = "citation_utilization", "retrieval.efficiency"
+    name, category = "source_utilization", "retrieval.efficiency"
     version = f"6.audit{AUDIT_VERSION}"     # 4: deep-research reasoning chain; 5: URL-level funnel; 6: step chunks exclude deeper levels
     prompts = (PARAGRAPH_AUDIT,)
     MATCH, MIN_TERMS = 0.5, 5

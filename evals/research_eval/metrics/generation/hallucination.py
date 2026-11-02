@@ -37,6 +37,10 @@ class Faithfulness(_AuditMetric):
         if not scored:
             return self.skip("no factual claims judged")
         verdicts = Counter(c["verdict"] for _, c in claims)
+        by_type = {}
+        for t in ("fact", "analysis"):
+            ts = [c["score"] for _, c in claims if c.get("type", "fact") == t and c["score"] is not None]
+            by_type[t] = {"claims": len(ts), "score": rounded(sum(ts) / len(ts)) if ts else None}
         per_para = []
         for p in audit.judged:
             s = [c["score"] for c in p.claims if c["score"] is not None]
@@ -44,7 +48,7 @@ class Faithfulness(_AuditMetric):
                              "claims": len(p.claims), "score": rounded(sum(s) / len(s)) if s else None})
         flagged = [{"para_id": p.para_id, "mode": p.mode, **{k: c[k] for k in ("claim", "verdict", "evidence")}}
                    for p, c in claims if (c["score"] if c["score"] is not None else 0) <= 0]
-        return self.result(rounded(sum(scored) / len(scored)), claims=len(scored),
+        return self.result(rounded(sum(scored) / len(scored)), claims=len(scored), by_type=by_type,
                            verdicts=dict(verdicts),
                            unknown_verdicts=len(claims) - len(scored),
                            uncited_factual_paragraphs=sum(p.mode == "uncited" and p.kind == "factual"

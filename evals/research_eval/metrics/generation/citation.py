@@ -68,11 +68,14 @@ class CitationRecall(_AuditMetric):
         if not claims:
             return self.skip("no cited claims")
         ok = sum(c["supported"] for c in claims)
-        factual = sum(len(p.claims) for p in audit.judged if p.kind == "factual")
+        factual = sum(c.get("type", "fact") == "fact" for p in audit.judged if p.kind == "factual"
+                      for c in p.claims)
+        analysis = sum(c.get("type") == "analysis" for p in audit.judged for c in p.claims)
         units = [s for s in audit.sentence_checks if s["judged"]]
         unit_ok = sum(s["supported"] for s in units)
         return self.result(rounded(ok / len(claims)), cited_claims=len(claims), supported=ok,
-                           factual_claims=factual,
+                           factual_claims=factual, analysis_claims=analysis,
+                           analysis_share=rounded(analysis / (factual + analysis)) if factual + analysis else None,
                            cited_share=rounded(len(claims) / factual) if factual else None,
                            supported_of_all_claims=rounded(ok / factual) if factual else None,
                            verdicts=dict(Counter(c["verdict"] for c in claims)),

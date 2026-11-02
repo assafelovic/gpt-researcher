@@ -529,3 +529,20 @@ def test_precision_flags_redundant_citations():
     from evals.research_eval.metrics.generation.citation import _redundant
     # b only backs x, which a also backs: redundant. a backs y alone: needed.
     assert _redundant(CitationAudit([pa])) == [{"para_id": "p", "sentence": 1, "url": "https://b"}]
+
+
+def test_analysis_claims_stay_out_of_citation_metrics():
+    from evals.research_eval.citation_audit import CitationAudit, ParagraphAudit, claim_level, interpret
+    from evals.research_eval.judge import JudgeResponse
+    pa = ParagraphAudit("p", [], "cited", [{"text": "A", "urls": ["https://a"]}],
+                        [{"n": 1, "url": "https://a", "found": True, "passages": [{"id": "1a", "chunk_id": "ca"}]}])
+    pa.response = JudgeResponse({"kind": "factual", "claims": [
+        {"claim": "x", "type": "fact", "sentences": [1], "verdict": "supported", "passages": ["1a"]},
+        {"claim": "y leads", "type": "analysis", "sentences": [1], "verdict": "inferred_b", "passages": ["1a"]},
+        {"claim": "z", "sentences": [1], "verdict": "unsupported", "passages": []}]},
+        "", False, "paragraph_audit", "3")
+    interpret(pa)
+    assert [c["type"] for c in pa.claims] == ["fact", "analysis", "fact"]   # untyped -> fact
+    assert [c["claim"] for c in pa.claim_checks] == ["x", "z"]
+    audit = CitationAudit([pa])
+    assert len(audit.claim_checks) == 2
