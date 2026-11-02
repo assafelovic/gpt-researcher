@@ -221,10 +221,16 @@ Do the following IN ORDER.
    - "fact": an event, number, date, an entity's action or property, or what a
      named source found or said. A source could state it word for word.
      "Gartner ranks Zipline first" is a fact: that Gartner says so is checkable.
+     What a named entity is or does (its role, type, specialty, business model,
+     products, partners, markets) is a fact, even when worded loosely: a source
+     can confirm or deny it. If unsure, use fact.
    - "analysis": the writer's own evaluation, ranking, comparison, prediction,
      recommendation or conclusion, or a statement about the report or its
      sources. No source would state it as such; at best it follows from them.
    Examples:
+     "Swoop Aero is a healthcare logistics specialist."                -> fact
+     "Wing's role is as a delivery operator for retail partners."      -> fact
+     "Zipline's model is per-delivery fees paid by health systems."    -> fact
      "Zipline has completed over one million deliveries."              -> fact
      "Zipline has completed over one million deliveries, the most of
       any operator."  -> two claims, both fact if the material ranks them
