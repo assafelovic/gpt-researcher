@@ -154,7 +154,7 @@ def test_parse_json_response_tolerates_fences_and_prose():
 
 async def test_judge_caches_by_full_input_and_skips_bad_replies(tmp_path):
     cache = EvalCache(tmp_path / "c.sqlite")
-    replies = iter(['{"total": 3}', "garbage", '{"total": 5}'])
+    replies = iter(['{"total": 3}', "garbage", "", '{"total": 5}'])
     calls = []
 
     async def complete(p):
@@ -166,11 +166,11 @@ async def test_judge_caches_by_full_input_and_skips_bad_replies(tmp_path):
     second = await j.ask("p", "1", "prompt A")
     assert first.parsed == second.parsed == {"total": 3}
     assert (first.cache_hit, second.cache_hit) == (False, True)
-    bad = await j.ask("p", "2", "prompt A")          # new version -> new key
-    assert bad.parsed is None and bad.error
+    bad = await j.ask("p", "2", "prompt A")          # new version -> new key; asked twice
+    assert bad.parsed is None and "after 2 attempts" in bad.error
     retry = await j.ask("p", "2", "prompt A")        # unparseable reply was not cached
     assert retry.parsed == {"total": 5}
-    assert len(calls) == 3
+    assert len(calls) == 4
 
     # Survives reopening the file.
     cache.close()

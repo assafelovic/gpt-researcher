@@ -55,6 +55,9 @@ def parse_json_response(text: str) -> Any:
     raise ValueError("no JSON object in judge response")
 
 
+PARSE_RETRIES = 1       # extra calls when a reply holds no usable JSON
+
+
 class Judge:
     """Cached rubric judge. `complete` is an async str -> str backend."""
 
@@ -98,19 +101,22 @@ class Judge:
         if cached is not None:
             self.cache_hits += 1
             return JudgeResponse(cached["parsed"], cached["raw"], True, prompt_id, prompt_version)
-        self.calls += 1
-        try:
-            raw = await self._call(prompt)
-        except Exception as e:
-            return JudgeResponse(None, "", False, prompt_id, prompt_version,
-                                 error=f"{type(e).__name__}: {e}")
-        try:
-            parsed = parse_json_response(raw)
-        except ValueError as e:
-            # Unparseable replies are not cached: a retry may well succeed.
-            return JudgeResponse(None, raw, False, prompt_id, prompt_version, error=str(e))
-        self.cache.put("llm", key, {"parsed": parsed, "raw": raw})
-        return JudgeResponse(parsed, raw, False, prompt_id, prompt_version)
+        for attempt in range(1 + PARSE_RETRIES):
+            self.calls += 1
+            try:
+                raw = await self._call(prompt)
+            except Exception as e:
+                return JudgeResponse(None, "", False, prompt_id, prompt_version,
+                                     error=f"{type(e).__name__}: {e}")
+            try:
+                parsed = parse_json_response(raw)
+            except ValueError as e:
+                # Unparseable replies (empty, cut off) are not cached; ask again.
+                error = str(e) + (f" (after {attempt + 1} attempts)" if attempt else "")
+                continue
+            self.cache.put("llm", key, {"parsed": parsed, "raw": raw})
+            return JudgeResponse(parsed, raw, False, prompt_id, prompt_version)
+        return JudgeResponse(None, raw, False, prompt_id, prompt_version, error=error)
 
 
 class Embedder:
