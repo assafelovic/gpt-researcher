@@ -21,10 +21,9 @@ class Faithfulness(_AuditMetric):
     Claims are extracted per paragraph by the judge (not taken as the cited
     sentences), and checked against the paragraph's cited passages; a fact
     claim they do not support is checked again against up to 6 passages the
-    checker picks itself from the rest of the retrieved material, and keeps the
-    better verdict (so a claim is not judged only on what the agent chose to
-    cite); paragraphs
-    with no citations are checked against the BM25 top passages of everything
+    checker picks itself from the rest of the retrieved material, and becomes
+    "supported" only when one of them plainly states it (so a claim is not
+    judged only on what the agent chose to cite); paragraphs with no citations are checked against the BM25 top passages of everything
     retrieved, and skipped when the judge finds them non-factual.
 
         supported 1 | inferred 0.5 / 0.4 / 0.3 | unsupported 0 | contradicted -1

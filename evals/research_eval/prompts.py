@@ -270,7 +270,7 @@ Return ONLY JSON:
 """.strip())
 
 
-CLAIM_RECHECK = Prompt("claim_recheck", "1", """
+CLAIM_RECHECK = Prompt("claim_recheck", "2", """
 You are checking claims from a research report against source material.
 These claims were not fully supported by the sources the report cites for
 them. The material below is other material the writer had retrieved, picked by
@@ -285,18 +285,19 @@ Claims:
 Material:
 {material}
 
-For EACH claim give one verdict against this material:
-- "supported": the material states it.
-- "inferred_a": the conclusion is partly supported, and the reasoning to it is
-  strongly supported by the material or clearly sound.
-- "inferred_b": the conclusion is partly supported, the reasoning is plausible
-  but only partly backed by the material.
-- "inferred_c": the conclusion itself is not supported, but the reasoning
-  toward it is strongly supported or clearly sound.
-- "unsupported": the material does not say this (anything weaker than the above).
-- "contradicted": the material says the opposite.
-List the passage ids (e.g. "1a") it rests on, and quote the material words your
-verdict rests on.
+For EACH claim give one verdict against this material. Be strict:
+- "supported": one passage states the claim itself: the same subject (entity,
+  market, sector, region, period) and the same strength. "Exploring regional
+  routes" does not support "competes in regional delivery"; a statement about
+  retail does not support the same claim about banking; one example does not
+  support a general statement; "is built around X" does not support "is
+  distinguished by X".
+- "contradicted": a passage about the same subject states the opposite or a
+  different figure.
+- "unsupported": anything else, including partial support or support that
+  needs an inference.
+List the passage ids (e.g. "1a") a supported or contradicted verdict rests on,
+and quote the words it rests on.
 
 Return ONLY JSON:
 {{"claims": [{{"claim": 1, "verdict": "unsupported", "passages": [], "evidence": ""}}]}}

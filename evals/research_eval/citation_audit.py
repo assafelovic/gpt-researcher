@@ -63,6 +63,7 @@ PASSAGE_CHARS = 1200        # one chunk shown to the judge
 SOURCE_PASSAGES = 12        # chunks shown per cited URL: most pages fit whole
 MATERIAL_CHARS = 24000      # per paragraph, shared by its cited URLs
 UNCITED_PASSAGES = 4        # BM25 top-k for paragraphs without citations
+RECHECK_VERDICTS = ("supported", "unsupported", "contradicted")   # strict, CLAIM_RECHECK v2
 INDEPENDENT_PASSAGES = 6    # checker-picked passages outside the cited URLs (recheck step)
 UNAVAILABLE = "(not available: the agent never retrieved this URL)"
 
@@ -475,7 +476,7 @@ def render_recheck(archive: "RunArchive", pa: ParagraphAudit, todo: list[dict]) 
 
 def apply_recheck(pa: ParagraphAudit, todo: list[dict]) -> None:
     """Record the recheck on each claim; the faithfulness verdict becomes the
-    better of the two when the recheck finds support. Citation checks are
+    supported verdict when the recheck finds plain support. Citation checks are
     rebuilt (backed_by_uncited)."""
     r = pa.recheck
     if r is None or not isinstance(r.parsed, dict):
@@ -487,14 +488,14 @@ def apply_recheck(pa: ParagraphAudit, todo: list[dict]) -> None:
         except (TypeError, ValueError, IndexError, AttributeError):
             continue
         verdict = str(got.get("verdict", "")).strip().lower()
-        score = VERDICT_SCORES.get(verdict)
+        score = VERDICT_SCORES.get(verdict) if verdict in RECHECK_VERDICTS else None
         c.update(elsewhere_verdict=verdict, elsewhere_score=score,
                  elsewhere_chunk_ids=[passage_chunk[str(x)] for x in got.get("passages") or []
                                       if str(x) in passage_chunk],
                  elsewhere_evidence=got.get("evidence", ""))
-        # Only support found elsewhere lifts a verdict: silence in other
-        # material does not cancel a contradiction by the cited source.
-        if score is not None and score > 0 and (c["faith_score"] is None or score > c["faith_score"]):
+        # Only plain support found elsewhere lifts a verdict (a contradiction
+        # elsewhere is recorded, not scored: sources may simply disagree).
+        if verdict == "supported" and (c["faith_score"] is None or score > c["faith_score"]):
             c["faith_verdict"], c["faith_score"] = verdict, score
     pa.claim_checks, pa.citation_checks = [], []
     claim_level(pa)
