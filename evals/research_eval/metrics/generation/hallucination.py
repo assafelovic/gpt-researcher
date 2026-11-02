@@ -19,9 +19,11 @@ class Faithfulness(_AuditMetric):
     """Mean verdict score of the report's factual claims, in [-1, 1].
 
     Claims are extracted per paragraph by the judge (not taken as the cited
-    sentences), and checked against the paragraph's cited passages plus up to
-    6 passages the checker picks itself from the rest of the retrieved material
-    (so a claim is not judged only on what the agent chose to cite); paragraphs
+    sentences), and checked against the paragraph's cited passages; a fact
+    claim they do not support is checked again against up to 6 passages the
+    checker picks itself from the rest of the retrieved material, and keeps the
+    better verdict (so a claim is not judged only on what the agent chose to
+    cite); paragraphs
     with no citations are checked against the BM25 top passages of everything
     retrieved, and skipped when the judge finds them non-factual.
 
@@ -35,6 +37,9 @@ class Faithfulness(_AuditMetric):
 
     def from_audit(self, audit: CitationAudit, archive: RunArchive) -> MetricResult:
         claims = [(p, c) for p in audit.judged for c in p.claims]
+        claims = [(p, {**c, "cited_verdict": c["verdict"],
+                       "verdict": c.get("faith_verdict", c["verdict"]),
+                       "score": c.get("faith_score", c["score"])}) for p, c in claims]
         scored = [c["score"] for _, c in claims if c["score"] is not None]
         if not scored:
             return self.skip("no factual claims judged")
@@ -45,13 +50,17 @@ class Faithfulness(_AuditMetric):
             by_type[t] = {"claims": len(ts), "score": rounded(sum(ts) / len(ts)) if ts else None}
         per_para = []
         for p in audit.judged:
-            s = [c["score"] for c in p.claims if c["score"] is not None]
+            s = [c.get("faith_score", c["score"]) for c in p.claims
+                 if c.get("faith_score", c["score"]) is not None]
             per_para.append({"para_id": p.para_id, "mode": p.mode, "kind": p.kind,
                              "claims": len(p.claims), "score": rounded(sum(s) / len(s)) if s else None})
         flagged = [{"para_id": p.para_id, "mode": p.mode, **{k: c[k] for k in ("claim", "verdict", "evidence")}}
                    for p, c in claims if (c["score"] if c["score"] is not None else 0) <= 0]
         return self.result(rounded(sum(scored) / len(scored)), claims=len(scored), by_type=by_type,
                            verdicts=dict(verdicts),
+                           rechecked=sum("elsewhere_verdict" in c for _, c in claims),
+                           upgraded_by_recheck=sum(c["verdict"] != c.get("cited_verdict", c["verdict"])
+                                                   for _, c in claims),
                            unknown_verdicts=len(claims) - len(scored),
                            uncited_factual_paragraphs=sum(p.mode == "uncited" and p.kind == "factual"
                                                           for p in audit.judged),

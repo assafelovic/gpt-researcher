@@ -108,11 +108,18 @@ def audit_reply(prompt):
 class ScriptedJudge:
     def __init__(self):
         self.prompts = []
+        self.recheck = {}
 
     async def __call__(self, prompt):
         self.prompts.append(prompt)
         if "checking one paragraph of a research report" in prompt:
             return json.dumps(audit_reply(prompt))
+        if "not fully supported by the sources the report cites" in prompt:
+            # Recheck: unsupported unless a test sets a verdict for a claim.
+            claims = re.findall(r"^(\d+)\. (.+)$", prompt.split("Claims:")[1].split("Material:")[0], re.M)
+            return json.dumps({"claims": [
+                {"claim": int(n), **self.recheck.get(text, {"verdict": "unsupported", "passages": []})}
+                for n, text in claims]})
         if "a finished report covers" in prompt:
             return json.dumps({"points": [{"point": 1, "coverage": "full"},
                                           {"point": 2, "coverage": "partial"},
@@ -548,32 +555,30 @@ def test_analysis_claims_stay_out_of_citation_metrics():
     assert len(audit.claim_checks) == 2
 
 
-async def test_audit_adds_independent_passages_outside_cited_urls(ctx):
+
+async def test_recheck_judges_unsupported_facts_on_checker_picked_passages(ctx):
+    ctx.fake.recheck = {"Glencore dominates": {"verdict": "supported", "passages": ["1a"]}}
     audit = await citation_audit(make_archive(), ctx)
-    second = next(p for p in audit_prompts(ctx) if "Recycling mandates" in p)
-    # Cited sources [1] recycle.org, [2] ghost; then the checker's own picks from
-    # the other retrieved URLs, numbered after them and marked as not cited.
-    assert "picked by the checker" in second
-    assert re.search(r"Source \[3\] https://(reuters\.com/cobalt|energy\.gov/lithium) passage 3a:", second)
+    rechecks = [p for p in ctx.fake.prompts if "not fully supported by the sources" in p]
+    # Paragraph 1: only "China refines 65%" (inferred_b); paragraph 2: both
+    # unsupported facts. Uncited paragraphs get no recheck.
+    assert len(rechecks) == 2
+    second = next(p for p in rechecks if "Glencore" in p)
+    assert "1. Glencore dominates\n2. prices triple" in second.split("Material:")[0]
+    material = second.split("Material:")[1]
+    assert "recycle.org" not in material and "never-retrieved" not in material
+    assert re.search(r"Source \[1\] https://(reuters\.com/cobalt|energy\.gov/lithium) passage 1a:", material)
     pa = audit.paragraphs[1]
-    assert [s["cited"] for s in pa.sources][:2] == [True, True]
-    assert all(not s["cited"] for s in pa.sources[2:]) and len(pa.sources) > 2
-    assert {s["url"] for s in pa.sources[2:]} <= {URL["cobalt"], URL["lithium"]}
-    # Uncited sources never show up as an item's citations.
-    assert "(cites: [1])" in second and "[3]" not in second.split("Material:")[0]
-
-
-def test_claim_backed_only_by_uncited_material_is_not_a_supported_citation():
-    from evals.research_eval.citation_audit import ParagraphAudit, claim_level
-    pa = ParagraphAudit("p1", [], "cited", [{"text": "Glencore is the largest producer.",
-                                              "urls": [URL["recycling"]]}],
-                        [{"n": 1, "url": URL["recycling"], "found": True, "cited": True,
-                          "passages": [{"id": "1a", "chunk_id": "r"}]},
-                         {"n": 2, "url": URL["cobalt"], "found": True, "cited": False,
-                          "passages": [{"id": "2a", "chunk_id": "c"}]}])
-    pa.claims = [{"claim": "Glencore is the largest producer", "type": "fact", "verdict": "supported",
-                  "score": 1.0, "sentences": [1], "chunk_ids": ["c"], "evidence": ""}]
-    claim_level(pa)
-    cc = pa.claim_checks[0]
+    glencore = next(c for c in pa.claims if c["claim"] == "Glencore dominates")
+    # Citation side unchanged; faithfulness takes the better verdict.
+    assert glencore["verdict"] == "contradicted" and glencore["faith_verdict"] == "supported"
+    cc = next(c for c in pa.claim_checks if c["claim"] == "Glencore dominates")
     assert cc["supported"] is False and cc["backed_by_uncited"] is True
-    assert pa.citation_checks[0]["precise"] is False
+    assert glencore["elsewhere_chunk_ids"] == [pa.extra[0]["passages"][0]["chunk_id"]]
+    # The judge's first call never sees the independent passages.
+    first = next(p for p in audit_prompts(ctx) if "Recycling mandates" in p)
+    assert "reuters.com" not in first.split("Material:")[1]
+    r = await Faithfulness().score(make_archive(), ctx)
+    assert r.details["rechecked"] == 3 and r.details["upgraded_by_recheck"] == 1
+    rec = await CitationRecall().score(make_archive(), ctx)
+    assert rec.details["backed_by_uncited"] == 1

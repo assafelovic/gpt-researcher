@@ -270,6 +270,39 @@ Return ONLY JSON:
 """.strip())
 
 
+CLAIM_RECHECK = Prompt("claim_recheck", "1", """
+You are checking claims from a research report against source material.
+These claims were not fully supported by the sources the report cites for
+them. The material below is other material the writer had retrieved, picked by
+the checker. Work only from the material shown; do not use outside knowledge.
+
+Core question of the report:
+{question}
+
+Claims:
+{claims}
+
+Material:
+{material}
+
+For EACH claim give one verdict against this material:
+- "supported": the material states it.
+- "inferred_a": the conclusion is partly supported, and the reasoning to it is
+  strongly supported by the material or clearly sound.
+- "inferred_b": the conclusion is partly supported, the reasoning is plausible
+  but only partly backed by the material.
+- "inferred_c": the conclusion itself is not supported, but the reasoning
+  toward it is strongly supported or clearly sound.
+- "unsupported": the material does not say this (anything weaker than the above).
+- "contradicted": the material says the opposite.
+List the passage ids (e.g. "1a") it rests on, and quote the material words your
+verdict rests on.
+
+Return ONLY JSON:
+{{"claims": [{{"claim": 1, "verdict": "unsupported", "passages": [], "evidence": ""}}]}}
+""".strip())
+
+
 COMPREHENSIVENESS = Prompt("comprehensiveness", "1", """
 You are checking which aspects of a research question a finished report covers.
 For EACH numbered key point decide:
