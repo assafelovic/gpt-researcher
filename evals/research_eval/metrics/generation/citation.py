@@ -81,6 +81,7 @@ class CitationRecall(_AuditMetric):
                            verdicts=dict(Counter(c["verdict"] for c in claims)),
                            supported_elsewhere=sum(c["verdict"] == "supported" and not c["backing_urls"]
                                                    for c in claims),
+                           backed_by_uncited=sum(c.get("backed_by_uncited", False) for c in claims),
                            unit_level=rounded(unit_ok / len(units)) if units else None,
                            unsupported=[{k: c[k] for k in ("para_id", "claim", "verdict", "urls")}
                                         for c in claims if not c["supported"]])

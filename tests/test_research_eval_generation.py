@@ -546,3 +546,34 @@ def test_analysis_claims_stay_out_of_citation_metrics():
     assert [c["claim"] for c in pa.claim_checks] == ["x", "z"]
     audit = CitationAudit([pa])
     assert len(audit.claim_checks) == 2
+
+
+async def test_audit_adds_independent_passages_outside_cited_urls(ctx):
+    audit = await citation_audit(make_archive(), ctx)
+    second = next(p for p in audit_prompts(ctx) if "Recycling mandates" in p)
+    # Cited sources [1] recycle.org, [2] ghost; then the checker's own picks from
+    # the other retrieved URLs, numbered after them and marked as not cited.
+    assert "picked by the checker" in second
+    assert re.search(r"Source \[3\] https://(reuters\.com/cobalt|energy\.gov/lithium) passage 3a:", second)
+    pa = audit.paragraphs[1]
+    assert [s["cited"] for s in pa.sources][:2] == [True, True]
+    assert all(not s["cited"] for s in pa.sources[2:]) and len(pa.sources) > 2
+    assert {s["url"] for s in pa.sources[2:]} <= {URL["cobalt"], URL["lithium"]}
+    # Uncited sources never show up as an item's citations.
+    assert "(cites: [1])" in second and "[3]" not in second.split("Material:")[0]
+
+
+def test_claim_backed_only_by_uncited_material_is_not_a_supported_citation():
+    from evals.research_eval.citation_audit import ParagraphAudit, claim_level
+    pa = ParagraphAudit("p1", [], "cited", [{"text": "Glencore is the largest producer.",
+                                              "urls": [URL["recycling"]]}],
+                        [{"n": 1, "url": URL["recycling"], "found": True, "cited": True,
+                          "passages": [{"id": "1a", "chunk_id": "r"}]},
+                         {"n": 2, "url": URL["cobalt"], "found": True, "cited": False,
+                          "passages": [{"id": "2a", "chunk_id": "c"}]}])
+    pa.claims = [{"claim": "Glencore is the largest producer", "type": "fact", "verdict": "supported",
+                  "score": 1.0, "sentences": [1], "chunk_ids": ["c"], "evidence": ""}]
+    claim_level(pa)
+    cc = pa.claim_checks[0]
+    assert cc["supported"] is False and cc["backed_by_uncited"] is True
+    assert pa.citation_checks[0]["precise"] is False
