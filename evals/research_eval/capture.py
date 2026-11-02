@@ -293,7 +293,15 @@ class RunCapture:
         orig_process = DeepResearchSkill.process_research_results
 
         async def process_research_results(self, query, *a, **k):
-            out = await orig_process(self, query, *a, **k)
+            try:
+                out = await orig_process(self, query, *a, **k)
+            except Exception as e:
+                # The step is dropped (process_query returns None); no learnings
+                # are recorded, which is how the archive marks a failed step.
+                sp = tracer.get(_last_research.get())
+                if sp is not None and sp.attributes.get("query") == query:
+                    sp.attributes["process_error"] = f"{type(e).__name__}: {e}"[:500]
+                raise
             sp = tracer.get(_last_research.get())
             if sp is not None and sp.attributes.get("query") == query:
                 sp.attributes["learnings"] = list((out or {}).get("learnings") or [])

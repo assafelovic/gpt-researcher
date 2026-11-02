@@ -25,6 +25,10 @@ class SourceUtilization(Metric):
 
         value = cited URLs ∩ retrieved URLs / retrieved URLs
 
+    Retrieved = what can reach the writer: URLs retrieved only inside a failed
+    deep-research step (it raised, so its material was dropped) are left out
+    and counted in `details.urls_only_in_failed_steps`.
+
     Which chunk a claim actually rests on comes from the generation side's
     citation audit (one judge call per paragraph, shared with citation recall /
     precision and faithfulness). With a judge configured `details` adds:
@@ -51,12 +55,16 @@ class SourceUtilization(Metric):
     """
 
     name, category = "source_utilization", "retrieval.efficiency"
-    version = f"6.audit{AUDIT_VERSION}"     # 4: deep-research reasoning chain; 5: URL-level funnel; 6: step chunks exclude deeper levels
+    version = f"7.audit{AUDIT_VERSION}"     # 4: deep-research reasoning chain; 5: URL-level funnel; 6: step chunks exclude deeper levels; 7: failed deep steps left out
     prompts = (PARAGRAPH_AUDIT,)
     MATCH, MIN_TERMS = 0.5, 5
 
     async def score(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:
-        retrieved = archive.retrieved_urls
+        # Only what can reach the writer: material of a failed deep-research
+        # step is dropped before the report is written.
+        chunk_ids = archive.writer_chunk_ids
+        retrieved = list({normalize_url(archive.chunks[c]["url"]): archive.chunks[c]["url"]
+                          for c in chunk_ids if archive.chunks[c].get("url")}.values())
         if not retrieved:
             return self.skip("no retrieved sources")
         parsed = archive.report
@@ -74,7 +82,6 @@ class SourceUtilization(Metric):
                 by_url.setdefault(normalize_url(c["url"]), []).extend(sents)
         all_sentences = usable(report_sentences(parsed))
 
-        chunk_ids = archive.retrieved_chunk_ids
         idf = idf_table([archive.chunks[c]["content"] for c in chunk_ids])
         per_chunk, used, echoed = [], 0, 0
         for cid in chunk_ids:
@@ -94,8 +101,11 @@ class SourceUtilization(Metric):
                 echoed += entry["echoed_uncited"]
             per_chunk.append(entry)
 
+        lost_urls = len(archive.retrieved_urls) - len(retrieved)
         res = self.result(rounded(len(used_urls) / len(retrieved)),
                           retrieved_urls=len(retrieved), cited_retrieved_urls=len(used_urls),
+                          failed_deep_steps=len(archive.failed_deep_steps),
+                          urls_only_in_failed_steps=lost_urls,
                           uncited_urls=[u for u in retrieved if normalize_url(u) not in cited],
                           chunk_level=rounded(used / len(per_chunk)) if per_chunk else None,
                           chunks=len(per_chunk), chunks_used=used, chunks_echoed_uncited=echoed,

@@ -71,7 +71,10 @@ class RunArchive:
         version = data.get("schema_version")
         if version != SCHEMA_VERSION:
             raise ValueError(f"unsupported archive schema_version {version!r}")
-        self.data = data
+        from .chunks import resplit_archived
+        chunks, spans, split = resplit_archived(data["chunks"], data["spans"])
+        self.data = data if not split else {**data, "chunks": chunks, "spans": spans}
+        self.chunks_resplit = split          # chunks repaired on load (multi-line titles)
 
     @classmethod
     def load(cls, path: str | Path) -> "RunArchive":
@@ -238,6 +241,24 @@ class RunArchive:
                     seen.add(cid)
                     out.append(cid)
         return out
+
+    @cached_property
+    def failed_deep_steps(self) -> list[dict]:
+        """Deep-research steps whose result was lost: the step raised before its
+        learnings were recorded (process_query returns None and the step is
+        dropped), so none of its material reaches the writer."""
+        return [s for s in self.spans if s["name"] == "research"
+                and (self.span_by_id.get(s["parent_id"]) or {}).get("name") == "deep_level"
+                and "learnings" not in s["attributes"]]
+
+    @cached_property
+    def writer_chunk_ids(self) -> list[str]:
+        """Retrieved chunks that can reach the writer: all of them, except those
+        retrieved only inside failed deep-research steps."""
+        lost = {s["span_id"] for st in self.failed_deep_steps
+                for s in [st, *self.descendants(st["span_id"])]}
+        keep = {c for u in self.retrieval_units if u.span_id not in lost for c in u.chunk_ids}
+        return [c for c in self.retrieved_chunk_ids if c in keep]
 
     @cached_property
     def chunks_by_url(self) -> dict[str, list[str]]:

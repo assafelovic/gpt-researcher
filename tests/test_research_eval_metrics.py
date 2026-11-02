@@ -543,3 +543,21 @@ async def test_reasoning_chain_leaves_out_chunks_of_deeper_levels():
             sp["parent_id"] = "dl"
     chain = (await SourceUtilization().score(RunArchive(a.data), rules_ctx)).details["reasoning"]
     assert chain["chunks_distilled"] == 0
+
+
+def test_failed_deep_step_material_is_not_counted_as_reaching_the_writer():
+    ca, cb = _chunk("cobalt"), _chunk("lithium")
+    spans = [
+        {"span_id": "r0", "parent_id": None, "name": "research", "attributes": {"query": CORE}},
+        {"span_id": "d1", "parent_id": "r0", "name": "deep_level", "attributes": {"query": CORE}},
+        # ok step: learnings recorded (even empty); failed step: none recorded
+        {"span_id": "r1", "parent_id": "d1", "name": "research", "attributes": {"query": "a", "learnings": []}},
+        {"span_id": "q1", "parent_id": "r1", "name": "sub_query", "attributes": {"query": "a", "chunk_ids": [ca[0]]}},
+        {"span_id": "r2", "parent_id": "d1", "name": "research", "attributes": {"query": "b"}},
+        {"span_id": "q2", "parent_id": "r2", "name": "sub_query", "attributes": {"query": "b", "chunk_ids": [cb[0], ca[0]]}},
+    ]
+    a = RunArchive(build_archive(meta={"run_id": "t", "query": CORE}, spans=spans,
+                                 chunks={ca[0]: ca[1], cb[0]: cb[1]}, report_markdown="# t\n"))
+    assert [s["span_id"] for s in a.failed_deep_steps] == ["r2"]
+    # cobalt also came back in the ok step, so it still reaches the writer
+    assert a.writer_chunk_ids == [ca[0]]

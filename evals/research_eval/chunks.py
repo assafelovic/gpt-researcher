@@ -19,7 +19,10 @@ from __future__ import annotations
 import hashlib
 import re
 
-_DOC_HEADER = re.compile(r"^Source: (?P<url>[^\n]*)\nTitle: (?P<title>[^\n]*)\nContent: ", re.M)
+# A title can span lines (some pages have line breaks in <title>); it never
+# runs into the next block's "Source:" line.
+_DOC_HEADER = re.compile(r"^Source: (?P<url>[^\n]*)\nTitle: (?P<title>(?:(?!\nSource: )[\s\S]){0,2000}?)"
+                         r"\nContent: ", re.M)
 
 
 def chunk_id(url: str | None, content: str) -> str:
@@ -56,3 +59,39 @@ def split_context(text: str) -> tuple[list[dict], list[str]]:
         chunks.append({"id": chunk_id(url, content), "url": url, "title": title,
                        "content": content})
     return chunks, warnings
+
+
+def resplit_archived(chunks: dict[str, dict], spans: list[dict]) -> tuple[dict, list[dict], int]:
+    """Repair archives captured before multi-line titles were parsed.
+
+    A block whose title spanned lines was not recognised, so its URL, title and
+    content were swallowed by the chunk before it: that URL looks never
+    retrieved and its text is credited to the previous page. Each archived
+    chunk is rendered back to its block and split again; spans' chunk_ids are
+    rewritten to the pieces. Returns (chunks, spans, chunks split).
+    """
+    remap: dict[str, list[str]] = {}
+    new_pieces: list[dict] = []
+    for cid, ch in chunks.items():
+        if "\nSource: " not in ch["content"]:
+            continue
+        text = (f"Source: {ch['url']}\nTitle: {ch.get('title') or ''}\nContent: {ch['content']}"
+                if ch.get("url") else ch["content"])
+        pieces, _ = split_context(text)
+        if len(pieces) > 1:
+            remap[cid] = [p["id"] for p in pieces]
+            new_pieces.extend(pieces)
+    if not remap:
+        return chunks, spans, 0
+    out = {cid: ch for cid, ch in chunks.items() if cid not in remap}
+    for p in new_pieces:
+        out.setdefault(p["id"], {"url": p["url"], "title": p["title"], "content": p["content"],
+                                 "jev_score": None})
+    new_spans = []
+    for s in spans:
+        ids = s.get("attributes", {}).get("chunk_ids")
+        if ids and any(c in remap for c in ids):
+            fixed = list(dict.fromkeys(n for c in ids for n in remap.get(c, [c])))
+            s = {**s, "attributes": {**s["attributes"], "chunk_ids": fixed}}
+        new_spans.append(s)
+    return out, new_spans, len(remap)

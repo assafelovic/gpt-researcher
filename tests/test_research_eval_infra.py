@@ -197,3 +197,23 @@ async def test_embedder_embeds_only_missing_texts():
     assert await e.embed(["a", "bb"]) == [[1.0, 1.0], [2.0, 1.0]]
     assert await e.embed(["bb", "ccc"]) == [[2.0, 1.0], [3.0, 1.0]]
     assert seen == [["a", "bb"], ["ccc"]]
+
+
+def test_split_context_multi_line_title_and_archive_repair():
+    from evals.research_eval.chunks import resplit_archived
+    text = ("Source: https://a.com/x\nTitle: A\nContent: alpha text\n\n"
+            "Source: https://b.com/y\nTitle: B line one\nB line two\nContent: beta text\n")
+    chunks, _ = split_context(text)
+    assert [(c["url"], c["title"], c["content"]) for c in chunks] == [
+        ("https://a.com/x", "A", "alpha text"),
+        ("https://b.com/y", "B line one\nB line two", "beta text")]
+    # An archive captured with the old one-line rule: b swallowed by a.
+    merged = {"url": "https://a.com/x", "title": "A", "jev_score": None,
+              "content": "alpha text\n\nSource: https://b.com/y\nTitle: B line one\nB line two\nContent: beta text"}
+    spans = [{"span_id": "s", "name": "sub_query", "attributes": {"chunk_ids": ["old", "keep"]}}]
+    keep = {"url": "https://c.com", "title": "C", "content": "gamma", "jev_score": None}
+    out, new_spans, n = resplit_archived({"old": merged, "keep": keep}, spans)
+    assert n == 1 and "old" not in out and "keep" in out
+    ids = new_spans[0]["attributes"]["chunk_ids"]
+    assert [out[i]["url"] for i in ids] == ["https://a.com/x", "https://b.com/y", "https://c.com"]
+    assert spans[0]["attributes"]["chunk_ids"] == ["old", "keep"]      # input untouched
