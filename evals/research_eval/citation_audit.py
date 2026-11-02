@@ -97,7 +97,10 @@ class ParagraphAudit:
                 "independent": [{"n": s["n"], "url": s["url"],
                                  "chunk_ids": [p["chunk_id"] for p in s["passages"]]}
                                 for s in self.extra],
-                "error": self.error}
+                "error": self.error,
+                # the judge's reply when it could not be used, to see why
+                "raw_on_error": (self.response.raw or "")[:4000]
+                                if self.error and self.response else None}
 
 
 @dataclass

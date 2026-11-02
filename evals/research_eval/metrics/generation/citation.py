@@ -46,34 +46,41 @@ class _AuditMetric(Metric):
 
 
 class CitationRecall(_AuditMetric):
-    """Citation recall per claim: cited claims that their own citations support.
+    """Citation recall per claim: fact claims that their own citations support.
 
-        value = supported cited claims / cited claims
+        value = fact claims supported by their own citations / all fact claims
+
+    As in ALCE, a fact with no citation counts as unsupported, so a report
+    cannot raise its recall by citing less. `details.cited_only` keeps the
+    former value (supported cited claims / cited claims), which answers "are
+    the citations it gives right?"; `details.cited_share` is how many facts
+    carry a citation at all.
 
     Claims come from the citation audit (the judge splits each paragraph into
     claims; one claim may span several sentences). A claim is cited when an
     item it comes from cites a source, and supported when its verdict is
     "supported" (strict: inferences do not count) and a passage it rests on
     belongs to one of those cited URLs (`citation_audit.claim_level`). Claims
-    in uncited paragraphs or after a paragraph's last citation are left to
-    faithfulness. `details.unit_level` keeps the former ALCE per-citing-unit
+    in uncited paragraphs or after a paragraph's last citation count in the
+    denominator only. `details.unit_level` keeps the former ALCE per-citing-unit
     value, where one unsupported claim failed a whole paragraph-long unit.
     """
 
     name = "citation_recall"
-    version = f"2.audit{AUDIT_VERSION}"     # 2: claim citation share in details
+    version = f"3.audit{AUDIT_VERSION}"     # 3: denominator = all fact claims
 
     def from_audit(self, audit, archive):
         claims = audit.claim_checks
-        if not claims:
-            return self.skip("no cited claims")
         ok = sum(c["supported"] for c in claims)
         factual = sum(c.get("type", "fact") == "fact" for p in audit.judged if p.kind == "factual"
                       for c in p.claims)
+        if not factual:
+            return self.skip("no fact claims")
         analysis = sum(c.get("type") == "analysis" for p in audit.judged for c in p.claims)
         units = [s for s in audit.sentence_checks if s["judged"]]
         unit_ok = sum(s["supported"] for s in units)
-        return self.result(rounded(ok / len(claims)), cited_claims=len(claims), supported=ok,
+        return self.result(rounded(ok / factual), cited_claims=len(claims), supported=ok,
+                           cited_only=rounded(ok / len(claims)) if claims else None,
                            factual_claims=factual, analysis_claims=analysis,
                            analysis_share=rounded(analysis / (factual + analysis)) if factual + analysis else None,
                            cited_share=rounded(len(claims) / factual) if factual else None,

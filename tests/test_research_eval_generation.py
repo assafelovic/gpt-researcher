@@ -203,12 +203,12 @@ async def test_audit_is_shared_across_metrics(ctx):
 
 async def test_citation_recall_is_per_claim(ctx):
     r = await CitationRecall().score(make_archive(), ctx)
-    # 5 cited claims (the uncited paragraph's claim is left to faithfulness).
-    # Supported: Congo (reuters) and 2027 (recycle). Not: China (inferred_b:
-    # strict), Glencore (contradicted), prices (unsupported; its only source
-    # was never retrieved).
+    # 6 fact claims: 5 cited, plus the uncited paragraph's claim, which counts
+    # as unsupported. Supported: Congo (reuters) and 2027 (recycle). Not: China
+    # (inferred_b: strict), Glencore (contradicted), prices (unsupported; its
+    # only source was never retrieved).
     assert (r.details["cited_claims"], r.details["supported"]) == (5, 2)
-    assert r.value == 0.4
+    assert r.value == round(2 / 6, 3) and r.details["cited_only"] == 0.4
     assert r.details["supported_elsewhere"] == 0
     assert {u["claim"] for u in r.details["unsupported"]} == {
         "China refines 65%", "Glencore dominates", "prices triple"}
