@@ -192,7 +192,7 @@ Return ONLY a JSON array in this exact format, one entry per domain:
 
 # --- generation metrics ------------------------------------------------------
 
-PARAGRAPH_AUDIT = Prompt("paragraph_audit", "3", """
+PARAGRAPH_AUDIT = Prompt("paragraph_audit", "4", """
 You are checking one paragraph of a research report against the source material
 the writer had. Work only from the material shown; do not use outside knowledge.
 
@@ -216,7 +216,8 @@ Do the following IN ORDER.
    - checkable: someone holding the right source could say whether it is true;
    - atomic: one piece of information (split "A and B" when each can be checked
      on its own; keep a figure together with what it measures);
-   - self-contained: understandable without the paragraph (replace pronouns).
+   - self-contained: understandable without the paragraph (replace pronouns;
+     never refer to item or source numbers such as "item 1" or "[2]").
    Sentences without a citation count too. Give each claim a type:
    - "fact": an event, number, date, an entity's action or property, or what a
      named source found or said. A source could state it word for word.
