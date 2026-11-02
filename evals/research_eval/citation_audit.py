@@ -16,12 +16,14 @@ Per paragraph the judge sees:
              BM25-weighted, within a budget); a cited URL that was never
              retrieved is shown as unavailable. For a paragraph without
              citations, the best-matching passages from everything retrieved.
-Second step (cited paragraphs only): the fact claims the cited passages did not
-support are judged again, in a separate call, against independent passages:
-the checker's own BM25 pick from everything retrieved outside the cited URLs.
-So a claim is not judged only on the evidence the agent chose to cite, while
-citation recall / precision still come from the first call alone (more
-material in one call made the judge more lenient on the citations too).
+Second step: the fact claims the first call's passages did not support are
+judged again, in a separate call, against independent passages: the checker's
+own BM25 pick from everything retrieved that the first call did not show
+(other pages, and passages of a cited page left out by the material budget;
+support found there backs the citation).
+So a claim is not judged only on the evidence the agent chose to cite. The
+first call shows only cited material, because more material in one call made
+the judge more lenient on the citations too.
 and returns:
   kind       factual | non_factual (opinion, transition: no claims judged)
   claims     the paragraph's factual claims, each with a 6-level verdict and
@@ -52,7 +54,7 @@ if TYPE_CHECKING:
 # Bump when the audit's material or unit logic changes (prompt changes bump the
 # prompt version instead); every metric that reads the audit carries it in its
 # version, so the scorer version changes and old results are not overwritten.
-AUDIT_VERSION = "10"    # 7: recall / precision per claim; 8: fact / analysis claims; 9: entity roles are facts; 10: independent recheck
+AUDIT_VERSION = "11"    # 7: recall / precision per claim; 8: fact / analysis claims; 9: entity roles are facts; 10: independent recheck; 11: recheck uncited paragraphs and unshown passages of cited pages
 
 # Faithfulness points per verdict (eval-design/generation-metrics.md §3.2 B).
 VERDICT_SCORES = {"supported": 1.0, "inferred_a": 0.5, "inferred_b": 0.4, "inferred_c": 0.3,
@@ -266,24 +268,25 @@ def citation_units(paragraph: dict, scope: str = "preceding") -> list[dict]:
     return units + pending
 
 
-def _independent(archive: "RunArchive", paragraph: dict, cited_urls: list[str], idf: dict,
-                 k: int, start: int) -> list[dict]:
+def _independent(archive: "RunArchive", paragraph: dict, cited_urls: list[str], shown: set[str],
+                 idf: dict, k: int, start: int) -> list[dict]:
     """The checker's own evidence for the recheck: up to k passages from
-    everything retrieved outside the cited URLs, first the best one for each
-    sentence, then by match with the whole paragraph. Grouped by URL and
-    numbered from `start`."""
+    everything retrieved that the first call did not show (other pages, and
+    passages of the cited pages left out by the material budget), first the
+    best one for each sentence, then by match with the whole paragraph.
+    Grouped by URL and numbered from `start`; "cited" marks a cited page."""
     if k <= 0:
         return []
     cited = {normalize_url(u) for u in cited_urls}
-    pool = [c for c in archive.retrieved_chunk_ids
-            if normalize_url(archive.chunks[c].get("url") or "") not in cited]
+    pool = [c for c in archive.retrieved_chunk_ids if c not in shown]
     if not pool:
         return []
     picked = _candidates(archive, cited_sentences(paragraph), paragraph["text"], pool, idf)[:k]
     by_url: dict[str, list[str]] = {}
     for c in picked:
         by_url.setdefault(archive.chunks[c].get("url") or "", []).append(c)
-    return [{"n": n, "url": url or None, "found": True, "cited": False,
+    return [{"n": n, "url": url or None, "found": True,
+             "cited": bool(url) and normalize_url(url) in cited,
              "passages": [{"id": f"{n}{ascii_lowercase[i]}", "chunk_id": c}
                           for i, c in enumerate(cids)]}
             for n, (url, cids) in enumerate(by_url.items(), start)]
@@ -310,13 +313,13 @@ def prepare(archive: "RunArchive", paragraph: dict, idf: dict,
             sources.append({"n": n, "url": url, "found": bool(cids), "cited": True,
                             "passages": [{"id": f"{n}{ascii_lowercase[i]}", "chunk_id": c}
                                          for i, c in enumerate(picked)]})
-        extra = _independent(archive, paragraph, urls, idf, independent, 1)
     else:
-        extra = []
         mode = "uncited"
         top = _rank(paragraph["text"], archive.retrieved_chunk_ids, archive, idf)[:UNCITED_PASSAGES]
         sources = [{"n": n, "url": archive.chunks[c].get("url"), "found": True, "cited": False,
                     "passages": [{"id": f"{n}a", "chunk_id": c}]} for n, c in enumerate(top, 1)]
+    shown = {p["chunk_id"] for s in sources for p in s["passages"]}
+    extra = _independent(archive, paragraph, urls, shown, idf, independent, 1)
     return ParagraphAudit(paragraph["para_id"], [], mode, sents, sources,
                           table=paragraph.get("type") == "table", extra=extra)
 
@@ -426,6 +429,11 @@ def claim_level(pa: ParagraphAudit) -> None:
     # citation can state (faithfulness still scores it).
     unit_urls = {i: s["urls"] for i, s in enumerate(pa.sentences, 1) if s["urls"]}
     chunk_url = {p["chunk_id"]: s["url"] for s in pa.sources for p in s["passages"]}
+    # recheck passages of a cited page, by the URL spelling the items cite
+    cited_as = {normalize_url(u): u for us in unit_urls.values() for u in us}
+    extra_url = {p["chunk_id"]: cited_as[normalize_url(s["url"])] for s in pa.extra
+                 if s.get("cited") and s["url"] and normalize_url(s["url"]) in cited_as
+                 for p in s["passages"]}
     for c in pa.claims:
         if c.get("type", "fact") != "fact":
             continue
@@ -444,15 +452,20 @@ def claim_level(pa: ParagraphAudit) -> None:
             continue        # from uncited sentences after the last citation
         urls = list(dict.fromkeys(u for n in units for u in unit_urls[n]))
         backing_chunks = [cid for cid in dict.fromkeys(c["chunk_ids"]) if chunk_url.get(cid) in urls]
-        backing = list(dict.fromkeys(chunk_url[cid] for cid in backing_chunks))
+        # The recheck may find the support in a passage of a cited page that
+        # the first call's material budget left out: that backs the citation.
+        recheck_chunks = [cid for cid in dict.fromkeys(c.get("elsewhere_chunk_ids") or [])
+                          if extra_url.get(cid) in urls] if c.get("elsewhere_verdict") == "supported" else []
+        on_recheck = c["verdict"] != "supported" and bool(recheck_chunks)
+        backing_chunks += [cid for cid in recheck_chunks if cid not in backing_chunks]
+        backing = list(dict.fromkeys((chunk_url.get(cid) or extra_url.get(cid)) for cid in backing_chunks))
         pa.claim_checks.append({
             "para_id": pa.para_id, "claim": c["claim"], "units": units, "urls": urls,
             "verdict": c["verdict"], "backing_urls": backing, "backing_chunks": backing_chunks,
-            "units_guessed": guessed,
-            # the fact holds, but the backing is in material the item does not cite
-            "backed_by_uncited": not (c["verdict"] == "supported" and backing)
-                                 and c.get("elsewhere_verdict") == "supported",
-            "supported": c["verdict"] == "supported" and bool(backing)})
+            "units_guessed": guessed, "supported_on_recheck": on_recheck,
+            "supported": (supported := (c["verdict"] == "supported" or on_recheck) and bool(backing)),
+            # the fact holds, but only material the item does not cite says so
+            "backed_by_uncited": not supported and c.get("elsewhere_verdict") == "supported"})
     for n, urls in unit_urls.items():
         mine = [cc for cc in pa.claim_checks if n in cc["units"]]
         for u in urls:
@@ -463,8 +476,8 @@ def claim_level(pa: ParagraphAudit) -> None:
 
 
 def recheck_todo(pa: ParagraphAudit) -> list[dict]:
-    """Fact claims of a cited paragraph that its cited passages did not support."""
-    if pa.mode != "cited" or pa.error or not pa.extra:
+    """Fact claims that the first call's passages did not support."""
+    if pa.error or not pa.extra:
         return []
     return [c for c in pa.claims if c.get("type", "fact") == "fact" and c["verdict"] != "supported"]
 

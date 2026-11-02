@@ -271,11 +271,11 @@ Return ONLY JSON:
 """.strip())
 
 
-CLAIM_RECHECK = Prompt("claim_recheck", "2", """
+CLAIM_RECHECK = Prompt("claim_recheck", "3", """
 You are checking claims from a research report against source material.
-These claims were not fully supported by the sources the report cites for
-them. The material below is other material the writer had retrieved, picked by
-the checker. Work only from the material shown; do not use outside knowledge.
+These claims were not fully supported by the material checked so far. The
+material below is more of what the writer had retrieved, picked by the checker.
+Work only from the material shown; do not use outside knowledge.
 
 Core question of the report:
 {question}

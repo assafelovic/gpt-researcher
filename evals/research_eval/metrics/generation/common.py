@@ -7,7 +7,7 @@ import re
 from ...archive import RunArchive
 from ...report_parser import REFERENCES_HEADING, body_paragraphs
 
-REPORT_CHARS = 60000     # the whole default / detailed report; deep reports are cut
+REPORT_CHARS = 80000     # whole reports (longest so far: a detailed one at ~58k)
 _URL = re.compile(r"https?://\S+")
 _MD_LINK = re.compile(r"\[([^\]]*)\]\(\s*https?://[^)\s]*\s*\)")
 _HEADING = re.compile(r"^\s{0,3}(#{1,6})\s+(.*?)\s*#*\s*$")

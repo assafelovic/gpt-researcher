@@ -19,9 +19,10 @@ class Faithfulness(_AuditMetric):
     """Mean verdict score of the report's factual claims, in [-1, 1].
 
     Claims are extracted per paragraph by the judge (not taken as the cited
-    sentences), and checked against the paragraph's cited passages; a fact
-    claim they do not support is checked again against up to 6 passages the
-    checker picks itself from the rest of the retrieved material, and becomes
+    sentences), and checked against the paragraph's cited passages (or, for a
+    paragraph without citations, the 4 best-matching retrieved passages); a
+    fact claim they do not support is checked again against up to 6 passages
+    the checker picks itself from the retrieved material not yet shown, and becomes
     "supported" only when one of them plainly states it (so a claim is not
     judged only on what the agent chose to cite); paragraphs with no citations
     are checked against the BM25 top passages of everything retrieved, and skipped when the judge finds them non-factual.

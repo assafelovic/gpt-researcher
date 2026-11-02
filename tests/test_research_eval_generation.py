@@ -114,7 +114,7 @@ class ScriptedJudge:
         self.prompts.append(prompt)
         if "checking one paragraph of a research report" in prompt:
             return json.dumps(audit_reply(prompt))
-        if "not fully supported by the sources the report cites" in prompt:
+        if "not fully supported by the material checked so far" in prompt:
             # Recheck: unsupported unless a test sets a verdict for a claim.
             claims = re.findall(r"^(\d+)\. (.+)$", prompt.split("Claims:")[1].split("Material:")[0], re.M)
             return json.dumps({"claims": [
@@ -559,7 +559,7 @@ def test_analysis_claims_stay_out_of_citation_metrics():
 async def test_recheck_judges_unsupported_facts_on_checker_picked_passages(ctx):
     ctx.fake.recheck = {"Glencore dominates": {"verdict": "supported", "passages": ["1a"]}}
     audit = await citation_audit(make_archive(), ctx)
-    rechecks = [p for p in ctx.fake.prompts if "not fully supported by the sources" in p]
+    rechecks = [p for p in ctx.fake.prompts if "not fully supported by the material checked" in p]
     # Paragraph 1: only "China refines 65%" (inferred_b); paragraph 2: both
     # unsupported facts. Uncited paragraphs get no recheck.
     assert len(rechecks) == 2
@@ -582,3 +582,52 @@ async def test_recheck_judges_unsupported_facts_on_checker_picked_passages(ctx):
     assert r.details["rechecked"] == 3 and r.details["upgraded_by_recheck"] == 1
     rec = await CitationRecall().score(make_archive(), ctx)
     assert rec.details["backed_by_uncited"] == 1
+
+
+def _pa_with_extra(mode, extra_url, extra_cited):
+    from evals.research_eval.citation_audit import ParagraphAudit
+    urls = [URL["cobalt"]] if mode == "cited" else []
+    pa = ParagraphAudit("p1", [], mode, [{"text": "Glencore is the largest producer.", "urls": urls}],
+                        [{"n": 1, "url": URL["cobalt"], "found": True, "cited": mode == "cited",
+                          "passages": [{"id": "1a", "chunk_id": "shown"}]}],
+                        extra=[{"n": 1, "url": extra_url, "found": True, "cited": extra_cited,
+                                "passages": [{"id": "1a", "chunk_id": "unshown"}]}])
+    pa.claims = [{"claim": "Glencore is the largest producer", "type": "fact", "verdict": "unsupported",
+                  "score": 0.0, "faith_verdict": "unsupported", "faith_score": 0.0,
+                  "sentences": [1], "chunk_ids": [], "evidence": ""}]
+    return pa
+
+
+def _recheck(pa, verdict="supported"):
+    from evals.research_eval.citation_audit import apply_recheck, claim_level, recheck_todo
+    from evals.research_eval.judge import JudgeResponse
+    claim_level(pa)
+    todo = recheck_todo(pa)
+    pa.recheck = JudgeResponse({"claims": [{"claim": 1, "verdict": verdict, "passages": ["1a"]}]},
+                               "", False, "claim_recheck", "3")
+    apply_recheck(pa, todo)
+    return todo
+
+
+def test_recheck_passage_of_the_cited_page_backs_the_citation():
+    # The first call's budget left this passage of the cited page out.
+    pa = _pa_with_extra("cited", "https://www.reuters.com/cobalt/", True)
+    _recheck(pa)
+    cc = pa.claim_checks[0]
+    assert cc["supported"] and cc["supported_on_recheck"] and not cc["backed_by_uncited"]
+    assert cc["backing_urls"] == [URL["cobalt"]] and pa.citation_checks[0]["precise"]
+    assert pa.claims[0]["faith_verdict"] == "supported"
+
+
+def test_recheck_on_another_page_does_not_back_the_citation():
+    pa = _pa_with_extra("cited", URL["lithium"], False)
+    _recheck(pa)
+    cc = pa.claim_checks[0]
+    assert not cc["supported"] and cc["backed_by_uncited"] and not pa.citation_checks[0]["precise"]
+
+
+def test_uncited_paragraph_facts_are_rechecked_too():
+    pa = _pa_with_extra("uncited", URL["lithium"], False)
+    todo = _recheck(pa)
+    assert len(todo) == 1 and pa.claims[0]["faith_verdict"] == "supported"
+    assert pa.claim_checks == []        # nothing cited: no citation checks
