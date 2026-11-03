@@ -11,8 +11,8 @@ deterministic (no LLM writes the defects); the originals are never modified.
     python -m evals.research_eval.perturb make RUN.json [RUN.json ...] --out DIR
     # 2. score them like any archive (unchanged paragraphs replay the cache);
     #    --dry-run first counts the judge calls that would be made
-    python -m evals.research_eval.score DIR/*.json --results-dir DIR/results --dry-run
-    python -m evals.research_eval.score DIR/*.json --results-dir DIR/results --max-calls N
+    python -m evals.research_eval.score DIR/*__*.json --results-dir DIR/results --dry-run
+    python -m evals.research_eval.score DIR/*__*.json --results-dir DIR/results --max-calls N
     #    optional noise control: the __noise copies re-asked under a salt
     python -m evals.research_eval.score DIR/*__noise.json --results-dir DIR/results --judge-salt noise1
     # 3. the table: expected direction, change, verdict

@@ -61,7 +61,7 @@ python -m evals.research_eval.score RUNS --judge-salt noise1        # ask the ju
 
 # Perturbation test: does each metric get worse when the run does? (perturb.py)
 python -m evals.research_eval.perturb make RUN.json [RUN.json ...] --out DIR
-python -m evals.research_eval.score DIR/*.json --results-dir DIR/results
+python -m evals.research_eval.score DIR/*__*.json --results-dir DIR/results   # not manifest.json
 python -m evals.research_eval.perturb report DIR/manifest.json --results-dir DIR/results
 ```
 
