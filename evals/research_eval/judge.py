@@ -62,11 +62,19 @@ class Judge:
     """Cached rubric judge. `complete` is an async str -> str backend."""
 
     def __init__(self, cache: EvalCache, *, model: str | None = None,
-                 complete: Callable[[str], Awaitable[str]] | None = None) -> None:
+                 complete: Callable[[str], Awaitable[str]] | None = None,
+                 salt: str = "", max_calls: int | None = None) -> None:
+        """`salt` keys the cache apart (asks again what the plain cache already
+        holds, e.g. to measure the judge's own spread); `max_calls` caps
+        uncached calls: past it, ask() returns an error instead of calling."""
         from evals.judge import judge_model_name
         self.cache = cache
         self.model = model or judge_model_name()
         self._complete = complete
+        self.salt = salt
+        self.max_calls = max_calls
+        self.refused = 0            # calls not made because max_calls was reached
+        self.prompt_chars = 0       # characters sent in uncached calls
         self.calls = 0
         self.cache_hits = 0
         self.input_tokens = 0       # summed from the provider's usage metadata,
@@ -92,17 +100,25 @@ class Judge:
 
     def usage(self) -> dict:
         return {"model": self.model, "calls": self.calls, "cache_hits": self.cache_hits,
-                "input_tokens": self.input_tokens, "output_tokens": self.output_tokens}
+                "input_tokens": self.input_tokens, "output_tokens": self.output_tokens,
+                "prompt_chars": self.prompt_chars, "refused": self.refused}
 
     async def ask(self, prompt_id: str, prompt_version: str, prompt: str,
                   **params: Any) -> JudgeResponse:
         key = stable_hash(self.model, prompt_id, prompt_version, prompt, params)
+        if self.salt:
+            key = stable_hash(key, self.salt)
         cached = self.cache.get("llm", key)
         if cached is not None:
             self.cache_hits += 1
             return JudgeResponse(cached["parsed"], cached["raw"], True, prompt_id, prompt_version)
         for attempt in range(1 + PARSE_RETRIES):
+            if self.max_calls is not None and self.calls >= self.max_calls:
+                self.refused += 1
+                return JudgeResponse(None, "", False, prompt_id, prompt_version,
+                                     error=f"call budget reached ({self.max_calls} calls)")
             self.calls += 1
+            self.prompt_chars += len(prompt)
             try:
                 raw = await self._call(prompt)
             except Exception as e:

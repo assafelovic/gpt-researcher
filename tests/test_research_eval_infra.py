@@ -186,6 +186,28 @@ async def test_judge_records_backend_errors():
     assert r.parsed is None and "down" in r.error
 
 
+async def test_judge_salt_asks_again_and_max_calls_caps_uncached_calls():
+    calls = []
+
+    async def complete(p):
+        calls.append(p)
+        return '{"total": %d}' % len(calls)
+
+    cache = EvalCache(":memory:")
+    plain = Judge(cache, model="m", complete=complete)
+    assert (await plain.ask("p", "1", "x")).parsed == {"total": 1}
+    salted = Judge(cache, model="m", complete=complete, salt="noise1")
+    again = await salted.ask("p", "1", "x")              # same prompt, asked again
+    assert again.parsed == {"total": 2} and not again.cache_hit
+    assert (await plain.ask("p", "1", "x")).parsed == {"total": 1}   # plain cache untouched
+    capped = Judge(cache, model="m", complete=complete, max_calls=1)
+    assert (await capped.ask("p", "1", "y")).parsed == {"total": 3}
+    refused = await capped.ask("p", "1", "z")
+    assert refused.parsed is None and "call budget" in refused.error
+    assert (await capped.ask("p", "1", "y")).cache_hit               # cached answers still served
+    assert capped.usage()["refused"] == 1 and len(calls) == 3
+
+
 async def test_embedder_embeds_only_missing_texts():
     seen = []
 

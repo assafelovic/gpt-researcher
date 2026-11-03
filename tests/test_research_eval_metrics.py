@@ -534,7 +534,8 @@ async def test_judge_counts_tokens_from_usage_metadata():
     j = Judge(EvalCache(":memory:"), model="m", complete=lambda p: None)
     j._add_usage({"input_tokens": 10, "output_tokens": 3})
     j._add_usage(None)
-    assert j.usage() == {"model": "m", "calls": 0, "cache_hits": 0, "input_tokens": 10, "output_tokens": 3}
+    assert j.usage() == {"model": "m", "calls": 0, "cache_hits": 0, "input_tokens": 10, "output_tokens": 3,
+                         "prompt_chars": 0, "refused": 0}
 
 
 async def test_reasoning_chain_leaves_out_chunks_of_deeper_levels():

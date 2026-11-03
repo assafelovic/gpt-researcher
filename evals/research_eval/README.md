@@ -55,7 +55,26 @@ python -m evals.research_eval.runner --modes default,detailed,deep --questions q
 python -m evals.research_eval.score evals/research_eval/runs/questions_v0/*.json
 python -m evals.research_eval.score RUN.json --rules-only           # zero-cost metrics
 python -m evals.research_eval.score RUN.json --metrics plan_adherence,query_relevance
+python -m evals.research_eval.score RUNS --dry-run                  # count uncached judge calls, call nothing
+python -m evals.research_eval.score RUNS --max-calls 300            # cap uncached judge calls
+python -m evals.research_eval.score RUNS --judge-salt noise1        # ask the judge again (noise control)
+
+# Perturbation test: does each metric get worse when the run does? (perturb.py)
+python -m evals.research_eval.perturb make RUN.json [RUN.json ...] --out DIR
+python -m evals.research_eval.score DIR/*.json --results-dir DIR/results
+python -m evals.research_eval.perturb report DIR/manifest.json --results-dir DIR/results
 ```
+
+The perturbation test checks the evaluator, not the agent. `perturb make` copies an
+archive and injects one known defect per copy, rule-based and deterministic: half the
+sections dropped, body links stripped, citations pointed at unrelated retrieved pages,
+figures changed, off-topic paragraphs, analysis removed, structure scrambled, toxic or
+biased opinions added, sub-queries made near-copies, off-topic material for half the
+search steps. Each copy names the metrics that should move and which way. `__base` is an
+unchanged copy (it replays the original scores from the cache); `__noise` is another,
+to be scored with `--judge-salt` so the judge's own spread sets how large a change has
+to be. `perturb report` prints, per defect and metric, the change and a verdict
+(pass / weak / FAIL), plus the other metrics that moved.
 
 The judge model is `EVAL_JUDGE_MODEL` (default in `evals/judge.py`). Re-scoring an
 archive with unchanged metrics replays every judge and embedding call from the cache.
