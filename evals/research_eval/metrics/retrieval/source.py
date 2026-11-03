@@ -36,7 +36,7 @@ def concentration(domains: list[str]) -> dict:
       evenness         entropy / log2(domains), Pielou: 1 = perfectly even
       pie              n/(n-1) * (1 - hhi), Hurlbert's PIE: chance that two
                        entries drawn without replacement are from different
-                       domains (unbiased, so it does not grow with n)
+                       domains (Gini-Simpson without its small-sample bias)
     """
     counts = Counter(domains)
     total = len(domains)
@@ -52,19 +52,24 @@ def concentration(domains: list[str]) -> dict:
 
 
 class SourceDiversity(Metric):
-    """Chance that two citations of the report body, picked at random, come
-    from different domains (Hurlbert's PIE), in [0, 1].
+    """Gini-Simpson diversity of the domains the report body cites, with
+    Hurlbert's small-sample correction (PIE), in [0, 1]: the chance that two
+    citations picked at random (without replacement) come from different
+    domains.
 
         n     = body citations (one per paragraph-URL pair)
         p_i   = share of them from domain i
-        value = n/(n-1) * (1 - Σ p_i²)
+        value = n/(n-1) * (1 - Σ p_i²)        (1 - Σ p_i² is Gini-Simpson)
 
     0 = every citation is from one domain; 1 = no two citations share a
-    domain; citing two domains half and half gives about 0.5. Unlike entropy or
-    the domain count, it does not grow with the number of citations, so a
-    longer report does not score higher only for being longer; unlike Pielou
-    evenness, it does not give full marks to a report that cites two domains
-    evenly. With no body citations the retrieved sources are used
+    domain; citing two domains half and half gives about 0.5. It is an
+    unbiased estimate, so citing more of the same mix does not by itself raise
+    it (entropy and the domain count do rise as more rare domains turn up);
+    a report that draws on more domains still scores higher, and on v12
+    reports it still correlates with length (r = 0.83 against word count,
+    entropy 0.93), largely because detailed reports cite more domains. Unlike
+    Pielou evenness, it does not give full marks to a report that cites two
+    domains evenly. With no body citations the retrieved sources are used
     (`details.basis`). `details.entropy` (bits) was the v3 value; 2^H
     (`equivalent_domains`), evenness, HHI and the domain count are beside it,
     for citations and retrieved sources (`cited` / `retrieved`);
@@ -72,7 +77,7 @@ class SourceDiversity(Metric):
     """
 
     name, category = "source_diversity", "retrieval.source"
-    version = "4"           # 3: entropy of cited domains; 4: Hurlbert's PIE
+    version = "4"           # 3: entropy of cited domains; 4: Gini-Simpson (Hurlbert's PIE)
 
     async def score(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:
         retrieved = [d for d in (domain_of(u) for u in archive.retrieved_urls) if d]
