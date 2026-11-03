@@ -61,23 +61,26 @@ class SourceDiversity(Metric):
         p_i   = share of them from domain i
         value = n/(n-1) * (1 - Σ p_i²)        (1 - Σ p_i² is Gini-Simpson)
 
-    0 = every citation is from one domain; 1 = no two citations share a
-    domain; citing two domains half and half gives about 0.5. It is an
+    0 = every citation is from one domain, or the body cites nothing; 1 = no
+    two citations share a domain; citing two domains half and half gives
+    about 0.5. It is an
     unbiased estimate, so citing more of the same mix does not by itself raise
     it (entropy and the domain count do rise as more rare domains turn up);
     a report that draws on more domains still scores higher, and on v12
     reports it still correlates with length (r = 0.83 against word count,
     entropy 0.93), largely because detailed reports cite more domains. Unlike
     Pielou evenness, it does not give full marks to a report that cites two
-    domains evenly. With no body citations the retrieved sources are used
-    (`details.basis`). `details.entropy` (bits) was the v3 value; 2^H
+    domains evenly. A report whose body cites nothing scores 0 (the v4 value
+    fell back to the retrieved sources, so an uncited report scored about 1);
+    the retrieved sources' spread stays in `details.retrieved`.
+    `details.entropy` (bits) was the v3 value; 2^H
     (`equivalent_domains`), evenness, HHI and the domain count are beside it,
     for citations and retrieved sources (`cited` / `retrieved`);
     `diversity_ratio` = distinct retrieved domains / retrieved sources was v1.
     """
 
     name, category = "source_diversity", "retrieval.source"
-    version = "4"           # 3: entropy of cited domains; 4: Gini-Simpson (Hurlbert's PIE)
+    version = "5"           # 3: entropy; 4: Gini-Simpson (Hurlbert's PIE); 5: no citations = 0, no fallback
 
     async def score(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:
         retrieved = [d for d in (domain_of(u) for u in archive.retrieved_urls) if d]
@@ -85,15 +88,18 @@ class SourceDiversity(Metric):
                              for c in p["citations"]) if d]
         if not retrieved and not cited:
             return self.skip("no sources")
-        basis, domains = ("cited", cited) if cited else ("retrieved", retrieved)
-        c = concentration(domains)
         rc = concentration(retrieved) if retrieved else None
+        ratio = rounded(rc["domains"] / rc["n"]) if rc else None
+        if not cited:
+            # Nothing cited: the report rests on no source, so it spreads over none.
+            return self.result(0.0, basis="no body citations", n=0, cited=None, retrieved=rc,
+                               diversity_ratio=ratio)
+        c = concentration(cited)
         # One citation: nothing to spread over, so no diversity.
-        return self.result(c["pie"] if c["pie"] is not None else 0.0, basis=basis, entropy=c["entropy"],
+        return self.result(c["pie"] if c["pie"] is not None else 0.0, basis="cited", entropy=c["entropy"],
                            equivalent_domains=rounded(2 ** c["entropy"]),
-                           evenness=c["evenness"], n=len(domains), domains=c["domains"],
-                           cited=concentration(cited) if cited else None, retrieved=rc,
-                           diversity_ratio=rounded(rc["domains"] / rc["n"]) if rc else None)
+                           evenness=c["evenness"], n=len(cited), domains=c["domains"],
+                           cited=c, retrieved=rc, diversity_ratio=ratio)
 
 
 _HIGH_AUTHORITY_DOMAINS = {
@@ -144,8 +150,10 @@ class SourceAuthority(Metric):
 
     The mean over every retrieved source is kept in `details.retrieved_mean`:
     a run that searches widely and then cites regulators would otherwise score
-    below a run that retrieves and cites ten vendor blogs. A report with no
-    citations falls back to the retrieved mean (`details.basis`).
+    below a run that retrieves and cites ten vendor blogs. A report whose body
+    cites nothing is skipped (it rests on no source to rate; citation recall
+    and coverage already score it 0); v2 fell back to the retrieved mean,
+    which gave an uncited report an ordinary-looking value.
 
     Rule tiers first. Deferred domains are looked up in the global domain
     cache (domain + prompt version), and the rest are scored in ONE batched
@@ -156,7 +164,7 @@ class SourceAuthority(Metric):
     """
 
     name, category = "source_authority", "retrieval.source"
-    version = "2"
+    version = "3"           # 3: no fallback to retrieved sources when nothing is cited
     uses_llm = True
     prompts = (DOMAIN_AUTHORITY,)
 
@@ -212,8 +220,12 @@ class SourceAuthority(Metric):
         def mean(ds):
             return rounded(sum(verdicts[d]["score"] for d in ds) / len(ds)) if ds else None
 
-        res = self.result(mean(cited) if cited else mean(domains),
-                          basis="citations" if cited else "retrieved",
+        if not cited:
+            res = self.skip("no body citations", n_citations=0, retrieved_mean=mean(domains),
+                            n_sources=len(domains), fallback_domains=fallback)
+            res.llm = self.llm_record(ctx, responses)
+            return res
+        res = self.result(mean(cited), basis="citations",
                           n_citations=len(cited), retrieved_mean=mean(domains),
                           n_sources=len(domains),
                           cited_domains=Counter(cited).most_common(),

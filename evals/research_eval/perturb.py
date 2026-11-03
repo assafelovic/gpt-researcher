@@ -453,7 +453,7 @@ def _write(out_dir: Path, data: dict) -> None:
 
 # --- report -----------------------------------------------------------------
 
-UNIT_RANGE = {"effective_citations": False, "source_diversity": True}   # default True
+UNIT_RANGE = {"effective_citations": False, "toxicity": False, "bias": False}   # default True
 FLOOR = 0.03           # least change that counts on a 0-1 metric (about the judge's spread)
 REL_FLOOR = 0.10       # the same for unbounded metrics, relative to the base value
 

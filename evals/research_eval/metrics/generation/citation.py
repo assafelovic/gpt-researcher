@@ -157,17 +157,29 @@ class EffectiveCitations(_AuditMetric):
     overlap >= `DUPLICATE`) are merged, by rule, with no judge call. Per 1,000
     words because the raw count grows with report length (a report twice as
     long cites about twice as much); the count, the v3 value, is
-    `details.evidence`, beside the citation-pair and distinct URL counts.
+    `details.evidence`, beside the citation-pair and distinct URL counts. A
+    report that states facts but cites nothing scores 0 (v4 skipped it, so it
+    never pulled an average down).
+
+    Read it beside insight: a density, it rises when analysis is cut and only
+    cited facts remain (the perturbation test saw +3 to +4.5 per 1k words).
     """
 
     name = "effective_citations"
-    version = f"4.audit{AUDIT_VERSION}"     # 2: distinct evidence chunks; 4: per 1k words as value
+    version = f"5.audit{AUDIT_VERSION}"     # 2: distinct evidence chunks; 4: per 1k words; 5: uncited facts = 0
     DUPLICATE = 0.8
 
     def from_audit(self, audit, archive):
         cites = audit.citations
+        words = body_word_count(archive)
+        if not words:
+            return self.skip("empty report body")
         if not cites:
-            return self.skip("no citations of factual claims")
+            facts = sum(c.get("type", "fact") == "fact" for p in audit.judged for c in p.claims)
+            if not facts:
+                return self.skip("no fact claims")
+            # Facts stated, none cited: no evidence brought, which is a 0, not a gap.
+            return self.result(0.0, evidence=0, words=words, citations=0, fact_claims=facts)
         eff = [c for c in cites if c["effective"]]
         chunks = list(dict.fromkeys(cid for c in audit.claim_checks if c["supported"]
                                     for cid in c["backing_chunks"] if cid in archive.chunks))
@@ -178,9 +190,6 @@ class EffectiveCitations(_AuditMetric):
             if not any(symmetric_overlap(text, archive.chunks[g]["content"], idf) >= self.DUPLICATE
                        for g in groups):
                 groups.append(cid)
-        words = body_word_count(archive)
-        if not words:
-            return self.skip("empty report body")
         return self.result(rounded(1000 * len(groups) / words), evidence=len(groups),
                            evidence_chunks=len(chunks), words=words,
                            merged_duplicates=len(chunks) - len(groups),

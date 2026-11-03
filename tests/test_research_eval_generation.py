@@ -237,6 +237,21 @@ async def test_effective_citations_is_evidence_per_1k_words(ctx):
     assert r.value == pytest.approx(2000 / r.details["words"], abs=1e-3)
 
 
+def test_effective_citations_is_zero_when_facts_go_uncited():
+    from evals.research_eval.citation_audit import CitationAudit, ParagraphAudit
+    archive = RunArchive(build_archive(
+        meta={"run_id": "r", "query": "q"},
+        spans=[{"span_id": "s", "parent_id": None, "name": "run", "attributes": {"chunk_ids": []}}],
+        chunks={}, report_markdown="# R\n\n## S\n\n" + "word " * 100))
+    pa = ParagraphAudit("p", [], "uncited", [], [])
+    pa.kind = "factual"
+    pa.claims = [{"claim": "Congo mines most cobalt.", "type": "fact", "verdict": "unsupported", "score": 0}]
+    r = EffectiveCitations().from_audit(CitationAudit([pa]), archive)
+    assert r.value == 0.0 and r.skipped is None and r.details["fact_claims"] == 1
+    pa.claims = [{"claim": "This matters.", "type": "analysis", "verdict": "unsupported", "score": 0}]
+    assert EffectiveCitations().from_audit(CitationAudit([pa]), archive).skipped == "no fact claims"
+
+
 def test_effective_citations_merges_near_duplicate_evidence():
     from evals.research_eval.citation_audit import CitationAudit, ParagraphAudit
     copy = "Congo produced 74% of mined cobalt in 2023 and Glencore is the largest producer."
@@ -372,7 +387,10 @@ async def test_toxicity_and_bias_share_one_screen(ctx):
     a = make_archive()
     t = await Toxicity().score(a, ctx)
     b = await Bias().score(a, ctx)
-    assert (t.value, b.value) == (0.25, 0.25)
+    # one of four opinions flagged for each: a count of 1, a share of 0.25
+    assert (t.value, b.value) == (1.0, 1.0)
+    assert (t.details["rate"], b.details["rate"]) == (0.25, 0.25)
+    assert t.details["per_1k_words"] > 0
     assert t.higher_is_better is False and b.details["flagged"][0]["bias_type"] == "geography"
     assert sum("screening part of a research report" in p for p in ctx.fake.prompts) == 1
 

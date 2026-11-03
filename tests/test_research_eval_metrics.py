@@ -257,7 +257,9 @@ async def test_source_diversity(ctx):
     twice = await SourceDiversity().score(make_archive("# R\n\n## S\n\n" + two_sites16), ctx)
     assert twice.value == pytest.approx(0.533, abs=1e-3)
     uncited = await SourceDiversity().score(make_archive("# R\n\n## S\n\nNo links.\n"), ctx)
-    assert uncited.details["basis"] == "retrieved" and uncited.value == 1.0
+    # Nothing cited: 0, not the retrieved sources' spread (which stays in details).
+    assert uncited.details["basis"] == "no body citations" and uncited.value == 0.0
+    assert uncited.details["retrieved"]["domains"] == 3
     assert r.details["retrieved"]["entropy"] == pytest.approx(1.585, abs=1e-3)
 
 
@@ -290,6 +292,12 @@ async def test_source_authority_weights_by_citation_and_matches_subdomains(ctx):
 async def test_source_authority_without_judge_falls_back():
     r = await SourceAuthority().score(make_archive(), ScoringContext(cache=EvalCache(":memory:")))
     assert r.details["fallback_domains"] == ["weather-blog.com"]
+
+
+async def test_source_authority_skips_a_report_that_cites_nothing(ctx):
+    r = await SourceAuthority().score(make_archive("# R\n\n## S\n\nNo links.\n"), ctx)
+    assert r.value is None and r.skipped == "no body citations"
+    assert r.details["retrieved_mean"] is not None
 
 
 async def test_source_authority_judge_failure_is_skipped(ctx):
