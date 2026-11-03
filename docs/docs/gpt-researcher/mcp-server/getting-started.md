@@ -81,12 +81,11 @@ Once the server is running, you'll see output indicating that the server is read
 
 ## Integrating with Claude
 
-There are two primary ways to integrate your MCP server with Claude:
+To integrate your MCP server with the Claude desktop application for Mac:
 
-1. **[API Integration](./claude-integration)** - For programmatic access through Claude API
-2. **[Desktop Integration](./claude-desktop-integration)** - For using with Claude desktop application on Mac
+- **[Claude Desktop Integration](./claude-integration)** - For using with Claude desktop application on Mac
 
-For detailed instructions on each method, follow the links above.
+For detailed instructions, follow the link above.
 
 ## Example Usage with Claude
 
