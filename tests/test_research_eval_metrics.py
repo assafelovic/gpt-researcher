@@ -17,7 +17,8 @@ from evals.research_eval.metrics import all_metrics
 from evals.research_eval.metrics.base import ScoringContext
 from evals.research_eval.metrics.retrieval import (
     SourceUtilization, DecompositionCoverage, DecompositionTreeQuality, PlanAdherence,
-    QueryRelevance, RetrievalOverlap, SourceAuthority, SourceDiversity, SubqueryRedundancy)
+    MaterialCoverage, QueryRelevance, RetrievalOverlap, SourceAuthority, SourceDiversity,
+    SourceRecency, SubqueryRedundancy)
 from evals.research_eval.scoring import save_results, score_archive, scorer_version
 
 CORE = "battery supply chain risks"
@@ -103,6 +104,17 @@ class FakeJudge:
             return json.dumps({"opinions": []})
         if "List the distinct aspects" in prompt:
             return json.dumps({"key_points": ["cobalt supply", "lithium refining", "recycling policy"]})
+        if "retrieved covers, before any report" in prompt:
+            # Covered when one of the point's own passages names its first word.
+            blocks = prompt.split("Key point ")[1:]
+            out = []
+            for b in blocks:
+                n, rest = b.split(":", 1)
+                word = rest.split()[0].lower()
+                ids = [i for i, text in re.findall(r"^\[(\w+)\] [^\n]*\n([^\n]*)", rest, re.M)
+                       if word in text.lower()]
+                out.append({"point": int(n), "coverage": "full" if ids else "none", "passages": ids})
+            return json.dumps({"points": out[:-1] if "drop-last" in prompt else out})
         if "which aspects of a research question" in prompt:
             points = re.findall(r"^(\d+)\. (.+)$", prompt.split("Key points:")[1].split("Sub-queries:")[0], re.M)
             subs = re.findall(r"^(\d+)\. (.+)$", prompt.split("Sub-queries:")[1].split("Return ONLY")[0], re.M)
@@ -606,3 +618,49 @@ async def test_plan_adherence_counts_a_failed_deep_step_as_not_completed():
     assert r.details["failed_after_retrieval"][0]["error"] == "ValueError: empty"
     assert [f["query"] for f in r.details["not_delivered"]] == ["c"]
     assert r.details["deep_steps_failed"] == 1
+
+
+# --- source recency / material coverage -----------------------------------------
+
+def test_source_year_prefers_the_url_date_and_ignores_forecasts():
+    from evals.research_eval.metrics.retrieval.source import source_year
+    assert source_year("https://x.com/news/2025/03/foo", "", "since 2019, as of 2026", 2026) == (2025, "url")
+    assert source_year("https://x.com/files/2023-10/report.pdf", "", "2026", 2026) == (2023, "url")
+    assert source_year("https://x.com/a", "Outlook 2024", "by 2030 the market doubles", 2026) == (2024, "text")
+    assert source_year("https://x.com/a", "", "1,2019 staff, version 3.2020", 2026) == (None, "none")
+
+
+async def test_source_recency_counts_dated_cited_sources_only():
+    a = make_archive(report="# R\n\n## A\n\nCobalt is concentrated ([R](https://reuters.com/cobalt)). "
+                            "Refining sits in China ([D](https://energy.gov/lithium)).\n")
+    a.data["meta"]["started_at"] = "2025-06-01T00:00:00+00:00"
+    r = await SourceRecency().score(a, ScoringContext(cache=EvalCache(":memory:")))
+    # cobalt names 2024 (within a year of 2025); lithium names no year: left out, not old.
+    assert r.value == 1.0 and r.details["dated"] == 1 and r.details["undated"] == 1
+    assert r.details["undated_urls"] == ["https://energy.gov/lithium"]
+    a.data["meta"]["started_at"] = "2026-06-01T00:00:00+00:00"
+    old = await SourceRecency().score(a, ScoringContext(cache=EvalCache(":memory:")))
+    assert old.value == 0.0 and old.details["old"][0]["year"] == 2024
+    none = await SourceRecency().score(make_archive(report="# R\n\n## A\n\nNo links here at all.\n"),
+                                       ScoringContext(cache=EvalCache(":memory:")))
+    assert none.skipped and none.value is None
+
+
+async def test_material_coverage_grades_key_points_on_evaluator_picked_passages(ctx):
+    r = await MaterialCoverage().score(make_archive(), ctx)
+    per = {p["key_point"]: p for p in r.details["per_point"]}
+    # cobalt and lithium passages exist; nothing retrieved is about recycling policy.
+    assert per["cobalt supply"]["coverage"] == "full" and per["lithium refining"]["coverage"] == "full"
+    assert per["recycling policy"]["coverage"] == "none"
+    assert r.value == pytest.approx(2 / 3, abs=1e-3)
+    assert per["cobalt supply"]["urls"] == ["https://www.reuters.com/cobalt"]
+    prompt = next(p for p in ctx.fake.prompts if "retrieved covers" in p)
+    assert "Weather forecasts" not in prompt.split("Key point 1:")[1].split("Key point 2:")[0]
+    assert r.details["unanswered"] == 0 and r.llm["requests"] == 1
+
+
+async def test_material_coverage_counts_points_the_reply_skipped(ctx):
+    a = make_archive()
+    a.data["meta"]["query"] = a.data["meta"]["query"] + " drop-last"
+    r = await MaterialCoverage().score(a, ctx)
+    assert r.details["unanswered"] == 1 and r.details["per_point"][-1]["coverage"] == "none"

@@ -407,8 +407,9 @@ def metric_checks(record: dict) -> list[dict]:
     if d("decomposition_tree_quality").get("per_parent"):
         gaps["decomposition_tree_quality: parents without a score"] = \
             sum(q.get("score") is None for q in d("decomposition_tree_quality")["per_parent"])
-    if "unanswered" in d("comprehensiveness"):
-        gaps["comprehensiveness: key points the reply skipped (scored none)"] = d("comprehensiveness")["unanswered"]
+    for k in ("comprehensiveness", "material_coverage"):
+        if "unanswered" in d(k):
+            gaps[f"{k}: key points the reply skipped (scored none)"] = d(k)["unanswered"]
     if "unknown_verdicts" in d("faithfulness"):
         gaps["faithfulness: claims without a usable verdict"] = d("faithfulness")["unknown_verdicts"]
     bad = {k: v for k, v in gaps.items() if v}

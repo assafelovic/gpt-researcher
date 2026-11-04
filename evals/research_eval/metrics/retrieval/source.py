@@ -10,14 +10,21 @@ imported, so the old module can be deleted later without touching this one.
 from __future__ import annotations
 
 import math
+import re
 from collections import Counter
+from datetime import datetime, timezone
+from string import ascii_lowercase
 from urllib.parse import urlparse
 
-from ...archive import RunArchive
+from gpt_researcher.context.lexical import tokenize
+
+from ...archive import RunArchive, normalize_url
 from ...cache import stable_hash
-from ...prompts import DOMAIN_AUTHORITY
-from ...report_parser import body_paragraphs
+from ...key_points import get_key_points
+from ...prompts import DOMAIN_AUTHORITY, KEY_POINTS, MATERIAL_COVERAGE
+from ...report_parser import body_paragraphs, cited_urls
 from ..base import Metric, MetricResult, ScoringContext, rounded
+from ..lexical import idf_table, weighted_overlap
 
 
 def domain_of(url: str) -> str:
@@ -233,4 +240,186 @@ class SourceAuthority(Metric):
                                            key=lambda x: -x["score"]),
                           fallback_domains=fallback)
         res.llm = self.llm_record(ctx, responses)
+        return res
+
+
+_YEAR = re.compile(r"(?<![\d.,/-])(19[89]\d|20\d\d)(?![\d,])")
+_URL_DATE = re.compile(r"(?<!\d)(20\d\d)[/_-]?(0[1-9]|1[0-2])(?:[/_-]?(0[1-9]|[12]\d|3[01]))?(?!\d)")
+_URL_YEAR = re.compile(r"/(19[89]\d|20\d\d)/")
+
+
+def run_year(archive: RunArchive) -> int:
+    started = str(archive.meta.get("started_at") or "")
+    return int(started[:4]) if started[:4].isdigit() else datetime.now(timezone.utc).year
+
+
+def source_year(url: str, title: str, text: str, now: int) -> tuple[int | None, str]:
+    """(year, basis): when a source's information dates from, by rule.
+
+    A date in the URL path ("/2025/03/", "2025-03-14") is taken as the
+    publication date. Otherwise the latest year named in the title or the
+    retrieved text, ignoring years after the run (forecasts: "by 2030").
+    """
+    path = urlparse(url).path
+    years = [int(m.group(1)) for m in _URL_DATE.finditer(path)] + \
+            [int(y) for y in _URL_YEAR.findall(path)]
+    years = [y for y in years if y <= now]
+    if years:
+        return max(years), "url"
+    named = [int(y) for y in _YEAR.findall(f"{title}\n{text}") if int(y) <= now]
+    return (max(named), "text") if named else (None, "none")
+
+
+class SourceRecency(Metric):
+    """Share of the report's cited sources whose information is recent:
+    dated in the run's year or the `recency_years` (default 1) before it.
+
+        value = recent cited sources / dated cited sources   (distinct URLs)
+
+    A rule, with no search and no judge: the date is the one in the URL path
+    when there is one (a publication date), otherwise the latest year named in
+    the source's title or retrieved text, years after the run left out (a
+    forecast "by 2030" does not make a page new). This dates the sources, not
+    each fact: a 2026 article can still quote 2021 figures. Sources with no
+    year are left out of the value (unknown is not old) and counted in
+    `details.undated`. `details.retrieved_share` is the same share over every
+    source that reached the writer, to compare what the report cited with what
+    retrieval offered; `per_citation` weights each source by its body citations.
+    Meant for time-sensitive questions (all of questions_v0 are); for a
+    question about settled history an old source is no defect.
+    """
+
+    name, category = "source_recency", "retrieval.source"
+    version = "1"
+    YEARS = 1
+
+    def _dates(self, archive: RunArchive, urls: list[str], now: int) -> dict[str, tuple[int | None, str]]:
+        out = {}
+        for u in urls:
+            cids = archive.chunks_by_url.get(normalize_url(u), [])
+            title = next((archive.chunks[c].get("title") or "" for c in cids), "")
+            text = "\n".join(archive.chunks[c]["content"] for c in cids)
+            out[u] = source_year(u, title, text, now)
+        return out
+
+    async def score(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:
+        now = run_year(archive)
+        cutoff = now - int(ctx.option("recency_years", self.YEARS))
+        cited = [u for u in cited_urls(archive.report) if normalize_url(u) in archive.chunks_by_url]
+        if not cited:
+            return self.skip("no body citations of retrieved sources", run_year=now)
+        dates = self._dates(archive, cited, now)
+        dated = {u: y for u, (y, _) in dates.items() if y is not None}
+        offered = list(dict.fromkeys(archive.chunks[c]["url"] for c in archive.writer_chunk_ids
+                                     if archive.chunks[c].get("url")))
+        offered_years = [y for y, _ in self._dates(archive, offered, now).values() if y is not None]
+        n_cites = Counter(normalize_url(c["url"]) for p in body_paragraphs(archive.report)
+                          for c in p["citations"])
+        weights = {u: n_cites[normalize_url(u)] for u in dated}
+        details = dict(
+            run_year=now, cutoff=cutoff, cited=len(cited), dated=len(dated),
+            undated=len(cited) - len(dated),
+            basis=dict(Counter(b for _, b in dates.values())),
+            years=dict(sorted(Counter(dated.values()).items())),
+            retrieved_share=rounded(sum(y >= cutoff for y in offered_years) / len(offered_years))
+                            if offered_years else None,
+            per_citation=rounded(sum(w for u, w in weights.items() if dated[u] >= cutoff)
+                                 / sum(weights.values())) if sum(weights.values()) else None,
+            old=[{"url": u, "year": y, "basis": dates[u][1]} for u, y in dated.items() if y < cutoff],
+            undated_urls=[u for u, (y, _) in dates.items() if y is None])
+        if not dated:
+            return self.skip("no cited source names a year", **details)
+        return self.result(rounded(sum(y >= cutoff for y in dated.values()) / len(dated)), **details)
+
+
+class MaterialCoverage(Metric):
+    """Share of the question's key points that the retrieved material covers,
+    before any writing: the retrieval-side counterpart of comprehensiveness.
+
+        value = (full + 0.5 partial key points) / key points
+
+    Material = the chunks that reached the writer (`RunArchive.writer_chunk_ids`;
+    failed deep steps' chunks never did). For each key point the evaluator,
+    not the agent, picks the passages that match it best by BM25-weighted
+    overlap, one per URL, `PASSAGES` per point; one judge call per run sees
+    all points with their passages and grades each from any passage shown.
+    The picks are a sample, so a point the material covers only in other
+    words can be missed: a lower bound.
+
+    Read beside the other two key-point metrics, per point (`details.per_point`):
+    decomposition_coverage covered but material none -> searched, found
+    nothing; material covered but comprehensiveness none -> found, not written.
+    """
+
+    name, category = "material_coverage", "retrieval.source"
+    version = "1"
+    uses_llm = True
+    prompts = (MATERIAL_COVERAGE, KEY_POINTS)
+    PASSAGES = 6
+    PASSAGE_CHARS = 1200
+    POINTS = {"full": 1.0, "partial": 0.5, "none": 0.0}
+
+    def picks(self, archive: RunArchive, point: str, idf: dict) -> list[str]:
+        scored = sorted(((weighted_overlap(point, set(tokenize(archive.chunks[c]["content"])), idf), i, c)
+                         for i, c in enumerate(archive.writer_chunk_ids)), key=lambda x: (-x[0], x[1]))
+        out, urls = [], set()
+        for score, _, c in scored:
+            url = normalize_url(archive.chunks[c].get("url") or c)
+            if score <= 0 or url in urls:
+                continue
+            urls.add(url)
+            out.append(c)
+            if len(out) == self.PASSAGES:
+                break
+        return out
+
+    async def score(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:
+        if ctx.judge is None:
+            return self.skip("no judge configured")
+        if not archive.writer_chunk_ids:
+            return self.result(0.0, reason="no material reached the writer")
+        points, provenance = await get_key_points(archive, ctx)
+        if not points:
+            return self.skip("no key points", key_points=provenance)
+        idf = idf_table([archive.chunks[c]["content"] for c in archive.writer_chunk_ids])
+        shown, blocks = {}, []
+        for i, p in enumerate(points, 1):
+            lines = [f"Key point {i}: {p}"]
+            for j, c in enumerate(self.picks(archive, p, idf)):
+                pid = f"{i}{ascii_lowercase[j]}"
+                shown[pid] = c
+                lines.append(f"[{pid}] {archive.chunks[c].get('url') or 'unknown source'}\n"
+                             f"{archive.chunks[c]['content'][:self.PASSAGE_CHARS]}")
+            if len(lines) == 1:
+                lines.append("(no passage shares a word with this key point)")
+            blocks.append("\n\n".join(lines))
+        r = await ctx.judge.ask(MATERIAL_COVERAGE.id, MATERIAL_COVERAGE.version,
+                                MATERIAL_COVERAGE.render(question=archive.query,
+                                                         points="\n\n---\n\n".join(blocks)))
+        got = {}
+        for e in (r.parsed or {}).get("points", []) if isinstance(r.parsed, dict) else []:
+            try:
+                got[int(e["point"])] = e
+            except (KeyError, TypeError, ValueError):
+                continue
+        if not got:
+            res = self.skip("judge call failed", key_points=provenance, error=r.error)
+            res.llm = self.llm_record(ctx, [r])
+            return res
+        per_point, total = [], 0.0
+        for i, p in enumerate(points, 1):
+            e = got.get(i, {})
+            cov = str(e.get("coverage", "none")).lower()
+            cov = cov if cov in self.POINTS else "none"
+            total += self.POINTS[cov]
+            cids = [shown[str(x)] for x in e.get("passages") or [] if str(x) in shown]
+            per_point.append({"key_point": p, "coverage": cov, "answered": i in got,
+                              "chunk_ids": cids,
+                              "urls": list(dict.fromkeys(archive.chunks[c].get("url") for c in cids)),
+                              "evidence": e.get("evidence", "")})
+        res = self.result(rounded(total / len(points)), key_points=provenance, per_point=per_point,
+                          uncovered=[x["key_point"] for x in per_point if x["coverage"] == "none"],
+                          unanswered=sum(not x["answered"] for x in per_point),
+                          passages_shown=len(shown), material_chunks=len(archive.writer_chunk_ids))
+        res.llm = self.llm_record(ctx, [r])
         return res
