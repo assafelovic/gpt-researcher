@@ -32,7 +32,7 @@ EMBEDDING=openai:text-embedding-3-small
 
 ## Custom LLM
 
-Create a local OpenAI API using [llama.cpp Server](https://github.com/ggerganov/llama.cpp/blob/master/examples/server/README.md#quick-start).
+Create a local OpenAI API using [llama.cpp Server](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md#quick-start).
 
 For custom LLM, specify "openai:&#123;your-llm&#125;"
 ```env
