@@ -8,12 +8,9 @@ from .writing import (Comprehensiveness, Insight, InstructionFollowing, Readabil
                       TopicRelevance)
 
 GENERATION_METRICS = (
-    # A. writing quality
-    Comprehensiveness, Insight, Readability, InstructionFollowing, TopicRelevance,
-    # B. citations
-    CitationRecall, CitationPrecision, CitationCoverage, EffectiveCitations,
-    # C. hallucination
-    Faithfulness, FactGrounding,
-    # other
-    Toxicity, Bias,
+    # writing quality: what the report says and how it reads
+    Comprehensiveness, Insight, Readability, Toxicity, Bias, TopicRelevance,
+    # writing authority: whether it follows the brief and rests on its sources
+    InstructionFollowing, CitationRecall, CitationPrecision, CitationCoverage,
+    EffectiveCitations, FactGrounding, Faithfulness,
 )

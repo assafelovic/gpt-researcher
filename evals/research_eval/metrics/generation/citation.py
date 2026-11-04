@@ -18,7 +18,7 @@ from ..lexical import idf_table, symmetric_overlap
 
 
 class _AuditMetric(Metric):
-    category = "generation.citation"
+    category = "generation.writing_authority"
     version = f"1.audit{AUDIT_VERSION}"
     uses_llm = True
     prompts = (PARAGRAPH_AUDIT,)
@@ -207,7 +207,7 @@ class CitationCoverage(Metric):
     `citation_faithfulness`, which compared domains.
     """
 
-    name, category = "citation_coverage", "generation.citation"
+    name, category = "citation_coverage", "generation.writing_authority"
 
     async def score(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:
         parsed = archive.report

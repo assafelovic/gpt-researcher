@@ -54,7 +54,7 @@ class SourceUtilization(Metric):
                        writer either took without citing or got elsewhere.
     """
 
-    name, category = "source_utilization", "retrieval.efficiency"
+    name, category = "source_utilization", "retrieval.retrieval_quality"
     version = f"7.audit{AUDIT_VERSION}"     # 4: deep-research reasoning chain; 5: URL-level funnel; 6: step chunks exclude deeper levels; 7: failed deep steps left out
     prompts = (PARAGRAPH_AUDIT,)
     MATCH, MIN_TERMS = 0.5, 5
@@ -207,7 +207,7 @@ class QueryRelevance(Metric):
     already counts them.
     """
 
-    name, category = "query_relevance", "retrieval.efficiency"
+    name, category = "query_relevance", "retrieval.retrieval_quality"
     version = "4"           # 4: Q4 counts only reworded requests for the same facts
     uses_llm = True
     prompts = (QUERY_RELEVANCE, KEY_POINTS)
@@ -310,7 +310,7 @@ class RetrievalOverlap(Metric):
     and are not counted.
     """
 
-    name, category = "retrieval_overlap", "retrieval.efficiency"
+    name, category = "retrieval_overlap", "retrieval.retrieval_quality"
     version = "2"           # 2: core-question repeat searches left out
     higher_is_better = False
 

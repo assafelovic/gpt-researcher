@@ -204,6 +204,20 @@ async def test_subquery_redundancy_reads_query_relevance_q4(ctx):
     assert len(ctx.fake.prompts) == before
 
 
+async def test_subquery_redundancy_counts_sub_queries_not_parent_searches(ctx):
+    a = make_archive()
+    cobalt = _chunk("cobalt")[0]
+    # The researcher's own question, searched while planning: a parent step.
+    a.data["spans"].append({"span_id": "s8", "parent_id": "s2", "name": "initial_results",
+                            "attributes": {"query": CORE, "chunk_ids": [cobalt],
+                                           "proposed_urls": [], "new_urls": []}})
+    r = await SubqueryRedundancy().score(RunArchive(a.data), ctx)
+    assert r.details["parent_steps"] == 1 and r.details["steps"] == 2
+    assert r.value == 0.5                                   # the parent step (judged not unique) is left out
+    assert r.details["with_parent_steps"] == pytest.approx(2 / 3, abs=1e-3)
+    assert r.details["per_layer"] == {1: {"steps": 2, "not_unique": 1, "share": 0.5}}
+
+
 async def test_subquery_redundancy_lexical_fallback_flags_near_duplicates():
     ctx = ScoringContext(cache=EvalCache(":memory:"))       # no judge
     r = await SubqueryRedundancy().score(make_archive(), ctx)

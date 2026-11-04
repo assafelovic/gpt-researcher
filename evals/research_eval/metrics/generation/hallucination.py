@@ -40,7 +40,7 @@ class Faithfulness(_AuditMetric):
     here; citation recall / precision catch it.
     """
 
-    name, category = "faithfulness", "generation.hallucination"
+    name, category = "faithfulness", "generation.writing_authority"
     version = f"2.audit{AUDIT_VERSION}"     # 2: fact claims only; analysis in details
 
     def from_audit(self, audit: CitationAudit, archive: RunArchive) -> MetricResult:
@@ -158,7 +158,7 @@ class FactGrounding(Metric):
     Unjudged and uncalibrated: a paraphrased or converted figure counts as missing.
     """
 
-    name, category = "fact_grounding", "generation.hallucination"
+    name, category = "fact_grounding", "generation.writing_authority"
     version = "2"
 
     async def score(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:

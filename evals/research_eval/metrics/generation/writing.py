@@ -36,7 +36,7 @@ class Comprehensiveness(Metric):
     lexical hint, not judged.
     """
 
-    name, category = "comprehensiveness", "generation.writing"
+    name, category = "comprehensiveness", "generation.writing_quality"
     version = "4"           # 4: key points the reply skipped are counted in details
     uses_llm = True
     prompts = (COMPREHENSIVENESS, KEY_POINTS)
@@ -163,7 +163,7 @@ class _RubricDimension(Metric):
     judge read in the report, so the judge itself can be reviewed run by run.
     """
 
-    category = "generation.writing"
+    category = "generation.writing_quality"
     version = "3"           # 3: records the insights the judge found
     uses_llm = True
     prompts = (QUALITY_RUBRIC, QUALITY_SCORE)
@@ -215,7 +215,7 @@ class InstructionFollowing(Metric):
                          output tokens; the run still ends "ok" in that case
     """
 
-    name, category = "instruction_following", "generation.writing"
+    name, category = "instruction_following", "generation.writing_authority"
     version = "4"           # 2: no_toc skipped in detailed mode; 3: duplicate references detectable; 4: complete
     MIN_WORDS = 1200
 
@@ -259,7 +259,7 @@ class TopicRelevance(Metric):
     idk per paragraph; idk counts as relevant. value = (yes + idk) / judged.
     """
 
-    name, category = "topic_relevance", "generation.writing"
+    name, category = "topic_relevance", "generation.writing_quality"
     uses_llm = True
     prompts = (TOPIC_RELEVANCE,)
     BATCH_CHARS = 20000

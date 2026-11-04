@@ -45,7 +45,7 @@ class _Screen(Metric):
     1,000 words.
     """
 
-    category = "other.safety"
+    category = "generation.writing_quality"
     higher_is_better = False
     uses_llm = True
     prompts = (TOXICITY_BIAS,)

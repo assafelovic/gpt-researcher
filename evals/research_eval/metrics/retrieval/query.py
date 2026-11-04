@@ -42,7 +42,7 @@ class DecompositionCoverage(Metric):
     when no judge is configured, flagged in `details.method`.
     """
 
-    name, category = "decomposition_coverage", "retrieval.query"
+    name, category = "decomposition_coverage", "retrieval.query_quality"
     version = "3"           # 3: deep clarifying questions are not sub-queries
     uses_llm = True
     prompts = (KEY_POINTS, DECOMPOSITION_COVERAGE)
@@ -107,7 +107,7 @@ class DecompositionCoverage(Metric):
 
 
 class SubqueryRedundancy(Metric):
-    """Share of search steps that ask what another step already asks (lower is better).
+    """Share of sub-queries that ask what another sub-query already asks (lower is better).
 
     With a judge: read from query_relevance's Q4 ("compared with the other
     sub-queries, does this one go after something they do not?"), which is
@@ -115,8 +115,18 @@ class SubqueryRedundancy(Metric):
     of the query tree only (`RunArchive.query_layer`), across branches: a
     parent and its own children overlap by design. Only a step that asks for
     the same information as another in other words is not unique; another
-    perspective, source or separate subtopic of the same object is. value =
-    steps judged not unique / steps with a Q4 answer.
+    perspective, source or separate subtopic of the same object is.
+
+        value = sub-queries judged not unique / sub-queries with a Q4 answer
+
+    Only the leaves of each researcher's plan count: the searches of a
+    researcher's own question (its initial search, and the repeat search of
+    that question after its sub-queries) are parent nodes, few and almost
+    never duplicates, and would dilute the share. They stay in
+    query_relevance. In deep research every researcher's planned sub-queries
+    are leaves, at whatever layer, so keeping only the deepest layer would
+    drop real repeat searches of the first level. `details.per_layer` gives
+    the share per layer; `details.with_parent_steps` the v4 value.
 
     Without a judge (`details.method` = "lexical"): sibling pairs whose
     symmetric BM25-weighted term overlap reaches the threshold, IDF over the
@@ -125,8 +135,8 @@ class SubqueryRedundancy(Metric):
     well under the threshold, and branches are never compared.
     """
 
-    name, category = "subquery_redundancy", "retrieval.query"
-    version = "4"           # 4: only a reworded request for the same facts is a duplicate
+    name, category = "subquery_redundancy", "retrieval.query_quality"
+    version = "5"           # 4: only a reworded request for the same facts is a duplicate; 5: sub-queries only
     higher_is_better = False
     DEFAULT_THRESHOLD = 0.6
 
@@ -139,6 +149,7 @@ class SubqueryRedundancy(Metric):
             res = self.skip(f"query_relevance: {qr.skipped}")
             res.llm = {**(qr.llm or {}), "shared": "query_relevance"}
             return res
+        parent = {u.span_id for u in archive.retrieval_units if u.is_core_query}
         steps = []
         for q in qr.details["per_query"]:
             q4 = (q.get("rubric") or {}).get("q4") if isinstance(q.get("rubric"), dict) else None
@@ -147,12 +158,24 @@ class SubqueryRedundancy(Metric):
                 unique = {"true": True, "false": False}.get(unique.strip().lower())
             if isinstance(unique, bool):
                 steps.append({"span_id": q["span_id"], "kind": q["kind"], "query": q["query"],
+                              "layer": q.get("layer"), "parent_step": q["span_id"] in parent,
                               "unique": unique, "evidence": q4.get("evidence", "")})
         if not steps:
             return self.skip("query_relevance returned no uniqueness answers")
-        dupes = [x for x in steps if not x["unique"]]
-        res = self.result(rounded(len(dupes) / len(steps)), method="judge_q4",
-                          steps=len(steps), not_unique=dupes)
+        leaves = [x for x in steps if not x["parent_step"]]
+        share = lambda xs: rounded(sum(not x["unique"] for x in xs) / len(xs)) if xs else None
+        per_layer = {}
+        for x in leaves:
+            per_layer.setdefault(x["layer"], []).append(x)
+        details = dict(method="judge_q4", steps=len(leaves), parent_steps=len(steps) - len(leaves),
+                       with_parent_steps=share(steps),
+                       per_layer={k: {"steps": len(v), "not_unique": sum(not x["unique"] for x in v),
+                                      "share": share(v)} for k, v in sorted(per_layer.items())},
+                       not_unique=[x for x in leaves if not x["unique"]])
+        if not leaves:
+            res = self.skip("no sub-query with a uniqueness answer", **details)
+        else:
+            res = self.result(share(leaves), **details)
         res.llm = {**(qr.llm or {}), "shared": "query_relevance"}
         return res
 
@@ -189,7 +212,7 @@ class DecompositionTreeQuality(Metric):
     returns a 0-10 total; the value is the mean of total/10 over parents.
     """
 
-    name, category = "decomposition_tree_quality", "retrieval.query"
+    name, category = "decomposition_tree_quality", "retrieval.query_quality"
     version = "3"           # 3: the judge sees the root-to-parent path
     MAX_TOTAL = 10
     uses_llm = True
@@ -261,7 +284,7 @@ class PlanAdherence(Metric):
     steps that make the difference.
     """
 
-    name, category = "plan_adherence", "retrieval.query"
+    name, category = "plan_adherence", "retrieval.retrieval_quality"
     version = "3"           # 2: deep steps with material but no learnings in details; 3: failed deep steps count as not completed
 
     async def score(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:

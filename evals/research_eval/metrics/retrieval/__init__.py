@@ -6,10 +6,10 @@ from .query import (DecompositionCoverage, DecompositionTreeQuality, PlanAdheren
 from .source import MaterialCoverage, SourceAuthority, SourceDiversity, SourceRecency
 
 RETRIEVAL_METRICS = (
-    # A. query
-    DecompositionCoverage, SubqueryRedundancy, DecompositionTreeQuality, PlanAdherence,
-    # B. source
-    SourceAuthority, SourceDiversity, SourceRecency, MaterialCoverage,
-    # C. efficiency
-    SourceUtilization, QueryRelevance, RetrievalOverlap,
+    # query quality: what the agent decided to search for
+    DecompositionCoverage, SubqueryRedundancy, DecompositionTreeQuality,
+    # source quality: the sources the report rests on
+    SourceAuthority, SourceDiversity, SourceRecency,
+    # retrieval quality: what the searches brought back and how it was used
+    PlanAdherence, RetrievalOverlap, MaterialCoverage, QueryRelevance, SourceUtilization,
 )

@@ -86,7 +86,7 @@ class SourceDiversity(Metric):
     `diversity_ratio` = distinct retrieved domains / retrieved sources was v1.
     """
 
-    name, category = "source_diversity", "retrieval.source"
+    name, category = "source_diversity", "retrieval.source_quality"
     version = "5"           # 3: entropy; 4: Gini-Simpson (Hurlbert's PIE); 5: no citations = 0, no fallback
 
     async def score(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:
@@ -170,7 +170,7 @@ class SourceAuthority(Metric):
     and the domains are listed in `fallback_domains`.
     """
 
-    name, category = "source_authority", "retrieval.source"
+    name, category = "source_authority", "retrieval.source_quality"
     version = "3"           # 3: no fallback to retrieved sources when nothing is cited
     uses_llm = True
     prompts = (DOMAIN_AUTHORITY,)
@@ -289,7 +289,7 @@ class SourceRecency(Metric):
     question about settled history an old source is no defect.
     """
 
-    name, category = "source_recency", "retrieval.source"
+    name, category = "source_recency", "retrieval.source_quality"
     version = "1"
     YEARS = 1
 
@@ -351,7 +351,7 @@ class MaterialCoverage(Metric):
     nothing; material covered but comprehensiveness none -> found, not written.
     """
 
-    name, category = "material_coverage", "retrieval.source"
+    name, category = "material_coverage", "retrieval.retrieval_quality"
     version = "1"
     uses_llm = True
     prompts = (MATERIAL_COVERAGE, KEY_POINTS)
