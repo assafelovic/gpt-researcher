@@ -642,8 +642,7 @@ Return ONLY a JSON object using this exact schema:
         self.researcher.visited_urls = results['visited_urls']
 
         # Set research sources
-        if results.get('sources'):
-            self.researcher.research_sources = results['sources']
+        self.researcher.research_sources = results.get('sources') or []
 
         # Log total execution time
         end_time = time.time()
