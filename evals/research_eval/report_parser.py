@@ -130,6 +130,7 @@ def parse_report(markdown_text: str, chunks_by_url: dict[str, list[str]] | None 
     sections: list[dict] = []
     path: list[tuple[int, str]] = []
     in_refs = False
+    refs_level = 0
     last_level = 0
     current: dict | None = None
     saw_refs = False
@@ -144,6 +145,8 @@ def parse_report(markdown_text: str, chunks_by_url: dict[str, list[str]] | None 
         tag = block["tag"]
         if tag in _HEADINGS:
             level, text = _HEADINGS[tag], block["text"]
+            if in_refs and level > refs_level:
+                continue        # a sub-heading of References ("Academic", "News"): still references
             if last_level and level > last_level + 1:
                 _add(warnings, "heading_level_jump")
             last_level = level
@@ -154,6 +157,7 @@ def parse_report(markdown_text: str, chunks_by_url: dict[str, list[str]] | None 
                     _add(warnings, "multiple_titles")
             in_refs = bool(REFERENCES_HEADING.match(text))
             if in_refs:
+                refs_level = level
                 saw_refs = True
                 current = None
                 continue
@@ -328,3 +332,54 @@ def cited_sentences(paragraph: dict, min_chars: int = 20) -> list[dict]:
 def report_sentences(parsed: dict) -> list[str]:
     """Body sentences, with URLs removed, for matching chunks against the text."""
     return [s for p in body_paragraphs(parsed) for s in paragraph_sentences(p)]
+
+
+_FENCE = re.compile(r"^\s{0,3}(```|~~~)")
+_HEADING_LINE = re.compile(r"^\s{0,3}(#{1,6})\s+(.*?)\s*#*\s*$")
+_NOT_PROSE = re.compile(r"^\s*([-*+]\s|\d+[.)]\s|\||>)")
+_SENTENCE_DONE = re.compile(r"[.!?。！？…)\]]$")
+_RULE = re.compile(r"^\s*([-*_])(\s*\1){2,}\s*$")
+
+
+def report_ending(markdown_text: str) -> dict:
+    """Signs that the report stops part-way, e.g. the writer ran out of output
+    tokens: the text is cut, but the run still ends "ok".
+
+    The body's last line (before a References heading) must not be a heading,
+    leave ** emphasis open, or, when it is a plain paragraph, stop without
+    closing punctuation (a citation's ")" counts as closing). The report's very
+    last line must not leave a link or bracket open, and code fences must close.
+    A missing references section alone is not a sign (instruction_following
+    checks it); it is reported as `references`.
+    """
+    lines = (markdown_text or "").rstrip().splitlines()
+    refs_at = next((i for i, l in enumerate(lines) if (m := _HEADING_LINE.match(l))
+                    and REFERENCES_HEADING.match(m.group(2))), None)
+    body = list(lines if refs_at is None else lines[:refs_at])
+    while body and (not body[-1].strip() or _RULE.match(body[-1])):
+        body.pop()
+    signals = []
+    if not body:
+        signals.append("empty_body")
+    else:
+        start = len(body) - 1
+        while start > 0 and body[start - 1].strip():
+            start -= 1
+        block, last = "\n".join(body[start:]), body[-1].strip()
+        if _HEADING_LINE.match(last):
+            signals.append("ends_with_heading")
+        if block.count("**") % 2:
+            signals.append("open_emphasis")
+        tail = re.sub(r"[*_`\"'”’»\s]+$", "", last)
+        if last.startswith("|") and not last.endswith("|"):
+            signals.append("open_table_row")
+        elif not _NOT_PROSE.match(last) and not _HEADING_LINE.match(last) \
+                and not _BARE_URL.search(tail[-200:]) and not _SENTENCE_DONE.search(tail):
+            signals.append("ends_mid_sentence")
+    final = lines[-1] if lines else ""
+    if final.count("[") > final.count("]") or final.count("(") > final.count(")"):
+        signals.append("open_link")
+    if sum(1 for l in lines if _FENCE.match(l)) % 2:
+        signals.append("open_code_block")
+    return {"complete": not signals, "signals": signals, "references": refs_at is not None,
+            "last_line": (body[-1].strip() if body else "")[-160:]}

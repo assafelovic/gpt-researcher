@@ -339,12 +339,31 @@ async def test_instruction_following(ctx):
     assert c["no_toc"] and c["in_text_citations"]
     assert c["cites_only_retrieved"] is False
     assert r.details["cited_not_retrieved"] == [URL["ghost"]]
-    assert r.value == pytest.approx(6 / 7, abs=1e-3)
+    assert c["complete"] and r.details["ending"]["signals"] == []
+    assert r.value == pytest.approx(7 / 8, abs=1e-3)
     long = await InstructionFollowing().score(make_archive(config={"mode": "default"}), ctx)
     assert long.details["min_words"] == 1200 and long.details["checks"]["min_words"] is False
     # Detailed reports get their table of contents from code: not held against the writer.
     detailed = await InstructionFollowing().score(make_archive(config={"mode": "detailed"}), ctx)
-    assert "no_toc" not in detailed.details["checks"] and len(detailed.details["checks"]) == 6
+    assert "no_toc" not in detailed.details["checks"] and len(detailed.details["checks"]) == 7
+    # The writer ran out of tokens mid-heading: the run is "ok", the report is not complete.
+    cut = REPORT.split("## Outlook")[0] + "## Outlook\n\nDiversifying suppliers is **the"
+    r = await InstructionFollowing().score(make_archive(report=cut), ctx)
+    assert r.details["checks"]["complete"] is False and r.details["checks"]["references"] is False
+    assert set(r.details["ending"]["signals"]) == {"open_emphasis", "ends_mid_sentence"}
+
+
+def test_report_ending_signs():
+    from evals.research_eval.report_parser import report_ending
+    ok = "# T\n\n## A\n\nDone ([x](https://a.com)).\n\n---\n\n## References\n\n- [a](https://a.com)"
+    assert report_ending(ok)["complete"] and report_ending(ok)["references"]
+    assert report_ending("# T\n\n## A\n\n- item one\n- item two")["complete"]     # lists need no full stop
+    assert report_ending("# T\n\n## A\n\nThe factors are:")["signals"] == ["ends_mid_sentence"]
+    assert report_ending("# T\n\n## A\n\nText.\n\n## B")["signals"] == ["ends_with_heading"]
+    assert report_ending("# T\n\n## A\n\n| a | b |\n|---|---|\n| 1 | 2")["signals"] == ["open_table_row"]
+    cut_refs = ok + "\n- [b](https://b.com/pa"
+    assert report_ending(cut_refs)["signals"] == ["open_link"]
+    assert "open_code_block" in report_ending("# T\n\n## A\n\n```\ncode")["signals"]
 
 
 # --- judged writing metrics ----------------------------------------------------
@@ -355,6 +374,7 @@ async def test_comprehensiveness(ctx):
     none = r.details["per_point"][2]
     assert none["coverage"] == "none" and none["retrieved_hint"]["url"] == URL["recycling"]
     assert r.details["omitted_but_retrieved"] == ["EU battery regulation"]
+    assert r.details["unanswered"] == 0 and all(e["answered"] for e in r.details["per_point"])
     prompt = next(p for p in ctx.fake.prompts if "a finished report covers" in p)
     assert "https://" not in prompt.split("Report:")[1]
 

@@ -13,7 +13,7 @@ from ...citation_audit import material_idf
 from ...key_points import get_key_points
 from ...prompts import (COMPREHENSIVENESS, KEY_POINTS, QUALITY_RUBRIC, QUALITY_SCORE,
                         TOPIC_RELEVANCE)
-from ...report_parser import TOC_HEADING, body_paragraphs, cited_urls
+from ...report_parser import TOC_HEADING, body_paragraphs, cited_urls, report_ending
 from ..base import Metric, MetricResult, ScoringContext, rounded
 from ..lexical import weighted_overlap
 from .common import batches, body_word_count, paragraph_plain, report_text
@@ -37,7 +37,7 @@ class Comprehensiveness(Metric):
     """
 
     name, category = "comprehensiveness", "generation.writing"
-    version = "3"           # 3: records the insights the judge found
+    version = "4"           # 4: key points the reply skipped are counted in details
     uses_llm = True
     prompts = (COMPREHENSIVENESS, KEY_POINTS)
     HINT = 0.6
@@ -74,7 +74,8 @@ class Comprehensiveness(Metric):
             cov = str(got.get(i, {}).get("coverage", "none")).lower()
             cov = cov if cov in COVERAGE_POINTS else "none"
             total += COVERAGE_POINTS[cov]
-            entry = {"key_point": p, "coverage": cov, "evidence": got.get(i, {}).get("evidence", "")}
+            entry = {"key_point": p, "coverage": cov, "evidence": got.get(i, {}).get("evidence", ""),
+                     "answered": i in got}
             if cov == "none" and chunk_terms:
                 best = max(((weighted_overlap(p, t, idf), c) for c, t in chunk_terms), key=lambda x: x[0])
                 entry["retrieved_hint"] = {"best_overlap": round(best[0], 3), "chunk_id": best[1],
@@ -84,6 +85,8 @@ class Comprehensiveness(Metric):
                    if e.get("retrieved_hint", {}).get("best_overlap", 0) >= threshold]
         res = self.result(rounded(total / len(points)), key_points=provenance,
                           per_point=per_point, omitted_but_retrieved=omitted,
+                          # key points the reply skipped: scored "none", as an omission
+                          unanswered=sum(not e["answered"] for e in per_point),
                           report_truncated=truncated)
         res.llm = self.llm_record(ctx, [r])
         return res
@@ -206,10 +209,14 @@ class InstructionFollowing(Metric):
     references           a references section that lists links, without duplicates
     in_text_citations    the body carries hyperlinked citations
     cites_only_retrieved every URL cited in the body was retrieved by the agent
+    complete             the report does not stop part-way (`report_parser.report_ending`:
+                         no open emphasis, link or code block, and the body's last
+                         paragraph ends a sentence), e.g. when the writer ran out of
+                         output tokens; the run still ends "ok" in that case
     """
 
     name, category = "instruction_following", "generation.writing"
-    version = "3"           # 2: no_toc skipped in detailed mode; 3: duplicate references detectable
+    version = "4"           # 2: no_toc skipped in detailed mode; 3: duplicate references detectable; 4: complete
     MIN_WORDS = 1200
 
     async def score(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:
@@ -225,6 +232,7 @@ class InstructionFollowing(Metric):
         refs = [normalize_url(u) for u in parsed.get("references_listed", parsed["references"])]
         not_retrieved = [u for u in cited if normalize_url(u) not in archive.chunks_by_url]
         headings = {h for s in parsed["sections"] for h in s["heading_path"]}
+        ending = report_ending(archive.report_markdown)
         checks = {
             "min_words": words >= min_words,
             "single_title": not ({"no_title", "multiple_titles"} & set(w)),
@@ -236,11 +244,12 @@ class InstructionFollowing(Metric):
             "references": bool(refs) and len(set(refs)) == len(refs),
             "in_text_citations": bool(cited),
             "cites_only_retrieved": not not_retrieved,
+            "complete": ending["complete"],
         }
         return self.result(rounded(sum(checks.values()) / len(checks)), checks=checks,
                            words=words, min_words=min_words, parse_warnings=w,
                            duplicate_references=len(refs) - len(set(refs)),
-                           cited_not_retrieved=not_retrieved)
+                           cited_not_retrieved=not_retrieved, ending=ending)
 
 
 class TopicRelevance(Metric):

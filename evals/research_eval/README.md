@@ -63,7 +63,25 @@ python -m evals.research_eval.score RUNS --judge-salt noise1        # ask the ju
 python -m evals.research_eval.perturb make RUN.json [RUN.json ...] --out DIR
 python -m evals.research_eval.score DIR/*__*.json --results-dir DIR/results   # not manifest.json
 python -m evals.research_eval.perturb report DIR/manifest.json --results-dir DIR/results
+
+# Integrity audit: is every input counted, and counted once? (integrity.py, no model calls)
+python -m evals.research_eval.integrity RUNS/*.json --results-dir RESULTS --json integrity.json
 ```
+
+The integrity audit checks the bookkeeping, not the judgments: for each archive and its
+latest score record it compares counts that must agree and measures what each limit
+cut. Report: body links = parsed citations, body words in parsed paragraphs, which
+paragraphs the citation audit leaves out and why, References sub-headings, whether the
+report stops part-way. Trace: chunk ids resolve, no chunk outside a search step, no page
+swallowed by the chunk before it, chunks without a URL, failed deep steps. Prompts: the
+whole report within `REPORT_CHARS`, tree-quality path entries cut, audit passages cut at
+`PASSAGE_CHARS`, chunks of cited pages left to the recheck, query-relevance URLs shown.
+Audit: every audited paragraph judged once, judge errors, the audit's sources = the
+paragraph's citations, claims tied to items that exist, the same fact claims in
+citation recall's and faithfulness's denominators, every unsupported fact rechecked.
+Metrics: skips, judge errors, items a judge reply skipped. Each check is ok / note (left
+out by design, amount given) / warn (lost or cut) / fail (counts disagree); any fail
+sets exit code 1.
 
 The perturbation test checks the evaluator, not the agent. `perturb make` copies an
 archive and injects one known defect per copy, rule-based and deterministic: half the
@@ -201,10 +219,10 @@ can legitimately differ: material on a key point can arrive from a search not ai
 
 | Category | Metric | Value | LLM cost per run |
 |---|---|---|---|
-| Writing | `comprehensiveness` | (full + 0.5 partial key points) / K; uncovered points that a retrieved chunk seems to discuss are listed as `omitted_but_retrieved` | 1 (+ key points, shared) |
+| Writing | `comprehensiveness` | (full + 0.5 partial key points) / K; uncovered points that a retrieved chunk seems to discuss are listed as `omitted_but_retrieved`; a point the judge's reply skips scores none and is counted in `details.unanswered` | 1 (+ key points, shared) |
 | Writing | `insight` | weighted rubric score / 10; rubric (3-5 criteria) generated once per question; `details.insights_found` records the insights the judge read | rubric: 1 per question, cached; scoring: 1, shared with readability |
 | Writing | `readability` | same, readability criteria | shared |
-| Writing | `instruction_following` | passed / 7 rule checks (6 in detailed mode, whose TOC is inserted by code): min words, one title, clean headings, no TOC, references, in-text citations, cites only retrieved URLs | 0 |
+| Writing | `instruction_following` | passed / 8 rule checks (7 in detailed mode, whose TOC is inserted by code): min words, one title, clean headings, no TOC, references, in-text citations, cites only retrieved URLs, complete (the report does not stop part-way: open emphasis / link / code block, or a last paragraph without closing punctuation; `details.ending`) | 0 |
 | Writing | `topic_relevance` | (yes + idk) / paragraphs | 1 per ~20k chars |
 | Citation | `citation_recall` | per claim: fact claims supported by their own citations / all fact claims (as in ALCE, an uncited fact counts as unsupported). Claims come from the audit (checkable, atomic, self-contained; typed `fact` or `analysis`: the writer's own evaluation, ranking, recommendation or conclusion, which recall, precision, effective citations and the faithfulness value leave out; faithfulness reports it separately); supported = verdict "supported" (strict) and a passage it rests on is from a URL its own item cites. `details.cited_only` = supported cited claims / cited claims (are the citations given right?); `details.cited_share` = cited claims / all fact claims; `details.unit_level` keeps the former ALCE per-citing-unit value | audit (below) |
 | Citation | `citation_precision` | per claim: citations that back a supported claim of their item / citations (item-URL pairs; items with no factual claim left out; in a table, each URL once per table, precise if it is for any row). `details.unit_level` keeps the ALCE value; `details.redundant_rate`: precise citations whose every backed claim another URL of the item also backs (corroboration, kept out of the value) | audit |
