@@ -279,26 +279,43 @@ class SubqueryRedundancy(Metric):
 
 
 class DecompositionTreeQuality(Metric):
-    """Judge rubric per parent node: coverage, specificity, searchability,
-    relevance to the parent, and relevance to the original question (Q5, which
-    catches a deep tree drifting away from the question one level at a time).
+    """How well each parent query was split: every child judged on its own,
+    then the split as a whole.
 
-    One call per decomposition (parent + all its children). The judge also sees
-    the whole path from the original question down to the parent
-    (`RunArchive.query_path`), so Q5 can follow drift across levels. Each call
-    returns a 0-10 total; the value is the mean of total/10 over parents.
+    One call per decomposition that was searched (deep research's clarifying
+    questions are left out: they are folded into one query, never searched).
+    The judge sees the whole path from the original question down to the
+    parent (`RunArchive.query_path`) and answers four yes/no checks per child:
+
+        narrower         asks for a part of the parent, not the parent restated
+        searchable       would return focused results as it is
+        serves_parent    helps answer the parent
+        serves_question  still serves the original question (catches drift)
+
+    and, for the split, lists the parent's aspects (at most 6) with the
+    children aimed at each: coverage = aspects with a child / aspects.
+
+        parent score = (pass rate of each of the four checks + coverage) / 5
+        value        = mean parent score
+
+    The five parts weigh the same, as Q1-Q5 did in v3; per-child answers make
+    a split with one restated or drifting child score below a clean one,
+    which v3's 0-2 impression of the whole group rarely did.
+    `details.checks` gives each check's pass rate over all children and
+    `details.coverage` the mean coverage; `details.weak_children` lists the
+    children that failed a check.
     """
 
     name, category = "decomposition_tree_quality", "retrieval.query_quality"
-    version = "3"           # 3: the judge sees the root-to-parent path
-    MAX_TOTAL = 10
+    version = "4"           # 3: the judge sees the root-to-parent path; 4: per-child checks + aspect coverage
     uses_llm = True
     prompts = (TREE_QUALITY,)
+    CHECKS = ("narrower", "searchable", "serves_parent", "serves_question")
 
     async def score(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:
         if ctx.judge is None:
             return self.skip("no judge configured")
-        decs = [d for d in archive.decompositions if d.child_queries]
+        decs = [d for d in archive.decompositions if d.child_queries and d.kind != "deep_plan"]
         if not decs:
             return self.skip("no decompositions")
 
@@ -310,22 +327,54 @@ class DecompositionTreeQuality(Metric):
                 question=archive.query.strip(),
                 path="\n".join(f"{i}. {self._short(q)}" for i, q in enumerate(path)),
                 parent=d.parent_query.strip(),
-                children="\n".join(f"- {c}" for c in d.child_queries))
+                children="\n".join(f"{i}. {c}" for i, c in enumerate(d.child_queries, 1)))
             return d, await ctx.judge.ask(TREE_QUALITY.id, TREE_QUALITY.version, prompt)
 
         results = await ctx.gather(judge_one(d) for d in decs)
-        per_parent, scores = [], []
+        per_parent, scores, verdicts, coverages, weak = [], [], [], [], []
         for d, r in results:
-            total = _number((r.parsed or {}).get("total")) if isinstance(r.parsed, dict) else None
-            norm = None if total is None else max(0.0, min(1.0, total / self.MAX_TOTAL))
-            if norm is not None:
-                scores.append(norm)
+            parsed = r.parsed if isinstance(r.parsed, dict) else {}
+            n = len(d.child_queries)
+            kids = {}
+            for e in parsed.get("children") or []:
+                try:
+                    i = int(e["child"])
+                except (KeyError, TypeError, ValueError):
+                    continue
+                answers = {c: _bool(e.get(c)) for c in self.CHECKS}
+                if 1 <= i <= n and all(v is not None for v in answers.values()):
+                    kids[i] = {**answers, "evidence": str(e.get("evidence") or "")}
+            aspects = []
+            for e in parsed.get("aspects") or []:
+                if isinstance(e, dict) and str(e.get("aspect") or "").strip():
+                    nums = [k for k in e.get("children") or [] if isinstance(k, int) and 1 <= k <= n]
+                    aspects.append({"aspect": str(e["aspect"]), "children": nums})
+            rates = {c: (sum(k[c] for k in kids.values()) / len(kids) if kids else None) for c in self.CHECKS}
+            coverage = sum(bool(a["children"]) for a in aspects) / len(aspects) if aspects else None
+            score = None
+            if kids and coverage is not None:
+                score = (sum(rates.values()) + coverage) / (len(self.CHECKS) + 1)
+                scores.append(score)
+                coverages.append(coverage)
+                verdicts.extend(kids.values())
+                for i, k in sorted(kids.items()):
+                    failed = [c for c in self.CHECKS if not k[c]]
+                    if failed:
+                        weak.append({"parent": d.parent_query.strip()[:200], "child": d.child_queries[i - 1],
+                                     "failed": failed, "evidence": k["evidence"]})
             per_parent.append({"span_id": d.span_id, "kind": d.kind, "parent": d.parent_query,
-                               "depth": len(archive.query_path(d.span_id)) - 1,
-                               "n_children": len(d.child_queries), "score": rounded(norm),
-                               "rubric": r.parsed, "error": r.error})
-        res = self.result(rounded(sum(scores) / len(scores)) if scores else None,
-                          per_parent=per_parent, scored_parents=len(scores))
+                               "depth": len(archive.query_path(d.span_id)) - 1, "n_children": n,
+                               "score": rounded(score), "coverage": rounded(coverage),
+                               "checks": {c: rounded(v) for c, v in rates.items()},
+                               "children": [{"child": d.child_queries[i - 1], **kids[i]} for i in sorted(kids)],
+                               "unanswered_children": n - len(kids), "aspects": aspects, "error": r.error})
+        res = self.result(
+            rounded(sum(scores) / len(scores)) if scores else None, per_parent=per_parent,
+            scored_parents=len(scores),
+            checks={c: rounded(sum(v[c] for v in verdicts) / len(verdicts)) if verdicts else None
+                    for c in self.CHECKS},
+            coverage=rounded(sum(coverages) / len(coverages)) if coverages else None,
+            children=len(verdicts), weak_children=weak)
         if not scores:
             res.skipped = "every judge call failed"
         res.llm = self.llm_record(ctx, [r for _, r in results])
@@ -424,6 +473,14 @@ class PlanAdherence(Metric):
                      if s["name"] == "research" and s["attributes"].get("query") == query
                      and s["attributes"].get("parent_query")]
         return [s for s in spans if archive.subtree_chunk_ids(s["span_id"])]
+
+
+def _bool(x) -> bool | None:
+    if isinstance(x, bool):
+        return x
+    if isinstance(x, str):
+        return {"true": True, "yes": True, "false": False, "no": False}.get(x.strip().lower())
+    return None
 
 
 def _number(x) -> float | None:

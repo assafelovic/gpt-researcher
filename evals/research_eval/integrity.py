@@ -407,6 +407,9 @@ def metric_checks(record: dict) -> list[dict]:
     if d("decomposition_tree_quality").get("per_parent"):
         gaps["decomposition_tree_quality: parents without a score"] = \
             sum(q.get("score") is None for q in d("decomposition_tree_quality")["per_parent"])
+        gaps["decomposition_tree_quality: children without a verdict"] = \
+            sum(q.get("unanswered_children") or 0 for q in d("decomposition_tree_quality")["per_parent"]
+                if q.get("score") is not None)
     if "unanswered" in d("subquery_redundancy"):
         gaps["subquery_redundancy: query-tree nodes without a verdict"] = len(d("subquery_redundancy")["unanswered"])
     for k in ("comprehensiveness", "material_coverage"):

@@ -123,8 +123,14 @@ class FakeJudge:
                 {"point": int(i), "evidence": "",
                  "subqueries": [int(j) for j, q in subs if p.split()[0] in q]} for i, p in points]})
         if "how a research agent split a query" in prompt:
-            return json.dumps({"q1": {"score": 1}, "q2": {"score": 2}, "q3": {"score": 2},
-                               "q4": {"score": 1}, "q5": {"score": 2}, "total": 8})
+            # Every child passes, except that "sodium" serves neither the parent nor the
+            # question; of two aspects only cobalt is picked up.
+            kids = re.findall(r"^(\d+)\. (.+)$", prompt.split("Child queries:\n")[1].split("\n\n")[0], re.M)
+            return json.dumps({
+                "children": [{"child": int(n), "narrower": True, "searchable": "yes",
+                              "serves_parent": "sodium" not in q, "serves_question": "sodium" not in q,
+                              "evidence": q} for n, q in kids],
+                "aspects": [{"aspect": "cobalt", "children": [1]}, {"aspect": "recycling", "children": []}]})
         if "auditing the search plan of a research agent" in prompt:
             # A query repeats the first earlier one it starts with (ancestors included:
             # the metric must drop those marks).
@@ -302,14 +308,29 @@ async def test_subquery_redundancy_lexical_fallback_flags_near_duplicates():
     assert r.higher_is_better is False
 
 
-async def test_tree_quality_uses_judge_total(ctx):
+async def test_tree_quality_judges_each_child_and_the_aspects_of_the_split(ctx):
     r = await DecompositionTreeQuality().score(make_archive(), ctx)
-    assert r.value == 0.8                                   # 8 / 10
+    # Checks over 4 children: 1, 1, 0.75, 0.75; coverage 1 of 2 aspects.
+    assert r.value == pytest.approx((1 + 1 + 0.75 + 0.75 + 0.5) / 5, abs=1e-3)
+    assert r.details["checks"] == {"narrower": 1.0, "searchable": 1.0, "serves_parent": 0.75,
+                                   "serves_question": 0.75}
+    assert r.details["coverage"] == 0.5 and r.details["children"] == 4
+    [w] = r.details["weak_children"]
+    assert w["child"] == "sodium battery alternatives" and w["failed"] == ["serves_parent", "serves_question"]
     assert r.llm["requests"] == r.llm["api_calls"] == 1 and r.llm["judge_model"] == "judge-x"
-    assert r.llm["prompts"]["tree_quality"]["version"] == "3"
+    assert r.llm["prompts"]["tree_quality"]["version"] == "4"
     prompt = next(p for p in ctx.fake.prompts if "Path from the original question" in p)
     assert f"0. {CORE}" in prompt and r.details["per_parent"][0]["depth"] == 0
     assert f"Original research question (the root of the whole search tree):\n{CORE}" in prompt
+    assert "4. sodium battery alternatives" in prompt
+
+
+async def test_tree_quality_leaves_out_deep_clarifying_questions(ctx):
+    a = make_archive()
+    a.data["spans"].append({"span_id": "q9", "parent_id": "s2", "name": "deep_plan",
+                            "attributes": {"query": CORE, "questions": ["Which regions?", "Which years?"]}})
+    r = await DecompositionTreeQuality().score(RunArchive(a.data), ctx)
+    assert [p["kind"] for p in r.details["per_parent"]] == ["plan"]
 
 
 def test_query_path_runs_from_the_question_down():

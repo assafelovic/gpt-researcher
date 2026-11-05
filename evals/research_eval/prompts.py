@@ -69,10 +69,10 @@ Return ONLY JSON, one entry per key point, in order:
 """.strip())
 
 
-TREE_QUALITY = Prompt("tree_quality", "3", """
+TREE_QUALITY = Prompt("tree_quality", "4", """
 You are auditing how a research agent split a query into sub-queries before
-searching the web. Judge the split below. Answer the five questions IN ORDER;
-for each, quote the parent or child text your answer rests on, then score it.
+searching the web. Judge each child query on its own, then the split as a
+whole. For every answer, quote the parent or child words it rests on.
 
 Original research question (the root of the whole search tree):
 {question}
@@ -87,32 +87,29 @@ Parent query:
 Child queries:
 {children}
 
-Q1 Coverage: are all aspects of the parent picked up by at least one child?
-   2 = every aspect, 1 = most aspects, 0 = major aspects missing.
-Q2 Specificity: are the children narrower and more concrete than the parent?
-   2 = all of them, 1 = some, 0 = they mostly restate the parent.
-Q3 Searchability: could each child be pasted into a web search engine as-is and
-   return focused results? 2 = all, 1 = some, 0 = few or none.
-Q4 Relevance: does every child serve the parent? Moderate extension beyond the
-   parent's literal scope is acceptable when it helps answer it.
-   2 = all relevant, 1 = one or two drift, 0 = several are off-topic.
-Q5 Root relevance: do the children still serve the ORIGINAL research question?
-   A deep tree can stay faithful to each parent while drifting away from the
-   question step by step, for example toward one firm's business situation or a
-   detail the question never asked about. Use the path above to see how far
-   the branch has already moved. If the parent is the original question
-   itself, score Q5 the same as Q4.
-   2 = all serve it, 1 = one or two have drifted, 0 = several have drifted.
+For EACH child, answer true or false:
+- narrower: it asks for one part of the parent, or a more concrete angle on
+  it. False when it restates the whole parent in other words.
+- searchable: pasted into a web search engine as it is, it would return
+  focused results. False when it is too vague, or a pile of terms about
+  several different things.
+- serves_parent: what it asks helps answer the parent. Moderate extension
+  beyond the parent's literal scope counts when it helps answer it.
+- serves_question: it still serves the ORIGINAL research question. A deep
+  tree can stay faithful to each parent while drifting away from the question
+  step by step, for example toward one firm's business situation or a detail
+  the question never asked about. Use the path above to see how far the
+  branch has already moved. If the parent is the original question itself,
+  give the same answer as serves_parent.
 
-Finally give "total", the sum of the five scores (0-10).
+Then, for the split as a whole, list the distinct aspects of the parent (at
+most 6, each a short phrase) and, for each aspect, the numbers of the children
+aimed at it (an empty list when no child picks it up).
 
 Return ONLY JSON:
-{{"q1": {{"evidence": "...", "score": 0}},
-  "q2": {{"evidence": "...", "score": 0}},
-  "q3": {{"evidence": "...", "score": 0}},
-  "q4": {{"evidence": "...", "score": 0}},
-  "q5": {{"evidence": "...", "score": 0}},
-  "total": 0}}
+{{"children": [{{"child": 1, "narrower": true, "searchable": true,
+                "serves_parent": true, "serves_question": true, "evidence": "..."}}],
+  "aspects": [{{"aspect": "...", "children": [1]}}]}}
 """.strip())
 
 
