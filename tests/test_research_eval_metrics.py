@@ -229,8 +229,9 @@ async def test_subquery_redundancy_takes_the_majority_of_three_calls(ctx):
         "lithium refining capacity worldwide flaky"
     r = await SubqueryRedundancy().score(RunArchive(a.data), ctx)
     assert r.details["replies"] == 3
-    assert {u["query"]: u["marks"] for u in r.details["unstable"]} == {
-        "lithium refining capacity worldwide flaky": 1, "lithium refining capacity in Europe flaky2": 2}
+    assert {u["query"]: (u["marks"], u["counted"]) for u in r.details["unstable"]} == {
+        "lithium refining capacity worldwide flaky": (1, False), "lithium refining capacity in Europe flaky2": (2, True)}
+    assert {u["repeats"] for u in r.details["unstable"]} == {"lithium refining capacity"}
     dups = {d["query"] for d in r.details["not_unique"]}
     assert dups == {"Congo cobalt output 2024 figures", "lithium refining capacity in Europe flaky2"}
 

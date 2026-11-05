@@ -209,11 +209,12 @@ class SubqueryRedundancy(Metric):
         need = len(ballots) // 2 + 1
         links, unstable = {}, []
         for i, ms in sorted(marks.items()):
+            targets = [j for j, _ in ms]
+            j = min(set(targets), key=lambda t: (-targets.count(t), t))
             if len(ms) < len(ballots):
-                unstable.append({"query": nodes[i - 1].query, "marks": len(ms), "replies": len(ballots)})
+                unstable.append({"query": nodes[i - 1].query, "repeats": nodes[j - 1].query,
+                                 "marks": len(ms), "replies": len(ballots), "counted": len(ms) >= need})
             if len(ms) >= need:
-                targets = [j for j, _ in ms]
-                j = min(set(targets), key=lambda t: (-targets.count(t), t))
                 links[i] = (j, next(ev for t, ev in ms if t == j))
         # Groups of repeats; the node searched first is each group's original.
         group = list(range(len(nodes) + 1))
