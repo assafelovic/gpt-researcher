@@ -39,7 +39,8 @@ async def scored(tmp_path, ctx, archive):
     # The scripted judge answers the generation prompts and subquery_redundancy's;
     # the other retrieval metrics it runs are rule-based.
     metrics = [m for m in all_metrics() if not m.uses_embeddings
-               and (m.category.startswith("generation") or not m.uses_llm)]
+               and (m.category.startswith("generation") or not m.uses_llm
+                    or m.name == "subquery_redundancy")]
     record = await score_archive(archive, metrics, ctx)
     save_results(record, tmp_path / "results")
     return check_run(write(tmp_path, archive), tmp_path / "results"), record

@@ -145,6 +145,7 @@ class SubqueryRedundancy(Metric):
     version = "7"           # 4: only a reworded request for the same facts; 5: sub-queries only;
                             # 6: own call per layer over every node; 7: whole tree but ancestors, one call
     higher_is_better = False
+    uses_llm = True         # the lexical fallback only runs when no judge is configured at all
     prompts = (SUBQUERY_REDUNDANCY,)
     DEFAULT_THRESHOLD = 0.6
 
