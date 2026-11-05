@@ -25,7 +25,7 @@ dataset/questions_*.jsonl -> runner.py -> capture.py (hooks) -> runs/<dataset>/<
                                                                     |
                                        score.py -> metrics/ -> results/<run_id>/<scorer_version>.json
                                                       ^
-                                     cache/research_eval.sqlite, judge.py, prompts.py
+                                     cache/research_eval.sqlite, judge.py, prompts/
 ```
 
 | Module | Role |
@@ -37,7 +37,7 @@ dataset/questions_*.jsonl -> runner.py -> capture.py (hooks) -> runs/<dataset>/<
 | `report_parser.py` | Python-Markdown (+tables) -> sections, paragraphs, citations, evidence, parse warnings. |
 | `cache.py` | One SQLite file: `question`, `domain`, `llm`, `embedding` namespaces. |
 | `judge.py` | Cached judge (model from `evals/judge.py`) and cached embedder (repo `EMBEDDING` setting). |
-| `prompts.py` | Versioned rubric prompts; version + content hash go into cache keys and results. |
+| `prompts/` | Every judge prompt as its own `<id>.md` file (header: id, version, metrics that use it), shared definitions in `prompts/skills/`, `versions.json` locking each version to its text hash; see `prompts/README.md`. Version + content hash go into cache keys and results. |
 | `key_points.py` | Per-question key points: frozen file > cache > one judge call. |
 | `citation_audit.py` | Shared paragraph-level judge audit: claims, ALCE sentence checks, which chunks were used. |
 | `metrics/` | `Metric` interface and registry; `retrieval/` holds the nine retrieval metrics, `generation/` the thirteen generation ones. |

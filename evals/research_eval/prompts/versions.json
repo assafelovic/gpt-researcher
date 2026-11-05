@@ -1,0 +1,58 @@
+{
+  "claim_recheck": {
+    "version": "3",
+    "hash": "6dc865c7dfc2"
+  },
+  "comprehensiveness": {
+    "version": "1",
+    "hash": "5817c222365b"
+  },
+  "decomposition_coverage": {
+    "version": "1",
+    "hash": "258c65ba2f97"
+  },
+  "domain_authority": {
+    "version": "1",
+    "hash": "b7ace21db12d"
+  },
+  "key_points": {
+    "version": "1",
+    "hash": "5925e262d939"
+  },
+  "material_coverage": {
+    "version": "1",
+    "hash": "469172cde44a"
+  },
+  "paragraph_audit": {
+    "version": "4",
+    "hash": "e29ab3db631e"
+  },
+  "quality_rubric": {
+    "version": "1",
+    "hash": "6c5429c17258"
+  },
+  "quality_score": {
+    "version": "2",
+    "hash": "6a89c7c3a57f"
+  },
+  "query_relevance": {
+    "version": "3",
+    "hash": "d9ac9d414ed3"
+  },
+  "subquery_redundancy": {
+    "version": "2",
+    "hash": "ce4a09639a9e"
+  },
+  "topic_relevance": {
+    "version": "1",
+    "hash": "17a7821774a5"
+  },
+  "toxicity_bias": {
+    "version": "1",
+    "hash": "00f304cf3d0d"
+  },
+  "tree_quality": {
+    "version": "4",
+    "hash": "fd0c7ffedd03"
+  }
+}
