@@ -1,6 +1,7 @@
 ---
 id: query_relevance
 version: 3
+group: Retrieval quality
 used_by: query_relevance
 ---
 

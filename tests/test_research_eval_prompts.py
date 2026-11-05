@@ -42,3 +42,14 @@ def test_include_pulls_one_skill_section(tmp_path, monkeypatch):
     assert P._expand("x\n@include s#beta\ny", tmp_path / "p.md") == "x\nB text.\ny"
     with pytest.raises(KeyError):
         P._expand("@include s#gamma", tmp_path / "p.md")
+
+
+def test_query_quality_prompts_share_the_skill_definitions():
+    skill = P.skill_sections("query_quality")
+    assert {"aspect", "aimed_at", "narrower", "searchable", "serves_parent", "drift", "repeat"} <= set(skill)
+    for pid, sections in {"tree_quality": ["narrower", "searchable", "serves_parent", "drift", "aspect", "aimed_at"],
+                          "subquery_redundancy": ["repeat"], "decomposition_coverage": ["aimed_at"]}.items():
+        t = P.load(pid).template
+        assert "@include" not in t
+        for sec in sections:
+            assert skill[sec] in t, (pid, sec)

@@ -226,7 +226,7 @@ async def test_subquery_redundancy_judges_every_node_in_one_call(ctx):
     assert r.value == pytest.approx(1 / 3, abs=1e-3) and r.higher_is_better is False
     assert sum("auditing the search plan" in p for p in ctx.fake.prompts) == 3     # three votes
     assert r.details["votes"] == 3 and r.details["replies"] == 3 and r.details["unstable"] == []
-    assert r.llm["prompts"]["subquery_redundancy"]["version"] == "2"
+    assert r.llm["prompts"]["subquery_redundancy"]["version"] == "3"
 
 
 async def test_subquery_redundancy_takes_the_majority_of_three_calls(ctx):
@@ -318,7 +318,7 @@ async def test_tree_quality_judges_each_child_and_the_aspects_of_the_split(ctx):
     [w] = r.details["weak_children"]
     assert w["child"] == "sodium battery alternatives" and w["failed"] == ["serves_parent", "serves_question"]
     assert r.llm["requests"] == r.llm["api_calls"] == 1 and r.llm["judge_model"] == "judge-x"
-    assert r.llm["prompts"]["tree_quality"]["version"] == "4"
+    assert r.llm["prompts"]["tree_quality"]["version"] == "5"
     prompt = next(p for p in ctx.fake.prompts if "Path from the original question" in p)
     assert f"0. {CORE}" in prompt and r.details["per_parent"][0]["depth"] == 0
     assert f"Original research question (the root of the whole search tree):\n{CORE}" in prompt

@@ -1,6 +1,7 @@
 ---
 id: paragraph_audit
 version: 4
+group: Writing authority
 used_by: citation audit (citation_audit.py), source_utilization, citation_recall, citation_precision, effective_citations, faithfulness
 ---
 

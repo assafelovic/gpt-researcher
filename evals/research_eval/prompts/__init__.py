@@ -32,7 +32,7 @@ HERE = Path(__file__).parent
 SKILLS = HERE / "skills"
 LOCK = HERE / "versions.json"
 PLACEHOLDER = re.compile(r"\{([a-z_][a-z0-9_]*)\}")
-INCLUDE = re.compile(r"^@include\s+([\w-]+)#([\w-]+)\s*$", re.M)
+INCLUDE = re.compile(r"^@include[ \t]+([\w-]+)#([\w-]+)[ \t]*$", re.M)
 
 
 @dataclass(frozen=True)
@@ -41,6 +41,8 @@ class Prompt:
     version: str
     template: str
     used_by: tuple[str, ...] = field(default=(), compare=False)
+    group: str = field(default="", compare=False)
+    includes: tuple[str, ...] = field(default=(), compare=False)    # skill sections pulled in
 
     @property
     def hash(self) -> str:
@@ -96,7 +98,8 @@ def load(prompt_id: str) -> Prompt:
     if head.get("id") != prompt_id:
         raise ValueError(f"{path.name}: id {head.get('id')!r} does not match the file name")
     used_by = tuple(u.strip() for u in head.get("used_by", "").split(",") if u.strip())
-    return Prompt(prompt_id, head["version"], _expand(m.group(2), path).strip(), used_by)
+    return Prompt(prompt_id, head["version"], _expand(m.group(2), path).strip(), used_by,
+                  head.get("group", ""), tuple(f"{s}#{n}" for s, n in INCLUDE.findall(m.group(2))))
 
 
 def all_prompts() -> dict[str, Prompt]:
@@ -120,9 +123,24 @@ def lock_problems(prompts: dict[str, Prompt] | None = None) -> list[str]:
     return out
 
 
+GROUPS = ("Query quality", "Source quality", "Retrieval quality", "Writing quality", "Writing authority")
+
+
 def write_lock() -> None:
+    """Record every prompt's version and hash, and rewrite the README table."""
+    prompts = all_prompts()
     LOCK.write_text(json.dumps({pid: {"version": p.version, "hash": p.hash}
-                                for pid, p in all_prompts().items()}, indent=2) + "\n", encoding="utf-8")
+                                for pid, p in prompts.items()}, indent=2) + "\n", encoding="utf-8")
+    rank = lambda p: (GROUPS.index(p.group) if p.group in GROUPS else len(GROUPS), p.id)
+    rows = ["| Group | File | Version | Used by | Skill sections | Filled in |", "|---|---|---|---|---|---|"]
+    for p in sorted(prompts.values(), key=rank):
+        rows.append(f"| {p.group} | [`{p.id}.md`]({p.id}.md) | {p.version} | {', '.join(p.used_by)} | "
+                    f"{', '.join(p.includes) or '-'} | {', '.join('`' + x + '`' for x in p.placeholders)} |")
+    readme = HERE / "README.md"
+    text = readme.read_text(encoding="utf-8")
+    start, end = "<!-- prompts:start (written by --lock) -->", "<!-- prompts:end -->"
+    i, j = text.index(start) + len(start), text.index(end)
+    readme.write_text(text[:i] + "\n" + "\n".join(rows) + "\n" + text[j:], encoding="utf-8")
 
 
 KEY_POINTS = load("key_points")

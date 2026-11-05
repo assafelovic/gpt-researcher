@@ -1,6 +1,7 @@
 ---
 id: subquery_redundancy
-version: 2
+version: 3
+group: Query quality
 used_by: subquery_redundancy
 ---
 
@@ -15,13 +16,9 @@ For EACH query, say whether it repeats an EARLIER query (a lower number) that
 is not in its own brackets. A query and the queries it was split from overlap
 by design and are never compared.
 
-A query repeats another ONLY when both ask for the same information in other
-words, so that the same facts would answer both. These are NOT repeats, even
-when the wording overlaps heavily:
-- a different perspective, or a different source or authority;
-- a different time period, place, or group of actors;
-- a separate subtopic about the same object;
-- a narrower query that asks for only one part of a broader query.
+What counts as a repeat:
+@include query_quality#repeat
+
 Query 1 is never a repeat. When a query repeats several earlier ones, give the
 lowest number. Quote the words of both queries your answer rests on.
 

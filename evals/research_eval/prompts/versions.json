@@ -8,8 +8,8 @@
     "hash": "5817c222365b"
   },
   "decomposition_coverage": {
-    "version": "1",
-    "hash": "258c65ba2f97"
+    "version": "2",
+    "hash": "43f9978fee77"
   },
   "domain_authority": {
     "version": "1",
@@ -40,8 +40,8 @@
     "hash": "d9ac9d414ed3"
   },
   "subquery_redundancy": {
-    "version": "2",
-    "hash": "ce4a09639a9e"
+    "version": "3",
+    "hash": "b883ab79e31c"
   },
   "topic_relevance": {
     "version": "1",
@@ -52,7 +52,7 @@
     "hash": "00f304cf3d0d"
   },
   "tree_quality": {
-    "version": "4",
-    "hash": "fd0c7ffedd03"
+    "version": "5",
+    "hash": "c844f2604192"
   }
 }

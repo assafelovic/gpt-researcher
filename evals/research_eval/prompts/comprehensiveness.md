@@ -1,6 +1,7 @@
 ---
 id: comprehensiveness
 version: 1
+group: Writing quality
 used_by: comprehensiveness
 ---
 

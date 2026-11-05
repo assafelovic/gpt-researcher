@@ -1,6 +1,7 @@
 ---
 id: domain_authority
 version: 1
+group: Source quality
 used_by: source_authority
 ---
 

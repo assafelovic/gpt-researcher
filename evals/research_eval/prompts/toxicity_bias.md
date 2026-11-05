@@ -1,6 +1,7 @@
 ---
 id: toxicity_bias
 version: 1
+group: Writing quality
 used_by: toxicity, bias
 ---
 

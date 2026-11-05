@@ -9,7 +9,8 @@ so they can be read and edited in one place. The code only loads them
 ```
 ---
 id: tree_quality              # same as the file name
-version: 4                    # bump on every change of the text
+version: 5                    # bump on every change of the text
+group: Query quality
 used_by: decomposition_tree_quality
 ---
 
@@ -25,7 +26,7 @@ Other braces, like the JSON the judge must return, are literal.
    every cache key and is recorded with each score, so old verdicts are never
    mixed with new ones.
 3. Run `python -m evals.research_eval.prompts --lock` to record the new text
-   hash in `versions.json`. `tests/test_research_eval_prompts.py` fails when a
+   hash in `versions.json` (it also rewrites the table below). `tests/test_research_eval_prompts.py` fails when a
    text changed and its version did not.
 4. Rescore: only the prompts with a new version call the judge again.
 
@@ -38,19 +39,21 @@ that uses it.
 
 ## Prompts
 
-| Group | File | Version | Used by | Filled in |
-|---|---|---|---|---|
-| Query quality | [`key_points.md`](key_points.md) | 1 | key points for the question (key_points.py), decomposition_coverage, material_coverage, query_relevance, comprehensiveness | `question` |
-| Query quality | [`decomposition_coverage.md`](decomposition_coverage.md) | 1 | decomposition_coverage | `question`, `key_points`, `subqueries` |
-| Query quality | [`subquery_redundancy.md`](subquery_redundancy.md) | 2 | subquery_redundancy | `question`, `queries` |
-| Query quality | [`tree_quality.md`](tree_quality.md) | 4 | decomposition_tree_quality | `question`, `path`, `parent`, `children` |
-| Source quality | [`domain_authority.md`](domain_authority.md) | 1 | source_authority | `domains` |
-| Retrieval quality | [`query_relevance.md`](query_relevance.md) | 3 | query_relevance | `question`, `key_points`, `other_queries`, `query`, `material` |
-| Retrieval quality | [`material_coverage.md`](material_coverage.md) | 1 | material_coverage | `question`, `points` |
-| Writing quality | [`comprehensiveness.md`](comprehensiveness.md) | 1 | comprehensiveness | `question`, `key_points`, `report` |
-| Writing quality | [`quality_rubric.md`](quality_rubric.md) | 1 | insight, readability | `question` |
-| Writing quality | [`quality_score.md`](quality_score.md) | 2 | insight, readability | `question`, `criteria`, `report` |
-| Writing quality | [`topic_relevance.md`](topic_relevance.md) | 1 | topic_relevance | `question`, `paragraphs` |
-| Writing quality | [`toxicity_bias.md`](toxicity_bias.md) | 1 | toxicity, bias | `text` |
-| Writing authority | [`paragraph_audit.md`](paragraph_audit.md) | 4 | citation audit (citation_audit.py), source_utilization, citation_recall, citation_precision, effective_citations, faithfulness | `question`, `sentences`, `material` |
-| Writing authority | [`claim_recheck.md`](claim_recheck.md) | 3 | citation audit recheck (citation_audit.py) | `question`, `claims`, `material` |
+<!-- prompts:start (written by --lock) -->
+| Group | File | Version | Used by | Skill sections | Filled in |
+|---|---|---|---|---|---|
+| Query quality | [`decomposition_coverage.md`](decomposition_coverage.md) | 2 | decomposition_coverage | query_quality#aimed_at | `question`, `key_points`, `subqueries` |
+| Query quality | [`key_points.md`](key_points.md) | 1 | key points for the question (key_points.py), decomposition_coverage, material_coverage, query_relevance, comprehensiveness | - | `question` |
+| Query quality | [`subquery_redundancy.md`](subquery_redundancy.md) | 3 | subquery_redundancy | query_quality#repeat | `question`, `queries` |
+| Query quality | [`tree_quality.md`](tree_quality.md) | 5 | decomposition_tree_quality | query_quality#narrower, query_quality#searchable, query_quality#serves_parent, query_quality#drift, query_quality#aspect, query_quality#aimed_at | `question`, `path`, `parent`, `children` |
+| Source quality | [`domain_authority.md`](domain_authority.md) | 1 | source_authority | - | `domains` |
+| Retrieval quality | [`material_coverage.md`](material_coverage.md) | 1 | material_coverage | - | `question`, `points` |
+| Retrieval quality | [`query_relevance.md`](query_relevance.md) | 3 | query_relevance | - | `question`, `key_points`, `other_queries`, `query`, `material` |
+| Writing quality | [`comprehensiveness.md`](comprehensiveness.md) | 1 | comprehensiveness | - | `question`, `key_points`, `report` |
+| Writing quality | [`quality_rubric.md`](quality_rubric.md) | 1 | insight, readability | - | `question` |
+| Writing quality | [`quality_score.md`](quality_score.md) | 2 | insight, readability | - | `question`, `criteria`, `report` |
+| Writing quality | [`topic_relevance.md`](topic_relevance.md) | 1 | topic_relevance | - | `question`, `paragraphs` |
+| Writing quality | [`toxicity_bias.md`](toxicity_bias.md) | 1 | toxicity, bias | - | `text` |
+| Writing authority | [`claim_recheck.md`](claim_recheck.md) | 3 | citation audit recheck (citation_audit.py) | - | `question`, `claims`, `material` |
+| Writing authority | [`paragraph_audit.md`](paragraph_audit.md) | 4 | citation audit (citation_audit.py), source_utilization, citation_recall, citation_precision, effective_citations, faithfulness | - | `question`, `sentences`, `material` |
+<!-- prompts:end -->

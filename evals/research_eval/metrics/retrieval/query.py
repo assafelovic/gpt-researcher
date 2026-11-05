@@ -43,7 +43,7 @@ class DecompositionCoverage(Metric):
     """
 
     name, category = "decomposition_coverage", "retrieval.query_quality"
-    version = "3"           # 3: deep clarifying questions are not sub-queries
+    version = "4"           # 3: deep clarifying questions are not sub-queries; 4: "aimed at" from the query-quality skill
     uses_llm = True
     prompts = (KEY_POINTS, DECOMPOSITION_COVERAGE)
     EMBEDDING_THRESHOLD = 0.5
@@ -147,9 +147,10 @@ class SubqueryRedundancy(Metric):
     """
 
     name, category = "subquery_redundancy", "retrieval.query_quality"
-    version = "9"           # 4: only a reworded request for the same facts; 5: sub-queries only;
+    version = "10"          # 4: only a reworded request for the same facts; 5: sub-queries only;
                             # 6: own call per layer over every node; 7: whole tree but ancestors, one call;
-                            # 8: overlaps beside repeats (too broad, dropped); 9: majority of VOTES calls
+                            # 8: overlaps beside repeats (too broad, dropped); 9: majority of VOTES calls;
+                            # 10: "repeat" from the query-quality skill, with examples
     higher_is_better = False
     uses_llm = True         # the lexical fallback only runs when no judge is configured at all
     prompts = (SUBQUERY_REDUNDANCY,)
@@ -307,7 +308,8 @@ class DecompositionTreeQuality(Metric):
     """
 
     name, category = "decomposition_tree_quality", "retrieval.query_quality"
-    version = "4"           # 3: the judge sees the root-to-parent path; 4: per-child checks + aspect coverage
+    version = "5"           # 3: the judge sees the root-to-parent path; 4: per-child checks + aspect coverage;
+                            # 5: check and aspect definitions from the query-quality skill, with examples
     uses_llm = True
     prompts = (TREE_QUALITY,)
     CHECKS = ("narrower", "searchable", "serves_parent", "serves_question")
