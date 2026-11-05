@@ -1,7 +1,6 @@
 ---
 id: decomposition_coverage
-version: 2
-group: Query quality
+version: 3
 used_by: decomposition_coverage
 ---
 
@@ -12,8 +11,10 @@ are aimed at it. A sub-query may serve several key points. Quote the words of
 the sub-query your answer rests on; leave the list empty when no sub-query
 targets the point.
 
+@include query-quality#principles
+
 What counts as aimed at:
-@include query_quality#aimed_at
+@include query-quality#aimed_at
 
 Question:
 {question}

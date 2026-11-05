@@ -1,7 +1,6 @@
 ---
 id: claim_recheck
 version: 3
-group: Writing authority
 used_by: citation audit recheck (citation_audit.py)
 ---
 

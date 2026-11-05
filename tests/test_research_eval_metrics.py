@@ -235,7 +235,7 @@ async def test_subquery_redundancy_judges_every_node_in_one_call(ctx):
     assert r.value == pytest.approx(1 / 3, abs=1e-3) and r.higher_is_better is False
     assert sum("auditing the search plan" in p for p in ctx.fake.prompts) == 3     # three votes
     assert r.details["votes"] == 3 and r.details["replies"] == 3 and r.details["unstable"] == []
-    assert r.llm["prompts"]["subquery_redundancy"]["version"] == "3"
+    assert r.llm["prompts"]["subquery_redundancy"]["version"] == "4"
 
 
 async def test_subquery_redundancy_takes_the_majority_of_three_calls(ctx):
@@ -336,7 +336,7 @@ async def test_tree_quality_judges_each_child_and_the_aspects_of_the_split(ctx):
     assert r.details["key_points"]["source"] == "judge"
     # The key points are shared with decomposition_coverage, so the metric itself asks once.
     assert r.llm["requests"] == r.llm["api_calls"] == 1 and r.llm["judge_model"] == "judge-x"
-    assert r.llm["prompts"]["tree_quality"]["version"] == "6"
+    assert r.llm["prompts"]["tree_quality"]["version"] == "7"
     assert not any("planning research on one query" in q for q in ctx.fake.prompts)
     prompt = next(p for p in ctx.fake.prompts if "Path from the original question" in p)
     assert f"0. {CORE}" in prompt and r.details["per_parent"][0]["depth"] == 0

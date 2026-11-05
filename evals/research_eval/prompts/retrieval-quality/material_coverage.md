@@ -1,7 +1,6 @@
 ---
 id: material_coverage
 version: 1
-group: Retrieval quality
 used_by: material_coverage
 ---
 

@@ -1,7 +1,6 @@
 ---
 id: topic_relevance
 version: 1
-group: Writing quality
 used_by: topic_relevance
 ---
 

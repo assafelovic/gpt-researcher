@@ -37,20 +37,37 @@ def test_render_fills_placeholders_once_and_leaves_json_braces():
 
 
 def test_include_pulls_one_skill_section(tmp_path, monkeypatch):
-    (tmp_path / "s.md").write_text("# S\n\nintro\n\n## alpha\n\nA text.\n\n## beta\n\nB text.\n")
-    monkeypatch.setattr(P, "SKILLS", tmp_path)
-    assert P._expand("x\n@include s#beta\ny", tmp_path / "p.md") == "x\nB text.\ny"
+    (tmp_path / "g").mkdir()
+    (tmp_path / "g" / "SKILL.md").write_text(
+        "---\nname: g\ndescription: d\n---\n\n# G\n\nintro\n\n## alpha\n\nA text.\n\n"
+        "## beta\n\nB text.\n\n## How to edit\n\nnot for the judge\n")
+    monkeypatch.setattr(P, "HERE", tmp_path)
+    assert P.skill_sections("g") == {"alpha": "A text.", "beta": "B text."}
+    assert P._expand("x\n@include g#beta\ny", tmp_path / "p.md") == "x\nB text.\ny"
     with pytest.raises(KeyError):
-        P._expand("@include s#gamma", tmp_path / "p.md")
+        P._expand("@include g#gamma", tmp_path / "p.md")
+
+
+def test_one_skill_per_group_and_every_section_is_used():
+    ps = P.all_prompts()
+    assert [g.name for g in P.groups()] == list(P.GROUPS)
+    used = {inc for p in ps.values() for inc in p.includes}
+    for g in P.groups():
+        head, _ = P._front(g / P.SKILL)
+        assert head["name"] == g.name and head["description"]
+        assert any(p.group == g.name for p in ps.values()), g.name
+        # A section no prompt includes is text nobody reads.
+        assert {f"{g.name}#{s}" for s in P.skill_sections(g.name)} <= used, g.name
 
 
 def test_query_quality_prompts_share_the_skill_definitions():
-    skill = P.skill_sections("query_quality")
-    assert {"aspect", "aimed_at", "narrower", "searchable", "serves_parent", "drift", "repeat"} <= set(skill)
+    skill = P.skill_sections("query-quality")
+    assert set(skill) == {"principles", "aspect", "aimed_at", "narrower", "searchable", "serves_parent",
+                          "drift", "repeat"}
     for pid, sections in {"tree_quality": ["narrower", "searchable", "serves_parent", "drift", "aimed_at"],
                           "parent_aspects": ["aspect"],
                           "subquery_redundancy": ["repeat"], "decomposition_coverage": ["aimed_at"]}.items():
         t = P.load(pid).template
-        assert "@include" not in t
-        for sec in sections:
+        assert "@include" not in t and P.load(pid).group == "query-quality"
+        for sec in ["principles"] + sections:
             assert skill[sec] in t, (pid, sec)

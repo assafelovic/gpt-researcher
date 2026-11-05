@@ -1,7 +1,6 @@
 ---
 id: subquery_redundancy
-version: 3
-group: Query quality
+version: 4
 used_by: subquery_redundancy
 ---
 
@@ -16,8 +15,10 @@ For EACH query, say whether it repeats an EARLIER query (a lower number) that
 is not in its own brackets. A query and the queries it was split from overlap
 by design and are never compared.
 
+@include query-quality#principles
+
 What counts as a repeat:
-@include query_quality#repeat
+@include query-quality#repeat
 
 Query 1 is never a repeat. When a query repeats several earlier ones, give the
 lowest number. Quote the words of both queries your answer rests on.

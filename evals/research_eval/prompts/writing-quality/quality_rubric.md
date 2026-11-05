@@ -1,7 +1,6 @@
 ---
 id: quality_rubric
 version: 1
-group: Writing quality
 used_by: insight, readability
 ---
 

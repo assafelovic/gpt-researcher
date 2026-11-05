@@ -1,35 +1,39 @@
 {
-  "claim_recheck": {
-    "version": "3",
-    "hash": "6dc865c7dfc2"
-  },
-  "comprehensiveness": {
-    "version": "1",
-    "hash": "5817c222365b"
-  },
   "decomposition_coverage": {
-    "version": "2",
-    "hash": "43f9978fee77"
-  },
-  "domain_authority": {
-    "version": "1",
-    "hash": "b7ace21db12d"
+    "version": "3",
+    "hash": "e296d40973eb"
   },
   "key_points": {
     "version": "1",
     "hash": "5925e262d939"
   },
+  "parent_aspects": {
+    "version": "2",
+    "hash": "9494d972e12d"
+  },
+  "subquery_redundancy": {
+    "version": "4",
+    "hash": "36d93d184047"
+  },
+  "tree_quality": {
+    "version": "7",
+    "hash": "7ebc7de5974b"
+  },
+  "domain_authority": {
+    "version": "1",
+    "hash": "b7ace21db12d"
+  },
   "material_coverage": {
     "version": "1",
     "hash": "469172cde44a"
   },
-  "paragraph_audit": {
-    "version": "4",
-    "hash": "e29ab3db631e"
+  "query_relevance": {
+    "version": "3",
+    "hash": "d9ac9d414ed3"
   },
-  "parent_aspects": {
+  "comprehensiveness": {
     "version": "1",
-    "hash": "4cc597f94264"
+    "hash": "5817c222365b"
   },
   "quality_rubric": {
     "version": "1",
@@ -39,14 +43,6 @@
     "version": "2",
     "hash": "6a89c7c3a57f"
   },
-  "query_relevance": {
-    "version": "3",
-    "hash": "d9ac9d414ed3"
-  },
-  "subquery_redundancy": {
-    "version": "3",
-    "hash": "b883ab79e31c"
-  },
   "topic_relevance": {
     "version": "1",
     "hash": "17a7821774a5"
@@ -55,8 +51,12 @@
     "version": "1",
     "hash": "00f304cf3d0d"
   },
-  "tree_quality": {
-    "version": "6",
-    "hash": "e76c37779444"
+  "claim_recheck": {
+    "version": "3",
+    "hash": "6dc865c7dfc2"
+  },
+  "paragraph_audit": {
+    "version": "4",
+    "hash": "e29ab3db631e"
   }
 }

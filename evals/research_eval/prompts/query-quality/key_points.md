@@ -1,7 +1,6 @@
 ---
 id: key_points
 version: 1
-group: Query quality
 used_by: key points for the question (key_points.py), decomposition_coverage, material_coverage, query_relevance, comprehensiveness
 ---
 

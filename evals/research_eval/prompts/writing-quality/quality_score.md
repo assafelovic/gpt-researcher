@@ -1,7 +1,6 @@
 ---
 id: quality_score
 version: 2
-group: Writing quality
 used_by: insight, readability
 ---
 
