@@ -130,9 +130,12 @@ class FakeJudge:
             qs = re.findall(r"^(\d+)\.(?: \[[^\]]*\])? (.+)$", prompt.split("Queries:\n")[1].split("Return ONLY")[0], re.M)
             if any("garbled" in q for _, q in qs):
                 return "not json"
-            out = [{"query": int(n), "evidence": "",
-                    "repeats": next((int(m) for m, p in qs if int(m) < int(n) and q.startswith(p)), None)}
-                   for n, q in qs]
+            out = []
+            for n, q in qs:
+                rep = next((int(m) for m, p in qs if int(m) < int(n) and q.startswith(p)), None)
+                over = next((int(m) for m, p in qs if int(m) < int(n) and rep is None
+                             and q.split()[:2] == p.split()[:2]), None)
+                out.append({"query": int(n), "evidence": "", "repeats": rep, "overlaps": over})
             return json.dumps({"queries": out[:-1] if any("drop-last" in q for _, q in qs) else out})
         if "auditing one retrieval step" in prompt:
             q = re.search(r"Sub-query under review:\n(.*)\n", prompt).group(1)
@@ -212,7 +215,17 @@ async def test_subquery_redundancy_judges_every_node_in_one_call(ctx):
     assert d["same_parent"] is True and d["same_layer"] is True and d["kind"] == "leaf"
     assert r.value == pytest.approx(1 / 3, abs=1e-3) and r.higher_is_better is False
     assert sum("auditing the search plan" in p for p in ctx.fake.prompts) == 1
-    assert r.llm["prompts"]["subquery_redundancy"]["version"] == "2"
+    assert r.llm["prompts"]["subquery_redundancy"]["version"] == "3"
+
+
+async def test_subquery_redundancy_reports_overlaps_beside_repeats(ctx):
+    a = make_archive()
+    next(x for x in a.data["spans"] if x["span_id"] == "s6")["attributes"]["query"] = "lithium refining costs"
+    r = await SubqueryRedundancy().score(RunArchive(a.data), ctx)
+    assert r.value == 0.0 and r.details["overlaps"] == 1
+    assert r.details["with_overlaps"] == pytest.approx(1 / 3, abs=1e-3)
+    [o] = r.details["overlapping"]
+    assert (o["query"], o["overlaps"], o["same_layer"]) == ("lithium refining costs", "lithium refining capacity", True)
 
 
 def nested_archive(extra=""):
@@ -251,7 +264,9 @@ async def test_subquery_redundancy_compares_across_branches_and_layers_but_not_a
     assert r.details["nodes"] == 9 and r.details["duplicates"] == 3
     assert r.value == pytest.approx(3 / 9, abs=1e-3)
     # Rewording its own parent is not a repeat: the mark is dropped.
-    assert r.details["dropped_marks"] == [{"query": "Congo cobalt mining sites", "marked": "Congo cobalt mining"}]
+    assert r.details["dropped_marks"] == [
+        {"query": "Congo cobalt output 2024", "marked": "Congo cobalt mining", "as": "overlaps"},
+        {"query": "Congo cobalt mining sites", "marked": "Congo cobalt mining", "as": "repeats"}]
     dup = {d["query"]: d for d in r.details["not_unique"]}
     assert dup["Congo cobalt output 2024 figures"]["same_parent"] is False
     assert dup["Congo cobalt output 2024 figures"]["same_layer"] is True

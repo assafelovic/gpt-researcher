@@ -127,6 +127,12 @@ class SubqueryRedundancy(Metric):
 
         value = duplicate nodes / all nodes
 
+    The judge also marks overlaps: a node that is no repeat but asks for most
+    of the same information as an earlier node (adds only a detail or a
+    slightly different angle, or asks for one part of it).
+    `details.with_overlaps` = (duplicates + overlapping nodes) / all nodes,
+    the looser reading; `details.overlapping` lists them.
+
     `details.per_layer` and `details.per_kind` (branch / leaf) give the share
     by the duplicate's layer and kind; `details.same_layer` and
     `details.same_parent` count the duplicates whose original sits on the
@@ -142,8 +148,9 @@ class SubqueryRedundancy(Metric):
     """
 
     name, category = "subquery_redundancy", "retrieval.query_quality"
-    version = "7"           # 4: only a reworded request for the same facts; 5: sub-queries only;
-                            # 6: own call per layer over every node; 7: whole tree but ancestors, one call
+    version = "8"           # 4: only a reworded request for the same facts; 5: sub-queries only;
+                            # 6: own call per layer over every node; 7: whole tree but ancestors, one call;
+                            # 8: overlaps (most of the same information) reported beside repeats
     higher_is_better = False
     uses_llm = True         # the lexical fallback only runs when no judge is configured at all
     prompts = (SUBQUERY_REDUNDANCY,)
@@ -174,7 +181,17 @@ class SubqueryRedundancy(Metric):
             res.llm = self.llm_record(ctx, [r])
             return res
 
-        links, answered, dropped = {}, set(), []
+        links, overlaps, answered, dropped = {}, {}, set(), []
+
+        def ref(i, e, key):
+            j = None if isinstance(e.get(key), bool) else _number(e.get(key))
+            if j is None or j != int(j) or not 1 <= j <= len(nodes) or j == i:
+                return None
+            if related(i, int(j)):
+                dropped.append({"query": nodes[i - 1].query, "marked": nodes[int(j) - 1].query, "as": key})
+                return None
+            return int(j)
+
         for e in entries:
             try:
                 i = int(e["query"])
@@ -183,14 +200,11 @@ class SubqueryRedundancy(Metric):
             if not 1 <= i <= len(nodes):
                 continue
             answered.add(i)
-            j = None if isinstance(e.get("repeats"), bool) else _number(e.get("repeats"))
-            if j is None or j != int(j) or not 1 <= j <= len(nodes) or j == i:
-                continue
-            j = int(j)
-            if related(i, j):
-                dropped.append({"query": nodes[i - 1].query, "marked": nodes[j - 1].query})
-                continue
-            links[i] = (j, str(e.get("evidence") or ""))
+            evidence = str(e.get("evidence") or "")
+            if (j := ref(i, e, "repeats")) is not None:
+                links[i] = (j, evidence)
+            elif (j := ref(i, e, "overlaps")) is not None:
+                overlaps[i] = (j, evidence)
         # Groups of repeats; the node searched first is each group's original.
         group = list(range(len(nodes) + 1))
         find = lambda x: x if group[x] == x else find(group[x])
@@ -213,6 +227,14 @@ class SubqueryRedundancy(Metric):
                                "same_parent": o.parent == n.parent, "evidence": evidence,
                                "span_id": n.span_id})
         dup_ids = {d["span_id"] for d in duplicates}
+        overlapping = []
+        for i, (j, evidence) in sorted(overlaps.items()):
+            n, o = nodes[i - 1], nodes[j - 1]
+            if n.span_id not in dup_ids:
+                overlapping.append({"query": n.query, "layer": n.layer, "kind": n.kind, "overlaps": o.query,
+                                    "overlaps_layer": o.layer, "same_layer": o.layer == n.layer,
+                                    "same_parent": o.parent == n.parent, "evidence": evidence,
+                                    "span_id": n.span_id})
 
         def share(xs):
             k = sum(x.span_id in dup_ids for x in xs)
@@ -224,7 +246,9 @@ class SubqueryRedundancy(Metric):
             rounded(len(dup_ids) / len(nodes)), method="judge_tree", nodes=len(nodes),
             duplicates=len(dup_ids), same_layer=sum(d["same_layer"] for d in duplicates),
             same_parent=sum(d["same_parent"] for d in duplicates),
-            per_layer=by("layer"), per_kind=by("kind"), not_unique=duplicates,
+            per_layer=by("layer"), per_kind=by("kind"),
+            overlaps=len(overlapping), with_overlaps=rounded((len(dup_ids) + len(overlapping)) / len(nodes)),
+            not_unique=duplicates, overlapping=overlapping,
             unanswered=[nodes[i - 1].query for i in range(1, len(nodes) + 1) if i not in answered],
             dropped_marks=dropped)
         res.llm = self.llm_record(ctx, [r])
