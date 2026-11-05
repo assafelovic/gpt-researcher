@@ -9,7 +9,7 @@ from evals.research_eval.metrics import all_metrics
 
 def test_every_prompt_file_loads_and_is_locked():
     ps = P.all_prompts()
-    assert len(ps) == 14 and all(p.used_by for p in ps.values())
+    assert len(ps) == 15 and all(p.used_by for p in ps.values())
     assert P.lock_problems(ps) == [], "run: python -m evals.research_eval.prompts --lock (after bumping versions)"
 
 
@@ -47,7 +47,8 @@ def test_include_pulls_one_skill_section(tmp_path, monkeypatch):
 def test_query_quality_prompts_share_the_skill_definitions():
     skill = P.skill_sections("query_quality")
     assert {"aspect", "aimed_at", "narrower", "searchable", "serves_parent", "drift", "repeat"} <= set(skill)
-    for pid, sections in {"tree_quality": ["narrower", "searchable", "serves_parent", "drift", "aspect", "aimed_at"],
+    for pid, sections in {"tree_quality": ["narrower", "searchable", "serves_parent", "drift", "aimed_at"],
+                          "parent_aspects": ["aspect"],
                           "subquery_redundancy": ["repeat"], "decomposition_coverage": ["aimed_at"]}.items():
         t = P.load(pid).template
         assert "@include" not in t

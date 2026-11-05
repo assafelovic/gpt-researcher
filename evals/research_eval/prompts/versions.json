@@ -27,6 +27,10 @@
     "version": "4",
     "hash": "e29ab3db631e"
   },
+  "parent_aspects": {
+    "version": "1",
+    "hash": "4cc597f94264"
+  },
   "quality_rubric": {
     "version": "1",
     "hash": "6c5429c17258"
@@ -52,7 +56,7 @@
     "hash": "00f304cf3d0d"
   },
   "tree_quality": {
-    "version": "5",
-    "hash": "c844f2604192"
+    "version": "6",
+    "hash": "e76c37779444"
   }
 }

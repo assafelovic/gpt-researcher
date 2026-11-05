@@ -44,8 +44,9 @@ that uses it.
 |---|---|---|---|---|---|
 | Query quality | [`decomposition_coverage.md`](decomposition_coverage.md) | 2 | decomposition_coverage | query_quality#aimed_at | `question`, `key_points`, `subqueries` |
 | Query quality | [`key_points.md`](key_points.md) | 1 | key points for the question (key_points.py), decomposition_coverage, material_coverage, query_relevance, comprehensiveness | - | `question` |
+| Query quality | [`parent_aspects.md`](parent_aspects.md) | 1 | decomposition_tree_quality | query_quality#aspect | `question`, `parent` |
 | Query quality | [`subquery_redundancy.md`](subquery_redundancy.md) | 3 | subquery_redundancy | query_quality#repeat | `question`, `queries` |
-| Query quality | [`tree_quality.md`](tree_quality.md) | 5 | decomposition_tree_quality | query_quality#narrower, query_quality#searchable, query_quality#serves_parent, query_quality#drift, query_quality#aspect, query_quality#aimed_at | `question`, `path`, `parent`, `children` |
+| Query quality | [`tree_quality.md`](tree_quality.md) | 6 | decomposition_tree_quality | query_quality#narrower, query_quality#searchable, query_quality#serves_parent, query_quality#drift, query_quality#aimed_at | `question`, `path`, `parent`, `children`, `aspects` |
 | Source quality | [`domain_authority.md`](domain_authority.md) | 1 | source_authority | - | `domains` |
 | Retrieval quality | [`material_coverage.md`](material_coverage.md) | 1 | material_coverage | - | `question`, `points` |
 | Retrieval quality | [`query_relevance.md`](query_relevance.md) | 3 | query_relevance | - | `question`, `key_points`, `other_queries`, `query`, `material` |
