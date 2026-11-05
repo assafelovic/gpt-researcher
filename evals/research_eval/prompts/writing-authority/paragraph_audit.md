@@ -1,21 +1,11 @@
 ---
 id: paragraph_audit
-version: 4
+version: 5
 used_by: citation audit (citation_audit.py), source_utilization, citation_recall, citation_precision, effective_citations, faithfulness
 ---
 
 You are checking one paragraph of a research report against the source material
 the writer had. Work only from the material shown; do not use outside knowledge.
-
-Core question of the report:
-{question}
-
-Paragraph (numbered items; "cites" lists the sources an item links to; a
-citation vouches for the whole item it ends, which may be several sentences):
-{sentences}
-
-Material:
-{material}
 
 Do the following IN ORDER.
 
@@ -79,3 +69,15 @@ Return ONLY JSON:
                "passages": ["1a"], "evidence": "..."}],
   "sentences": [{"sentence": 1, "supported": true,
                   "citations": [{"source": 1, "alone": true, "rest_suffice": false}]}]}
+
+@user
+
+Core question of the report:
+{question}
+
+Paragraph (numbered items; "cites" lists the sources an item links to; a
+citation vouches for the whole item it ends, which may be several sentences):
+{sentences}
+
+Material:
+{material}

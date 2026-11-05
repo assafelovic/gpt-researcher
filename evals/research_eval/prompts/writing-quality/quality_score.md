@@ -1,6 +1,6 @@
 ---
 id: quality_score
-version: 2
+version: 3
 used_by: insight, readability
 ---
 
@@ -14,6 +14,16 @@ below from 0 to 10 using these anchors:
 For each criterion first quote or point to the report text your score rests on,
 then give the score. Judge the report as written; do not reward length by itself.
 
+Also list the report's insights as you read them: each conclusion, comparison
+or implication that goes beyond restating a source, in one sentence, with the
+report text it comes from. Use an empty list if there are none.
+
+Return ONLY JSON, one score entry per criterion id, in order:
+{"scores": [{"id": "I1", "evidence": "...", "score": 0}],
+  "insights": [{"insight": "...", "quote": "..."}]}
+
+@user
+
 Question:
 {question}
 
@@ -22,11 +32,3 @@ Criteria:
 
 Report:
 {report}
-
-Also list the report's insights as you read them: each conclusion, comparison
-or implication that goes beyond restating a source, in one sentence, with the
-report text it comes from. Use an empty list if there are none.
-
-Return ONLY JSON, one score entry per criterion id, in order:
-{"scores": [{"id": "I1", "evidence": "...", "score": 0}],
-  "insights": [{"insight": "...", "quote": "..."}]}

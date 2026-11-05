@@ -1,6 +1,6 @@
 ---
 id: decomposition_coverage
-version: 3
+version: 4
 used_by: decomposition_coverage
 ---
 
@@ -16,6 +16,11 @@ targets the point.
 What counts as aimed at:
 @include query-quality#aimed_at
 
+Return ONLY JSON, one entry per key point, in order:
+{"points": [{"point": 1, "evidence": "...", "subqueries": [2]}]}
+
+@user
+
 Question:
 {question}
 
@@ -24,6 +29,3 @@ Key points:
 
 Sub-queries:
 {subqueries}
-
-Return ONLY JSON, one entry per key point, in order:
-{"points": [{"point": 1, "evidence": "...", "subqueries": [2]}]}

@@ -1,6 +1,6 @@
 ---
 id: quality_rubric
-version: 1
+version: 2
 used_by: insight, readability
 ---
 
@@ -16,9 +16,11 @@ Give 3 to 5 criteria per dimension. Each criterion has a short name, one
 sentence saying what a strong report does on it for this question, and a weight;
 weights within a dimension sum to 1.
 
-Question:
-{question}
-
 Return ONLY JSON:
 {"insight": [{"criterion": "...", "description": "...", "weight": 0.3}],
   "readability": [{"criterion": "...", "description": "...", "weight": 0.3}]}
+
+@user
+
+Question:
+{question}

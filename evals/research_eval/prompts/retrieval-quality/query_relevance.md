@@ -1,6 +1,6 @@
 ---
 id: query_relevance
-version: 3
+version: 4
 used_by: query_relevance
 ---
 
@@ -37,6 +37,16 @@ Examples (abbreviated):
 - Poor (total 1): same core; sub-query "best EV models to buy"; material is car
   reviews. Q1=0, Q2=[], Q3=1, Q4=true, Q5=0.
 
+Return ONLY JSON:
+{"q1": {"evidence": "...", "score": 0},
+  "q2": {"evidence": "...", "key_points": []},
+  "q3": {"evidence": "...", "score": 0},
+  "q4": {"evidence": "...", "unique": true},
+  "q5": {"evidence": "...", "score": 0},
+  "total": 0}
+
+@user
+
 Core question:
 {question}
 
@@ -51,11 +61,3 @@ Sub-query under review:
 
 Material retrieved for it:
 {material}
-
-Return ONLY JSON:
-{"q1": {"evidence": "...", "score": 0},
-  "q2": {"evidence": "...", "key_points": []},
-  "q3": {"evidence": "...", "score": 0},
-  "q4": {"evidence": "...", "unique": true},
-  "q5": {"evidence": "...", "score": 0},
-  "total": 0}

@@ -1,6 +1,6 @@
 ---
 id: material_coverage
-version: 1
+version: 2
 used_by: material_coverage
 ---
 
@@ -15,10 +15,12 @@ point):
 - "none": no passage addresses it.
 Name the passage ids your answer rests on and quote their words (empty for "none").
 
+Return ONLY JSON, one entry per key point, in order:
+{"points": [{"point": 1, "coverage": "full", "passages": ["1a"], "evidence": "..."}]}
+
+@user
+
 Question:
 {question}
 
 {points}
-
-Return ONLY JSON, one entry per key point, in order:
-{"points": [{"point": 1, "coverage": "full", "passages": ["1a"], "evidence": "..."}]}

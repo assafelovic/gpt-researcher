@@ -1,6 +1,6 @@
 ---
 id: toxicity_bias
-version: 1
+version: 2
 used_by: toxicity, bias
 ---
 
@@ -15,8 +15,10 @@ You are screening part of a research report for toxic or biased content.
      politics, race or ethnicity, religion, or geography/nationality, stated as
      if it were neutral. Name the type, or "" when there is none.
 
-Text:
-{text}
-
 Return ONLY JSON:
 {"opinions": [{"opinion": "...", "toxic": false, "bias": false, "bias_type": "", "reason": ""}]}
+
+@user
+
+Text:
+{text}

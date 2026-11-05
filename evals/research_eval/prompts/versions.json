@@ -1,62 +1,62 @@
 {
   "decomposition_coverage": {
-    "version": "3",
-    "hash": "e296d40973eb"
+    "version": "4",
+    "hash": "a615097740b4"
   },
   "key_points": {
-    "version": "1",
-    "hash": "5925e262d939"
+    "version": "2",
+    "hash": "0792d43b553a"
   },
   "parent_aspects": {
-    "version": "2",
-    "hash": "9494d972e12d"
+    "version": "3",
+    "hash": "bbec5d89ae77"
   },
   "subquery_redundancy": {
-    "version": "4",
-    "hash": "36d93d184047"
+    "version": "5",
+    "hash": "2e3299158f32"
   },
   "tree_quality": {
-    "version": "7",
-    "hash": "7ebc7de5974b"
+    "version": "8",
+    "hash": "71b2ca7779f4"
   },
   "domain_authority": {
-    "version": "1",
-    "hash": "b7ace21db12d"
+    "version": "2",
+    "hash": "49b8e1d06c53"
   },
   "material_coverage": {
-    "version": "1",
-    "hash": "469172cde44a"
+    "version": "2",
+    "hash": "5f2653f7d5f1"
   },
   "query_relevance": {
-    "version": "3",
-    "hash": "d9ac9d414ed3"
+    "version": "4",
+    "hash": "8bdb616b3c65"
   },
   "comprehensiveness": {
-    "version": "1",
-    "hash": "5817c222365b"
+    "version": "2",
+    "hash": "d8f10c7aea1a"
   },
   "quality_rubric": {
-    "version": "1",
-    "hash": "6c5429c17258"
+    "version": "2",
+    "hash": "9eb9d87c9588"
   },
   "quality_score": {
-    "version": "2",
-    "hash": "6a89c7c3a57f"
+    "version": "3",
+    "hash": "2f97ef2f7193"
   },
   "topic_relevance": {
-    "version": "1",
-    "hash": "17a7821774a5"
+    "version": "2",
+    "hash": "4e767d2fff9d"
   },
   "toxicity_bias": {
-    "version": "1",
-    "hash": "00f304cf3d0d"
+    "version": "2",
+    "hash": "a7c71031d850"
   },
   "claim_recheck": {
-    "version": "3",
-    "hash": "6dc865c7dfc2"
+    "version": "4",
+    "hash": "6ab47fa34c24"
   },
   "paragraph_audit": {
-    "version": "4",
-    "hash": "e29ab3db631e"
+    "version": "5",
+    "hash": "c545e6f7b86a"
   }
 }

@@ -1,6 +1,6 @@
 ---
 id: tree_quality
-version: 7
+version: 8
 used_by: decomposition_tree_quality
 ---
 
@@ -10,19 +10,6 @@ the parent the children pick up. For every answer, quote the parent or child
 words it rests on.
 
 @include query-quality#principles
-
-Original research question (the root of the whole search tree):
-{question}
-
-Path from the original question (0) down to the parent (last line), one query
-per level; long queries are cut:
-{path}
-
-Parent query:
-{parent}
-
-Child queries:
-{children}
 
 For EACH child, answer true or false for each of the four checks below.
 
@@ -44,9 +31,6 @@ Then, for EACH aspect of the parent listed below, give the numbers of the
 children aimed at it (an empty list when no child picks it up). The aspects
 were listed from the parent alone, before its children were known.
 
-Aspects of the parent:
-{aspects}
-
 What counts as aimed at:
 @include query-quality#aimed_at
 
@@ -54,3 +38,21 @@ Return ONLY JSON:
 {"children": [{"child": 1, "narrower": true, "searchable": true,
                 "serves_parent": true, "serves_question": true, "evidence": "..."}],
   "aspects": [{"aspect": 1, "children": [1]}]}
+
+@user
+
+Original research question (the root of the whole search tree):
+{question}
+
+Path from the original question (0) down to the parent (last line), one query
+per level; long queries are cut:
+{path}
+
+Parent query:
+{parent}
+
+Child queries:
+{children}
+
+Aspects of the parent:
+{aspects}

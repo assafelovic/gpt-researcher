@@ -208,6 +208,45 @@ async def test_judge_salt_asks_again_and_max_calls_caps_uncached_calls():
     assert capped.usage()["refused"] == 1 and len(calls) == 3
 
 
+class FakeChatModel:
+    """Stands in for the LangChain chat model: records what each call sends."""
+
+    def __init__(self):
+        self.sent = []
+
+    def bind(self, **kw):
+        bound = FakeChatModel()
+        bound.sent, bound.kw = self.sent, kw
+        return bound
+
+    async def ainvoke(self, messages):
+        from langchain_core.messages import AIMessage
+        self.sent.append((messages, getattr(self, "kw", {})))
+        return AIMessage(content=[{"type": "text", "text": '{"total": 1}'}],
+                         usage_metadata={"input_tokens": 7, "output_tokens": 2, "total_tokens": 9})
+
+
+async def test_judge_sends_a_system_and_a_user_message_with_the_strict_schema(monkeypatch):
+    from evals import judge as judge_factory
+    from evals.research_eval.prompts import TREE_QUALITY
+    fake = FakeChatModel()
+    monkeypatch.setattr(judge_factory, "make_judge", lambda model=None: fake)
+    prompt = TREE_QUALITY.render(question="Q", path="0. Q", parent="Q", children="1. a", aspects="1. x")
+    j = Judge(EvalCache(":memory:"), model="m", structured=True)
+    r = await j.ask(TREE_QUALITY.id, TREE_QUALITY.version, prompt)
+    assert r.parsed == {"total": 1} and j.usage()["input_tokens"] == 7
+    [(messages, kw)] = fake.sent
+    assert [m.type for m in messages] == ["system", "human"]
+    assert messages[0].content == TREE_QUALITY.system and "Child queries:\n1. a" in messages[1].content
+    fmt = kw["response_format"]
+    assert fmt["type"] == "json_schema" and fmt["json_schema"]["name"] == "tree_quality"
+    assert fmt["json_schema"]["strict"] is True and fmt["json_schema"]["schema"] == TREE_QUALITY.schema
+    # Without structured output the schema is left out, and so is its cache key.
+    plain = Judge(j.cache, model="m", structured=False)
+    assert not (await plain.ask(TREE_QUALITY.id, TREE_QUALITY.version, prompt)).cache_hit
+    assert fake.sent[1][1] == {}
+
+
 async def test_embedder_embeds_only_missing_texts():
     seen = []
 

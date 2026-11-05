@@ -1,6 +1,6 @@
 ---
 id: claim_recheck
-version: 3
+version: 4
 used_by: citation audit recheck (citation_audit.py)
 ---
 
@@ -8,15 +8,6 @@ You are checking claims from a research report against source material.
 These claims were not fully supported by the material checked so far. The
 material below is more of what the writer had retrieved, picked by the checker.
 Work only from the material shown; do not use outside knowledge.
-
-Core question of the report:
-{question}
-
-Claims:
-{claims}
-
-Material:
-{material}
 
 For EACH claim give one verdict against this material. Be strict:
 - "supported": one passage states the claim itself: the same subject (entity,
@@ -34,3 +25,14 @@ and quote the words it rests on.
 
 Return ONLY JSON:
 {"claims": [{"claim": 1, "verdict": "unsupported", "passages": [], "evidence": ""}]}
+
+@user
+
+Core question of the report:
+{question}
+
+Claims:
+{claims}
+
+Material:
+{material}

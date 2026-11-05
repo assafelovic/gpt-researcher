@@ -1,6 +1,6 @@
 ---
 id: key_points
-version: 1
+version: 2
 used_by: key points for the question (key_points.py), decomposition_coverage, material_coverage, query_relevance, comprehensiveness
 ---
 
@@ -12,6 +12,8 @@ Rules:
 - Each aspect is a short noun phrase (at most 12 words), specific to this question.
 - Aspects must not overlap; do not include generic items like "introduction" or "conclusion".
 
-Question: {question}
-
 Return ONLY JSON: {"key_points": ["...", "..."]}
+
+@user
+
+Question: {question}

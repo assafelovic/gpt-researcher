@@ -36,7 +36,7 @@ dataset/questions_*.jsonl -> runner.py -> capture.py (hooks) -> runs/<dataset>/<
 | `archive.py` | Archive schema, write-once save, `RunArchive` with derived views (span tree, decompositions, retrieval units, URL -> chunk index, parsed report). |
 | `report_parser.py` | Python-Markdown (+tables) -> sections, paragraphs, citations, evidence, parse warnings. |
 | `cache.py` | One SQLite file: `question`, `domain`, `llm`, `embedding` namespaces. |
-| `judge.py` | Cached judge (model from `evals/judge.py`) and cached embedder (repo `EMBEDDING` setting). |
+| `judge.py` | Cached judge (model from `evals/judge.py`): each prompt goes out as a system message (the fixed task) and a user message (the data), with the prompt's answer schema in strict structured-output mode; cached embedder (repo `EMBEDDING` setting). |
 | `prompts/` | Every judge prompt as its own `<id>.md` file (header: id, version, metrics that use it), in one folder per metric group whose `SKILL.md` holds the group's shared definitions; `versions.json` locks each version to its text hash; see `prompts/README.md`. Version + content hash go into cache keys and results. |
 | `key_points.py` | Per-question key points: frozen file > cache > one judge call. |
 | `citation_audit.py` | Shared paragraph-level judge audit: claims, ALCE sentence checks, which chunks were used. |
@@ -94,7 +94,8 @@ to be scored with `--judge-salt` so the judge's own spread sets how large a chan
 to be. `perturb report` prints, per defect and metric, the change and a verdict
 (pass / weak / FAIL), plus the other metrics that moved.
 
-The judge model is `EVAL_JUDGE_MODEL` (default in `evals/judge.py`). Re-scoring an
+The judge model is `EVAL_JUDGE_MODEL` (default in `evals/judge.py`); set
+`EVAL_JUDGE_STRUCTURED=0` if it has no structured output. Re-scoring an
 archive with unchanged metrics replays every judge and embedding call from the cache.
 At the end, `score` prints the judge's call count, cache hits and the input / output
 tokens of uncached calls (from the provider's usage metadata), so scoring cost is

@@ -1,6 +1,6 @@
 ---
 id: comprehensiveness
-version: 1
+version: 2
 used_by: comprehensiveness
 ---
 
@@ -11,6 +11,11 @@ For EACH numbered key point decide:
 - "none": the report does not address it.
 Quote the report words your answer rests on (empty for "none").
 
+Return ONLY JSON, one entry per key point, in order:
+{"points": [{"point": 1, "coverage": "full", "evidence": "..."}]}
+
+@user
+
 Question:
 {question}
 
@@ -19,6 +24,3 @@ Key points:
 
 Report:
 {report}
-
-Return ONLY JSON, one entry per key point, in order:
-{"points": [{"point": 1, "coverage": "full", "evidence": "..."}]}

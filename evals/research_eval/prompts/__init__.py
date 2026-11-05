@@ -4,16 +4,23 @@ Versioned judge prompts: one skill per metric group, one file per prompt.
 Each metric group is a folder (`query-quality/`, `source-quality/`, ...)
 holding a `SKILL.md` and that group's prompts, one `<id>.md` each: a short
 header (id, version, the metrics that use it) and the prompt text below it.
-`{name}` marks a value filled in when the prompt is sent; any other brace is
-literal text (the JSON the judge must return). A line
+A line `@user` splits the text into two messages: above it the system
+message (the task, the definitions and the answer format, the same on every
+call), below it the user message (the data of this call). `{name}` marks a
+value filled in when the prompt is sent, and only the user message may hold
+one; any other brace is literal text (the JSON the judge must return). A line
 `@include <group>#<section>` is replaced by that `## <section>` of
 `<group>/SKILL.md`, so prompts that share a definition share one text.
+
+`<id>.schema.json` beside the prompt is the JSON schema of its answer. The
+judge is called in strict structured-output mode with it, so a reply is
+always valid JSON of that shape.
 
 Change the text (or a skill section a prompt includes) -> bump the prompt's
 version. The version is part of every cache key and is recorded with each
 score, so old verdicts are never mixed with new ones. `versions.json` holds
-each prompt's version and text hash; a test fails when the text changed but
-the version did not. After bumping, run
+each prompt's version and the hash of its text and schema; a test fails when
+either changed but the version did not. After bumping, run
 
     python -m evals.research_eval.prompts --lock
 
@@ -33,6 +40,7 @@ HERE = Path(__file__).parent
 SKILL = "SKILL.md"
 LOCK = HERE / "versions.json"
 PLACEHOLDER = re.compile(r"\{([a-z_][a-z0-9_]*)\}")
+USER = re.compile(r"^@user[ \t]*$", re.M)
 INCLUDE = re.compile(r"^@include[ \t]+([\w-]+)#([\w-]+)[ \t]*$", re.M)
 SECTION = re.compile(r"^##[ \t]+([\w-]+)[ \t]*$")
 HEADER = re.compile(r"^---\n(.*?)\n---\n(.*)$", re.S)
@@ -41,30 +49,63 @@ GROUPS = ("query-quality", "source-quality", "retrieval-quality", "writing-quali
 
 
 @dataclass(frozen=True)
+class Rendered:
+    """One judge request: the system message, the filled-in user message and
+    the answer schema (JSON text, "" for none)."""
+    system: str
+    user: str
+    schema_json: str = ""
+    name: str = "answer"
+
+    @property
+    def schema(self) -> dict | None:
+        return json.loads(self.schema_json) if self.schema_json else None
+
+    @property
+    def text(self) -> str:
+        """Both messages as one text (what test and dry-run backends see)."""
+        return f"{self.system}\n\n{self.user}" if self.system else self.user
+
+    def __str__(self) -> str:
+        return self.text
+
+
+@dataclass(frozen=True)
 class Prompt:
     id: str
     version: str
-    template: str
+    system: str
+    user: str
+    schema_json: str = ""
     used_by: tuple[str, ...] = field(default=(), compare=False)
     group: str = field(default="", compare=False)
     includes: tuple[str, ...] = field(default=(), compare=False)    # skill sections pulled in
     path: str = field(default="", compare=False)                     # relative to this folder
 
     @property
+    def template(self) -> str:
+        return f"{self.system}\n\n{self.user}" if self.system else self.user
+
+    @property
+    def schema(self) -> dict | None:
+        return json.loads(self.schema_json) if self.schema_json else None
+
+    @property
     def hash(self) -> str:
-        return hashlib.sha256(self.template.encode("utf-8")).hexdigest()[:12]
+        text = f"{self.system}\n@user\n{self.user}\n@schema\n{self.schema_json}"
+        return hashlib.sha256(text.encode("utf-8")).hexdigest()[:12]
 
     @property
     def placeholders(self) -> list[str]:
-        return list(dict.fromkeys(PLACEHOLDER.findall(self.template)))
+        return list(dict.fromkeys(PLACEHOLDER.findall(self.user)))
 
-    def render(self, **kw) -> str:
+    def render(self, **kw) -> Rendered:
         missing = [p for p in self.placeholders if p not in kw]
         if missing:
             raise KeyError(f"prompt {self.id} needs {', '.join(missing)}")
         # One pass: a filled-in value is never scanned for placeholders again.
-        return PLACEHOLDER.sub(lambda m: str(kw[m.group(1)]) if m.group(1) in kw else m.group(0),
-                               self.template)
+        user = PLACEHOLDER.sub(lambda m: str(kw[m.group(1)]) if m.group(1) in kw else m.group(0), self.user)
+        return Rendered(self.system, user, self.schema_json, self.id)
 
 
 def groups() -> list[Path]:
@@ -128,8 +169,65 @@ def load(prompt_id: str, path: Path | None = None) -> Prompt:
     if head.get("id") != prompt_id:
         raise ValueError(f"{path.name}: id {head.get('id')!r} does not match the file name")
     used_by = tuple(u.strip() for u in head.get("used_by", "").split(",") if u.strip())
-    return Prompt(prompt_id, head["version"], _expand(body, path).strip(), used_by, path.parent.name,
+    parts = USER.split(body)
+    if len(parts) > 2:
+        raise ValueError(f"{path.name}: more than one @user line")
+    system, user = ("", parts[0]) if len(parts) == 1 else parts
+    system, user = _expand(system, path).strip(), _expand(user, path).strip()
+    if PLACEHOLDER.search(system):
+        raise ValueError(f"{path.name}: the system part must be the same on every call, "
+                         f"but holds {PLACEHOLDER.search(system).group(0)}; move it below @user")
+    schema = path.with_suffix(".schema.json")
+    schema_json = json.dumps(json.loads(schema.read_text(encoding="utf-8")), separators=(",", ":")) \
+        if schema.exists() else ""
+    return Prompt(prompt_id, head["version"], system, user, schema_json, used_by, path.parent.name,
                   tuple(f"{s}#{n}" for s, n in INCLUDE.findall(body)), str(path.relative_to(HERE)))
+
+
+def strict_schema_problems(schema: dict, where: str = "$") -> list[str]:
+    """What keeps a schema from OpenAI's strict structured-output mode: every
+    object must list all its properties as required and allow no others."""
+    out = []
+    if schema.get("type") == "object" or "properties" in schema:
+        props = schema.get("properties") or {}
+        if schema.get("additionalProperties") is not False:
+            out.append(f"{where}: additionalProperties must be false")
+        if list(schema.get("required") or []) != list(props):
+            out.append(f"{where}: required must list every property, in order")
+        for k, v in props.items():
+            out += strict_schema_problems(v, f"{where}.{k}")
+    if "items" in schema:
+        out += strict_schema_problems(schema["items"], f"{where}[]")
+    return out
+
+
+def schema_errors(value, schema: dict, where: str = "$") -> list[str]:
+    """Where `value` breaks `schema` (the subset our schemas use: type, enum,
+    properties, required, additionalProperties, items)."""
+    kinds = schema.get("type")
+    kinds = kinds if isinstance(kinds, list) else [kinds] if kinds else []
+    check = {"object": lambda v: isinstance(v, dict), "array": lambda v: isinstance(v, list),
+             "string": lambda v: isinstance(v, str), "boolean": lambda v: isinstance(v, bool),
+             "integer": lambda v: isinstance(v, int) and not isinstance(v, bool),
+             "number": lambda v: isinstance(v, (int, float)) and not isinstance(v, bool),
+             "null": lambda v: v is None}
+    if kinds and not any(check[k](value) for k in kinds):
+        return [f"{where}: {value!r} is not {'/'.join(kinds)}"]
+    if "enum" in schema and value not in schema["enum"]:
+        return [f"{where}: {value!r} not in {schema['enum']}"]
+    out = []
+    if isinstance(value, dict):
+        props = schema.get("properties") or {}
+        out += [f"{where}: missing {k}" for k in schema.get("required") or [] if k not in value]
+        if schema.get("additionalProperties") is False:
+            out += [f"{where}: unexpected {k}" for k in value if k not in props]
+        for k, v in value.items():
+            if k in props:
+                out += schema_errors(v, props[k], f"{where}.{k}")
+    if isinstance(value, list) and "items" in schema:
+        for n, v in enumerate(value):
+            out += schema_errors(v, schema["items"], f"{where}[{n}]")
+    return out
 
 
 def all_prompts() -> dict[str, Prompt]:
@@ -159,10 +257,13 @@ def write_lock() -> None:
     LOCK.write_text(json.dumps({pid: {"version": p.version, "hash": p.hash}
                                 for pid, p in prompts.items()}, indent=2) + "\n", encoding="utf-8")
     rank = lambda p: (GROUPS.index(p.group) if p.group in GROUPS else len(GROUPS), p.id)
-    rows = ["| Group | File | Version | Used by | Skill sections | Filled in |", "|---|---|---|---|---|---|"]
+    rows = ["| Group | File | Version | Used by | Skill sections | Filled in | Schema |",
+            "|---|---|---|---|---|---|---|"]
     for p in sorted(prompts.values(), key=rank):
+        schema = Path(p.path).with_suffix(".schema.json").as_posix()
         rows.append(f"| [{p.group}]({p.group}/{SKILL}) | [`{p.id}.md`]({p.path}) | {p.version} | {', '.join(p.used_by)} | "
-                    f"{', '.join(p.includes) or '-'} | {', '.join('`' + x + '`' for x in p.placeholders)} |")
+                    f"{', '.join(p.includes) or '-'} | {', '.join('`' + x + '`' for x in p.placeholders)} | "
+                    + (f"[json]({schema}) |" if p.schema_json else "- |"))
     readme = HERE / "README.md"
     text = readme.read_text(encoding="utf-8")
     start, end = "<!-- prompts:start (written by --lock) -->", "<!-- prompts:end -->"

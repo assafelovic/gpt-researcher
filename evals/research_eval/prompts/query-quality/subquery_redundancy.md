@@ -1,6 +1,6 @@
 ---
 id: subquery_redundancy
-version: 4
+version: 5
 used_by: subquery_redundancy
 ---
 
@@ -23,13 +23,15 @@ What counts as a repeat:
 Query 1 is never a repeat. When a query repeats several earlier ones, give the
 lowest number. Quote the words of both queries your answer rests on.
 
+Return ONLY JSON, one entry per query, in order; "repeats" is the number of
+the earlier query it repeats, or null:
+{"queries": [{"query": 1, "repeats": null, "evidence": ""},
+             {"query": 2, "repeats": 1, "evidence": "..."}]}
+
+@user
+
 Research question:
 {question}
 
 Queries:
 {queries}
-
-Return ONLY JSON, one entry per query, in order; "repeats" is the number of
-the earlier query it repeats, or null:
-{"queries": [{"query": 1, "repeats": null, "evidence": ""},
-             {"query": 2, "repeats": 1, "evidence": "..."}]}

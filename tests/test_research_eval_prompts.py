@@ -1,6 +1,8 @@
 """The prompt folder: every prompt loads from its own file, renders only its
 own placeholders, and cannot change its text without a version bump."""
 
+import json
+
 import pytest
 
 from evals.research_eval import prompts as P
@@ -20,20 +22,53 @@ def test_metrics_use_the_prompts_from_the_folder():
             assert ps[p.id] == p, (m.name, p.id)
 
 
-def test_text_change_without_a_version_bump_is_caught():
+def test_text_or_schema_change_without_a_version_bump_is_caught():
     ps = P.all_prompts()
-    edited = P.Prompt("tree_quality", ps["tree_quality"].version, ps["tree_quality"].template + "\nmore")
-    assert P.lock_problems({**ps, "tree_quality": edited}) == [
-        f"tree_quality: text changed but version is still {edited.version}; bump it"]
+    t = ps["tree_quality"]
+    for edited in (P.Prompt(t.id, t.version, t.system + "\nmore", t.user, t.schema_json),
+                   P.Prompt(t.id, t.version, t.system, t.user, t.schema_json.replace("evidence", "reason"))):
+        assert P.lock_problems({**ps, "tree_quality": edited}) == [
+            f"tree_quality: text changed but version is still {t.version}; bump it"]
 
 
 def test_render_fills_placeholders_once_and_leaves_json_braces():
-    p = P.Prompt("x", "1", 'Q: {question}\nReturn {"a": [{"b": 1}]} for {question}')
+    p = P.Prompt("x", "1", 'Return {"a": [{"b": 1}]}', "Q: {question}\nfor {question}")
     assert p.placeholders == ["question"]
-    assert p.render(question="{question} and {x}") == \
-        'Q: {question} and {x}\nReturn {"a": [{"b": 1}]} for {question} and {x}'
+    r = p.render(question="{question} and {x}")
+    assert (r.system, r.user) == ('Return {"a": [{"b": 1}]}', "Q: {question} and {x}\nfor {question} and {x}")
+    assert r.text == r.system + "\n\n" + r.user and r.name == "x"
     with pytest.raises(KeyError):
         p.render()
+
+
+def test_every_prompt_is_a_fixed_system_message_and_a_user_message_with_the_data():
+    for p in P.all_prompts().values():
+        assert p.system and p.user and p.placeholders, p.id
+        assert not P.PLACEHOLDER.search(p.system), p.id
+        assert "Return ONLY" in p.system and "Return ONLY" not in p.user, p.id
+
+
+def test_a_placeholder_above_the_user_line_is_refused(tmp_path, monkeypatch):
+    (tmp_path / "g").mkdir()
+    (tmp_path / "g" / "SKILL.md").write_text("---\nname: g\ndescription: d\n---\n")
+    (tmp_path / "g" / "x.md").write_text("---\nid: x\nversion: 1\n---\nAsk {question}\n@user\nData\n")
+    monkeypatch.setattr(P, "HERE", tmp_path)
+    with pytest.raises(ValueError, match="system part"):
+        P.load("x")
+
+
+def test_every_answer_schema_is_strict_and_fits_the_prompt_example():
+    for p in P.all_prompts().values():
+        assert p.schema is not None, p.id
+        assert P.strict_schema_problems(p.schema) == [], p.id
+        # The JSON example the judge reads must be an answer the schema accepts.
+        tail = p.system[p.system.rindex("Return ONLY"):]
+        assert P.schema_errors(json.loads(tail[tail.index("{"):]), p.schema) == [], p.id
+    tq = P.load("tree_quality").schema
+    assert P.schema_errors({"children": [{"child": 1, "narrower": "yes"}], "aspects": []}, tq) == [
+        "$.children[0]: missing searchable", "$.children[0]: missing serves_parent",
+        "$.children[0]: missing serves_question", "$.children[0]: missing evidence",
+        "$.children[0].narrower: 'yes' is not boolean"]
 
 
 def test_include_pulls_one_skill_section(tmp_path, monkeypatch):

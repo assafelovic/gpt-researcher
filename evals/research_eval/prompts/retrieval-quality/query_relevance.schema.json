@@ -1,0 +1,128 @@
+{
+  "type": "object",
+  "properties": {
+    "q1": {
+      "type": "object",
+      "properties": {
+        "evidence": {
+          "type": "string"
+        },
+        "score": {
+          "type": "integer",
+          "enum": [
+            0,
+            1,
+            2
+          ]
+        }
+      },
+      "required": [
+        "evidence",
+        "score"
+      ],
+      "additionalProperties": false
+    },
+    "q2": {
+      "type": "object",
+      "properties": {
+        "evidence": {
+          "type": "string"
+        },
+        "key_points": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        }
+      },
+      "required": [
+        "evidence",
+        "key_points"
+      ],
+      "additionalProperties": false
+    },
+    "q3": {
+      "type": "object",
+      "properties": {
+        "evidence": {
+          "type": "string"
+        },
+        "score": {
+          "type": "integer",
+          "enum": [
+            0,
+            1,
+            2
+          ]
+        }
+      },
+      "required": [
+        "evidence",
+        "score"
+      ],
+      "additionalProperties": false
+    },
+    "q4": {
+      "type": "object",
+      "properties": {
+        "evidence": {
+          "type": "string"
+        },
+        "unique": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "evidence",
+        "unique"
+      ],
+      "additionalProperties": false
+    },
+    "q5": {
+      "type": "object",
+      "properties": {
+        "evidence": {
+          "type": "string"
+        },
+        "score": {
+          "type": "integer",
+          "enum": [
+            0,
+            1,
+            2
+          ]
+        }
+      },
+      "required": [
+        "evidence",
+        "score"
+      ],
+      "additionalProperties": false
+    },
+    "total": {
+      "type": "integer",
+      "enum": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ]
+    }
+  },
+  "required": [
+    "q1",
+    "q2",
+    "q3",
+    "q4",
+    "q5",
+    "total"
+  ],
+  "additionalProperties": false
+}

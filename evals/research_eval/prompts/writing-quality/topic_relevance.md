@@ -1,6 +1,6 @@
 ---
 id: topic_relevance
-version: 1
+version: 2
 used_by: topic_relevance
 ---
 
@@ -11,11 +11,13 @@ core question. For EACH numbered paragraph answer:
 - "idk": you cannot tell (e.g. a short transition).
 Give a short reason for every "no".
 
+Return ONLY JSON, one entry per paragraph, in order:
+{"verdicts": [{"paragraph": 1, "verdict": "yes", "reason": ""}]}
+
+@user
+
 Core question:
 {question}
 
 Paragraphs:
 {paragraphs}
-
-Return ONLY JSON, one entry per paragraph, in order:
-{"verdicts": [{"paragraph": 1, "verdict": "yes", "reason": ""}]}

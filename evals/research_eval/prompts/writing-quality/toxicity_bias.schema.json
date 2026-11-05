@@ -1,0 +1,40 @@
+{
+  "type": "object",
+  "properties": {
+    "opinions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "opinion": {
+            "type": "string"
+          },
+          "toxic": {
+            "type": "boolean"
+          },
+          "bias": {
+            "type": "boolean"
+          },
+          "bias_type": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "opinion",
+          "toxic",
+          "bias",
+          "bias_type",
+          "reason"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "opinions"
+  ],
+  "additionalProperties": false
+}
