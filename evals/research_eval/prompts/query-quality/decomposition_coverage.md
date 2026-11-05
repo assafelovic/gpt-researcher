@@ -1,6 +1,6 @@
 ---
 id: decomposition_coverage
-version: 4
+version: 5
 used_by: decomposition_coverage
 ---
 

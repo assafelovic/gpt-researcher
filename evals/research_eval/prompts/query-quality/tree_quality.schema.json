@@ -9,42 +9,20 @@
           "child": {
             "type": "integer"
           },
-          "narrower": {
-            "type": "boolean"
-          },
-          "searchable": {
-            "type": "boolean"
-          },
-          "serves_parent": {
-            "type": "boolean"
-          },
-          "serves_question": {
-            "type": "boolean"
-          },
           "evidence": {
             "type": "string"
-          }
-        },
-        "required": [
-          "child",
-          "narrower",
-          "searchable",
-          "serves_parent",
-          "serves_question",
-          "evidence"
-        ],
-        "additionalProperties": false
-      }
-    },
-    "aspects": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "aspect": {
-            "type": "integer"
           },
-          "children": {
+          "relation": {
+            "type": "string",
+            "enum": [
+              "drifted",
+              "restated",
+              "deeper",
+              "extension",
+              "specific"
+            ]
+          },
+          "builds_on": {
             "type": "array",
             "items": {
               "type": "integer"
@@ -52,16 +30,17 @@
           }
         },
         "required": [
-          "aspect",
-          "children"
+          "child",
+          "evidence",
+          "relation",
+          "builds_on"
         ],
         "additionalProperties": false
       }
     }
   },
   "required": [
-    "children",
-    "aspects"
+    "children"
   ],
   "additionalProperties": false
 }

@@ -11,7 +11,7 @@ from evals.research_eval.metrics import all_metrics
 
 def test_every_prompt_file_loads_and_is_locked():
     ps = P.all_prompts()
-    assert len(ps) == 15 and all(p.used_by for p in ps.values())
+    assert len(ps) == 14 and all(p.used_by for p in ps.values())
     assert P.lock_problems(ps) == [], "run: python -m evals.research_eval.prompts --lock (after bumping versions)"
 
 
@@ -65,10 +65,9 @@ def test_every_answer_schema_is_strict_and_fits_the_prompt_example():
         tail = p.system[p.system.rindex("Return ONLY"):]
         assert P.schema_errors(json.loads(tail[tail.index("{"):]), p.schema) == [], p.id
     tq = P.load("tree_quality").schema
-    assert P.schema_errors({"children": [{"child": 1, "narrower": "yes"}], "aspects": []}, tq) == [
-        "$.children[0]: missing searchable", "$.children[0]: missing serves_parent",
-        "$.children[0]: missing serves_question", "$.children[0]: missing evidence",
-        "$.children[0].narrower: 'yes' is not boolean"]
+    assert P.schema_errors({"children": [{"child": 1, "relation": "deep"}], "notes": ""}, tq) == [
+        "$: unexpected notes", "$.children[0]: missing evidence", "$.children[0]: missing builds_on",
+        "$.children[0].relation: 'deep' not in ['drifted', 'restated', 'deeper', 'extension', 'specific']"]
 
 
 def test_include_pulls_one_skill_section(tmp_path, monkeypatch):
@@ -97,10 +96,8 @@ def test_one_skill_per_group_and_every_section_is_used():
 
 def test_query_quality_prompts_share_the_skill_definitions():
     skill = P.skill_sections("query-quality")
-    assert set(skill) == {"principles", "aspect", "aimed_at", "narrower", "searchable", "serves_parent",
-                          "drift", "repeat"}
-    for pid, sections in {"tree_quality": ["narrower", "searchable", "serves_parent", "drift", "aimed_at"],
-                          "parent_aspects": ["aspect"],
+    assert set(skill) == {"principles", "aimed_at", "relation", "drift", "builds_on", "repeat"}
+    for pid, sections in {"tree_quality": ["relation", "drift", "builds_on"],
                           "subquery_redundancy": ["repeat"], "decomposition_coverage": ["aimed_at"]}.items():
         t = P.load(pid).template
         assert "@include" not in t and P.load(pid).group == "query-quality"

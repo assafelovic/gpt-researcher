@@ -1,12 +1,16 @@
 ---
 name: query-quality
-description: How the judge rates the queries a research agent searched before writing (how it split the question, which aspects the sub-queries reach, whether they repeat or drift). Shared by the prompts of decomposition_coverage, subquery_redundancy and decomposition_tree_quality.
+description: How the judge rates the queries a research agent searched before writing (which key points the sub-queries reach, whether they repeat each other, whether each split goes deeper than its parent or drifts). Shared by the prompts of decomposition_coverage, subquery_redundancy and decomposition_tree_quality.
 ---
 
 # Query quality
 
 This group judges the search plan, not the report: the queries the agent
-searched and how each one was split into sub-queries. Every prompt in this
+searched and how each one was split into sub-queries. Breadth (does the plan
+reach every key point of the question) is decomposition_coverage, waste (do
+queries repeat each other) is subquery_redundancy, and depth (does each split
+go below its parent rather than restate or leave it) is
+decomposition_tree_quality. Every prompt in this
 folder includes the sections it needs with `@include query-quality#<section>`.
 The text under a `## <section>` heading is sent to the judge as it is, so it
 is written for the judge; this introduction is not sent.
@@ -27,24 +31,13 @@ frozen in the dataset, and changing that prompt would not regenerate them.
 ## principles
 
 How to judge:
-- Judge the words of the queries only. Do not guess what the agent meant or
-  what the search returned.
-- Rest each answer on words you can quote from the queries.
+- Judge only what you are shown: the queries and, where given, the key
+  points or findings. Do not guess what the agent meant or what else the
+  search returned.
+- Rest each answer on words you can quote from what you are shown.
 - These answers are counted and compared across runs, so the same queries
   must get the same answer every time. In a borderline case, apply the
   definition as written and pick the answer that needs fewer assumptions.
-
-## aspect
-
-An aspect is one distinct part of what a query asks: something a good answer
-would treat in its own paragraph. Take aspects from the query's own words and
-scope (its place, period, actors and object). An aspect is smaller than the
-whole query and larger than a single fact; leave out what the query does not
-ask and parts every answer has, such as background.
-Example: "How are European EV makers securing battery materials since 2023?"
-has the aspects supply contracts, stakes in mines and refiners, recycling, and
-EU policy support; not "history of electric cars" (not asked) or "lithium
-price on 1 March 2024" (a single fact).
 
 ## aimed_at
 
@@ -52,30 +45,27 @@ A query is aimed at an aspect when it names the aspect or is plainly written
 to find out about it. Sharing broad topic words is not enough: "EV battery
 supply in Europe" is not aimed at "battery recycling".
 
-## narrower
+## relation
 
-A child is narrower when it asks for one part of its parent, or a more
-concrete angle on it: a named actor, place, period, measure or source. A child
-that restates the whole parent is not narrower, even with a few words added,
-dropped or reordered.
-Example: for the parent "EU battery material supply risks 2024 2025", "EU
-dependence on Chinese graphite for anodes" is narrower; "2024 2025 EU supply
-risks for battery materials and policy response" is not.
-
-## searchable
-
-A child is searchable when, pasted into a web search engine as it is, it would
-return focused results about one thing. It is not when it is too vague
-("battery news"), or when it piles up terms about several things that no
-single page covers. A long query is fine when every term narrows the same
-thing.
-
-## serves_parent
-
-A child serves its parent when what it asks helps answer the parent. A
-moderate step beyond the parent's literal scope still counts (for a parent on
-EU battery rules, how Germany enforces them); a child on another question does
-not ("best electric cars to buy in 2025").
+Give each child the first of these relations that fits, in this order:
+1. drifted: it no longer helps answer the parent or the original research
+   question (see drift).
+2. restated: it asks for the whole parent again in other words, even with a
+   few terms added, dropped or reordered.
+3. deeper: it digs into one part of the parent: why or how it happens, or the
+   evidence and figures behind it.
+4. extension: it adds an angle the parent does not name but that helps answer
+   it, such as another actor, a side effect or a comparison.
+5. specific: it asks the parent's question for one concrete case: a named
+   actor, place, period, product or measure.
+The order settles a child that fits two: one that names a country and asks
+why its rule falls short is deeper, not specific.
+Example, for the parent "EU battery recycling rules 2025": "why lithium
+recovery in EU recycling plants stays below the targets" is deeper; "how the
+rules change battery import costs for carmakers" is an extension; "Germany's
+enforcement of the EU battery recycling quotas" is specific; "2025 EU rules
+for recycling batteries" is restated; "best electric cars to buy in 2025" has
+drifted.
 
 ## drift
 
@@ -85,6 +75,16 @@ trees, so read the path from the question down to the parent.
 Example: question "How are European EV makers securing battery materials?",
 path "Northvolt financing" > "Northvolt bond terms": the child "Swedish
 insolvency law for bondholders" has drifted.
+
+## builds_on
+
+A child builds on a finding when it follows up something the earlier search
+step found: a named company, figure, event or open question from the listed
+findings that the parent query alone would not suggest. Sharing topic words
+with a finding is not enough.
+Example: after the finding "Northvolt's Skelleftea plant ran at a third of
+its capacity in 2024", the child "why Northvolt Skelleftea capacity use stayed
+low in 2024" builds on it.
 
 ## repeat
 

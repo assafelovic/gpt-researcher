@@ -1,43 +1,31 @@
 ---
 id: tree_quality
-version: 8
+version: 9
 used_by: decomposition_tree_quality
 ---
 
 You are auditing how a research agent split a query into sub-queries before
-searching the web. Judge each child query on its own, then which aspects of
-the parent the children pick up. For every answer, quote the parent or child
-words it rests on.
+searching the web. For each child query, decide how it relates to its parent:
+whether it goes deeper than the parent, or only restates it or drifts away.
+In deep research a split can follow a search step whose findings are listed;
+then also say which findings each child follows up. For every answer, quote
+the parent or child words it rests on.
 
 @include query-quality#principles
 
-For EACH child, answer true or false for each of the four checks below.
+How a child relates to its parent:
+@include query-quality#relation
 
-narrower:
-@include query-quality#narrower
-
-searchable:
-@include query-quality#searchable
-
-serves_parent:
-@include query-quality#serves_parent
-
-serves_question (false when the child has drifted):
+What counts as drift:
 @include query-quality#drift
-If the parent is the original question itself, give the same answer as
-serves_parent.
 
-Then, for EACH aspect of the parent listed below, give the numbers of the
-children aimed at it (an empty list when no child picks it up). The aspects
-were listed from the parent alone, before its children were known.
+What counts as building on a finding:
+@include query-quality#builds_on
+Give the numbers of the findings a child builds on, or an empty list. When no
+findings are listed, the list is empty for every child.
 
-What counts as aimed at:
-@include query-quality#aimed_at
-
-Return ONLY JSON:
-{"children": [{"child": 1, "narrower": true, "searchable": true,
-                "serves_parent": true, "serves_question": true, "evidence": "..."}],
-  "aspects": [{"aspect": 1, "children": [1]}]}
+Return ONLY JSON, one entry per child, in order:
+{"children": [{"child": 1, "evidence": "...", "relation": "deeper", "builds_on": []}]}
 
 @user
 
@@ -51,8 +39,8 @@ per level; long queries are cut:
 Parent query:
 {parent}
 
+Findings of the search step this split follows:
+{findings}
+
 Child queries:
 {children}
-
-Aspects of the parent:
-{aspects}

@@ -9,7 +9,7 @@ from itertools import combinations
 from ...archive import RunArchive
 from ...judge import cosine
 from ...key_points import get_key_points
-from ...prompts import DECOMPOSITION_COVERAGE, KEY_POINTS, PARENT_ASPECTS, SUBQUERY_REDUNDANCY, TREE_QUALITY
+from ...prompts import DECOMPOSITION_COVERAGE, KEY_POINTS, SUBQUERY_REDUNDANCY, TREE_QUALITY
 from ..base import Metric, MetricResult, ScoringContext, rounded
 from ..lexical import idf_table, symmetric_overlap
 
@@ -282,51 +282,48 @@ class SubqueryRedundancy(Metric):
 
 
 class DecompositionTreeQuality(Metric):
-    """How well each parent query was split: every child judged on its own,
-    then which of the parent's aspects the children pick up.
+    """Depth of the search tree: does each split go below its parent, or only
+    restate it or drift away?
 
-    Per decomposition that was searched (deep research's clarifying questions
-    are left out: they are folded into one query, never searched):
+    Breadth is decomposition_coverage (do the sub-queries reach the question's
+    key points) and waste is subquery_redundancy; this metric looks at each
+    parent -> child step on its own. One call per decomposition that was
+    searched (deep research's clarifying questions are left out: they are
+    folded into one query, never searched). The judge sees the path from the
+    question down to the parent (`RunArchive.query_path`) and gives each child
+    one relation, the first that fits:
 
-    1. The parent's aspects are fixed before the children are seen, so a split
-       that collapses onto one aspect cannot redefine the aspects to match
-       (v4 let the judge list them next to the children, and three
-       near-identical children got one aspect, fully covered). A split of the
-       research question itself uses the question's key points
-       (`get_key_points`, shared with decomposition_coverage); any other
-       parent gets one call that lists 2-6 aspects from the parent alone
-       (prompt parent_aspects; cached, so perturbed children reuse it).
-    2. One call shows the path from the question down to the parent
-       (`RunArchive.query_path`), the children and the numbered aspects. The
-       judge answers four yes/no checks per child
+        drifted    no longer helps answer the parent or the question
+        restated   the whole parent again in other words
+        deeper     why or how one part of the parent happens, or its evidence
+        extension  an angle the parent does not name but that helps answer it
+        specific   the parent's question for one concrete case
 
-           narrower         asks for a part of the parent, not the parent restated
-           searchable       would return focused results as it is
-           serves_parent    helps answer the parent
-           serves_question  still serves the original question (catches drift)
+    A deeper deep-research level follows a search step whose findings
+    (learnings) the archive records; the judge is shown them and names the
+    findings each child follows up.
 
-       and gives the children aimed at each aspect:
-       coverage = aspects with a child / aspects answered.
-
-        parent score = (pass rate of each of the four checks + coverage) / 5
+        parent score = children that are deeper, extension or specific / children
         value        = mean parent score
 
-    The definitions come from the query-quality skill
-    (prompts/query-quality/SKILL.md). `details.checks` gives each check's
-    pass rate over all children, `details.coverage` the mean coverage,
-    `details.weak_children` the children that failed a check and
-    `details.uncovered_aspects` the aspects no child picked up.
+    `details.relations` gives each relation's share of all children and
+    `details.depth_share` the share that is deeper (the same in the parent
+    score as the other two good relations, so a one-level default run is not
+    marked down for its mode); `details.builds_on_findings` the share of
+    children after findings that follow one up. The definitions come from the
+    query-quality skill (prompts/query-quality/SKILL.md).
     """
 
     name, category = "decomposition_tree_quality", "retrieval.query_quality"
-    version = "7"           # 3: the judge sees the root-to-parent path; 4: per-child checks + aspect coverage;
+    version = "8"           # 3: the judge sees the root-to-parent path; 4: per-child checks + aspect coverage;
                             # 5: check and aspect definitions from the query-quality skill, with examples;
                             # 6: the parent's aspects are fixed before the children are shown;
-                            # 7: the skill rewritten short, with shared principles
+                            # 7: the skill rewritten short, with shared principles;
+                            # 8: depth only: one relation per child, findings in deep research, no coverage
     uses_llm = True
-    prompts = (TREE_QUALITY, PARENT_ASPECTS, KEY_POINTS)
-    CHECKS = ("narrower", "searchable", "serves_parent", "serves_question")
-    MAX_ASPECTS = 6
+    prompts = (TREE_QUALITY,)
+    RELATIONS = ("deeper", "extension", "specific", "restated", "drifted")
+    GOOD = ("deeper", "extension", "specific")
 
     async def score(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:
         if ctx.judge is None:
@@ -335,36 +332,24 @@ class DecompositionTreeQuality(Metric):
         if not decs:
             return self.skip("no decompositions")
         question = archive.query.strip()
-        key_points, provenance = (await get_key_points(archive, ctx)
-                                  if any(d.parent_query.strip() == question for d in decs) else (None, None))
-
-        async def aspects_of(d):
-            if d.parent_query.strip() == question and key_points:
-                return list(key_points), "key_points", None
-            r = await ctx.judge.ask(PARENT_ASPECTS.id, PARENT_ASPECTS.version,
-                                    PARENT_ASPECTS.render(question=question, parent=d.parent_query.strip()))
-            got = r.parsed.get("aspects") if isinstance(r.parsed, dict) else None
-            return [str(a).strip() for a in got or [] if str(a).strip()][:self.MAX_ASPECTS], "judge", r
 
         async def judge_one(d):
-            aspects, source, ar = await aspects_of(d)
-            if not aspects:
-                return d, aspects, source, ar, None
             path = archive.query_path(d.span_id)
             if path[-1] != d.parent_query.strip():
                 path.append(d.parent_query.strip())
+            findings = self.findings(archive, d)
             prompt = TREE_QUALITY.render(
                 question=question,
                 path="\n".join(f"{i}. {self._short(q)}" for i, q in enumerate(path)),
                 parent=d.parent_query.strip(),
-                children="\n".join(f"{i}. {c}" for i, c in enumerate(d.child_queries, 1)),
-                aspects="\n".join(f"{i}. {a}" for i, a in enumerate(aspects, 1)))
-            return d, aspects, source, ar, await ctx.judge.ask(TREE_QUALITY.id, TREE_QUALITY.version, prompt)
+                findings="\n".join(f"{i}. {f}" for i, f in enumerate(findings, 1)) or "none",
+                children="\n".join(f"{i}. {c}" for i, c in enumerate(d.child_queries, 1)))
+            return d, findings, await ctx.judge.ask(TREE_QUALITY.id, TREE_QUALITY.version, prompt)
 
         results = await ctx.gather(judge_one(d) for d in decs)
-        per_parent, scores, verdicts, coverages, weak, uncovered = [], [], [], [], [], []
-        for d, aspects, source, ar, r in results:
-            parsed = r.parsed if r is not None and isinstance(r.parsed, dict) else {}
+        per_parent, scores, verdicts, weak, after_findings = [], [], [], [], []
+        for d, findings, r in results:
+            parsed = r.parsed if isinstance(r.parsed, dict) else {}
             n = len(d.child_queries)
             kids = {}
             for e in parsed.get("children") or []:
@@ -372,55 +357,49 @@ class DecompositionTreeQuality(Metric):
                     i = int(e["child"])
                 except (KeyError, TypeError, ValueError):
                     continue
-                answers = {c: _bool(e.get(c)) for c in self.CHECKS}
-                if 1 <= i <= n and all(v is not None for v in answers.values()):
-                    kids[i] = {**answers, "evidence": str(e.get("evidence") or "")}
-            picked = {}
-            for e in parsed.get("aspects") or []:
-                try:
-                    a = int(e["aspect"])
-                except (KeyError, TypeError, ValueError):
-                    continue
-                if 1 <= a <= len(aspects):
-                    picked[a] = _child_numbers(e.get("children"), n)
-            rates = {c: (sum(k[c] for k in kids.values()) / len(kids) if kids else None) for c in self.CHECKS}
-            coverage = sum(bool(v) for v in picked.values()) / len(picked) if picked else None
-            score = None
-            if kids and coverage is not None:
-                score = (sum(rates.values()) + coverage) / (len(self.CHECKS) + 1)
+                rel = str(e.get("relation") or "").strip().lower()
+                if 1 <= i <= n and rel in self.RELATIONS:
+                    kids[i] = {"relation": rel, "evidence": str(e.get("evidence") or ""),
+                               "builds_on": _child_numbers(e.get("builds_on"), len(findings))}
+            score = sum(k["relation"] in self.GOOD for k in kids.values()) / len(kids) if kids else None
+            if score is not None:
                 scores.append(score)
-                coverages.append(coverage)
-                verdicts.extend(kids.values())
-                for i, k in sorted(kids.items()):
-                    failed = [c for c in self.CHECKS if not k[c]]
-                    if failed:
-                        weak.append({"parent": d.parent_query.strip()[:200], "child": d.child_queries[i - 1],
-                                     "failed": failed, "evidence": k["evidence"]})
-                uncovered += [{"parent": d.parent_query.strip()[:200], "aspect": aspects[a - 1]}
-                              for a, v in sorted(picked.items()) if not v]
-            error = (ar.error if ar is not None and not aspects else None) or (r.error if r is not None else None)
+                verdicts += kids.values()
+                if findings:
+                    after_findings += kids.values()
+                weak += [{"parent": d.parent_query.strip()[:200], "child": d.child_queries[i - 1],
+                          "relation": k["relation"], "evidence": k["evidence"]}
+                         for i, k in sorted(kids.items()) if k["relation"] not in self.GOOD]
             per_parent.append({"span_id": d.span_id, "kind": d.kind, "parent": d.parent_query,
                                "depth": len(archive.query_path(d.span_id)) - 1, "n_children": n,
-                               "score": rounded(score), "coverage": rounded(coverage),
-                               "checks": {c: rounded(v) for c, v in rates.items()},
+                               "score": rounded(score), "findings": findings,
                                "children": [{"child": d.child_queries[i - 1], **kids[i]} for i in sorted(kids)],
-                               "unanswered_children": n - len(kids),
-                               "aspects": [{"aspect": a, "source": source, "children": picked.get(i)}
-                                           for i, a in enumerate(aspects, 1)],
-                               "unanswered_aspects": len(aspects) - len(picked) if r is not None else None,
-                               "error": error or (None if aspects else "no aspects for the parent")})
+                               "unanswered_children": n - len(kids), "error": r.error})
+        share = (lambda rel: rounded(sum(v["relation"] == rel for v in verdicts) / len(verdicts))
+                 if verdicts else None)
         res = self.result(
             rounded(sum(scores) / len(scores)) if scores else None, per_parent=per_parent,
-            scored_parents=len(scores),
-            checks={c: rounded(sum(v[c] for v in verdicts) / len(verdicts)) if verdicts else None
-                    for c in self.CHECKS},
-            coverage=rounded(sum(coverages) / len(coverages)) if coverages else None,
-            children=len(verdicts), weak_children=weak, uncovered_aspects=uncovered,
-            key_points=provenance)
+            scored_parents=len(scores), children=len(verdicts),
+            relations={rel: share(rel) for rel in self.RELATIONS}, depth_share=share("deeper"),
+            builds_on_findings=rounded(sum(bool(v["builds_on"]) for v in after_findings) / len(after_findings))
+            if after_findings else None,
+            children_after_findings=len(after_findings), weak_children=weak)
         if not scores:
             res.skipped = "every judge call failed"
-        res.llm = self.llm_record(ctx, [x for _, _, _, ar, r in results for x in (ar, r) if x is not None])
+        res.llm = self.llm_record(ctx, [r for _, _, r in results])
         return res
+
+    @staticmethod
+    def findings(archive: RunArchive, d) -> list[str]:
+        """Learnings of the search step a deeper deep-research level follows:
+        the level's span hangs under the research branch whose goal and
+        follow-ups produced it (capture.py re-parents it)."""
+        if d.kind != "deep_level":
+            return []
+        parent = archive.span_by_id.get(archive.span_by_id[d.span_id].get("parent_id"))
+        if parent is None or parent["name"] != "research":
+            return []
+        return [str(x).strip() for x in parent["attributes"].get("learnings") or [] if str(x).strip()]
 
     PATH_CHARS = 400
 
@@ -515,14 +494,6 @@ class PlanAdherence(Metric):
                      if s["name"] == "research" and s["attributes"].get("query") == query
                      and s["attributes"].get("parent_query")]
         return [s for s in spans if archive.subtree_chunk_ids(s["span_id"])]
-
-
-def _bool(x) -> bool | None:
-    if isinstance(x, bool):
-        return x
-    if isinstance(x, str):
-        return {"true": True, "yes": True, "false": False, "no": False}.get(x.strip().lower())
-    return None
 
 
 def _child_numbers(xs, n: int) -> list[int]:

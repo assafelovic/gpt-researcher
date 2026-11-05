@@ -1,23 +1,19 @@
 {
   "decomposition_coverage": {
-    "version": "4",
-    "hash": "a615097740b4"
+    "version": "5",
+    "hash": "9a485a0cc755"
   },
   "key_points": {
     "version": "2",
     "hash": "0792d43b553a"
   },
-  "parent_aspects": {
-    "version": "3",
-    "hash": "bbec5d89ae77"
-  },
   "subquery_redundancy": {
-    "version": "5",
-    "hash": "2e3299158f32"
+    "version": "6",
+    "hash": "9bf93d7d7d49"
   },
   "tree_quality": {
-    "version": "8",
-    "hash": "71b2ca7779f4"
+    "version": "9",
+    "hash": "36e37ea3b12c"
   },
   "domain_authority": {
     "version": "2",

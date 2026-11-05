@@ -274,7 +274,6 @@ def write_lock() -> None:
 KEY_POINTS = load("key_points")
 DECOMPOSITION_COVERAGE = load("decomposition_coverage")
 TREE_QUALITY = load("tree_quality")
-PARENT_ASPECTS = load("parent_aspects")
 SUBQUERY_REDUNDANCY = load("subquery_redundancy")
 QUERY_RELEVANCE = load("query_relevance")
 DOMAIN_AUTHORITY = load("domain_authority")

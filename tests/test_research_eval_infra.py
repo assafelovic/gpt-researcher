@@ -231,7 +231,7 @@ async def test_judge_sends_a_system_and_a_user_message_with_the_strict_schema(mo
     from evals.research_eval.prompts import TREE_QUALITY
     fake = FakeChatModel()
     monkeypatch.setattr(judge_factory, "make_judge", lambda model=None: fake)
-    prompt = TREE_QUALITY.render(question="Q", path="0. Q", parent="Q", children="1. a", aspects="1. x")
+    prompt = TREE_QUALITY.render(question="Q", path="0. Q", parent="Q", findings="none", children="1. a")
     j = Judge(EvalCache(":memory:"), model="m", structured=True)
     r = await j.ask(TREE_QUALITY.id, TREE_QUALITY.version, prompt)
     assert r.parsed == {"total": 1} and j.usage()["input_tokens"] == 7

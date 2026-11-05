@@ -103,12 +103,6 @@ class FakeJudge:
             return json.dumps({"verdicts": [{"paragraph": i, "verdict": "yes"} for i in range(1, n + 1)]})
         if "screening part of a research report" in prompt:
             return json.dumps({"opinions": []})
-        if "planning research on one query" in prompt:
-            # The aspects of a parent below the question, listed without its children.
-            q = prompt.split("Query:\n")[1].split("\n")[0]
-            if "garbled" in q:
-                return "not json"
-            return json.dumps({"aspects": ["output figures", "mining sites", "labour conditions"]})
         if "List the distinct aspects" in prompt:
             return json.dumps({"key_points": ["cobalt supply", "lithium refining", "recycling policy"]})
         if "retrieved covers, before any report" in prompt:
@@ -129,17 +123,16 @@ class FakeJudge:
                 {"point": int(i), "evidence": "",
                  "subqueries": [int(j) for j, q in subs if p.split()[0] in q]} for i, p in points]})
         if "how a research agent split a query" in prompt:
-            # Every child passes, except that "sodium" serves neither the parent nor the
-            # question; an aspect is picked up by the children that name its first word.
+            # "sodium" drifted, "worldwide" restates, "why" digs deeper, the rest are
+            # specific; a child naming "Kamoto" follows up finding 1.
             kids = re.findall(r"^(\d+)\. (.+)$", prompt.split("Child queries:\n")[1].split("\n\n")[0], re.M)
-            aspects = re.findall(r"^(\d+)\. (.+)$", prompt.split("Aspects of the parent:\n")[1].split("\n\n")[0],
-                                 re.M)
-            return json.dumps({
-                "children": [{"child": int(n), "narrower": True, "searchable": "yes",
-                              "serves_parent": "sodium" not in q, "serves_question": "sodium" not in q,
-                              "evidence": q} for n, q in kids],
-                "aspects": [{"aspect": int(i), "children": [str(n) for n, q in kids if a.split()[0] in q.lower()]}
-                            for i, a in aspects]})
+            if any("garbled" in q for _, q in kids):
+                return "not json"
+            rel = lambda q: ("drifted" if "sodium" in q else "restated" if "worldwide" in q
+                             else "deeper" if q.startswith("why") else "specific")
+            return json.dumps({"children": [
+                {"child": int(n), "evidence": q, "relation": rel(q), "builds_on": [1] if "Kamoto" in q else []}
+                for n, q in kids]})
         if "auditing the search plan of a research agent" in prompt:
             # A query repeats the first earlier one it starts with (ancestors included:
             # the metric must drop those marks).
@@ -235,7 +228,7 @@ async def test_subquery_redundancy_judges_every_node_in_one_call(ctx):
     assert r.value == pytest.approx(1 / 3, abs=1e-3) and r.higher_is_better is False
     assert sum("auditing the search plan" in p for p in ctx.fake.prompts) == 3     # three votes
     assert r.details["votes"] == 3 and r.details["replies"] == 3 and r.details["unstable"] == []
-    assert r.llm["prompts"]["subquery_redundancy"]["version"] == "5"
+    assert r.llm["prompts"]["subquery_redundancy"]["version"] == "6"
 
 
 async def test_subquery_redundancy_takes_the_majority_of_three_calls(ctx):
@@ -317,84 +310,77 @@ async def test_subquery_redundancy_lexical_fallback_flags_near_duplicates():
     assert r.higher_is_better is False
 
 
-async def test_tree_quality_judges_each_child_and_the_aspects_of_the_split(ctx):
+async def test_tree_quality_judges_how_each_child_relates_to_its_parent(ctx):
     r = await DecompositionTreeQuality().score(make_archive(), ctx)
-    # Checks over 4 children: 1, 1, 0.75, 0.75; the split of the question is held
-    # against its key points, and 2 of 3 are picked up (recycling is not).
-    assert r.value == pytest.approx((1 + 1 + 0.75 + 0.75 + 2 / 3) / 5, abs=1e-3)
-    assert r.details["checks"] == {"narrower": 1.0, "searchable": 1.0, "serves_parent": 0.75,
-                                   "serves_question": 0.75}
-    assert r.details["coverage"] == 0.667 and r.details["children"] == 4
-    [w] = r.details["weak_children"]
-    assert w["child"] == "sodium battery alternatives" and w["failed"] == ["serves_parent", "serves_question"]
-    [p] = r.details["per_parent"]
-    assert p["aspects"] == [{"aspect": "cobalt supply", "source": "key_points", "children": [1]},
-                            {"aspect": "lithium refining", "source": "key_points", "children": [2, 3]},
-                            {"aspect": "recycling policy", "source": "key_points", "children": []}]
-    assert p["unanswered_aspects"] == 0
-    assert r.details["uncovered_aspects"] == [{"parent": CORE, "aspect": "recycling policy"}]
-    assert r.details["key_points"]["source"] == "judge"
-    # The key points are shared with decomposition_coverage, so the metric itself asks once.
+    # specific, specific, restated ("worldwide"), drifted ("sodium"): 2 of 4 go below the parent.
+    assert r.value == pytest.approx(0.5, abs=1e-3)
+    assert r.details["relations"] == {"deeper": 0.0, "extension": 0.0, "specific": 0.5,
+                                      "restated": 0.25, "drifted": 0.25}
+    assert r.details["depth_share"] == 0.0 and r.details["children"] == 4
+    assert [(w["child"], w["relation"]) for w in r.details["weak_children"]] == [
+        ("lithium refining capacity worldwide", "restated"), ("sodium battery alternatives", "drifted")]
+    # No findings outside deep research.
+    assert r.details["builds_on_findings"] is None and r.details["per_parent"][0]["findings"] == []
     assert r.llm["requests"] == r.llm["api_calls"] == 1 and r.llm["judge_model"] == "judge-x"
-    assert r.llm["prompts"]["tree_quality"]["version"] == "8"
-    assert not any("planning research on one query" in q for q in ctx.fake.prompts)
+    assert r.llm["prompts"]["tree_quality"]["version"] == "9"
     prompt = next(p for p in ctx.fake.prompts if "Path from the original question" in p)
     assert f"0. {CORE}" in prompt and r.details["per_parent"][0]["depth"] == 0
     assert f"Original research question (the root of the whole search tree):\n{CORE}" in prompt
+    assert "Findings of the search step this split follows:\nnone" in prompt
     assert "4. sodium battery alternatives" in prompt
-    assert "Aspects of the parent:\n1. cobalt supply\n2. lithium refining\n3. recycling policy" in prompt
 
 
-async def test_tree_quality_lists_the_aspects_of_a_lower_parent_before_its_children(ctx):
-    r = await DecompositionTreeQuality().score(nested_archive(), ctx)
-    by = {p["parent"]: p for p in r.details["per_parent"]}
-    assert set(by) == {CORE, "Congo cobalt mining", "recycling policy in Europe"}
-    asked = [q for q in ctx.fake.prompts if "planning research on one query" in q]
-    assert len(asked) == 2
-    # The aspects are listed from the parent alone: its children are not in that prompt.
-    one = next(q for q in asked if q.endswith("Query:\nCongo cobalt mining"))
-    assert "Congo cobalt mining sites" not in one and f"Original research question" in one
-    cobalt = by["Congo cobalt mining"]
-    assert [a["source"] for a in cobalt["aspects"]] == ["judge"] * 3
-    assert [a["children"] for a in cobalt["aspects"]] == [[1], [2], []]
-    assert cobalt["coverage"] == 0.667
-    assert by["recycling policy in Europe"]["coverage"] == 0.333
-    assert r.llm["requests"] == 5          # 3 splits + 2 aspect lists
+def deep_archive():
+    """A deep run: level 1 splits the question, the cobalt branch finds something
+    and a level 2 split follows it up."""
+    def span(sid, parent, name, **attrs):
+        return {"span_id": sid, "parent_id": parent, "name": name, "attributes": attrs}
+    spans = [
+        span("r0", None, "research", query=CORE),
+        span("d1", "r0", "deep_level", query=CORE, serp_queries=[
+            {"query": "Congo cobalt mining 2024", "goal": "g1"}, {"query": "lithium refining in China", "goal": "g2"}]),
+        span("r1", "d1", "research", query="Congo cobalt mining 2024", research_goal="g1",
+             learnings=["Kamoto mine output fell 30% in 2024", "Export quotas began in 2025"]),
+        span("r2", "d1", "research", query="lithium refining in China", research_goal="g2", learnings=[]),
+        span("d2", "r1", "deep_level", query="Previous research goal: g1\nFollow-up questions: why output fell",
+             serp_queries=[{"query": "why Kamoto mine output fell in 2024", "goal": "g3"},
+                           {"query": "Congo cobalt export quota rules", "goal": "g4"}]),
+    ]
+    return RunArchive(build_archive(meta={"run_id": "deep-1", "query": CORE, "config": {"mode": "deep"}},
+                                    spans=spans, chunks={}, report_markdown="# R\n\nText.\n"))
+
+
+async def test_tree_quality_shows_deep_findings_and_counts_the_children_that_follow_them_up(ctx):
+    a = deep_archive()
+    r = await DecompositionTreeQuality().score(a, ctx)
+    by = {p["span_id"]: p for p in r.details["per_parent"]}
+    assert by["d1"]["findings"] == [] and by["d2"]["findings"] == a.span_by_id["r1"]["attributes"]["learnings"]
+    prompt = next(p for p in ctx.fake.prompts if "Child queries:\n1. why Kamoto" in p)
+    assert "Findings of the search step this split follows:\n1. Kamoto mine output fell 30% in 2024\n2. Export" in prompt
+    assert [k["relation"] for k in by["d2"]["children"]] == ["deeper", "specific"]
+    assert [k["builds_on"] for k in by["d2"]["children"]] == [[1], []]
+    assert r.details["builds_on_findings"] == 0.5 and r.details["children_after_findings"] == 2
+    assert r.details["depth_share"] == 0.25 and r.value == 1.0
+
+
+async def test_tree_quality_reports_a_failed_call(ctx):
+    a = make_archive()
+    a.data["spans"][2]["attributes"]["sub_queries"] = ["garbled one", "cobalt supply"]
+    r = await DecompositionTreeQuality().score(RunArchive(a.data), ctx)
+    [p] = r.details["per_parent"]
+    assert p["score"] is None and p["error"] and p["unanswered_children"] == 2
+    assert r.value is None and r.skipped == "every judge call failed"
 
 
 async def test_dry_run_counts_follow_up_requests_and_caches_nothing():
     cache = EvalCache(":memory:")
     j = Judge(cache, model="m", dry_run=True)
-    r = await DecompositionTreeQuality().score(nested_archive(), ScoringContext(cache=cache, judge=j))
-    # key points + 2 aspect lists + 3 splits: the splits below the question are
-    # asked only once their aspects are known, so a dry run must answer them.
-    assert j.calls == 6 and r.value is not None
+    r = await DecompositionCoverage().score(nested_archive(), ScoringContext(cache=cache, judge=j))
+    # The key points, then the mapping that is asked only once they are known.
+    assert j.calls == 2 and r.value is not None
     j2 = Judge(cache, model="m", dry_run=True)
-    await DecompositionTreeQuality().score(nested_archive(), ScoringContext(cache=cache, judge=j2))
-    assert j2.calls == 6 and j2.cache_hits == 0
-
-
-async def test_tree_quality_children_cannot_redefine_the_aspects(ctx):
-    # Three near-identical children: v4 let the judge list one aspect next to them,
-    # fully covered. The key points are fixed first, so the collapse shows.
-    a = make_archive()
-    a.data["spans"][2]["attributes"]["sub_queries"] = [
-        "cobalt supply risk", "cobalt supply risks 2024", "risks to cobalt supply"]
-    r = await DecompositionTreeQuality().score(RunArchive(a.data), ctx)
-    [p] = r.details["per_parent"]
-    assert [x["children"] for x in p["aspects"]] == [[1, 2, 3], [], []]
-    assert p["coverage"] == 0.333
-
-
-async def test_tree_quality_reports_a_parent_without_aspects(ctx):
-    a = nested_archive()
-    for s in a.data["spans"]:
-        if s["span_id"] == "t2p":
-            s["attributes"]["query"] = "recycling policy in Europe garbled"
-    r = await DecompositionTreeQuality().score(RunArchive(a.data), ctx)
-    bad = next(p for p in r.details["per_parent"] if "garbled" in p["parent"])
-    assert bad["score"] is None and bad["aspects"] == [] and bad["error"]
-    assert r.details["scored_parents"] == 2 and r.llm["errors"] == 1
+    await DecompositionCoverage().score(nested_archive(), ScoringContext(cache=cache, judge=j2))
+    assert j2.calls == 2 and j2.cache_hits == 0
 
 
 async def test_tree_quality_leaves_out_deep_clarifying_questions(ctx):

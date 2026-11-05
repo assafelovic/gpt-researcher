@@ -1,6 +1,6 @@
 ---
 id: subquery_redundancy
-version: 5
+version: 6
 used_by: subquery_redundancy
 ---
 
