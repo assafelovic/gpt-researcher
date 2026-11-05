@@ -116,29 +116,28 @@ class SubqueryRedundancy(Metric):
     except a node and the nodes it was split from (its ancestors,
     `RunArchive.query_node_ancestors`): those overlap by design.
 
-    With a judge: one call per run. The judge sees every node in search
-    order, each with the numbers of its ancestors, and marks each node that
-    asks for the same information as an earlier node in other words (the
-    same facts would answer both). Another perspective, source, period,
-    place, a separate subtopic, or a narrower part of a broader query is not
-    a repeat. A mark that points at an ancestor or a descendant is dropped
-    (`details.dropped_marks`). Repeats chain into groups; in each group the
-    node searched first is the original and the rest are duplicates.
+    With a judge: the judge sees every node in search order, each with the
+    numbers of its ancestors, and marks each node that asks for the same
+    information as an earlier node in other words (the same facts would
+    answer both). Another perspective, source, period, place, a separate
+    subtopic, or a narrower part of a broader query is not a repeat. A mark
+    that points at an ancestor or a descendant is dropped
+    (`details.dropped_marks`). Borderline marks flip from one call to the
+    next, so the same prompt is asked VOTES times (cache keys apart) and a
+    node is a repeat when a majority of the replies mark it; its original is
+    the node most of those marks name. `details.unstable` lists the nodes
+    some but not all replies marked. Repeats chain into groups; in each
+    group the node searched first is the original and the rest are
+    duplicates.
 
         value = duplicate nodes / all nodes
-
-    The judge also marks overlaps: a node that is no repeat but asks for most
-    of the same information as an earlier node (adds only a detail or a
-    slightly different angle, or asks for one part of it).
-    `details.with_overlaps` = (duplicates + overlapping nodes) / all nodes,
-    the looser reading; `details.overlapping` lists them.
 
     `details.per_layer` and `details.per_kind` (branch / leaf) give the share
     by the duplicate's layer and kind; `details.same_layer` and
     `details.same_parent` count the duplicates whose original sits on the
     same layer / has the same parent (the per-layer comparison of v6 would
-    only see the first). A node the reply leaves out counts as not a
-    duplicate and is listed in `details.unanswered`.
+    only see the first). A node no reply answers counts as not a duplicate
+    and is listed in `details.unanswered`.
 
     Without a judge (`details.method` = "lexical"): sibling pairs whose
     symmetric BM25-weighted term overlap reaches the threshold, IDF over the
@@ -148,13 +147,14 @@ class SubqueryRedundancy(Metric):
     """
 
     name, category = "subquery_redundancy", "retrieval.query_quality"
-    version = "8"           # 4: only a reworded request for the same facts; 5: sub-queries only;
+    version = "9"           # 4: only a reworded request for the same facts; 5: sub-queries only;
                             # 6: own call per layer over every node; 7: whole tree but ancestors, one call;
-                            # 8: overlaps (most of the same information) reported beside repeats
+                            # 8: overlaps beside repeats (too broad, dropped); 9: majority of VOTES calls
     higher_is_better = False
     uses_llm = True         # the lexical fallback only runs when no judge is configured at all
     prompts = (SUBQUERY_REDUNDANCY,)
     DEFAULT_THRESHOLD = 0.6
+    VOTES = 3
 
     async def score(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:
         if ctx.judge is None:
@@ -174,37 +174,47 @@ class SubqueryRedundancy(Metric):
             tag = f" [{' > '.join(map(str, path))}]" if path else ""
             lines.append(f"{i}.{tag} {' '.join(n.query.split())}")
         prompt = SUBQUERY_REDUNDANCY.render(question=archive.query.strip(), queries="\n".join(lines))
-        r = await ctx.judge.ask(SUBQUERY_REDUNDANCY.id, SUBQUERY_REDUNDANCY.version, prompt)
-        entries = r.parsed.get("queries") if isinstance(r.parsed, dict) else None
-        if not isinstance(entries, list):
-            res = self.skip("judge call failed", error=r.error, raw=(r.raw or "")[:300])
-            res.llm = self.llm_record(ctx, [r])
+        votes = max(1, int(ctx.option("redundancy_votes", self.VOTES)))
+        # The first call keeps the plain cache key, so a single-call verdict is reused.
+        replies = await ctx.gather(
+            ctx.judge.ask(SUBQUERY_REDUNDANCY.id, SUBQUERY_REDUNDANCY.version, prompt, **({"vote": k} if k else {}))
+            for k in range(votes))
+        ballots = [r.parsed.get("queries") for r in replies
+                   if isinstance(r.parsed, dict) and isinstance(r.parsed.get("queries"), list)]
+        if not ballots:
+            res = self.skip("judge call failed", errors=[r.error for r in replies],
+                            raw=(replies[0].raw or "")[:300])
+            res.llm = self.llm_record(ctx, replies)
             return res
 
-        links, overlaps, answered, dropped = {}, {}, set(), []
-
-        def ref(i, e, key):
-            j = None if isinstance(e.get(key), bool) else _number(e.get(key))
-            if j is None or j != int(j) or not 1 <= j <= len(nodes) or j == i:
-                return None
-            if related(i, int(j)):
-                dropped.append({"query": nodes[i - 1].query, "marked": nodes[int(j) - 1].query, "as": key})
-                return None
-            return int(j)
-
-        for e in entries:
-            try:
-                i = int(e["query"])
-            except (KeyError, TypeError, ValueError):
-                continue
-            if not 1 <= i <= len(nodes):
-                continue
-            answered.add(i)
-            evidence = str(e.get("evidence") or "")
-            if (j := ref(i, e, "repeats")) is not None:
-                links[i] = (j, evidence)
-            elif (j := ref(i, e, "overlaps")) is not None:
-                overlaps[i] = (j, evidence)
+        marks: dict[int, list[tuple[int, str]]] = {}
+        answered, dropped = set(), {}
+        for entries in ballots:
+            for e in entries:
+                try:
+                    i = int(e["query"])
+                except (KeyError, TypeError, ValueError):
+                    continue
+                if not 1 <= i <= len(nodes):
+                    continue
+                answered.add(i)
+                j = None if isinstance(e.get("repeats"), bool) else _number(e.get("repeats"))
+                if j is None or j != int(j) or not 1 <= j <= len(nodes) or j == i:
+                    continue
+                j = int(j)
+                if related(i, j):
+                    dropped[(i, j)] = {"query": nodes[i - 1].query, "marked": nodes[j - 1].query}
+                    continue
+                marks.setdefault(i, []).append((j, str(e.get("evidence") or "")))
+        need = len(ballots) // 2 + 1
+        links, unstable = {}, []
+        for i, ms in sorted(marks.items()):
+            if len(ms) < len(ballots):
+                unstable.append({"query": nodes[i - 1].query, "marks": len(ms), "replies": len(ballots)})
+            if len(ms) >= need:
+                targets = [j for j, _ in ms]
+                j = min(set(targets), key=lambda t: (-targets.count(t), t))
+                links[i] = (j, next(ev for t, ev in ms if t == j))
         # Groups of repeats; the node searched first is each group's original.
         group = list(range(len(nodes) + 1))
         find = lambda x: x if group[x] == x else find(group[x])
@@ -227,14 +237,6 @@ class SubqueryRedundancy(Metric):
                                "same_parent": o.parent == n.parent, "evidence": evidence,
                                "span_id": n.span_id})
         dup_ids = {d["span_id"] for d in duplicates}
-        overlapping = []
-        for i, (j, evidence) in sorted(overlaps.items()):
-            n, o = nodes[i - 1], nodes[j - 1]
-            if n.span_id not in dup_ids:
-                overlapping.append({"query": n.query, "layer": n.layer, "kind": n.kind, "overlaps": o.query,
-                                    "overlaps_layer": o.layer, "same_layer": o.layer == n.layer,
-                                    "same_parent": o.parent == n.parent, "evidence": evidence,
-                                    "span_id": n.span_id})
 
         def share(xs):
             k = sum(x.span_id in dup_ids for x in xs)
@@ -246,12 +248,11 @@ class SubqueryRedundancy(Metric):
             rounded(len(dup_ids) / len(nodes)), method="judge_tree", nodes=len(nodes),
             duplicates=len(dup_ids), same_layer=sum(d["same_layer"] for d in duplicates),
             same_parent=sum(d["same_parent"] for d in duplicates),
-            per_layer=by("layer"), per_kind=by("kind"),
-            overlaps=len(overlapping), with_overlaps=rounded((len(dup_ids) + len(overlapping)) / len(nodes)),
-            not_unique=duplicates, overlapping=overlapping,
+            per_layer=by("layer"), per_kind=by("kind"), votes=votes, replies=len(ballots),
+            not_unique=duplicates, unstable=unstable,
             unanswered=[nodes[i - 1].query for i in range(1, len(nodes) + 1) if i not in answered],
-            dropped_marks=dropped)
-        res.llm = self.llm_record(ctx, [r])
+            dropped_marks=list(dropped.values()))
+        res.llm = self.llm_record(ctx, replies)
         return res
 
     def _lexical(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:

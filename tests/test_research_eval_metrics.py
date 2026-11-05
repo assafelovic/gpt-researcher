@@ -79,6 +79,7 @@ class FakeJudge:
 
     def __init__(self):
         self.prompts = []
+        self.asked = {}
 
     async def __call__(self, prompt):
         self.prompts.append(prompt)
@@ -130,12 +131,15 @@ class FakeJudge:
             qs = re.findall(r"^(\d+)\.(?: \[[^\]]*\])? (.+)$", prompt.split("Queries:\n")[1].split("Return ONLY")[0], re.M)
             if any("garbled" in q for _, q in qs):
                 return "not json"
+            # "flaky" queries are marked on the first call only, "flaky2" on the first two.
+            self.asked[prompt] = self.asked.get(prompt, 0) + 1
             out = []
             for n, q in qs:
                 rep = next((int(m) for m, p in qs if int(m) < int(n) and q.startswith(p)), None)
-                over = next((int(m) for m, p in qs if int(m) < int(n) and rep is None
-                             and q.split()[:2] == p.split()[:2]), None)
-                out.append({"query": int(n), "evidence": "", "repeats": rep, "overlaps": over})
+                if ("flaky2" in q and self.asked[prompt] > 2) or ("flaky2" not in q and "flaky" in q
+                                                                  and self.asked[prompt] > 1):
+                    rep = None
+                out.append({"query": int(n), "evidence": "", "repeats": rep})
             return json.dumps({"queries": out[:-1] if any("drop-last" in q for _, q in qs) else out})
         if "auditing one retrieval step" in prompt:
             q = re.search(r"Sub-query under review:\n(.*)\n", prompt).group(1)
@@ -214,18 +218,21 @@ async def test_subquery_redundancy_judges_every_node_in_one_call(ctx):
     assert (d["query"], d["repeats"]) == ("lithium refining capacity worldwide", "lithium refining capacity")
     assert d["same_parent"] is True and d["same_layer"] is True and d["kind"] == "leaf"
     assert r.value == pytest.approx(1 / 3, abs=1e-3) and r.higher_is_better is False
-    assert sum("auditing the search plan" in p for p in ctx.fake.prompts) == 1
-    assert r.llm["prompts"]["subquery_redundancy"]["version"] == "3"
+    assert sum("auditing the search plan" in p for p in ctx.fake.prompts) == 3     # three votes
+    assert r.details["votes"] == 3 and r.details["replies"] == 3 and r.details["unstable"] == []
+    assert r.llm["prompts"]["subquery_redundancy"]["version"] == "2"
 
 
-async def test_subquery_redundancy_reports_overlaps_beside_repeats(ctx):
-    a = make_archive()
-    next(x for x in a.data["spans"] if x["span_id"] == "s6")["attributes"]["query"] = "lithium refining costs"
+async def test_subquery_redundancy_takes_the_majority_of_three_calls(ctx):
+    a = nested_archive(" flaky2")
+    next(x for x in a.data["spans"] if x["span_id"] == "s6")["attributes"]["query"] = \
+        "lithium refining capacity worldwide flaky"
     r = await SubqueryRedundancy().score(RunArchive(a.data), ctx)
-    assert r.value == 0.0 and r.details["overlaps"] == 1
-    assert r.details["with_overlaps"] == pytest.approx(1 / 3, abs=1e-3)
-    [o] = r.details["overlapping"]
-    assert (o["query"], o["overlaps"], o["same_layer"]) == ("lithium refining costs", "lithium refining capacity", True)
+    assert r.details["replies"] == 3
+    assert {u["query"]: u["marks"] for u in r.details["unstable"]} == {
+        "lithium refining capacity worldwide flaky": 1, "lithium refining capacity in Europe flaky2": 2}
+    dups = {d["query"] for d in r.details["not_unique"]}
+    assert dups == {"Congo cobalt output 2024 figures", "lithium refining capacity in Europe flaky2"}
 
 
 def nested_archive(extra=""):
@@ -259,14 +266,12 @@ async def test_subquery_redundancy_compares_across_branches_and_layers_but_not_a
     assert kinds == {(1, "leaf", "s2"), (1, "branch", "s2"), (2, "leaf", "t1"), (2, "leaf", "t2")}
     assert a.query_node_ancestors["t1s1"] == ["t1i"] and a.query_node_ancestors["t1i"] == []
     r = await SubqueryRedundancy().score(a, ctx)
-    [prompt] = [p for p in ctx.fake.prompts if "auditing the search plan" in p]
+    [prompt] = {p for p in ctx.fake.prompts if "auditing the search plan" in p}     # one prompt, asked 3 times
     assert "6. [4] Congo cobalt mining sites" in prompt and "4. Congo cobalt mining" in prompt
     assert r.details["nodes"] == 9 and r.details["duplicates"] == 3
     assert r.value == pytest.approx(3 / 9, abs=1e-3)
     # Rewording its own parent is not a repeat: the mark is dropped.
-    assert r.details["dropped_marks"] == [
-        {"query": "Congo cobalt output 2024", "marked": "Congo cobalt mining", "as": "overlaps"},
-        {"query": "Congo cobalt mining sites", "marked": "Congo cobalt mining", "as": "repeats"}]
+    assert r.details["dropped_marks"] == [{"query": "Congo cobalt mining sites", "marked": "Congo cobalt mining"}]
     dup = {d["query"]: d for d in r.details["not_unique"]}
     assert dup["Congo cobalt output 2024 figures"]["same_parent"] is False
     assert dup["Congo cobalt output 2024 figures"]["same_layer"] is True
