@@ -214,7 +214,7 @@ class SourceAuthority(Metric):
                          "tier": f"llm:{item.get('reason', '')}", "judge_model": ctx.judge.model}
                 except (KeyError, TypeError, ValueError):
                     continue
-                if d in deferred:
+                if d in deferred and not r.dry:
                     ctx.cache.put("domain", stable_hash(d, DOMAIN_AUTHORITY.version), v)
                     verdicts[d] = {**v, "basis": "judge"}
 

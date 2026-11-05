@@ -362,6 +362,18 @@ async def test_tree_quality_lists_the_aspects_of_a_lower_parent_before_its_child
     assert r.llm["requests"] == 5          # 3 splits + 2 aspect lists
 
 
+async def test_dry_run_counts_follow_up_requests_and_caches_nothing():
+    cache = EvalCache(":memory:")
+    j = Judge(cache, model="m", dry_run=True)
+    r = await DecompositionTreeQuality().score(nested_archive(), ScoringContext(cache=cache, judge=j))
+    # key points + 2 aspect lists + 3 splits: the splits below the question are
+    # asked only once their aspects are known, so a dry run must answer them.
+    assert j.calls == 6 and r.value is not None
+    j2 = Judge(cache, model="m", dry_run=True)
+    await DecompositionTreeQuality().score(nested_archive(), ScoringContext(cache=cache, judge=j2))
+    assert j2.calls == 6 and j2.cache_hits == 0
+
+
 async def test_tree_quality_children_cannot_redefine_the_aspects(ctx):
     # Three near-identical children: v4 let the judge list one aspect next to them,
     # fully covered. The key points are fixed first, so the collapse shows.

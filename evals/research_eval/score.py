@@ -61,13 +61,9 @@ async def main(argv: list[str] | None = None) -> int:
     cache = EvalCache(args.cache)
     needs_llm = any(m.uses_llm for m in metrics)
     needs_emb = any(m.uses_embeddings for m in metrics)
-    dry_complete = None
-    if args.dry_run:
-        async def dry_complete(prompt: str) -> str:
-            raise RuntimeError("dry run: no judge call made")
     ctx = ScoringContext(cache=cache,
-                         judge=Judge(cache, complete=dry_complete, salt=args.judge_salt,
-                                     max_calls=args.max_calls) if needs_llm else None,
+                         judge=Judge(cache, salt=args.judge_salt, max_calls=args.max_calls,
+                                     dry_run=args.dry_run) if needs_llm else None,
                          embedder=Embedder(cache) if needs_emb else None,
                          key_points_dir=KEY_POINTS_DIR,
                          max_concurrency=args.concurrency)
@@ -89,7 +85,9 @@ async def main(argv: list[str] | None = None) -> int:
         u = ctx.judge.usage()
         if args.dry_run:
             print(f"\n== dry run, judge {u['model']}: {u['calls']} uncached calls would be made "
-                  f"(~{u['prompt_chars'] // 4} input tokens, first pass only), {u['cache_hits']} cache hits")
+                  f"(~{u['prompt_chars'] // 4} input tokens), {u['cache_hits']} cache hits; follow-up "
+                  f"requests are counted on a minimal answer (one item per list), so calls that "
+                  f"depend on real verdicts, such as claim rechecks, can add more")
         else:
             print(f"\n== judge {u['model']}: {u['calls']} calls ({u['cache_hits']} cache hits), "
                   f"{u['input_tokens']} input / {u['output_tokens']} output tokens (uncached calls)")

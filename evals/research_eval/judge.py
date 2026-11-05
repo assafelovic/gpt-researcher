@@ -39,6 +39,7 @@ class JudgeResponse:
     prompt_id: str
     prompt_version: str
     error: str | None = None
+    dry: bool = False         # a dry run's made-up answer: never cache anything derived from it
 
 
 def parse_json_response(text: str) -> Any:
@@ -69,11 +70,15 @@ class Judge:
 
     def __init__(self, cache: EvalCache, *, model: str | None = None,
                  complete: Callable[[str], Awaitable[str]] | None = None,
-                 salt: str = "", max_calls: int | None = None, structured: bool | None = None) -> None:
+                 salt: str = "", max_calls: int | None = None, structured: bool | None = None,
+                 dry_run: bool = False) -> None:
         """`salt` keys the cache apart (asks again what the plain cache already
         holds, e.g. to measure the judge's own spread); `max_calls` caps
         uncached calls: past it, ask() returns an error instead of calling.
-        `complete` (tests, dry runs) gets both messages as one text."""
+        `complete` (tests) gets both messages as one text. `dry_run` makes no
+        call: each uncached request is counted and answered with the smallest
+        reply its schema allows (never cached), so the follow-up requests a
+        metric makes on an answer are counted too."""
         from evals.judge import judge_model_name
         self.cache = cache
         self.model = model or judge_model_name()
@@ -81,6 +86,7 @@ class Judge:
         self._llm = None
         self.salt = salt
         self.max_calls = max_calls
+        self.dry_run = dry_run
         self.structured = (os.getenv("EVAL_JUDGE_STRUCTURED", "1") != "0") if structured is None else structured
         self.refused = 0            # calls not made because max_calls was reached
         self.prompt_chars = 0       # characters sent in uncached calls
@@ -138,6 +144,8 @@ class Judge:
                                      error=f"call budget reached ({self.max_calls} calls)")
             self.calls += 1
             self.prompt_chars += len(prompt.text)
+            if self.dry_run:
+                return JudgeResponse(dry_answer(prompt.schema), "", False, prompt_id, prompt_version, dry=True)
             try:
                 raw = await self._call(prompt, schema)
             except Exception as e:
@@ -152,6 +160,22 @@ class Judge:
             self.cache.put("llm", key, {"parsed": parsed, "raw": raw})
             return JudgeResponse(parsed, raw, False, prompt_id, prompt_version)
         return JudgeResponse(None, raw, False, prompt_id, prompt_version, error=error)
+
+
+def dry_answer(schema: dict | None):
+    """The smallest answer a schema allows, with one item in every list (so a
+    metric goes on to the requests it makes per item)."""
+    if not schema:
+        return {}
+    kinds = schema.get("type")
+    kind = next((k for k in (kinds if isinstance(kinds, list) else [kinds]) if k != "null"), None)
+    if "enum" in schema:
+        return schema["enum"][0]
+    if kind == "object":
+        return {k: dry_answer(v) for k, v in (schema.get("properties") or {}).items()}
+    if kind == "array":
+        return [dry_answer(schema.get("items") or {})]
+    return {"string": "dry run", "integer": 1, "number": 0.5, "boolean": True}.get(kind)
 
 
 def reply_text(resp) -> str:

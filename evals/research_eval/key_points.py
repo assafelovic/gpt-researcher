@@ -49,7 +49,8 @@ async def get_key_points(archive: "RunArchive", ctx: "ScoringContext") -> tuple[
             points = (resp.parsed or {}).get("key_points") if isinstance(resp.parsed, dict) else None
             points = [str(p).strip() for p in points or [] if str(p).strip()]
             if points:
-                ctx.cache.put("question", key, points)
+                if not resp.dry:
+                    ctx.cache.put("question", key, points)
                 out = (points, {"source": "judge", "prompt_version": KEY_POINTS.version,
                                 "judge_model": ctx.judge.model, "cache_hit": resp.cache_hit})
             else:
