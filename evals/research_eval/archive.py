@@ -66,6 +66,22 @@ class RetrievalUnit:
     is_core_query: bool
 
 
+@dataclass(frozen=True)
+class QueryNode:
+    """One query of the tree below the run's question.
+
+    A branch is a researcher's own question: searched, then split into its
+    own sub-queries (a deep-research SERP query, a detailed-report subtopic).
+    A leaf is a planned sub-query: searched only. The researcher's repeat
+    search of its own question is the same node, not a second one.
+    """
+    span_id: str              # the node's (first) search step
+    query: str
+    layer: int                # RunArchive.query_layer
+    kind: str                 # branch | leaf
+    parent: str | None        # span_id of the researcher that asked for it
+
+
 class RunArchive:
     def __init__(self, data: dict) -> None:
         version = data.get("schema_version")
@@ -214,6 +230,42 @@ class RunArchive:
             if q != path[-1]:
                 path.append(q)
         return path
+
+    def _researcher(self, span: dict | None) -> dict | None:
+        """The nearest `research` span at or above this span."""
+        while span is not None and span["name"] != "research":
+            span = self.span_by_id.get(span["parent_id"])
+        return span
+
+    @cached_property
+    def query_nodes(self) -> list[QueryNode]:
+        """Every searched query below the run's question, once, in trace order.
+
+        The run's question (layer 0) is left out: it is alone in its layer.
+        A researcher's initial search and its repeat search of the same
+        question fold into one branch node. A detailed report's subtopic
+        researchers run beside the main researcher in the trace but are its
+        children, so their parent is the main researcher.
+        """
+        root = next((s for s in self.spans if s["name"] == "research"
+                     and not s["attributes"].get("parent_query")
+                     and self._researcher(self.span_by_id.get(s["parent_id"])) is None), None)
+        seen, out = set(), []
+        for u in self.retrieval_units:
+            r = self._researcher(self.span_by_id[u.span_id])
+            own = (r["attributes"].get("query") or "").strip() if r else None
+            layer = self.query_layer(u.span_id)
+            if u.is_core_query or u.query.strip() == own:
+                if layer == 0 or r is None or r["span_id"] in seen:
+                    continue
+                seen.add(r["span_id"])
+                up = self._researcher(self.span_by_id.get(r["parent_id"]))
+                if up is None and root is not None and root is not r:
+                    up = root
+                out.append(QueryNode(u.span_id, u.query, layer, "branch", up and up["span_id"]))
+            else:
+                out.append(QueryNode(u.span_id, u.query, layer, "leaf", r and r["span_id"]))
+        return out
 
     @cached_property
     def issued_subqueries(self) -> list[str]:

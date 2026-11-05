@@ -9,7 +9,7 @@ from itertools import combinations
 from ...archive import RunArchive
 from ...judge import cosine
 from ...key_points import get_key_points
-from ...prompts import DECOMPOSITION_COVERAGE, KEY_POINTS, TREE_QUALITY
+from ...prompts import DECOMPOSITION_COVERAGE, KEY_POINTS, SUBQUERY_REDUNDANCY, TREE_QUALITY
 from ..base import Metric, MetricResult, ScoringContext, rounded
 from ..lexical import idf_table, symmetric_overlap
 
@@ -107,26 +107,30 @@ class DecompositionCoverage(Metric):
 
 
 class SubqueryRedundancy(Metric):
-    """Share of sub-queries that ask what another sub-query already asks (lower is better).
+    """Share of query-tree nodes that repeat another node of the same layer (lower is better).
 
-    With a judge: read from query_relevance's Q4 ("compared with the other
-    sub-queries, does this one go after something they do not?"), which is
-    already paid for. Each step is compared with the steps at the same layer
-    of the query tree only (`RunArchive.query_layer`), across branches: a
-    parent and its own children overlap by design. Only a step that asks for
-    the same information as another in other words is not unique; another
-    perspective, source or separate subtopic of the same object is.
+    Nodes are `RunArchive.query_nodes`: every searched query below the run's
+    question, both branches (a researcher's own question, split further) and
+    leaves (planned sub-queries), whether or not their search brought back
+    new material. Nodes are compared within their layer of the query tree
+    only, across branches: a parent and its own children overlap by design.
 
-        value = sub-queries judged not unique / sub-queries with a Q4 answer
+    With a judge: one call per layer with two or more nodes. The judge sees
+    the layer's queries in search order and marks each one that asks for the
+    same information as an earlier one in other words (the same facts would
+    answer both). Another perspective, source, period, place, a separate
+    subtopic, or a narrower part of a broader query is not a repeat. Repeats
+    chain into groups; in each group the first node is the original and the
+    rest are duplicates.
 
-    Only the leaves of each researcher's plan count: the searches of a
-    researcher's own question (its initial search, and the repeat search of
-    that question after its sub-queries) are parent nodes, few and almost
-    never duplicates, and would dilute the share. They stay in
-    query_relevance. In deep research every researcher's planned sub-queries
-    are leaves, at whatever layer, so keeping only the deepest layer would
-    drop real repeat searches of the first level. `details.per_layer` gives
-    the share per layer; `details.with_parent_steps` the v4 value.
+        value = duplicate nodes / all nodes
+
+    `details.per_layer` and `details.per_kind` (branch / leaf) give the same
+    share per layer and per node kind; `details.same_parent` counts the
+    duplicates whose original has the same parent (the rest repeat a node of
+    another branch). A node the reply leaves out counts as not a duplicate
+    and is listed in `details.unanswered`; a layer whose call fails is left
+    out of the value and listed in `details.failed_layers`.
 
     Without a judge (`details.method` = "lexical"): sibling pairs whose
     symmetric BM25-weighted term overlap reaches the threshold, IDF over the
@@ -136,47 +140,90 @@ class SubqueryRedundancy(Metric):
     """
 
     name, category = "subquery_redundancy", "retrieval.query_quality"
-    version = "5"           # 4: only a reworded request for the same facts is a duplicate; 5: sub-queries only
+    version = "6"           # 4: only a reworded request for the same facts; 5: sub-queries only;
+                            # 6: own call per layer over every node, branches and leaves
     higher_is_better = False
+    prompts = (SUBQUERY_REDUNDANCY,)
     DEFAULT_THRESHOLD = 0.6
 
     async def score(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:
         if ctx.judge is None:
             return self._lexical(archive, ctx)
-        from .efficiency import QueryRelevance
-        qr = await QueryRelevance().score(archive, ctx)
-        if qr.value is None:
-            res = self.skip(f"query_relevance: {qr.skipped}")
-            res.llm = {**(qr.llm or {}), "shared": "query_relevance"}
+        nodes = archive.query_nodes
+        if not nodes:
+            return self.skip("no searched query below the run's question")
+        layers: dict[int, list] = {}
+        for n in nodes:
+            layers.setdefault(n.layer, []).append(n)
+
+        async def judge_layer(layer, members):
+            prompt = SUBQUERY_REDUNDANCY.render(
+                question=archive.query.strip(),
+                queries="\n".join(f"{i}. {' '.join(n.query.split())}" for i, n in enumerate(members, 1)))
+            return layer, await ctx.judge.ask(SUBQUERY_REDUNDANCY.id, SUBQUERY_REDUNDANCY.version, prompt)
+
+        replies = dict(await ctx.gather(judge_layer(k, v) for k, v in layers.items() if len(v) > 1))
+        counted, duplicates, unanswered, failed = [], [], [], []
+        for layer, members in sorted(layers.items()):
+            r = replies.get(layer)
+            entries = (r.parsed or {}).get("queries") if r is not None and isinstance(r.parsed, dict) else None
+            if r is not None and not isinstance(entries, list):
+                failed.append({"layer": layer, "nodes": len(members), "error": r.error,
+                               "raw": (r.raw or "")[:300]})
+                continue
+            counted.extend(members)
+            links, answered = {}, set()
+            for e in entries or []:
+                try:
+                    i = int(e["query"])
+                except (KeyError, TypeError, ValueError):
+                    continue
+                if not 1 <= i <= len(members):
+                    continue
+                answered.add(i)
+                j = None if isinstance(e.get("repeats"), bool) else _number(e.get("repeats"))
+                if j is not None and j == int(j) and 1 <= j <= len(members) and j != i:
+                    links[i] = (int(j), str(e.get("evidence") or ""))
+            unanswered += [{"layer": layer, "query": n.query}
+                           for i, n in enumerate(members, 1) if r is not None and i not in answered]
+            # Groups of repeats: each node joins the group of the node it repeats.
+            group = list(range(len(members) + 1))
+            find = lambda x: x if group[x] == x else find(group[x])
+            for i, (j, _) in links.items():
+                a, b = sorted((find(i), find(j)))
+                group[b] = a
+            for i, n in enumerate(members, 1):
+                first = find(i)
+                if first == i:
+                    continue
+                j, evidence = links.get(i, (first, ""))
+                if j > i:                       # the reply pointed forward: the original is the earlier one
+                    j = first
+                original = members[j - 1]
+                duplicates.append({"layer": layer, "kind": n.kind, "query": n.query,
+                                   "repeats": original.query, "same_parent": original.parent == n.parent,
+                                   "evidence": evidence, "span_id": n.span_id})
+        if not counted:
+            res = self.skip("every judge call failed", failed_layers=failed)
+            res.llm = self.llm_record(ctx, list(replies.values()))
             return res
-        parent = {u.span_id for u in archive.retrieval_units if u.is_core_query}
-        steps = []
-        for q in qr.details["per_query"]:
-            q4 = (q.get("rubric") or {}).get("q4") if isinstance(q.get("rubric"), dict) else None
-            unique = q4.get("unique") if isinstance(q4, dict) else None
-            if isinstance(unique, str):
-                unique = {"true": True, "false": False}.get(unique.strip().lower())
-            if isinstance(unique, bool):
-                steps.append({"span_id": q["span_id"], "kind": q["kind"], "query": q["query"],
-                              "layer": q.get("layer"), "parent_step": q["span_id"] in parent,
-                              "unique": unique, "evidence": q4.get("evidence", "")})
-        if not steps:
-            return self.skip("query_relevance returned no uniqueness answers")
-        leaves = [x for x in steps if not x["parent_step"]]
-        share = lambda xs: rounded(sum(not x["unique"] for x in xs) / len(xs)) if xs else None
-        per_layer = {}
-        for x in leaves:
-            per_layer.setdefault(x["layer"], []).append(x)
-        details = dict(method="judge_q4", steps=len(leaves), parent_steps=len(steps) - len(leaves),
-                       with_parent_steps=share(steps),
-                       per_layer={k: {"steps": len(v), "not_unique": sum(not x["unique"] for x in v),
-                                      "share": share(v)} for k, v in sorted(per_layer.items())},
-                       not_unique=[x for x in leaves if not x["unique"]])
-        if not leaves:
-            res = self.skip("no sub-query with a uniqueness answer", **details)
-        else:
-            res = self.result(share(leaves), **details)
-        res.llm = {**(qr.llm or {}), "shared": "query_relevance"}
+        dup_ids = {d["span_id"] for d in duplicates}
+
+        def share(xs):
+            k = sum(x.span_id in dup_ids for x in xs)
+            return {"nodes": len(xs), "duplicates": k, "share": rounded(k / len(xs)) if xs else None}
+
+        per_kind = {}
+        for n in counted:
+            per_kind.setdefault(n.kind, []).append(n)
+        res = self.result(
+            rounded(len(dup_ids) / len(counted)), method="judge_layer", nodes=len(counted),
+            duplicates=len(dup_ids), same_parent=sum(d["same_parent"] for d in duplicates),
+            per_layer={k: share([n for n in counted if n.layer == k]) for k in sorted(layers)
+                       if any(n.layer == k for n in counted)},
+            per_kind={k: share(v) for k, v in sorted(per_kind.items())},
+            not_unique=duplicates, unanswered=unanswered, failed_layers=failed)
+        res.llm = self.llm_record(ctx, list(replies.values()))
         return res
 
     def _lexical(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:

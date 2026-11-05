@@ -138,6 +138,9 @@ class ScriptedJudge:
             n = len(re.findall(r"^\d+\. ", prompt.split("Paragraphs:")[1], re.M))
             v = ["yes", "no", "idk"] + ["yes"] * n
             return json.dumps({"verdicts": [{"paragraph": i, "verdict": v[i - 1]} for i in range(1, n + 1)]})
+        if "auditing the search plan of a research agent" in prompt:
+            n = len(re.findall(r"^\d+\. ", prompt.split("Queries at this level:")[1], re.M))
+            return json.dumps({"queries": [{"query": i, "repeats": None} for i in range(1, n + 1)]})
         if "screening part of a research report" in prompt:
             return json.dumps({"opinions": [
                 {"opinion": "diversifying is sensible", "toxic": False, "bias": False},

@@ -36,10 +36,10 @@ def test_seed_archives_have_no_counting_gaps(mode):
 
 
 async def scored(tmp_path, ctx, archive):
-    # The scripted judge answers the generation prompts; retrieval rule metrics need none.
+    # The scripted judge answers the generation prompts and subquery_redundancy's;
+    # the other retrieval metrics it runs are rule-based.
     metrics = [m for m in all_metrics() if not m.uses_embeddings
-               and (m.category.startswith("generation") or not m.uses_llm)
-               and m.name != "subquery_redundancy"]                         # reads query_relevance
+               and (m.category.startswith("generation") or not m.uses_llm)]
     record = await score_archive(archive, metrics, ctx)
     save_results(record, tmp_path / "results")
     return check_run(write(tmp_path, archive), tmp_path / "results"), record
@@ -60,9 +60,13 @@ async def test_judge_errors_and_unanswered_items_are_flagged(tmp_path, ctx):
     m = record["metrics"]
     m["topic_relevance"]["details"]["judged"] -= 1                          # a paragraph got no verdict
     m["insight"]["llm"]["errors"] = 1
+    m["subquery_redundancy"]["details"]["unanswered"] = [{"layer": 1, "query": "q"}]
     save_results({**record, "scorer_version": "zz-later"}, tmp_path / "results")
-    s = statuses(check_run(write(tmp_path, make_archive()), tmp_path / "results"))
+    r = check_run(write(tmp_path, make_archive()), tmp_path / "results")
+    s = statuses(r)
     assert s["M1"] == "warn" and s["M2"] == "warn"
+    m2 = next(c for c in r["checks"] if c["id"] == "M2")
+    assert m2["detail"]["gaps"]["subquery_redundancy: query-tree nodes without a verdict"] == 1
 
 
 async def test_dropped_or_duplicated_audit_paragraphs_fail(tmp_path, ctx):

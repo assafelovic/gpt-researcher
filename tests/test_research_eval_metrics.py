@@ -124,6 +124,15 @@ class FakeJudge:
         if "how a research agent split a query" in prompt:
             return json.dumps({"q1": {"score": 1}, "q2": {"score": 2}, "q3": {"score": 2},
                                "q4": {"score": 1}, "q5": {"score": 2}, "total": 8})
+        if "auditing the search plan of a research agent" in prompt:
+            # A query repeats the first earlier one it starts with.
+            qs = re.findall(r"^(\d+)\. (.+)$", prompt.split("Queries at this level:")[1].split("Return ONLY")[0], re.M)
+            if any("garbled" in q for _, q in qs):
+                return "not json"
+            out = [{"query": int(n), "evidence": "",
+                    "repeats": next((int(m) for m, p in qs if int(m) < int(n) and q.startswith(p)), None)}
+                   for n, q in qs]
+            return json.dumps({"queries": out[:-1] if any("drop-last" in q for _, q in qs) else out})
         if "auditing one retrieval step" in prompt:
             q = re.search(r"Sub-query under review:\n(.*)\n", prompt).group(1)
             return json.dumps({"total": 8 if "cobalt" in q else 4,
@@ -192,30 +201,67 @@ async def test_key_points_frozen_file_wins(ctx, tmp_path):
     assert not any("List the distinct aspects" in p for p in ctx.fake.prompts)
 
 
-async def test_subquery_redundancy_reads_query_relevance_q4(ctx):
-    a = make_archive()
-    r = await SubqueryRedundancy().score(a, ctx)
-    assert r.details["method"] == "judge_q4" and r.details["steps"] == 2
-    assert [x["query"] for x in r.details["not_unique"]] == ["lithium refining capacity"]
-    assert r.value == 0.5 and r.higher_is_better is False
-    # query_relevance reuses the same judgements: no new calls.
-    before = len(ctx.fake.prompts)
-    await QueryRelevance().score(a, ctx)
-    assert len(ctx.fake.prompts) == before
+async def test_subquery_redundancy_judges_every_node_of_a_layer(ctx):
+    r = await SubqueryRedundancy().score(make_archive(), ctx)
+    # The core repeat (layer 0) is the run's question, not a node; the step
+    # that brought back no new material is still a node.
+    assert r.details["method"] == "judge_layer" and r.details["nodes"] == 3
+    [d] = r.details["not_unique"]
+    assert (d["query"], d["repeats"]) == ("lithium refining capacity worldwide", "lithium refining capacity")
+    assert d["same_parent"] is True and d["kind"] == "leaf"
+    assert r.value == pytest.approx(1 / 3, abs=1e-3) and r.higher_is_better is False
+    assert sum("auditing the search plan" in p for p in ctx.fake.prompts) == 1    # one call per layer
+    assert r.llm["prompts"] == {"subquery_redundancy": {"version": "1", "hash": r.llm["prompts"]["subquery_redundancy"]["hash"]}}
 
 
-async def test_subquery_redundancy_counts_sub_queries_not_parent_searches(ctx):
+def nested_archive(extra=""):
+    """make_archive plus two subtopic researchers (layer 1 branches) with
+    their own sub-queries (layer 2); one sub-query repeats one of the other branch."""
     a = make_archive()
     cobalt = _chunk("cobalt")[0]
-    # The researcher's own question, searched while planning: a parent step.
-    a.data["spans"].append({"span_id": "s8", "parent_id": "s2", "name": "initial_results",
-                            "attributes": {"query": CORE, "chunk_ids": [cobalt],
-                                           "proposed_urls": [], "new_urls": []}})
-    r = await SubqueryRedundancy().score(RunArchive(a.data), ctx)
-    assert r.details["parent_steps"] == 1 and r.details["steps"] == 2
-    assert r.value == 0.5                                   # the parent step (judged not unique) is left out
-    assert r.details["with_parent_steps"] == pytest.approx(2 / 3, abs=1e-3)
-    assert r.details["per_layer"] == {1: {"steps": 2, "not_unique": 1, "share": 0.5}}
+
+    def step(sid, parent, name, query, **attrs):
+        a.data["spans"].append({"span_id": sid, "parent_id": parent, "name": name, "attributes": {
+            "query": query, "chunk_ids": [cobalt], "proposed_urls": [], "new_urls": [], **attrs}})
+
+    for rid, q, subs in [("t1", "Congo cobalt mining", ["Congo cobalt output 2024", "Congo mining labour"]),
+                         ("t2", "recycling policy in Europe", ["Congo cobalt output 2024 figures",
+                                                               "EU recycling targets" + extra])]:
+        a.data["spans"].append({"span_id": rid, "parent_id": "s1", "name": "research",
+                                "attributes": {"query": q, "parent_query": CORE}})
+        step(rid + "i", rid, "initial_results", q)
+        a.data["spans"].append({"span_id": rid + "p", "parent_id": rid, "name": "plan",
+                                "attributes": {"query": q, "sub_queries": subs}})
+        for k, sq in enumerate(subs):
+            step(f"{rid}s{k}", rid + "p", "sub_query", sq)
+    step("t1r", "t1p", "sub_query", "Congo cobalt mining", is_core_query=True)   # repeat: same node
+    return RunArchive(a.data)
+
+
+async def test_subquery_redundancy_compares_across_branches_within_a_layer(ctx):
+    a = nested_archive()
+    kinds = {(n.layer, n.kind, n.parent) for n in a.query_nodes}
+    assert kinds == {(1, "leaf", "s2"), (1, "branch", "s2"), (2, "leaf", "t1"), (2, "leaf", "t2")}
+    r = await SubqueryRedundancy().score(a, ctx)
+    assert r.details["nodes"] == 9 and r.details["duplicates"] == 2
+    assert r.value == pytest.approx(2 / 9, abs=1e-3)
+    assert r.details["per_layer"] == {1: {"nodes": 5, "duplicates": 1, "share": 0.2},
+                                      2: {"nodes": 4, "duplicates": 1, "share": 0.25}}
+    assert r.details["per_kind"] == {"branch": {"nodes": 2, "duplicates": 0, "share": 0.0},
+                                     "leaf": {"nodes": 7, "duplicates": 2, "share": 0.286}}
+    cross = next(d for d in r.details["not_unique"] if d["layer"] == 2)
+    assert cross["repeats"] == "Congo cobalt output 2024" and cross["same_parent"] is False
+    assert r.details["same_parent"] == 1
+    assert sum("auditing the search plan" in p for p in ctx.fake.prompts) == 2
+
+
+async def test_subquery_redundancy_reports_skipped_nodes_and_failed_layers(ctx):
+    r = await SubqueryRedundancy().score(nested_archive(" drop-last"), ctx)
+    assert r.details["unanswered"] == [{"layer": 2, "query": "EU recycling targets drop-last"}]
+    assert r.details["nodes"] == 9 and r.llm["errors"] == 0
+    r = await SubqueryRedundancy().score(nested_archive(" garbled"), ctx)
+    assert [f["layer"] for f in r.details["failed_layers"]] == [2]
+    assert r.details["nodes"] == 5 and r.value == 0.2            # layer 2 left out of the value
 
 
 async def test_subquery_redundancy_lexical_fallback_flags_near_duplicates():
