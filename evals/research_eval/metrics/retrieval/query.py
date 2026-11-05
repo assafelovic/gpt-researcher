@@ -107,30 +107,32 @@ class DecompositionCoverage(Metric):
 
 
 class SubqueryRedundancy(Metric):
-    """Share of query-tree nodes that repeat another node of the same layer (lower is better).
+    """Share of query-tree nodes that repeat another node of the tree (lower is better).
 
     Nodes are `RunArchive.query_nodes`: every searched query below the run's
     question, both branches (a researcher's own question, split further) and
     leaves (planned sub-queries), whether or not their search brought back
-    new material. Nodes are compared within their layer of the query tree
-    only, across branches: a parent and its own children overlap by design.
+    new material. Any two nodes are compared, at any layer and in any branch,
+    except a node and the nodes it was split from (its ancestors,
+    `RunArchive.query_node_ancestors`): those overlap by design.
 
-    With a judge: one call per layer with two or more nodes. The judge sees
-    the layer's queries in search order and marks each one that asks for the
-    same information as an earlier one in other words (the same facts would
-    answer both). Another perspective, source, period, place, a separate
-    subtopic, or a narrower part of a broader query is not a repeat. Repeats
-    chain into groups; in each group the first node is the original and the
-    rest are duplicates.
+    With a judge: one call per run. The judge sees every node in search
+    order, each with the numbers of its ancestors, and marks each node that
+    asks for the same information as an earlier node in other words (the
+    same facts would answer both). Another perspective, source, period,
+    place, a separate subtopic, or a narrower part of a broader query is not
+    a repeat. A mark that points at an ancestor or a descendant is dropped
+    (`details.dropped_marks`). Repeats chain into groups; in each group the
+    node searched first is the original and the rest are duplicates.
 
         value = duplicate nodes / all nodes
 
-    `details.per_layer` and `details.per_kind` (branch / leaf) give the same
-    share per layer and per node kind; `details.same_parent` counts the
-    duplicates whose original has the same parent (the rest repeat a node of
-    another branch). A node the reply leaves out counts as not a duplicate
-    and is listed in `details.unanswered`; a layer whose call fails is left
-    out of the value and listed in `details.failed_layers`.
+    `details.per_layer` and `details.per_kind` (branch / leaf) give the share
+    by the duplicate's layer and kind; `details.same_layer` and
+    `details.same_parent` count the duplicates whose original sits on the
+    same layer / has the same parent (the per-layer comparison of v6 would
+    only see the first). A node the reply leaves out counts as not a
+    duplicate and is listed in `details.unanswered`.
 
     Without a judge (`details.method` = "lexical"): sibling pairs whose
     symmetric BM25-weighted term overlap reaches the threshold, IDF over the
@@ -140,8 +142,8 @@ class SubqueryRedundancy(Metric):
     """
 
     name, category = "subquery_redundancy", "retrieval.query_quality"
-    version = "6"           # 4: only a reworded request for the same facts; 5: sub-queries only;
-                            # 6: own call per layer over every node, branches and leaves
+    version = "7"           # 4: only a reworded request for the same facts; 5: sub-queries only;
+                            # 6: own call per layer over every node; 7: whole tree but ancestors, one call
     higher_is_better = False
     prompts = (SUBQUERY_REDUNDANCY,)
     DEFAULT_THRESHOLD = 0.6
@@ -152,78 +154,79 @@ class SubqueryRedundancy(Metric):
         nodes = archive.query_nodes
         if not nodes:
             return self.skip("no searched query below the run's question")
-        layers: dict[int, list] = {}
-        for n in nodes:
-            layers.setdefault(n.layer, []).append(n)
+        index = {n.span_id: i for i, n in enumerate(nodes, 1)}
+        above = {i: {index[a] for a in archive.query_node_ancestors[n.span_id]} for i, n in enumerate(nodes, 1)}
+        related = lambda i, j: i in above[j] or j in above[i]
+        if len(nodes) == 1:
+            return self.result(0.0, method="judge_tree", nodes=1, duplicates=0, reason="one node")
 
-        async def judge_layer(layer, members):
-            prompt = SUBQUERY_REDUNDANCY.render(
-                question=archive.query.strip(),
-                queries="\n".join(f"{i}. {' '.join(n.query.split())}" for i, n in enumerate(members, 1)))
-            return layer, await ctx.judge.ask(SUBQUERY_REDUNDANCY.id, SUBQUERY_REDUNDANCY.version, prompt)
-
-        replies = dict(await ctx.gather(judge_layer(k, v) for k, v in layers.items() if len(v) > 1))
-        counted, duplicates, unanswered, failed = [], [], [], []
-        for layer, members in sorted(layers.items()):
-            r = replies.get(layer)
-            entries = (r.parsed or {}).get("queries") if r is not None and isinstance(r.parsed, dict) else None
-            if r is not None and not isinstance(entries, list):
-                failed.append({"layer": layer, "nodes": len(members), "error": r.error,
-                               "raw": (r.raw or "")[:300]})
-                continue
-            counted.extend(members)
-            links, answered = {}, set()
-            for e in entries or []:
-                try:
-                    i = int(e["query"])
-                except (KeyError, TypeError, ValueError):
-                    continue
-                if not 1 <= i <= len(members):
-                    continue
-                answered.add(i)
-                j = None if isinstance(e.get("repeats"), bool) else _number(e.get("repeats"))
-                if j is not None and j == int(j) and 1 <= j <= len(members) and j != i:
-                    links[i] = (int(j), str(e.get("evidence") or ""))
-            unanswered += [{"layer": layer, "query": n.query}
-                           for i, n in enumerate(members, 1) if r is not None and i not in answered]
-            # Groups of repeats: each node joins the group of the node it repeats.
-            group = list(range(len(members) + 1))
-            find = lambda x: x if group[x] == x else find(group[x])
-            for i, (j, _) in links.items():
-                a, b = sorted((find(i), find(j)))
-                group[b] = a
-            for i, n in enumerate(members, 1):
-                first = find(i)
-                if first == i:
-                    continue
-                j, evidence = links.get(i, (first, ""))
-                if j > i:                       # the reply pointed forward: the original is the earlier one
-                    j = first
-                original = members[j - 1]
-                duplicates.append({"layer": layer, "kind": n.kind, "query": n.query,
-                                   "repeats": original.query, "same_parent": original.parent == n.parent,
-                                   "evidence": evidence, "span_id": n.span_id})
-        if not counted:
-            res = self.skip("every judge call failed", failed_layers=failed)
-            res.llm = self.llm_record(ctx, list(replies.values()))
+        lines = []
+        for i, n in enumerate(nodes, 1):
+            path = [index[a] for a in reversed(archive.query_node_ancestors[n.span_id])]
+            tag = f" [{' > '.join(map(str, path))}]" if path else ""
+            lines.append(f"{i}.{tag} {' '.join(n.query.split())}")
+        prompt = SUBQUERY_REDUNDANCY.render(question=archive.query.strip(), queries="\n".join(lines))
+        r = await ctx.judge.ask(SUBQUERY_REDUNDANCY.id, SUBQUERY_REDUNDANCY.version, prompt)
+        entries = r.parsed.get("queries") if isinstance(r.parsed, dict) else None
+        if not isinstance(entries, list):
+            res = self.skip("judge call failed", error=r.error, raw=(r.raw or "")[:300])
+            res.llm = self.llm_record(ctx, [r])
             return res
+
+        links, answered, dropped = {}, set(), []
+        for e in entries:
+            try:
+                i = int(e["query"])
+            except (KeyError, TypeError, ValueError):
+                continue
+            if not 1 <= i <= len(nodes):
+                continue
+            answered.add(i)
+            j = None if isinstance(e.get("repeats"), bool) else _number(e.get("repeats"))
+            if j is None or j != int(j) or not 1 <= j <= len(nodes) or j == i:
+                continue
+            j = int(j)
+            if related(i, j):
+                dropped.append({"query": nodes[i - 1].query, "marked": nodes[j - 1].query})
+                continue
+            links[i] = (j, str(e.get("evidence") or ""))
+        # Groups of repeats; the node searched first is each group's original.
+        group = list(range(len(nodes) + 1))
+        find = lambda x: x if group[x] == x else find(group[x])
+        for i, (j, _) in links.items():
+            a, b = sorted((find(i), find(j)))
+            group[b] = a
+        members: dict[int, list[int]] = {}
+        for i in range(1, len(nodes) + 1):
+            members.setdefault(find(i), []).append(i)
+        duplicates = []
+        for i, n in enumerate(nodes, 1):
+            if find(i) == i:
+                continue
+            j, evidence = links.get(i, (None, ""))
+            if j is None:                       # in a group only through another node's mark
+                j = next((k for k in members[find(i)] if k != i and not related(i, k)), find(i))
+            o = nodes[j - 1]
+            duplicates.append({"query": n.query, "layer": n.layer, "kind": n.kind, "repeats": o.query,
+                               "repeats_layer": o.layer, "same_layer": o.layer == n.layer,
+                               "same_parent": o.parent == n.parent, "evidence": evidence,
+                               "span_id": n.span_id})
         dup_ids = {d["span_id"] for d in duplicates}
 
         def share(xs):
             k = sum(x.span_id in dup_ids for x in xs)
             return {"nodes": len(xs), "duplicates": k, "share": rounded(k / len(xs)) if xs else None}
 
-        per_kind = {}
-        for n in counted:
-            per_kind.setdefault(n.kind, []).append(n)
+        by = lambda key: {k: share([n for n in nodes if getattr(n, key) == k])
+                          for k in sorted({getattr(n, key) for n in nodes})}
         res = self.result(
-            rounded(len(dup_ids) / len(counted)), method="judge_layer", nodes=len(counted),
-            duplicates=len(dup_ids), same_parent=sum(d["same_parent"] for d in duplicates),
-            per_layer={k: share([n for n in counted if n.layer == k]) for k in sorted(layers)
-                       if any(n.layer == k for n in counted)},
-            per_kind={k: share(v) for k, v in sorted(per_kind.items())},
-            not_unique=duplicates, unanswered=unanswered, failed_layers=failed)
-        res.llm = self.llm_record(ctx, list(replies.values()))
+            rounded(len(dup_ids) / len(nodes)), method="judge_tree", nodes=len(nodes),
+            duplicates=len(dup_ids), same_layer=sum(d["same_layer"] for d in duplicates),
+            same_parent=sum(d["same_parent"] for d in duplicates),
+            per_layer=by("layer"), per_kind=by("kind"), not_unique=duplicates,
+            unanswered=[nodes[i - 1].query for i in range(1, len(nodes) + 1) if i not in answered],
+            dropped_marks=dropped)
+        res.llm = self.llm_record(ctx, [r])
         return res
 
     def _lexical(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:

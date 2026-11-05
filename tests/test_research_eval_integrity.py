@@ -60,7 +60,7 @@ async def test_judge_errors_and_unanswered_items_are_flagged(tmp_path, ctx):
     m = record["metrics"]
     m["topic_relevance"]["details"]["judged"] -= 1                          # a paragraph got no verdict
     m["insight"]["llm"]["errors"] = 1
-    m["subquery_redundancy"]["details"]["unanswered"] = [{"layer": 1, "query": "q"}]
+    m["subquery_redundancy"]["details"]["unanswered"] = ["q"]
     save_results({**record, "scorer_version": "zz-later"}, tmp_path / "results")
     r = check_run(write(tmp_path, make_archive()), tmp_path / "results")
     s = statuses(r)

@@ -80,6 +80,7 @@ class QueryNode:
     layer: int                # RunArchive.query_layer
     kind: str                 # branch | leaf
     parent: str | None        # span_id of the researcher that asked for it
+    researcher: str | None = None   # branch: span_id of the researcher it opens
 
 
 class RunArchive:
@@ -262,9 +263,24 @@ class RunArchive:
                 up = self._researcher(self.span_by_id.get(r["parent_id"]))
                 if up is None and root is not None and root is not r:
                     up = root
-                out.append(QueryNode(u.span_id, u.query, layer, "branch", up and up["span_id"]))
+                out.append(QueryNode(u.span_id, u.query, layer, "branch", up and up["span_id"], r["span_id"]))
             else:
                 out.append(QueryNode(u.span_id, u.query, layer, "leaf", r and r["span_id"]))
+        return out
+
+    @cached_property
+    def query_node_ancestors(self) -> dict[str, list[str]]:
+        """For each query node (by span_id), the nodes it was split from,
+        nearest first; empty for a node that came straight from the run's question."""
+        opens = {n.researcher: n.span_id for n in self.query_nodes if n.researcher}
+        by_id = {n.span_id: n for n in self.query_nodes}
+        out = {}
+        for n in self.query_nodes:
+            chain, cur = [], opens.get(n.parent)
+            while cur is not None and cur not in chain:
+                chain.append(cur)
+                cur = opens.get(by_id[cur].parent)
+            out[n.span_id] = chain
         return out
 
     @cached_property
