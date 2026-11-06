@@ -84,8 +84,8 @@ without checking it elsewhere.
   site. Do not guess a reputation: a site you do not know is "unknown".
 - Rest each answer on who runs the site and what kind of site it is.
 - These answers are counted and compared across runs, so the same domain
-  must get the same answer every time. In a borderline case, pick the kind
-  that needs fewer assumptions.
+  must get the same answer every time. When two kinds fit, pick the less
+  authoritative one.
 
 ## Suggested steps
 
