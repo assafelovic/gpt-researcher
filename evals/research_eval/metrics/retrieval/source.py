@@ -140,6 +140,12 @@ def rule_score(domain: str) -> tuple[float, str] | None:
     return None
 
 
+# The judge names a kind of site; the score comes from this table, on the
+# same scale as the rule tiers above. "unknown" falls back to the TLD rule.
+KIND_SCORES = {"official": 1.0, "academic": 0.9, "news": 0.8, "specialist": 0.7,
+               "company": 0.5, "low_editorial": 0.3, "unreliable": 0.1}
+
+
 def fallback_score(domain: str) -> tuple[float, str]:
     """Rule-only score for deferred domains the judge did not (or could not) score."""
     d = domain.lower().removeprefix("www.")
@@ -162,7 +168,11 @@ class SourceAuthority(Metric):
     and coverage already score it 0); v2 fell back to the retrieved mean,
     which gave an uncited report an ordinary-looking value.
 
-    Rule tiers first. Deferred domains are looked up in the global domain
+    Rule tiers first. The judge does not give numbers: it names the kind of
+    each site (official, academic, news, specialist, company, low_editorial,
+    unreliable, unknown) and `KIND_SCORES` turns it into the score, so a
+    domain cannot drift between 0.62 and 0.68 from one call to the next;
+    "unknown" gets the TLD fallback. Deferred domains are looked up in the global domain
     cache (domain + prompt version), and the rest are scored in ONE batched
     judge call whose verdicts are cached per domain, so the cost per run
     falls towards zero as the cache fills. Without a judge, or for domains the
@@ -171,7 +181,7 @@ class SourceAuthority(Metric):
     """
 
     name, category = "source_authority", "retrieval.source_quality"
-    version = "3"           # 3: no fallback to retrieved sources when nothing is cited
+    version = "4"           # 3: no fallback to retrieved sources when nothing is cited; 4: judge names a kind, code scores it
     uses_llm = True
     prompts = (DOMAIN_AUTHORITY,)
 
@@ -210,10 +220,17 @@ class SourceAuthority(Metric):
             for item in items:
                 try:
                     d = str(item["domain"]).lower().removeprefix("www.")
-                    v = {"score": max(0.0, min(1.0, float(item["score"]))),
-                         "tier": f"llm:{item.get('reason', '')}", "judge_model": ctx.judge.model}
+                    kind = str(item["kind"]).strip().lower()
                 except (KeyError, TypeError, ValueError):
                     continue
+                if kind in KIND_SCORES:
+                    score = KIND_SCORES[kind]
+                elif kind == "unknown":
+                    score = fallback_score(d)[0]
+                else:
+                    continue
+                v = {"score": score, "kind": kind, "tier": f"llm:{kind}:{item.get('reason', '')}",
+                     "judge_model": ctx.judge.model}
                 if d in deferred and not r.dry:
                     ctx.cache.put("domain", stable_hash(d, DOMAIN_AUTHORITY.version), v)
                     verdicts[d] = {**v, "basis": "judge"}

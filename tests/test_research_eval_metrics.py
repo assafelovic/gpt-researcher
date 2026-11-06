@@ -156,8 +156,9 @@ class FakeJudge:
                                "q4": {"evidence": "", "unique": "cobalt" in q}})
         if "used information from a source passage" in prompt:
             return json.dumps({"used": "Lithium" in prompt.split("Report sentences")[0], "evidence": ""})
-        if "Rate the authority" in prompt:
-            return json.dumps([{"domain": "weather-blog.com", "score": 0.2, "reason": "blog"}])
+        if "Rate how authoritative each domain is" in prompt:
+            return json.dumps({"domains": [{"domain": "weather-blog.com", "reason": "blog",
+                                            "kind": "low_editorial"}]})
         raise AssertionError(prompt[:80])
 
 
@@ -448,15 +449,16 @@ async def test_source_authority_rules_judge_and_domain_cache(ctx):
     r = await SourceAuthority().score(make_archive(), ctx)
     basis = {b["domain"]: (b["score"], b["basis"]) for b in r.details["breakdown"]}
     assert basis == {"energy.gov": (1.0, "rule"), "reuters.com": (0.8, "rule"),
-                     "weather-blog.com": (0.2, "judge")}
+                     "weather-blog.com": (0.3, "judge")}
     # The report cites only Reuters; the retrieved mean stays in details.
     assert r.value == 0.8 and r.details["basis"] == "citations"
-    assert r.details["retrieved_mean"] == pytest.approx((1.0 + 0.8 + 0.2) / 3, abs=1e-3)
+    assert r.details["retrieved_mean"] == pytest.approx((1.0 + 0.8 + 0.3) / 3, abs=1e-3)
     # Second run: the domain verdict comes from the global cache, no new call.
     before = len(ctx.fake.prompts)
     r2 = await SourceAuthority().score(make_archive(), ctx)
     assert len(ctx.fake.prompts) == before
     assert {b["basis"] for b in r2.details["breakdown"] if b["domain"] == "weather-blog.com"} == {"domain_cache"}
+    assert {b["kind"] for b in r2.details["breakdown"] if b["domain"] == "weather-blog.com"} == {"low_editorial"}
 
 
 async def test_source_authority_weights_by_citation_and_matches_subdomains(ctx):

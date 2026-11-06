@@ -23,7 +23,7 @@ Each group's `SKILL.md` has a header with `name` and `description`. There
 are two ways a group uses it:
 
 - **Whole skill as system prompt** (`system_prompt: true` in the header; so
-  far query-quality). The skill is the group's system prompt: background,
+  far query-quality and source-quality). The skill is the group's system prompt: background,
   definitions, principles, instructions and suggested steps, written for the
   judge. Every prompt in the folder is sent as that skill followed by its own
   task, its own definitions and its answer format. Maintainers' notes go in
@@ -91,7 +91,7 @@ inline.
 | [query-quality](query-quality/SKILL.md) | [`key_points.md`](query-quality/key_points.md) | 2 | key points for the question (key_points.py), decomposition_coverage, material_coverage, query_relevance, comprehensiveness | - | `question` | [json](query-quality/key_points.schema.json) |
 | [query-quality](query-quality/SKILL.md) | [`subquery_redundancy.md`](query-quality/subquery_redundancy.md) | 10 | subquery_redundancy | query-quality (whole skill) | `question`, `queries` | [json](query-quality/subquery_redundancy.schema.json) |
 | [query-quality](query-quality/SKILL.md) | [`tree_quality.md`](query-quality/tree_quality.md) | 20 | decomposition_tree_quality | query-quality (whole skill) | `question`, `path`, `parent`, `findings`, `children` | [json](query-quality/tree_quality.schema.json) |
-| [source-quality](source-quality/SKILL.md) | [`domain_authority.md`](source-quality/domain_authority.md) | 2 | source_authority | - | `domains` | [json](source-quality/domain_authority.schema.json) |
+| [source-quality](source-quality/SKILL.md) | [`domain_authority.md`](source-quality/domain_authority.md) | 3 | source_authority | source-quality (whole skill) | `domains` | [json](source-quality/domain_authority.schema.json) |
 | [retrieval-quality](retrieval-quality/SKILL.md) | [`material_coverage.md`](retrieval-quality/material_coverage.md) | 2 | material_coverage | - | `question`, `points` | [json](retrieval-quality/material_coverage.schema.json) |
 | [retrieval-quality](retrieval-quality/SKILL.md) | [`query_relevance.md`](retrieval-quality/query_relevance.md) | 4 | query_relevance | - | `question`, `key_points`, `other_queries`, `query`, `material` | [json](retrieval-quality/query_relevance.schema.json) |
 | [writing-quality](writing-quality/SKILL.md) | [`comprehensiveness.md`](writing-quality/comprehensiveness.md) | 2 | comprehensiveness | - | `question`, `key_points`, `report` | [json](writing-quality/comprehensiveness.schema.json) |

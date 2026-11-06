@@ -9,17 +9,27 @@
           "domain": {
             "type": "string"
           },
-          "score": {
-            "type": "number"
-          },
           "reason": {
             "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "official",
+              "academic",
+              "news",
+              "specialist",
+              "company",
+              "low_editorial",
+              "unreliable",
+              "unknown"
+            ]
           }
         },
         "required": [
           "domain",
-          "score",
-          "reason"
+          "reason",
+          "kind"
         ],
         "additionalProperties": false
       }

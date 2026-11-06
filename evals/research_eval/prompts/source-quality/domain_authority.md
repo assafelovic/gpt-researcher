@@ -1,17 +1,24 @@
 ---
 id: domain_authority
-version: 2
+version: 3
 used_by: source_authority
 ---
 
-You are a research source evaluator.
+# Task: domain authority
 
-Rate the authority of each domain below as a research source on a scale of 0.0 to 1.0.
-Consider whether it is a known academic journal, government body, established news outlet,
-professional organization, or specialized expert source.
+## Goal
+- Rate how authoritative each domain is as a research source.
+- You are given a list of domains, one per line.
 
-Return ONLY JSON in this exact format, one entry per domain:
-{"domains": [{"domain": "example.com", "score": 0.7, "reason": "established tech news outlet"}]}
+## What to decide for each domain
+- domain: the domain exactly as given.
+- reason: who runs the site and what kind of site it is, in a few words.
+- kind: one of "official", "academic", "news", "specialist", "company",
+  "low_editorial", "unreliable", "unknown".
+
+## Answer format
+Return ONLY JSON, one entry per domain, in order:
+{"domains": [{"domain": "example.com", "reason": "established technology news outlet", "kind": "news"}]}
 
 @user
 
