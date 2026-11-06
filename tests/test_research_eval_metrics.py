@@ -323,7 +323,7 @@ async def test_tree_quality_scores_the_step_each_child_takes(ctx):
     # No findings outside deep research.
     assert r.details["builds_on_findings"] is None and r.details["per_parent"][0]["findings"] == []
     assert r.llm["requests"] == r.llm["api_calls"] == 1 and r.llm["judge_model"] == "judge-x"
-    assert r.llm["prompts"]["tree_quality"]["version"] == "15"
+    assert r.llm["prompts"]["tree_quality"]["version"] == "16"
     prompt = next(p for p in ctx.fake.prompts if "Path from the original question" in p)
     assert f"0. {CORE}" in prompt and r.details["per_parent"][0]["depth"] == 0
     assert f"Original research question (the root of the whole search tree):\n{CORE}" in prompt
