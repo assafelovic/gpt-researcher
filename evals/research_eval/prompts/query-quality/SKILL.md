@@ -50,16 +50,18 @@ supply in Europe" is not aimed at "battery recycling".
 Give each child one relation. First rule out the two failures:
 - drifted: it no longer helps answer the parent or the original research
   question (see drift).
-- restated: it asks for the whole parent again in other words, even with a
-  few terms added, dropped or reordered, or with one period or name taken out.
+- restated: the same facts would answer the child and the whole parent.
+  Rewording, reordering, dropping words, or listing names the parent already
+  covers does not change that.
 Otherwise give the one of these that best describes what the child mainly asks:
-- deeper: why or how something in the parent happens, what it causes, or the
-  evidence that settles a claim in it. Asking for more detail, figures or
-  named cases of the parent's own topic is not deeper: that is specific.
+- deeper: what lies under something the parent asks about: its causes,
+  effects, drivers, mechanisms or trade-offs, or the evidence that settles a
+  claim in it. Count it even when the child also names cases.
 - extension: an angle the parent does not name but that helps answer it,
   such as another actor, a side effect or a comparison.
-- specific: the parent's question for one concrete case or measure: a named
-  actor, place, period, product or figure.
+- specific: a narrower part of the parent's own question at the same level:
+  one named actor, place, period, product or figure the parent does not
+  already pin down, or one of several topics the parent lists.
 Example, for the parent "EU battery recycling rules 2025": "why lithium
 recovery in EU recycling plants stays below the targets" is deeper; "how the
 rules change battery import costs for carmakers" is an extension; "recycling
