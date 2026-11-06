@@ -54,7 +54,8 @@ A good child takes a step away from its parent in one or more directions:
   as another actor, a side effect or a comparison.
 - specific: a narrower part of the parent's question: a named actor, place,
   period, product or figure the parent does not already pin down, or one of
-  several topics the parent lists. Asking for a source, rule text, data
+  several topics or questions the parent lists (taken alone, or a few of
+  them together). Asking for a source, rule text, data
   field, example, case study or size tier is specific, not deeper, even when
   worded as "how".
 One direction is enough for a good step, and a child can take several: name
