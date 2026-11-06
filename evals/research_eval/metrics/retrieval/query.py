@@ -282,48 +282,49 @@ class SubqueryRedundancy(Metric):
 
 
 class DecompositionTreeQuality(Metric):
-    """Depth of the search tree: does each split go below its parent, or only
-    restate it or drift away?
+    """Depth of the search tree: does each split take a step away from its
+    parent, or only restate it or drift away?
 
-    Breadth is decomposition_coverage (do the sub-queries reach the question's
-    key points) and waste is subquery_redundancy; this metric looks at each
-    parent -> child step on its own. One call per decomposition that was
-    searched (deep research's clarifying questions are left out: they are
+    Breadth over the question is decomposition_coverage (do the sub-queries
+    reach its key points) and waste is subquery_redundancy; this metric looks
+    at each parent -> child step on its own. One call per decomposition that
+    was searched (deep research's clarifying questions are left out: they are
     folded into one query, never searched). The judge sees the path from the
-    question down to the parent (`RunArchive.query_path`) and gives each child
-    one relation, the first that fits:
+    question down to the parent (`RunArchive.query_path`) and, for each child,
+    says whether it takes a step from the parent or has a problem that leaves
+    it with none (restated, drifted). Deeper, wider and more specific are the
+    directions a step can take, given as hints; the judge names every one a
+    child takes, but any step is a good split.
 
-        drifted    no longer helps answer the parent or the question
-        restated   the whole parent again in other words
-        deeper     why or how one part of the parent happens, or its evidence
-        extension  an angle the parent does not name but that helps answer it
-        specific   the parent's question for one concrete case
-
-    A deeper deep-research level follows a search step whose findings
-    (learnings) the archive records; the judge is shown them and names the
-    findings each child follows up.
-
-        parent score = children that are deeper, extension or specific / children
+        child score  = 1 when it takes a step, 0 when restated or drifted
+        parent score = mean child score
         value        = mean parent score
 
-    `details.relations` gives each relation's share of all children and
-    `details.depth_share` the share that is deeper (the same in the parent
-    score as the other two good relations, so a one-level default run is not
-    marked down for its mode); `details.builds_on_findings` the share of
-    children after findings that follow one up. The definitions come from the
-    query-quality skill (prompts/query-quality/SKILL.md).
+    One overall score, not one per direction: a child can go both deeper and
+    wider, and a one-level default run is not marked down for its mode.
+    A deeper deep-research level follows a search step whose findings
+    (learnings) the archive records; the judge is shown them and names the
+    findings each child follows up (`details.builds_on_findings`, a
+    diagnostic). `details.directions` and `details.problems` count the
+    judge's labels, for reading the scores, not as scores of their own. The
+    definitions come from the query-quality skill (prompts/query-quality/SKILL.md).
     """
 
     name, category = "decomposition_tree_quality", "retrieval.query_quality"
-    version = "8"           # 3: the judge sees the root-to-parent path; 4: per-child checks + aspect coverage;
+    version = "9"           # 3: the judge sees the root-to-parent path; 4: per-child checks + aspect coverage;
                             # 5: check and aspect definitions from the query-quality skill, with examples;
                             # 6: the parent's aspects are fixed before the children are shown;
                             # 7: the skill rewritten short, with shared principles;
-                            # 8: depth only: one relation per child, findings in deep research, no coverage
+                            # 8: depth only: one relation per child, findings in deep research, no coverage;
+                            # 9: one overall score per child (a step or not); deeper, wider, specific are hints
     uses_llm = True
     prompts = (TREE_QUALITY,)
-    RELATIONS = ("deeper", "extension", "specific", "restated", "drifted")
-    GOOD = ("deeper", "extension", "specific")
+    DIRECTIONS = ("deeper", "wider", "specific")
+    PROBLEMS = ("restated", "drifted")
+
+    @classmethod
+    def child_score(cls, kid: dict) -> float:
+        return 1.0 if kid["problem"] == "none" and kid["directions"] else 0.0
 
     async def score(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:
         if ctx.judge is None:
@@ -357,30 +358,38 @@ class DecompositionTreeQuality(Metric):
                     i = int(e["child"])
                 except (KeyError, TypeError, ValueError):
                     continue
-                rel = str(e.get("relation") or "").strip().lower()
-                if 1 <= i <= n and rel in self.RELATIONS:
-                    kids[i] = {"relation": rel, "evidence": str(e.get("evidence") or ""),
-                               "builds_on": _child_numbers(e.get("builds_on"), len(findings))}
-            score = sum(k["relation"] in self.GOOD for k in kids.values()) / len(kids) if kids else None
+                problem = str(e.get("problem") or "").strip().lower()
+                dirs = e.get("directions") if isinstance(e.get("directions"), list) else []
+                dirs = sorted({str(x).strip().lower() for x in dirs} & set(self.DIRECTIONS),
+                              key=self.DIRECTIONS.index)
+                if not 1 <= i <= n or problem not in ("none", *self.PROBLEMS):
+                    continue
+                if problem != "none":
+                    dirs = []
+                kid = {"problem": problem, "directions": dirs, "evidence": str(e.get("evidence") or ""),
+                       "builds_on": _child_numbers(e.get("builds_on"), len(findings))}
+                kid["score"] = self.child_score(kid)
+                kids[i] = kid
+            score = sum(k["score"] for k in kids.values()) / len(kids) if kids else None
             if score is not None:
                 scores.append(score)
                 verdicts += kids.values()
                 if findings:
                     after_findings += kids.values()
                 weak += [{"parent": d.parent_query.strip()[:200], "child": d.child_queries[i - 1],
-                          "relation": k["relation"], "evidence": k["evidence"]}
-                         for i, k in sorted(kids.items()) if k["relation"] not in self.GOOD]
+                          "problem": k["problem"], "evidence": k["evidence"]}
+                         for i, k in sorted(kids.items()) if k["score"] == 0]
             per_parent.append({"span_id": d.span_id, "kind": d.kind, "parent": d.parent_query,
                                "depth": len(archive.query_path(d.span_id)) - 1, "n_children": n,
                                "score": rounded(score), "findings": findings,
                                "children": [{"child": d.child_queries[i - 1], **kids[i]} for i in sorted(kids)],
                                "unanswered_children": n - len(kids), "error": r.error})
-        share = (lambda rel: rounded(sum(v["relation"] == rel for v in verdicts) / len(verdicts))
-                 if verdicts else None)
+        count = lambda pred: sum(pred(v) for v in verdicts)
         res = self.result(
             rounded(sum(scores) / len(scores)) if scores else None, per_parent=per_parent,
             scored_parents=len(scores), children=len(verdicts),
-            relations={rel: share(rel) for rel in self.RELATIONS}, depth_share=share("deeper"),
+            directions={x: count(lambda v: x in v["directions"]) for x in self.DIRECTIONS},
+            problems={x: count(lambda v: v["problem"] == x) for x in self.PROBLEMS},
             builds_on_findings=rounded(sum(bool(v["builds_on"]) for v in after_findings) / len(after_findings))
             if after_findings else None,
             children_after_findings=len(after_findings), weak_children=weak)

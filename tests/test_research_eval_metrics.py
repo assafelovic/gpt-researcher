@@ -123,15 +123,16 @@ class FakeJudge:
                 {"point": int(i), "evidence": "",
                  "subqueries": [int(j) for j, q in subs if p.split()[0] in q]} for i, p in points]})
         if "how a research agent split a query" in prompt:
-            # "sodium" drifted, "worldwide" restates, "why" digs deeper, the rest are
-            # specific; a child naming "Kamoto" follows up finding 1.
+            # "sodium" drifted, "worldwide" restates, the rest are specific and
+            # "why" also digs deeper; a child naming "Kamoto" follows up finding 1.
             kids = re.findall(r"^(\d+)\. (.+)$", prompt.split("Child queries:\n")[1].split("\n\n")[0], re.M)
             if any("garbled" in q for _, q in kids):
                 return "not json"
-            rel = lambda q: ("drifted" if "sodium" in q else "restated" if "worldwide" in q
-                             else "deeper" if q.startswith("why") else "specific")
+            problem = lambda q: "drifted" if "sodium" in q else "restated" if "worldwide" in q else "none"
+            dirs = lambda q: [] if problem(q) != "none" else ["deeper", "specific"] if q.startswith("why") else ["specific"]
             return json.dumps({"children": [
-                {"child": int(n), "evidence": q, "relation": rel(q), "builds_on": [1] if "Kamoto" in q else []}
+                {"child": int(n), "evidence": q, "problem": problem(q), "directions": dirs(q),
+                 "builds_on": [1] if "Kamoto" in q else []}
                 for n, q in kids]})
         if "auditing the search plan of a research agent" in prompt:
             # A query repeats the first earlier one it starts with (ancestors included:
@@ -310,19 +311,19 @@ async def test_subquery_redundancy_lexical_fallback_flags_near_duplicates():
     assert r.higher_is_better is False
 
 
-async def test_tree_quality_judges_how_each_child_relates_to_its_parent(ctx):
+async def test_tree_quality_scores_the_step_each_child_takes(ctx):
     r = await DecompositionTreeQuality().score(make_archive(), ctx)
-    # specific, specific, restated ("worldwide"), drifted ("sodium"): 2 of 4 go below the parent.
+    # specific, specific, restated ("worldwide"), drifted ("sodium"): 2 of 4 take a step.
     assert r.value == pytest.approx(0.5, abs=1e-3)
-    assert r.details["relations"] == {"deeper": 0.0, "extension": 0.0, "specific": 0.5,
-                                      "restated": 0.25, "drifted": 0.25}
-    assert r.details["depth_share"] == 0.0 and r.details["children"] == 4
-    assert [(w["child"], w["relation"]) for w in r.details["weak_children"]] == [
+    assert r.details["directions"] == {"deeper": 0, "wider": 0, "specific": 2}
+    assert r.details["problems"] == {"restated": 1, "drifted": 1}
+    assert r.details["children"] == 4
+    assert [(w["child"], w["problem"]) for w in r.details["weak_children"]] == [
         ("lithium refining capacity worldwide", "restated"), ("sodium battery alternatives", "drifted")]
     # No findings outside deep research.
     assert r.details["builds_on_findings"] is None and r.details["per_parent"][0]["findings"] == []
     assert r.llm["requests"] == r.llm["api_calls"] == 1 and r.llm["judge_model"] == "judge-x"
-    assert r.llm["prompts"]["tree_quality"]["version"] == "12"
+    assert r.llm["prompts"]["tree_quality"]["version"] == "13"
     prompt = next(p for p in ctx.fake.prompts if "Path from the original question" in p)
     assert f"0. {CORE}" in prompt and r.details["per_parent"][0]["depth"] == 0
     assert f"Original research question (the root of the whole search tree):\n{CORE}" in prompt
@@ -357,10 +358,11 @@ async def test_tree_quality_shows_deep_findings_and_counts_the_children_that_fol
     assert by["d1"]["findings"] == [] and by["d2"]["findings"] == a.span_by_id["r1"]["attributes"]["learnings"]
     prompt = next(p for p in ctx.fake.prompts if "Child queries:\n1. why Kamoto" in p)
     assert "Findings of the search step this split follows:\n1. Kamoto mine output fell 30% in 2024\n2. Export" in prompt
-    assert [k["relation"] for k in by["d2"]["children"]] == ["deeper", "specific"]
+    assert [(k["directions"], k["score"]) for k in by["d2"]["children"]] == [
+        (["deeper", "specific"], 1.0), (["specific"], 1.0)]
     assert [k["builds_on"] for k in by["d2"]["children"]] == [[1], []]
     assert r.details["builds_on_findings"] == 0.5 and r.details["children_after_findings"] == 2
-    assert r.details["depth_share"] == 0.25 and r.value == 1.0
+    assert r.value == 1.0 and r.details["directions"] == {"deeper": 1, "wider": 0, "specific": 4}
 
 
 async def test_tree_quality_reports_a_failed_call(ctx):

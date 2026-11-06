@@ -65,9 +65,10 @@ def test_every_answer_schema_is_strict_and_fits_the_prompt_example():
         tail = p.system[p.system.rindex("Return ONLY"):]
         assert P.schema_errors(json.loads(tail[tail.index("{"):]), p.schema) == [], p.id
     tq = P.load("tree_quality").schema
-    assert P.schema_errors({"children": [{"child": 1, "relation": "deep"}], "notes": ""}, tq) == [
-        "$: unexpected notes", "$.children[0]: missing evidence", "$.children[0]: missing builds_on",
-        "$.children[0].relation: 'deep' not in ['drifted', 'restated', 'deeper', 'extension', 'specific']"]
+    errs = P.schema_errors({"children": [{"child": 1, "problem": "none", "directions": ["deep"]}],
+                            "notes": ""}, tq)
+    assert errs == ["$: unexpected notes", "$.children[0]: missing evidence", "$.children[0]: missing builds_on",
+                    "$.children[0].directions[0]: 'deep' not in ['deeper', 'wider', 'specific']"], errs
 
 
 def test_include_pulls_one_skill_section(tmp_path, monkeypatch):
@@ -96,8 +97,8 @@ def test_one_skill_per_group_and_every_section_is_used():
 
 def test_query_quality_prompts_share_the_skill_definitions():
     skill = P.skill_sections("query-quality")
-    assert set(skill) == {"principles", "aimed_at", "relation", "drift", "builds_on", "repeat"}
-    for pid, sections in {"tree_quality": ["relation", "drift", "builds_on"],
+    assert set(skill) == {"principles", "aimed_at", "steps", "drift", "builds_on", "repeat"}
+    for pid, sections in {"tree_quality": ["steps", "drift", "builds_on"],
                           "subquery_redundancy": ["repeat"], "decomposition_coverage": ["aimed_at"]}.items():
         t = P.load(pid).template
         assert "@include" not in t and P.load(pid).group == "query-quality"

@@ -1,6 +1,6 @@
 ---
 name: query-quality
-description: How the judge rates the queries a research agent searched before writing (which key points the sub-queries reach, whether they repeat each other, whether each split goes deeper than its parent or drifts). Shared by the prompts of decomposition_coverage, subquery_redundancy and decomposition_tree_quality.
+description: How the judge rates the queries a research agent searched before writing (which key points the sub-queries reach, whether they repeat each other, whether each split takes a step from its parent or only restates or drifts). Shared by the prompts of decomposition_coverage, subquery_redundancy and decomposition_tree_quality.
 ---
 
 # Query quality
@@ -9,7 +9,7 @@ This group judges the search plan, not the report: the queries the agent
 searched and how each one was split into sub-queries. Breadth (does the plan
 reach every key point of the question) is decomposition_coverage, waste (do
 queries repeat each other) is subquery_redundancy, and depth (does each split
-go below its parent rather than restate or leave it) is
+take a step from its parent: deeper, wider or more specific) is
 decomposition_tree_quality. Every prompt in this
 folder includes the sections it needs with `@include query-quality#<section>`.
 The text under a `## <section>` heading is sent to the judge as it is, so it
@@ -45,30 +45,32 @@ A query is aimed at an aspect when it names the aspect or is plainly written
 to find out about it. Sharing broad topic words is not enough: "EV battery
 supply in Europe" is not aimed at "battery recycling".
 
-## relation
+## steps
 
-Give each child one relation. First rule out the two failures:
-- drifted: it no longer helps answer the parent or the original research
-  question (see drift).
+A good child takes a step away from its parent in one or more directions:
+- deeper: why something in the parent happens or what it leads to: its
+  causes, effects, drivers, mechanisms or trade-offs.
+- wider: an angle the parent does not name but that helps answer it, such
+  as another actor, a side effect or a comparison.
+- specific: a narrower part of the parent's question: a named actor, place,
+  period, product or figure the parent does not already pin down, or one of
+  several topics the parent lists. Asking for a source, rule text, data
+  field, example, case study or size tier is specific, not deeper, even when
+  worded as "how".
+One direction is enough for a good step, and a child can take several: name
+every direction it clearly takes, and only those. A child takes no step when
+it is:
 - restated: the same facts would answer the child and the whole parent.
   Rewording, reordering, dropping words, or listing names the parent already
   covers does not change that.
-Otherwise give the one of these that best describes what the child mainly asks:
-- deeper: why something in the parent happens or what it leads to: its
-  causes, effects, drivers, mechanisms or trade-offs. Asking for a source,
-  agency, rule text, data field, example, case study, size tier or period
-  is specific, not deeper, even when worded as "how"; so is a section
-  heading such as "profile of the leading vendors".
-- extension: an angle the parent does not name but that helps answer it,
-  such as another actor, a side effect or a comparison.
-- specific: a narrower part of the parent's own question at the same level:
-  one named actor, place, period, product or figure the parent does not
-  already pin down, or one of several topics the parent lists.
-Example, for the parent "EU battery recycling rules 2025": "why lithium
-recovery in EU recycling plants stays below the targets" is deeper; "how the
-rules change battery import costs for carmakers" is an extension; "recycling
-quotas each EU country met in 2025" is specific; "2025 EU rules for recycling
-batteries" is restated; "best electric cars to buy in 2025" has drifted.
+- drifted: it no longer helps answer the parent or the original research
+  question (see drift).
+Example, for the parent "EU battery recycling rules 2025": "why recycling
+plants miss the EU recovery targets" goes deeper; "battery recycling rules in
+the US and China" goes wider; "recycling quotas each EU country met in 2025"
+is specific; "why German plants missed the 2025 lithium target" is specific
+and deeper; "2025 EU rules for recycling batteries" is restated; "best
+electric cars to buy in 2025" has drifted.
 
 ## drift
 
