@@ -54,9 +54,11 @@ Give each child one relation. First rule out the two failures:
   Rewording, reordering, dropping words, or listing names the parent already
   covers does not change that.
 Otherwise give the one of these that best describes what the child mainly asks:
-- deeper: what lies under something the parent asks about: its causes,
-  effects, drivers, mechanisms or trade-offs, or the evidence that settles a
-  claim in it. Count it even when the child also names cases.
+- deeper: why something in the parent happens or what it leads to: its
+  causes, effects, drivers, mechanisms or trade-offs. Asking for a source,
+  agency, rule text, data field, example, case study, size tier or period
+  is specific, not deeper, even when worded as "how"; so is a section
+  heading such as "profile of the leading vendors".
 - extension: an angle the parent does not name but that helps answer it,
   such as another actor, a side effect or a comparison.
 - specific: a narrower part of the parent's own question at the same level:
