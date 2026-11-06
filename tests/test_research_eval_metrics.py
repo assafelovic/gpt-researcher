@@ -835,3 +835,11 @@ async def test_material_coverage_counts_points_the_reply_skipped(ctx):
     a.data["meta"]["query"] = a.data["meta"]["query"] + " drop-last"
     r = await MaterialCoverage().score(a, ctx)
     assert r.details["unanswered"] == 1 and r.details["per_point"][-1]["coverage"] == "none"
+
+
+def test_company_docs_and_investor_subdomains_are_scored_by_rule():
+    from evals.research_eval.metrics.retrieval.source import rule_score
+    assert rule_score("docs.pinecone.io") == (0.6, "company-primary")
+    assert rule_score("investor.uber.com") == (0.6, "company-primary")
+    assert rule_score("ir.com") is None
+    assert rule_score("pinecone.io") is None

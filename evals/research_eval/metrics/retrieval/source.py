@@ -127,6 +127,12 @@ _MAJOR_NEWS_DOMAINS = {
 }
 
 
+# A company's docs or investor pages: primary on its own products and figures.
+# Decided by rule because the judge, shown only a vendor's main domain, could
+# not tell such pages from its marketing (v37: 0.3/0.6 coin flips).
+_PRIMARY_COMPANY_SUBDOMAINS = {"docs", "developer", "developers", "investor", "investors", "ir"}
+
+
 def rule_score(domain: str) -> tuple[float, str] | None:
     """High-confidence rule tiers; None defers the domain to the judge."""
     d = domain.lower().removeprefix("www.")
@@ -137,15 +143,16 @@ def rule_score(domain: str) -> tuple[float, str] | None:
     if any(d == h or d.endswith("." + h) for h in _MAJOR_NEWS_DOMAINS):
         return 0.8, "major-news"
     if "wikipedia.org" in d:         return 0.75, "wikipedia"
+    if d.split(".", 1)[0] in _PRIMARY_COMPANY_SUBDOMAINS and d.count(".") >= 2:
+        return 0.6, "company-primary"
     return None
 
 
 # The judge names a kind of site; the score comes from this table, on the
-# same scale as the rule tiers above. "marketing", "low_editorial" and
-# "unknown" share 0.3, so the judge wavering between them moves no score.
+# same scale as the rule tiers above. Neighbouring kinds the judge wavers
+# between (company / unknown / low_editorial) sit 0.1 apart or less.
 KIND_SCORES = {"official": 1.0, "academic": 0.9, "news": 0.8, "specialist": 0.7,
-               "company": 0.6, "marketing": 0.3, "low_editorial": 0.3,
-               "unknown": 0.3, "unreliable": 0.1}
+               "company": 0.4, "low_editorial": 0.3, "unknown": 0.3, "unreliable": 0.1}
 
 
 def fallback_score(domain: str) -> tuple[float, str]:
@@ -171,8 +178,8 @@ class SourceAuthority(Metric):
     which gave an uncited report an ordinary-looking value.
 
     Rule tiers first. The judge does not give numbers: it names the kind of
-    each site (official, academic, news, specialist, company, marketing,
-    low_editorial, unreliable, unknown) and `KIND_SCORES` turns it into the
+    each site (official, academic, news, specialist, company, low_editorial,
+    unreliable, unknown) and `KIND_SCORES` turns it into the
     score, so a domain cannot drift between 0.62 and 0.68 from one call to the
     next. Deferred domains are looked up in the global domain
     cache (domain + prompt version), and the rest are scored in ONE batched
@@ -183,7 +190,7 @@ class SourceAuthority(Metric):
     """
 
     name, category = "source_authority", "retrieval.source_quality"
-    version = "5"           # 3: no fallback to retrieved sources when nothing is cited; 4: judge names a kind, code scores it; 5: company split into company/marketing, unknown fixed at 0.3
+    version = "6"           # 3: no fallback to retrieved sources when nothing is cited; 4: judge names a kind, code scores it; 5: unknown fixed at 0.3; 6: company 0.4, docs/investor subdomains 0.6 by rule
     uses_llm = True
     prompts = (DOMAIN_AUTHORITY,)
 

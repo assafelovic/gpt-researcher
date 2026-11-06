@@ -15,10 +15,11 @@ Maintainers' notes (comments are never sent to the judge).
   then run `python -m evals.research_eval.prompts --lock`.
 - The judge names a kind for each domain; the code turns the kind into the
   score (KIND_SCORES in source.py: official 1.0, academic 0.9, news 0.8,
-  specialist 0.7, company 0.6, marketing 0.3, low_editorial 0.3, unknown
-  0.3, unreliable 0.1). marketing, low_editorial and unknown share 0.3 so
-  the judge wavering between them (the most common flips in v36) moves no
-  score. Those numbers line up with the rule tiers
+  specialist 0.7, company 0.4, low_editorial 0.3, unknown 0.3, unreliable
+  0.1). docs.*, developer(s).*, investor(s).* and ir.* subdomains score
+  0.6 by rule: v37 asked the judge to split companies into "company" and
+  "marketing" from the domain alone, and it flipped 45 vendors between
+  0.3 and 0.6 from one call to the next. Those numbers line up with the rule tiers
   that score .gov, .edu, listed journals, major news and Wikipedia before
   the judge is asked, so rule and judge scores sit on one scale.
 - Verdicts are cached per domain and prompt version, across all questions:
@@ -45,7 +46,8 @@ writing". Your job is to evaluate where the agent's information came from.
 - Domain names only, not pages: judge the site as a whole, not one article.
 - Some domains are scored by fixed rules before you see the list:
   government sites, universities, major journals and international bodies,
-  major news outlets and Wikipedia. The list you get holds the rest, such as
+  major news outlets, Wikipedia, and company docs or investor subdomains
+  such as docs.example.com. The list you get holds the rest, such as
   company sites, trade press, blogs, regional outlets and niche publishers.
 
 ### Quality of a source
@@ -69,14 +71,11 @@ without checking it elsewhere.
   tanks, professional associations, edited dictionaries and reference
   works, and the published research of law firms and of large accounting
   or consulting firms.
-- company: a company you can name, with what it makes or does, on its own
-  site: its product docs, filings, investor pages or press releases.
-  Reliable on its own products and figures, not neutral about competitors.
-- marketing: a firm's own site whose pages mainly serve to win clients:
-  small software vendors, agencies, development shops, advisors and
-  boutique banks writing general articles, and sites that sell market-size
-  reports on many unrelated industries.
+- company: a company's own site, of any size: product pages, docs, blog,
+  press releases. Reliable on its own products and figures, not neutral
+  about competitors.
 - low_editorial: personal blogs, newsletters, press-release wires,
+  sites that sell market-size reports on many unrelated industries,
   directories, aggregators, Q&A and forum sites, wikis, and platforms that
   host what anyone posts (GitHub, LinkedIn, YouTube, Medium, Substack).
 - unreliable: content farms, AI-written or SEO pages, sites that copy
@@ -84,14 +83,13 @@ without checking it elsewhere.
 - unknown: you do not know the site and its name does not show what it is.
 
 ### Boundaries that need care
-- company or marketing: company only when your reason can name the
-  company and what it is known for ("Pinecone's vector database docs").
-  If your reason can only say "a software company" or "an AI company",
-  the site is marketing.
-- specialist or marketing for professional firms: law firms and the Big
+- specialist or company for professional firms: law firms and the Big
   Four or other large accounting and consulting firms publishing research
   are specialist. Investment banks, M&A advisors and smaller consultancies
-  writing on their own site are company or marketing, by the rule above.
+  writing on their own site are company.
+- specialist or low_editorial for market research: an analyst firm that
+  covers one field is specialist; a site that sells reports on every
+  industry, from drones to cosmetics, is low_editorial.
 - Platforms: judge the platform, not the account on it. An official
   repository on GitHub or a company page on LinkedIn is still on a
   platform that hosts what anyone posts.

@@ -1,6 +1,6 @@
 ---
 id: domain_authority
-version: 4
+version: 5
 used_by: source_authority
 ---
 
@@ -14,9 +14,8 @@ used_by: source_authority
 - domain: the domain exactly as given.
 - reason: who runs the site and what kind of site it is, in a few words.
 - kind: one of "official", "academic", "news", "specialist", "company",
-  "marketing", "low_editorial", "unreliable", "unknown".
-- Write the reason first and pick the kind from it: a reason that cannot
-  name the company is not "company".
+  "low_editorial", "unreliable", "unknown".
+- Write the reason first and pick the kind from it.
 
 ## Answer format
 Return ONLY JSON, one entry per domain, in order:
