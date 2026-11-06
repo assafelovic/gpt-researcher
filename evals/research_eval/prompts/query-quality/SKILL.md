@@ -61,8 +61,11 @@ One direction is enough for a good step, and a child can take several: name
 every direction it clearly takes, and only those. A child takes no step when
 it is:
 - restated: the same facts would answer the child and the whole parent.
-  Rewording, reordering, dropping words, or listing names the parent already
-  covers does not change that.
+  Rewording, reordering or dropping words does not change that, nor does
+  adding only a year or scope the parent already implies ("in 2026",
+  "worldwide", "commercial") or a list of the names the parent's answer
+  would give anyway. Specific needs a child whose answer leaves out most of
+  the parent's.
 - drifted: it no longer helps answer the parent or the original research
   question (see drift).
 Example, for the parent "EU battery recycling rules 2025": "why recycling
