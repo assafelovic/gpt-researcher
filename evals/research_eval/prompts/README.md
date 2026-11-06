@@ -8,7 +8,7 @@ read and edited in one place. The code only loads them (`__init__.py`).
 ```
 prompts/
 ├── query-quality/
-│   ├── SKILL.md                  what the group judges + its shared definitions
+│   ├── SKILL.md                  the group's system prompt (or its shared sections)
 │   ├── tree_quality.md           one file per prompt
 │   ├── tree_quality.schema.json  the JSON its answer must be
 │   └── ...
@@ -19,23 +19,33 @@ prompts/
 └── versions.json                 each prompt's version and text hash
 ```
 
-Each group's `SKILL.md` follows the skill layout: a header with `name` and
-`description`, then a short introduction for maintainers (not sent to the
-judge), then one `## <section>` per shared definition. The text of a section
-runs to the next heading and is sent to the judge as it is, so it is written
-for the judge: the rule, the reason when it is not obvious, and at most one
-example. A prompt pulls in only the sections it needs:
+Each group's `SKILL.md` has a header with `name` and `description`. There
+are two ways a group uses it:
+
+- **Whole skill as system prompt** (`system_prompt: true` in the header; so
+  far query-quality). The skill is the group's system prompt: background,
+  definitions, principles, instructions and suggested steps, written for the
+  judge. Every prompt in the folder is sent as that skill followed by its own
+  task, its own definitions and its answer format. Maintainers' notes go in
+  `<!-- ... -->` comments, which are never sent. A prompt that must not get
+  the skill says `skill: none` (key_points: its answers are frozen in the
+  dataset).
+- **Sections** (the other groups, until they are reviewed). A short
+  introduction for maintainers, then one `## <section>` per shared
+  definition; a prompt pulls one in with `@include <group>#<section>`.
 
 ```
 ---
 id: tree_quality              # same as the file name, unique across groups
-version: 10                   # bump on every change of the text or the schema
+version: 17                   # bump on every change of the text or the schema
 used_by: decomposition_tree_quality
 ---
 
-The task, the definitions and the answer format: the system message, the
-same on every call. Braces here, like the JSON example, are literal.
-@include query-quality#steps         <- replaced by that section of query-quality/SKILL.md
+                              <- the whole query-quality/SKILL.md comes first
+# Task: decomposition tree quality
+The task of this metric, its own definitions and the answer format: the
+rest of the system message, the same on every call. Braces here, like the
+JSON example, are literal.
 
 @user
 
@@ -57,8 +67,9 @@ inline.
 
 ## Editing a prompt or a skill section
 
-1. Edit the text or the schema. A skill section changes every prompt that
-   includes it (the table below lists them). A new answer field goes in both
+1. Edit the text or the schema. A whole-skill SKILL.md changes every prompt
+   in its folder (except `skill: none`); a skill section changes every prompt
+   that includes it (the table below lists them). A new answer field goes in both
    the JSON example and the schema.
 2. Bump `version` in every prompt whose text or schema changed. The version
    is part of every cache key and, with the text hash, of the scorer version
@@ -76,10 +87,10 @@ inline.
 <!-- prompts:start (written by --lock) -->
 | Group | File | Version | Used by | Skill sections | Filled in | Schema |
 |---|---|---|---|---|---|---|
-| [query-quality](query-quality/SKILL.md) | [`decomposition_coverage.md`](query-quality/decomposition_coverage.md) | 5 | decomposition_coverage | query-quality#principles, query-quality#aimed_at | `question`, `key_points`, `subqueries` | [json](query-quality/decomposition_coverage.schema.json) |
+| [query-quality](query-quality/SKILL.md) | [`decomposition_coverage.md`](query-quality/decomposition_coverage.md) | 6 | decomposition_coverage | query-quality (whole skill) | `question`, `key_points`, `subqueries` | [json](query-quality/decomposition_coverage.schema.json) |
 | [query-quality](query-quality/SKILL.md) | [`key_points.md`](query-quality/key_points.md) | 2 | key points for the question (key_points.py), decomposition_coverage, material_coverage, query_relevance, comprehensiveness | - | `question` | [json](query-quality/key_points.schema.json) |
-| [query-quality](query-quality/SKILL.md) | [`subquery_redundancy.md`](query-quality/subquery_redundancy.md) | 6 | subquery_redundancy | query-quality#principles, query-quality#repeat | `question`, `queries` | [json](query-quality/subquery_redundancy.schema.json) |
-| [query-quality](query-quality/SKILL.md) | [`tree_quality.md`](query-quality/tree_quality.md) | 16 | decomposition_tree_quality | query-quality#principles, query-quality#steps, query-quality#drift, query-quality#builds_on | `question`, `path`, `parent`, `findings`, `children` | [json](query-quality/tree_quality.schema.json) |
+| [query-quality](query-quality/SKILL.md) | [`subquery_redundancy.md`](query-quality/subquery_redundancy.md) | 7 | subquery_redundancy | query-quality (whole skill) | `question`, `queries` | [json](query-quality/subquery_redundancy.schema.json) |
+| [query-quality](query-quality/SKILL.md) | [`tree_quality.md`](query-quality/tree_quality.md) | 17 | decomposition_tree_quality | query-quality (whole skill) | `question`, `path`, `parent`, `findings`, `children` | [json](query-quality/tree_quality.schema.json) |
 | [source-quality](source-quality/SKILL.md) | [`domain_authority.md`](source-quality/domain_authority.md) | 2 | source_authority | - | `domains` | [json](source-quality/domain_authority.schema.json) |
 | [retrieval-quality](retrieval-quality/SKILL.md) | [`material_coverage.md`](retrieval-quality/material_coverage.md) | 2 | material_coverage | - | `question`, `points` | [json](retrieval-quality/material_coverage.schema.json) |
 | [retrieval-quality](retrieval-quality/SKILL.md) | [`query_relevance.md`](retrieval-quality/query_relevance.md) | 4 | query_relevance | - | `question`, `key_points`, `other_queries`, `query`, `material` | [json](retrieval-quality/query_relevance.schema.json) |

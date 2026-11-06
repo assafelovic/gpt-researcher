@@ -1,19 +1,19 @@
 {
   "decomposition_coverage": {
-    "version": "5",
-    "hash": "9a485a0cc755"
+    "version": "6",
+    "hash": "7e0c51b49248"
   },
   "key_points": {
     "version": "2",
     "hash": "0792d43b553a"
   },
   "subquery_redundancy": {
-    "version": "6",
-    "hash": "9bf93d7d7d49"
+    "version": "7",
+    "hash": "8f28e91eb2c7"
   },
   "tree_quality": {
-    "version": "16",
-    "hash": "1ef37bbf5498"
+    "version": "17",
+    "hash": "2cb5bbf9cf69"
   },
   "domain_authority": {
     "version": "2",

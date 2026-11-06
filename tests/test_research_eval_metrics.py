@@ -116,7 +116,7 @@ class FakeJudge:
                        if word in text.lower()]
                 out.append({"point": int(n), "coverage": "full" if ids else "none", "passages": ids})
             return json.dumps({"points": out[:-1] if "drop-last" in prompt else out})
-        if "which aspects of a research question" in prompt:
+        if "which key points of the core query" in prompt:
             points = re.findall(r"^(\d+)\. (.+)$", prompt.split("Key points:")[1].split("Sub-queries:")[0], re.M)
             subs = re.findall(r"^(\d+)\. (.+)$", prompt.split("Sub-queries:")[1].split("Return ONLY")[0], re.M)
             return json.dumps({"points": [
@@ -134,7 +134,7 @@ class FakeJudge:
                 {"child": int(n), "evidence": q, "problem": problem(q), "directions": dirs(q),
                  "builds_on": [1] if "Kamoto" in q else []}
                 for n, q in kids]})
-        if "auditing the search plan of a research agent" in prompt:
+        if "searched the same thing twice" in prompt:
             # A query repeats the first earlier one it starts with (ancestors included:
             # the metric must drop those marks).
             qs = re.findall(r"^(\d+)\.(?: \[[^\]]*\])? (.+)$", prompt.split("Queries:\n")[1].split("Return ONLY")[0], re.M)
@@ -188,7 +188,7 @@ async def test_decomposition_coverage_uses_judge_mapping(ctx):
                        "recycling policy": []}
     assert r.value == pytest.approx(2 / 3, abs=1e-3)
     assert r.details["key_points"]["source"] == "judge"
-    prompt = next(p for p in ctx.fake.prompts if "which aspects of a research question" in p)
+    prompt = next(p for p in ctx.fake.prompts if "which key points of the core query" in p)
     assert "4. sodium battery alternatives" in prompt and CORE not in prompt.split("Sub-queries:")[1]
 
 
@@ -227,9 +227,9 @@ async def test_subquery_redundancy_judges_every_node_in_one_call(ctx):
     assert (d["query"], d["repeats"]) == ("lithium refining capacity worldwide", "lithium refining capacity")
     assert d["same_parent"] is True and d["same_layer"] is True and d["kind"] == "leaf"
     assert r.value == pytest.approx(1 / 3, abs=1e-3) and r.higher_is_better is False
-    assert sum("auditing the search plan" in p for p in ctx.fake.prompts) == 3     # three votes
+    assert sum("searched the same thing twice" in p for p in ctx.fake.prompts) == 3     # three votes
     assert r.details["votes"] == 3 and r.details["replies"] == 3 and r.details["unstable"] == []
-    assert r.llm["prompts"]["subquery_redundancy"]["version"] == "6"
+    assert r.llm["prompts"]["subquery_redundancy"]["version"] == "7"
 
 
 async def test_subquery_redundancy_takes_the_majority_of_three_calls(ctx):
@@ -276,7 +276,7 @@ async def test_subquery_redundancy_compares_across_branches_and_layers_but_not_a
     assert kinds == {(1, "leaf", "s2"), (1, "branch", "s2"), (2, "leaf", "t1"), (2, "leaf", "t2")}
     assert a.query_node_ancestors["t1s1"] == ["t1i"] and a.query_node_ancestors["t1i"] == []
     r = await SubqueryRedundancy().score(a, ctx)
-    [prompt] = {p for p in ctx.fake.prompts if "auditing the search plan" in p}     # one prompt, asked 3 times
+    [prompt] = {p for p in ctx.fake.prompts if "searched the same thing twice" in p}     # one prompt, asked 3 times
     assert "6. [4] Congo cobalt mining sites" in prompt and "4. Congo cobalt mining" in prompt
     assert r.details["nodes"] == 9 and r.details["duplicates"] == 3
     assert r.value == pytest.approx(3 / 9, abs=1e-3)
@@ -323,7 +323,7 @@ async def test_tree_quality_scores_the_step_each_child_takes(ctx):
     # No findings outside deep research.
     assert r.details["builds_on_findings"] is None and r.details["per_parent"][0]["findings"] == []
     assert r.llm["requests"] == r.llm["api_calls"] == 1 and r.llm["judge_model"] == "judge-x"
-    assert r.llm["prompts"]["tree_quality"]["version"] == "16"
+    assert r.llm["prompts"]["tree_quality"]["version"] == "17"
     prompt = next(p for p in ctx.fake.prompts if "Path from the original question" in p)
     assert f"0. {CORE}" in prompt and r.details["per_parent"][0]["depth"] == 0
     assert f"Original research question (the root of the whole search tree):\n{CORE}" in prompt

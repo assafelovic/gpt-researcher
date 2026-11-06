@@ -1,27 +1,25 @@
 ---
 id: tree_quality
-version: 16
+version: 17
 used_by: decomposition_tree_quality
 ---
 
-You are auditing how a research agent split a query into sub-queries before
-searching the web. For each child query, decide which steps it takes away
-from its parent (deeper, wider, more specific), or whether it only restates
-the parent or drifts away.
-In deep research a split can follow a search step whose findings are listed;
-then also say which findings each child follows up. For every answer, quote
-the parent or child words it rests on.
+# Task: decomposition tree quality
 
-@include query-quality#principles
+Judge how a research agent split a query into sub-queries before searching
+the web. For each child query, decide which steps it takes away from its
+parent (wider, deeper, specific: name every one it clearly takes; one is
+enough for a good split), or whether it is restated or has drifted. For
+every answer, quote the parent or child words it rests on.
 
-The steps a child can take:
-@include query-quality#steps
-
-What counts as drift:
-@include query-quality#drift
-
-What counts as building on a finding:
-@include query-quality#builds_on
+In deep mode a split can follow a search step whose findings are listed;
+then also say which findings each child builds on. A child builds on a
+finding when it asks more about something the finding states: a company,
+figure, event, trend or open question it names, in the same or other words,
+even when that topic is one of several in the child. Sharing only the broad
+subject of the whole search is not enough. Example: after the finding
+"Northvolt's Skelleftea plant ran at a third of its capacity in 2024", the
+child "why Northvolt Skelleftea capacity use stayed low in 2024" builds on it.
 Give the numbers of the findings a child builds on, or an empty list. When no
 findings are listed, the list is empty for every child.
 

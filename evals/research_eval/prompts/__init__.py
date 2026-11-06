@@ -12,6 +12,14 @@ one; any other brace is literal text (the JSON the judge must return). A line
 `@include <group>#<section>` is replaced by that `## <section>` of
 `<group>/SKILL.md`, so prompts that share a definition share one text.
 
+A group whose SKILL.md header says `system_prompt: true` works the other
+way: its whole skill is the group's system prompt. Its text (without the
+header and without `<!-- ... -->` comments, which hold the maintainers'
+notes) goes in front of the system part of every prompt in the folder, so
+the judge reads the shared background, definitions and principles first and
+then the task of this one metric. A prompt that must not get it says
+`skill: none` in its header. Such a group's prompts use no @include.
+
 `<id>.schema.json` beside the prompt is the JSON schema of its answer. The
 judge is called in strict structured-output mode with it, so a reply is
 always valid JSON of that shape.
@@ -44,6 +52,7 @@ USER = re.compile(r"^@user[ \t]*$", re.M)
 INCLUDE = re.compile(r"^@include[ \t]+([\w-]+)#([\w-]+)[ \t]*$", re.M)
 SECTION = re.compile(r"^##[ \t]+([\w-]+)[ \t]*$")
 HEADER = re.compile(r"^---\n(.*?)\n---\n(.*)$", re.S)
+COMMENT = re.compile(r"<!--.*?-->", re.S)
 # Folder order is the order of the metric groups in the README table.
 GROUPS = ("query-quality", "source-quality", "retrieval-quality", "writing-quality", "writing-authority")
 
@@ -79,7 +88,7 @@ class Prompt:
     schema_json: str = ""
     used_by: tuple[str, ...] = field(default=(), compare=False)
     group: str = field(default="", compare=False)
-    includes: tuple[str, ...] = field(default=(), compare=False)    # skill sections pulled in
+    includes: tuple[str, ...] = field(default=(), compare=False)    # skill sections pulled in, or the whole skill
     path: str = field(default="", compare=False)                     # relative to this folder
 
     @property
@@ -141,6 +150,15 @@ def skill_sections(group: str) -> dict[str, str]:
     return out
 
 
+def skill_prompt(group: str) -> str | None:
+    """The system prompt of a `system_prompt: true` group: its SKILL.md
+    without the header and the `<!-- -->` comments; None for other groups."""
+    head, body = _front(HERE / group / SKILL)
+    if head.get("system_prompt", "").lower() != "true":
+        return None
+    return re.sub(r"\n{3,}", "\n\n", COMMENT.sub("", body)).strip()
+
+
 def _expand(body: str, source: Path) -> str:
     def include(m):
         sections = skill_sections(m.group(1))
@@ -173,15 +191,23 @@ def load(prompt_id: str, path: Path | None = None) -> Prompt:
     if len(parts) > 2:
         raise ValueError(f"{path.name}: more than one @user line")
     system, user = ("", parts[0]) if len(parts) == 1 else parts
+    skill = skill_prompt(path.parent.name) if (path.parent / SKILL).is_file() else None
+    if skill is not None and INCLUDE.search(body):
+        raise ValueError(f"{path.name}: {path.parent.name} sends its whole skill; drop the @include lines")
     system, user = _expand(system, path).strip(), _expand(user, path).strip()
+    prefixed = skill is not None and head.get("skill", "").lower() != "none"
+    if prefixed:
+        system = f"{skill}\n\n{system}".strip()
     if PLACEHOLDER.search(system):
         raise ValueError(f"{path.name}: the system part must be the same on every call, "
                          f"but holds {PLACEHOLDER.search(system).group(0)}; move it below @user")
     schema = path.with_suffix(".schema.json")
     schema_json = json.dumps(json.loads(schema.read_text(encoding="utf-8")), separators=(",", ":")) \
         if schema.exists() else ""
+    includes = (f"{path.parent.name} (whole skill)",) if prefixed else \
+        tuple(f"{s}#{n}" for s, n in INCLUDE.findall(body))
     return Prompt(prompt_id, head["version"], system, user, schema_json, used_by, path.parent.name,
-                  tuple(f"{s}#{n}" for s, n in INCLUDE.findall(body)), str(path.relative_to(HERE)))
+                  includes, str(path.relative_to(HERE)))
 
 
 def strict_schema_problems(schema: dict, where: str = "$") -> list[str]:
