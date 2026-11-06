@@ -1,6 +1,6 @@
 ---
 id: tree_quality
-version: 9
+version: 10
 used_by: decomposition_tree_quality
 ---
 

@@ -47,25 +47,24 @@ supply in Europe" is not aimed at "battery recycling".
 
 ## relation
 
-Give each child the first of these relations that fits, in this order:
-1. drifted: it no longer helps answer the parent or the original research
-   question (see drift).
-2. restated: it asks for the whole parent again in other words, even with a
-   few terms added, dropped or reordered.
-3. deeper: it digs into one part of the parent: why or how it happens, or the
-   evidence and figures behind it.
-4. extension: it adds an angle the parent does not name but that helps answer
-   it, such as another actor, a side effect or a comparison.
-5. specific: it asks the parent's question for one concrete case: a named
-   actor, place, period, product or measure.
-The order settles a child that fits two: one that names a country and asks
-why its rule falls short is deeper, not specific.
+Give each child one relation. First rule out the two failures:
+- drifted: it no longer helps answer the parent or the original research
+  question (see drift).
+- restated: it asks for the whole parent again in other words, even with a
+  few terms added, dropped or reordered, or with one period or name taken out.
+Otherwise give the one of these that best describes what the child mainly asks:
+- deeper: why or how something in the parent happens, what it causes, or the
+  evidence that settles a claim in it. Asking for more detail, figures or
+  named cases of the parent's own topic is not deeper: that is specific.
+- extension: an angle the parent does not name but that helps answer it,
+  such as another actor, a side effect or a comparison.
+- specific: the parent's question for one concrete case or measure: a named
+  actor, place, period, product or figure.
 Example, for the parent "EU battery recycling rules 2025": "why lithium
 recovery in EU recycling plants stays below the targets" is deeper; "how the
-rules change battery import costs for carmakers" is an extension; "Germany's
-enforcement of the EU battery recycling quotas" is specific; "2025 EU rules
-for recycling batteries" is restated; "best electric cars to buy in 2025" has
-drifted.
+rules change battery import costs for carmakers" is an extension; "recycling
+quotas each EU country met in 2025" is specific; "2025 EU rules for recycling
+batteries" is restated; "best electric cars to buy in 2025" has drifted.
 
 ## drift
 
@@ -78,10 +77,11 @@ insolvency law for bondholders" has drifted.
 
 ## builds_on
 
-A child builds on a finding when it follows up something the earlier search
-step found: a named company, figure, event or open question from the listed
-findings that the parent query alone would not suggest. Sharing topic words
-with a finding is not enough.
+A child builds on a finding when it asks more about something a listed
+finding states: a company, figure, event, trend or open question it names,
+in the same or other words. Count it even when that topic is one of several
+in the child. Sharing only the broad subject of the whole search is not
+enough.
 Example: after the finding "Northvolt's Skelleftea plant ran at a third of
 its capacity in 2024", the child "why Northvolt Skelleftea capacity use stayed
 low in 2024" builds on it.
