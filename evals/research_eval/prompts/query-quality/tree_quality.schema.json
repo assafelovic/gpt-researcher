@@ -9,6 +9,9 @@
           "child": {
             "type": "integer"
           },
+          "left_out": {
+            "type": "string"
+          },
           "evidence": {
             "type": "string"
           },
@@ -40,6 +43,7 @@
         },
         "required": [
           "child",
+          "left_out",
           "evidence",
           "problem",
           "directions",

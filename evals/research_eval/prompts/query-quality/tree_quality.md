@@ -1,6 +1,6 @@
 ---
 id: tree_quality
-version: 19
+version: 20
 used_by: decomposition_tree_quality
 ---
 
@@ -14,6 +14,9 @@ used_by: decomposition_tree_quality
   step the split follows.
 
 ## What to decide for each child
+- left_out: what the parent asks that the child does not: the topics,
+  questions, actors or periods it lists that the child drops. Write
+  "nothing" when the child keeps all of them.
 - problem: "restated" or "drifted" when the child takes no step away from
   its parent; otherwise "none".
 - directions: every step the child clearly takes: "wider", "deeper",
@@ -22,6 +25,15 @@ used_by: decomposition_tree_quality
 - evidence: quote the parent or child words your answer rests on.
 - builds_on: the numbers of the findings the child follows up, or an empty
   list. When no findings are listed, it is empty for every child.
+
+## Restated or specific
+- Decide this from left_out, not from the words the two queries share.
+- Restated: left_out is "nothing", or only wording, a year or scope the
+  parent implies, or names its answer would give.
+- Specific: left_out names a whole topic or question the parent lists, so
+  the child asks only part of the parent. This holds even when the child
+  repeats that part's words, for example when a deep-mode parent lists
+  several questions and the child takes one of them.
 
 ## Building on a finding (deep mode)
 - A child builds on a finding when it asks more about something the finding
@@ -35,7 +47,7 @@ used_by: decomposition_tree_quality
 
 ## Answer format
 Return ONLY JSON, one entry per child, in order:
-{"children": [{"child": 1, "evidence": "...", "problem": "none", "directions": ["deeper"], "builds_on": []}]}
+{"children": [{"child": 1, "left_out": "...", "evidence": "...", "problem": "none", "directions": ["deeper"], "builds_on": []}]}
 
 @user
 

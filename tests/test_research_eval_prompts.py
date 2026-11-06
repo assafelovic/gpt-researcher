@@ -67,7 +67,8 @@ def test_every_answer_schema_is_strict_and_fits_the_prompt_example():
     tq = P.load("tree_quality").schema
     errs = P.schema_errors({"children": [{"child": 1, "problem": "none", "directions": ["deep"]}],
                             "notes": ""}, tq)
-    assert errs == ["$: unexpected notes", "$.children[0]: missing evidence", "$.children[0]: missing builds_on",
+    assert errs == ["$: unexpected notes", "$.children[0]: missing left_out", "$.children[0]: missing evidence",
+                    "$.children[0]: missing builds_on",
                     "$.children[0].directions[0]: 'deep' not in ['deeper', 'wider', 'specific']"], errs
 
 

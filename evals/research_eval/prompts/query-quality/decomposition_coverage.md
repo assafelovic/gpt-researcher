@@ -1,6 +1,6 @@
 ---
 id: decomposition_coverage
-version: 8
+version: 9
 used_by: decomposition_coverage
 ---
 
@@ -22,6 +22,10 @@ used_by: decomposition_coverage
   written to find out about it.
 - Sharing broad topic words is not enough: "EV battery supply in Europe" is
   not aimed at "battery recycling".
+- Naming an example that belongs to the point (a company, a place, a
+  product) does not aim the sub-query at it unless it asks about the point.
+- If your evidence has to say the sub-query does not ask about the point,
+  leave it out.
 
 ## Answer format
 Return ONLY JSON, one entry per key point, in order:

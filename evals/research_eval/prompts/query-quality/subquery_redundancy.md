@@ -1,6 +1,6 @@
 ---
 id: subquery_redundancy
-version: 9
+version: 10
 used_by: subquery_redundancy
 ---
 
@@ -35,6 +35,9 @@ used_by: subquery_redundancy
   plants in Europe 2025" and "biggest European battery recycling facilities
   by capacity in 2025").
 - Shared wording is not enough.
+- Check what each query asks that the other does not. When that is only
+  wording, word order, a year or a list of names, it is a repeat. Long
+  keyword queries that list the same topics in another order are repeats.
 - These are not repeats:
   - a different perspective or source (the Commission's view, industry's
     criticism);

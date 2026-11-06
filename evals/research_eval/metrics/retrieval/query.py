@@ -366,7 +366,8 @@ class DecompositionTreeQuality(Metric):
                     continue
                 if problem != "none":
                     dirs = []
-                kid = {"problem": problem, "directions": dirs, "evidence": str(e.get("evidence") or ""),
+                kid = {"problem": problem, "directions": dirs, "left_out": str(e.get("left_out") or ""),
+                       "evidence": str(e.get("evidence") or ""),
                        "builds_on": _child_numbers(e.get("builds_on"), len(findings))}
                 kid["score"] = self.child_score(kid)
                 kids[i] = kid
