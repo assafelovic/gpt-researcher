@@ -74,12 +74,13 @@ A child takes no step when it is:
   "Northvolt bond terms": the child "Swedish insolvency law for
   bondholders" has drifted.
 
-Example, for the parent "EU battery recycling rules 2025": "why recycling
-plants miss the EU recovery targets" goes deeper; "battery recycling rules in
-the US and China" goes wider; "recycling quotas each EU country met in 2025"
-is specific; "why German plants missed the 2025 lithium target" is specific
-and deeper; "2025 EU rules for recycling batteries" is restated; "best
-electric cars to buy in 2025" has drifted.
+Example, for the parent "EU battery recycling rules 2025":
+- "why recycling plants miss the EU recovery targets": deeper.
+- "battery recycling rules in the US and China": wider.
+- "recycling quotas each EU country met in 2025": specific.
+- "why German plants missed the 2025 lithium target": specific and deeper.
+- "2025 EU rules for recycling batteries": restated.
+- "best electric cars to buy in 2025": drifted.
 
 ### Inputs you may be given
 - Key points are the aspects a thorough answer to the core query must

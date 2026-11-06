@@ -37,7 +37,7 @@ are two ways a group uses it:
 ```
 ---
 id: tree_quality              # same as the file name, unique across groups
-version: 17                   # bump on every change of the text or the schema
+version: 19                   # bump on every change of the text or the schema
 used_by: decomposition_tree_quality
 ---
 
@@ -87,10 +87,10 @@ inline.
 <!-- prompts:start (written by --lock) -->
 | Group | File | Version | Used by | Skill sections | Filled in | Schema |
 |---|---|---|---|---|---|---|
-| [query-quality](query-quality/SKILL.md) | [`decomposition_coverage.md`](query-quality/decomposition_coverage.md) | 6 | decomposition_coverage | query-quality (whole skill) | `question`, `key_points`, `subqueries` | [json](query-quality/decomposition_coverage.schema.json) |
+| [query-quality](query-quality/SKILL.md) | [`decomposition_coverage.md`](query-quality/decomposition_coverage.md) | 8 | decomposition_coverage | query-quality (whole skill) | `question`, `key_points`, `subqueries` | [json](query-quality/decomposition_coverage.schema.json) |
 | [query-quality](query-quality/SKILL.md) | [`key_points.md`](query-quality/key_points.md) | 2 | key points for the question (key_points.py), decomposition_coverage, material_coverage, query_relevance, comprehensiveness | - | `question` | [json](query-quality/key_points.schema.json) |
-| [query-quality](query-quality/SKILL.md) | [`subquery_redundancy.md`](query-quality/subquery_redundancy.md) | 7 | subquery_redundancy | query-quality (whole skill) | `question`, `queries` | [json](query-quality/subquery_redundancy.schema.json) |
-| [query-quality](query-quality/SKILL.md) | [`tree_quality.md`](query-quality/tree_quality.md) | 17 | decomposition_tree_quality | query-quality (whole skill) | `question`, `path`, `parent`, `findings`, `children` | [json](query-quality/tree_quality.schema.json) |
+| [query-quality](query-quality/SKILL.md) | [`subquery_redundancy.md`](query-quality/subquery_redundancy.md) | 9 | subquery_redundancy | query-quality (whole skill) | `question`, `queries` | [json](query-quality/subquery_redundancy.schema.json) |
+| [query-quality](query-quality/SKILL.md) | [`tree_quality.md`](query-quality/tree_quality.md) | 19 | decomposition_tree_quality | query-quality (whole skill) | `question`, `path`, `parent`, `findings`, `children` | [json](query-quality/tree_quality.schema.json) |
 | [source-quality](source-quality/SKILL.md) | [`domain_authority.md`](source-quality/domain_authority.md) | 2 | source_authority | - | `domains` | [json](source-quality/domain_authority.schema.json) |
 | [retrieval-quality](retrieval-quality/SKILL.md) | [`material_coverage.md`](retrieval-quality/material_coverage.md) | 2 | material_coverage | - | `question`, `points` | [json](retrieval-quality/material_coverage.schema.json) |
 | [retrieval-quality](retrieval-quality/SKILL.md) | [`query_relevance.md`](retrieval-quality/query_relevance.md) | 4 | query_relevance | - | `question`, `key_points`, `other_queries`, `query`, `material` | [json](retrieval-quality/query_relevance.schema.json) |
