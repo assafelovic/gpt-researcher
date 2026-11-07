@@ -15,7 +15,8 @@ Maintainers' notes (comments are never sent to the judge).
   <id>.schema.json (the JSON answer the judge must return).
 - Editing this file changes every prompt in the folder: bump their versions,
   then run `python -m evals.research_eval.prompts --lock`.
-- The key points come from query-quality/key_points.md (frozen per question).
+- query_relevance shows no key points since v12 (a list could narrow the judge
+  to what it names); material_coverage still uses the frozen key points.
 - The judge never gives a free number: it picks levels (full / partial /
   none, 0 / 1 / 2) and the code turns them into the score, as in the
   source-quality group, so two calls cannot drift apart by a few points.
@@ -44,8 +45,7 @@ any report is written.
 - The passages were picked by the evaluation, not by the agent: the best
   matches for the query, one passage per page. They are a
   sample of the material, so judge what they show.
-- Key points: the aspects a thorough answer to the core query must cover,
-  listed in advance. The core query is the user's original question.
+- The core query is the user's original question.
 
 ### Quality of material
 Material is good when a writer could build part of the answer on it and
@@ -85,7 +85,7 @@ cite it.
 
 ## Suggested steps
 
-1. Read the core query and the key points.
+1. Read the core query and the query under review.
 2. Read the passages, and note which give facts and which are only general
    text.
 3. For each answer, find and quote the words that decide it.

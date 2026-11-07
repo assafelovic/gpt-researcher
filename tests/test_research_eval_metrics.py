@@ -149,7 +149,7 @@ class FakeJudge:
             return json.dumps({"only_in_a": "", "only_in_b": "", "repeat": rep})
         if "auditing one retrieval step" in prompt:
             q = re.search(r"Query under review:\n(.*)\n", prompt).group(1)
-            return json.dumps({"key_points": [1] if "cobalt" in q else [], "relevance_evidence": "",
+            return json.dumps({"relevance_evidence": "",
                                "relevance": 2 if "cobalt" in q else 1, "substance_evidence": "",
                                "substance": 2 if "cobalt" in q else 0})
         if "used information from a source passage" in prompt:
@@ -551,7 +551,8 @@ async def test_query_relevance(ctx):
     assert r.details["no_material"] == ["lithium refining capacity worldwide"]
     assert r.value == pytest.approx(0.625)
     prompt = next(p for p in ctx.fake.prompts if "Query under review:\ncobalt" in p)
-    assert "1. cobalt supply" in prompt and "lithium refining capacity" not in prompt
+    # No key points (v6), and no other queries of the plan.
+    assert "Key points:" not in prompt and "lithium refining capacity" not in prompt
 
 
 def test_query_relevance_unit_score_comes_from_the_levels():

@@ -1,6 +1,6 @@
 ---
 id: query_relevance
-version: 11
+version: 12
 used_by: query_relevance
 ---
 
@@ -11,12 +11,10 @@ used_by: query_relevance
   searched and the material it kept for it.
 - Judge the query and its material together, as one unit, against the core
   query.
-- You are given the core query, its key points, the query under review and
-  the material, one passage per page, best matches first.
+- You are given the core query, the query under review and the material,
+  one passage per page, best matches first.
 
 ## What to decide
-- key_points: the numbers of the key points the material gives real
-  information on. May be empty.
 - relevance_evidence: quote the words of the material that decide its
   relevance.
 - relevance:
@@ -59,15 +57,12 @@ used_by: query_relevance
 
 ## Answer format
 Return ONLY JSON:
-{"key_points": [2], "relevance_evidence": "...", "relevance": 2, "substance_evidence": "...", "substance": 1}
+{"relevance_evidence": "...", "relevance": 2, "substance_evidence": "...", "substance": 1}
 
 @user
 
 Core question:
 {question}
-
-Key points:
-{key_points}
 
 Query under review:
 {query}

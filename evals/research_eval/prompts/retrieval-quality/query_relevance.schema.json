@@ -1,12 +1,6 @@
 {
   "type": "object",
   "properties": {
-    "key_points": {
-      "type": "array",
-      "items": {
-        "type": "integer"
-      }
-    },
     "relevance_evidence": {
       "type": "string"
     },
@@ -31,7 +25,6 @@
     }
   },
   "required": [
-    "key_points",
     "relevance_evidence",
     "relevance",
     "substance_evidence",

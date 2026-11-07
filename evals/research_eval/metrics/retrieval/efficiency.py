@@ -6,8 +6,7 @@ from __future__ import annotations
 
 from ...archive import RunArchive, normalize_url
 from ...citation_audit import AUDIT_VERSION, citation_audit
-from ...key_points import get_key_points
-from ...prompts import KEY_POINTS, PARAGRAPH_AUDIT, QUERY_RELEVANCE
+from ...prompts import PARAGRAPH_AUDIT, QUERY_RELEVANCE
 from ...report_parser import body_paragraphs, cited_urls, paragraph_sentences, report_sentences
 from ..base import Metric, MetricResult, ScoringContext, rounded
 from ..lexical import idf_table, weighted_overlap
@@ -194,7 +193,8 @@ class QueryRelevance(Metric):
     One call per search step that returned material. The judge picks levels
     and the code scores them, so no free 0-10 number drifts between calls:
     relevance to the core query (0/1/2), substance (0/1/2: concrete facts a
-    writer could cite) and the key points the material informs (diagnostic).
+    writer could cite). No key points are shown (since v6): a list could
+    narrow the judge to what it names.
 
         unit score = 0 if relevance == 0 else (relevance + substance) / 4
         value      = mean unit score
@@ -215,9 +215,9 @@ class QueryRelevance(Metric):
     """
 
     name, category = "query_relevance", "retrieval.retrieval_quality"
-    version = "5"           # 4: Q4 counts only reworded requests for the same facts; 5: levels scored by code, no total, no Q4
+    version = "6"           # 4: Q4 counts only reworded requests for the same facts; 5: levels scored by code, no total, no Q4; 6: no key points in the prompt
     uses_llm = True
-    prompts = (QUERY_RELEVANCE, KEY_POINTS)
+    prompts = (QUERY_RELEVANCE,)
     CHUNK_CHARS, MATERIAL_CHARS = 1500, 12000
 
     async def score(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:
@@ -236,9 +236,6 @@ class QueryRelevance(Metric):
                  or (u.kind == "sub_query" and u.query.strip() != core)]
         if not units:
             return self.skip("no executed sub-queries")
-        points, provenance = await get_key_points(archive, ctx)
-        if not points:
-            return self.skip("no key points", key_points=provenance)
         judged = [u for u in units if u.chunk_ids]
         empty = [u.query for u in units if not u.chunk_ids]
         layer = {u.span_id: archive.query_layer(u.span_id) for u in units}
@@ -248,9 +245,7 @@ class QueryRelevance(Metric):
             label = (f"{u.query}\n(the initial search on this query, run while planning)"
                      if u.kind == "initial_results" else u.query)
             prompt = QUERY_RELEVANCE.render(
-                question=archive.query,
-                key_points="\n".join(f"{i}. {p}" for i, p in enumerate(points, 1)),
-                query=label, material=material)
+                question=archive.query, query=label, material=material)
             return u, shown, await ctx.judge.ask(QUERY_RELEVANCE.id, QUERY_RELEVANCE.version, prompt)
 
         results = await ctx.gather(judge_one(u) for u in judged)
@@ -264,7 +259,7 @@ class QueryRelevance(Metric):
                               "chunks": len(u.chunk_ids), **shown,
                               "score": rounded(norm), "rubric": r.parsed, "error": r.error})
         res = self.result(rounded(sum(scores) / len(scores)) if scores else None,
-                          key_points=provenance, judged=len(scores),
+                          judged=len(scores),
                           no_material=empty, per_query=per_query)
         if judged and not scores:
             res.skipped = "every judge call failed"
