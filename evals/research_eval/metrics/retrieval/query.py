@@ -123,7 +123,8 @@ class SubqueryRedundancy(Metric):
     later one repeats the earlier (the same facts would answer both).
     Candidates: for each node, the CANDIDATES other nodes (not its ancestors
     or descendants) with the highest symmetric BM25-weighted word overlap,
-    IDF over all nodes, when the overlap is at least MIN_OVERLAP. Judging all
+    IDF over all nodes, however low (v12 had a 0.15 floor, which dropped
+    rewordings in synonyms: "top vendors" / "leading companies" at 0.04). Judging all
     pairs would cost n^2/2 calls (200-600 in a deep tree); a repeat in other
     words still shares the words of its subject. `details.pairs` /
     `details.all_pairs` say how many were judged. Repeats chain into groups;
@@ -148,19 +149,19 @@ class SubqueryRedundancy(Metric):
     """
 
     name, category = "subquery_redundancy", "retrieval.query_quality"
-    version = "12"          # 4: only a reworded request for the same facts; 5: sub-queries only;
+    version = "13"          # 4: only a reworded request for the same facts; 5: sub-queries only;
                             # 6: own call per layer over every node; 7: whole tree but ancestors, one call;
                             # 8: overlaps beside repeats (too broad, dropped); 9: majority of VOTES calls;
                             # 10: "repeat" from the query-quality skill, with examples;
                             # 11: the skill rewritten short, with shared principles;
-                            # 12: code-picked candidate pairs, one pair per call
+                            # 12: code-picked candidate pairs, one pair per call; 13: no overlap floor
     higher_is_better = False
     uses_llm = True         # the lexical fallback only runs when no judge is configured at all
     prompts = (SUBQUERY_REDUNDANCY,)
     DEFAULT_THRESHOLD = 0.6
     VOTES = 1
     CANDIDATES = 3          # most similar other nodes per node
-    MIN_OVERLAP = 0.15
+    MIN_OVERLAP = 0.0
 
     @classmethod
     def candidate_pairs(cls, archive: RunArchive, k: int | None = None,
@@ -179,7 +180,7 @@ class SubqueryRedundancy(Metric):
         sim = {(i, j): symmetric_overlap(texts[i - 1], texts[j - 1], idf) for i, j in comparable}
         picked = set()
         for x in range(1, len(nodes) + 1):
-            mine = sorted(((s, pair) for pair, s in sim.items() if x in pair and s >= floor),
+            mine = sorted(((s, pair) for pair, s in sim.items() if x in pair and s > floor or floor <= 0),
                           key=lambda e: (-e[0], e[1]))
             picked.update(pair for _, pair in mine[:k])
         return sorted(picked), len(comparable)

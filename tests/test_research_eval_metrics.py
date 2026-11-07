@@ -231,7 +231,7 @@ async def test_subquery_redundancy_judges_candidate_pairs_one_per_call(ctx):
     # The judge sees one pair, never the tree.
     assert all(p.count("Query A:") == 1 and "Queries:" not in p for p in prompts)
     assert r.details["votes"] == 1 and r.details["unstable"] == []
-    assert r.llm["prompts"]["subquery_redundancy"]["version"] == "11"
+    assert r.llm["prompts"]["subquery_redundancy"]["version"] == "12"
 
 
 async def test_subquery_redundancy_takes_the_majority_when_asked_several_times(ctx):
