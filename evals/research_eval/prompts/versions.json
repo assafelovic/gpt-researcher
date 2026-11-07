@@ -28,8 +28,8 @@
     "hash": "5e7e77b69d57"
   },
   "comprehensiveness": {
-    "version": "3",
-    "hash": "06e28bfd1c80"
+    "version": "4",
+    "hash": "453ed41980e7"
   },
   "quality_rubric": {
     "version": "3",
@@ -40,8 +40,8 @@
     "hash": "e9712c5fb4d9"
   },
   "topic_relevance": {
-    "version": "4",
-    "hash": "04633650ec53"
+    "version": "5",
+    "hash": "eef1223e3393"
   },
   "toxicity_bias": {
     "version": "3",

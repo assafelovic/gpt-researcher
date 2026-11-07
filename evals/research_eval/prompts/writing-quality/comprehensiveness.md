@@ -1,6 +1,6 @@
 ---
 id: comprehensiveness
-version: 3
+version: 4
 used_by: comprehensiveness
 ---
 
@@ -15,6 +15,8 @@ used_by: comprehensiveness
 - coverage: "full", "partial" or "none", by the definitions above.
 
 ## Covered or not
+- Look through the whole report before deciding, and judge each point by
+  the report's strongest passage on it, not the first one you find.
 - Sharing the point's words is not enough: the report must say something
   about the point itself.
 - Naming an example that belongs to the point (a company, a place, a

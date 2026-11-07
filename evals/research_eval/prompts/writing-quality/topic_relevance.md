@@ -1,6 +1,6 @@
 ---
 id: topic_relevance
-version: 4
+version: 5
 used_by: topic_relevance
 ---
 
@@ -22,6 +22,9 @@ used_by: topic_relevance
 ## On topic or not
 - Judge each paragraph against the core query, not against its section
   heading.
+- A paragraph on one aspect of the question is "yes" even when it does not
+  answer the whole question: valuations or financing terms in a report on
+  M&A activity are on topic.
 - A paragraph on a related subject is "yes" when the report uses it to
   answer the question (a comparison, a cause, a context).
 - Generic statements that would fit any report ("this is a complex and
