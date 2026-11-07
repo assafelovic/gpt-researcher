@@ -132,13 +132,13 @@ Examples (material: "CATL shipped 321 GWh in 2023. BYD shipped 159 GWh."):
 - "CATL shipped 280 GWh in 2023." -> contradicted
 
 More examples of "inferred":
-- Putting facts together. Material: "the plant assembles cells, builds
+- Putting facts together. The material says "the plant assembles cells, builds
   modules and tests finished packs on one site". Claim: "The plant covers
   several stages of battery production." -> inferred
-- A direct consequence. Material: "from 2027 every EV battery sold in the EU
+- A direct consequence. The material says "from 2027 every EV battery sold in the EU
   must carry a battery passport". Claim: "Carmakers selling in the EU will
   need passport data for their batteries." -> inferred
-- A hedged conclusion. Material: "the new rules cap the cobalt content of
+- A hedged conclusion. The material says "the new rules cap the cobalt content of
   cells sold from 2028". Claim: "The cap may push makers towards low-cobalt
   chemistries." -> inferred
 

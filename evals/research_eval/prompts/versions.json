@@ -49,10 +49,10 @@
   },
   "claim_recheck": {
     "version": "7",
-    "hash": "d0355d869bae"
+    "hash": "7109ebdd26eb"
   },
   "paragraph_audit": {
     "version": "8",
-    "hash": "8c361116798f"
+    "hash": "668cf9225311"
   }
 }
