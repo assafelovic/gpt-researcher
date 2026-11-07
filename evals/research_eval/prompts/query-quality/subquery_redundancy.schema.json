@@ -1,35 +1,20 @@
 {
   "type": "object",
   "properties": {
-    "queries": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "query": {
-            "type": "integer"
-          },
-          "repeats": {
-            "type": [
-              "integer",
-              "null"
-            ]
-          },
-          "evidence": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "query",
-          "repeats",
-          "evidence"
-        ],
-        "additionalProperties": false
-      }
+    "only_in_a": {
+      "type": "string"
+    },
+    "only_in_b": {
+      "type": "string"
+    },
+    "repeat": {
+      "type": "boolean"
     }
   },
   "required": [
-    "queries"
+    "only_in_a",
+    "only_in_b",
+    "repeat"
   ],
   "additionalProperties": false
 }

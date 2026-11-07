@@ -135,21 +135,18 @@ class FakeJudge:
                  "builds_on": [1] if "Kamoto" in q else []}
                 for n, q in kids]})
         if "searched the same thing twice" in prompt:
-            # A query repeats the first earlier one it starts with (ancestors included:
-            # the metric must drop those marks).
-            qs = re.findall(r"^(\d+)\.(?: \[[^\]]*\])? (.+)$", prompt.split("Queries:\n")[1].split("Return ONLY")[0], re.M)
-            if any("garbled" in q for _, q in qs):
+            # B repeats A when it starts with it; "flaky" queries are a repeat on
+            # the first call only, "flaky2" on the first two.
+            a = re.search(r"Query A:\n(.*)\n", prompt).group(1)
+            b = re.search(r"Query B:\n(.*)", prompt).group(1).strip()
+            if "garbled" in a + b or "drop-last" in b:
                 return "not json"
-            # "flaky" queries are marked on the first call only, "flaky2" on the first two.
             self.asked[prompt] = self.asked.get(prompt, 0) + 1
-            out = []
-            for n, q in qs:
-                rep = next((int(m) for m, p in qs if int(m) < int(n) and q.startswith(p)), None)
-                if ("flaky2" in q and self.asked[prompt] > 2) or ("flaky2" not in q and "flaky" in q
-                                                                  and self.asked[prompt] > 1):
-                    rep = None
-                out.append({"query": int(n), "evidence": "", "repeats": rep})
-            return json.dumps({"queries": out[:-1] if any("drop-last" in q for _, q in qs) else out})
+            rep = b.startswith(a)
+            if ("flaky2" in b and self.asked[prompt] > 2) or ("flaky2" not in b and "flaky" in b
+                                                              and self.asked[prompt] > 1):
+                rep = False
+            return json.dumps({"only_in_a": "", "only_in_b": "", "repeat": rep})
         if "auditing one retrieval step" in prompt:
             q = re.search(r"Query under review:\n(.*)\n", prompt).group(1)
             return json.dumps({"key_points": [1] if "cobalt" in q else [], "relevance_evidence": "",
@@ -220,26 +217,30 @@ async def test_key_points_frozen_file_wins(ctx, tmp_path):
     assert not any("List the distinct aspects" in p for p in ctx.fake.prompts)
 
 
-async def test_subquery_redundancy_judges_every_node_in_one_call(ctx):
+async def test_subquery_redundancy_judges_candidate_pairs_one_per_call(ctx):
     r = await SubqueryRedundancy().score(make_archive(), ctx)
     # The core repeat (layer 0) is the run's question, not a node; the step
     # that brought back no new material is still a node.
-    assert r.details["method"] == "judge_tree" and r.details["nodes"] == 3
+    assert r.details["method"] == "judge_pairs" and r.details["nodes"] == 3
     [d] = r.details["not_unique"]
     assert (d["query"], d["repeats"]) == ("lithium refining capacity worldwide", "lithium refining capacity")
     assert d["same_parent"] is True and d["same_layer"] is True and d["kind"] == "leaf"
     assert r.value == pytest.approx(1 / 3, abs=1e-3) and r.higher_is_better is False
-    assert sum("searched the same thing twice" in p for p in ctx.fake.prompts) == 3     # three votes
-    assert r.details["votes"] == 3 and r.details["replies"] == 3 and r.details["unstable"] == []
-    assert r.llm["prompts"]["subquery_redundancy"]["version"] == "10"
+    prompts = [p for p in ctx.fake.prompts if "searched the same thing twice" in p]
+    assert len(prompts) == r.details["pairs"] <= r.details["all_pairs"]
+    # The judge sees one pair, never the tree.
+    assert all(p.count("Query A:") == 1 and "Queries:" not in p for p in prompts)
+    assert r.details["votes"] == 1 and r.details["unstable"] == []
+    assert r.llm["prompts"]["subquery_redundancy"]["version"] == "11"
 
 
-async def test_subquery_redundancy_takes_the_majority_of_three_calls(ctx):
+async def test_subquery_redundancy_takes_the_majority_when_asked_several_times(ctx):
+    ctx.options["redundancy_votes"] = 3
     a = nested_archive(" flaky2")
     next(x for x in a.data["spans"] if x["span_id"] == "s6")["attributes"]["query"] = \
         "lithium refining capacity worldwide flaky"
     r = await SubqueryRedundancy().score(RunArchive(a.data), ctx)
-    assert r.details["replies"] == 3
+    assert r.details["votes"] == 3
     assert {u["query"]: (u["marks"], u["counted"]) for u in r.details["unstable"]} == {
         "lithium refining capacity worldwide flaky": (1, False), "lithium refining capacity in Europe flaky2": (2, True)}
     assert {u["repeats"] for u in r.details["unstable"]} == {"lithium refining capacity"}
@@ -277,13 +278,16 @@ async def test_subquery_redundancy_compares_across_branches_and_layers_but_not_a
     kinds = {(n.layer, n.kind, n.parent) for n in a.query_nodes}
     assert kinds == {(1, "leaf", "s2"), (1, "branch", "s2"), (2, "leaf", "t1"), (2, "leaf", "t2")}
     assert a.query_node_ancestors["t1s1"] == ["t1i"] and a.query_node_ancestors["t1i"] == []
+    pairs, comparable = SubqueryRedundancy.candidate_pairs(a)
+    nodes = [n.query for n in a.query_nodes]
+    named = {(nodes[i - 1], nodes[j - 1]) for i, j in pairs}
+    # A node is never paired with the query it was split from.
+    assert ("Congo cobalt mining", "Congo cobalt mining sites") not in named
+    assert ("Congo cobalt output 2024", "Congo cobalt output 2024 figures") in named
+    assert comparable < 9 * 8 // 2
     r = await SubqueryRedundancy().score(a, ctx)
-    [prompt] = {p for p in ctx.fake.prompts if "searched the same thing twice" in p}     # one prompt, asked 3 times
-    assert "6. [4] Congo cobalt mining sites" in prompt and "4. Congo cobalt mining" in prompt
     assert r.details["nodes"] == 9 and r.details["duplicates"] == 3
     assert r.value == pytest.approx(3 / 9, abs=1e-3)
-    # Rewording its own parent is not a repeat: the mark is dropped.
-    assert r.details["dropped_marks"] == [{"query": "Congo cobalt mining sites", "marked": "Congo cobalt mining"}]
     dup = {d["query"]: d for d in r.details["not_unique"]}
     assert dup["Congo cobalt output 2024 figures"]["same_parent"] is False
     assert dup["Congo cobalt output 2024 figures"]["same_layer"] is True
@@ -295,11 +299,15 @@ async def test_subquery_redundancy_compares_across_branches_and_layers_but_not_a
                                      "leaf": {"nodes": 7, "duplicates": 3, "share": 0.429}}
 
 
-async def test_subquery_redundancy_reports_skipped_nodes_and_failed_calls(ctx):
+async def test_subquery_redundancy_reports_skipped_pairs_and_failed_calls(ctx):
     r = await SubqueryRedundancy().score(nested_archive(" drop-last"), ctx)
     assert r.details["unanswered"] == ["lithium refining capacity in Europe drop-last"]
-    assert r.details["nodes"] == 9 and r.details["duplicates"] == 2 and r.llm["errors"] == 0
-    r = await SubqueryRedundancy().score(nested_archive(" garbled"), ctx)
+    assert r.details["nodes"] == 9 and r.details["duplicates"] == 2
+
+    async def bad(prompt):
+        return "not json"
+    ctx.judge = Judge(EvalCache(":memory:"), model="judge-y", complete=bad)
+    r = await SubqueryRedundancy().score(nested_archive(), ctx)
     assert r.value is None and r.skipped == "judge call failed"
 
 

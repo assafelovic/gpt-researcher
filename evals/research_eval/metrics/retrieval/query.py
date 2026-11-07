@@ -113,22 +113,21 @@ class SubqueryRedundancy(Metric):
     Nodes are `RunArchive.query_nodes`: every searched query below the run's
     question, both branches (a researcher's own question, split further) and
     leaves (planned sub-queries), whether or not their search brought back
-    new material. Any two nodes are compared, at any layer and in any branch,
-    except a node and the nodes it was split from (its ancestors,
+    new material. Any two nodes may repeat each other, at any layer and in
+    any branch, except a node and the nodes it was split from (its ancestors,
     `RunArchive.query_node_ancestors`): those overlap by design.
 
-    With a judge: the judge sees every node in search order, each with the
-    numbers of its ancestors, and marks each node that asks for the same
-    information as an earlier node in other words (the same facts would
-    answer both). Another perspective, source, period, place, a separate
-    subtopic, or a narrower part of a broader query is not a repeat. A mark
-    that points at an ancestor or a descendant is dropped
-    (`details.dropped_marks`). Borderline marks flip from one call to the
-    next, so the same prompt is asked VOTES times (cache keys apart) and a
-    node is a repeat when a majority of the replies mark it; its original is
-    the node most of those marks name. `details.unstable` lists the nodes
-    some but not all replies marked. Repeats chain into groups; in each
-    group the node searched first is the original and the rest are
+    With a judge, pair by pair: code lists the candidate pairs and the judge
+    sees one pair per call (the research question and the two queries, never
+    the tree), says what each asks that the other does not, and whether the
+    later one repeats the earlier (the same facts would answer both).
+    Candidates: for each node, the CANDIDATES other nodes (not its ancestors
+    or descendants) with the highest symmetric BM25-weighted word overlap,
+    IDF over all nodes, when the overlap is at least MIN_OVERLAP. Judging all
+    pairs would cost n^2/2 calls (200-600 in a deep tree); a repeat in other
+    words still shares the words of its subject. `details.pairs` /
+    `details.all_pairs` say how many were judged. Repeats chain into groups;
+    in each group the node searched first is the original and the rest are
     duplicates.
 
         value = duplicate nodes / all nodes
@@ -136,9 +135,10 @@ class SubqueryRedundancy(Metric):
     `details.per_layer` and `details.per_kind` (branch / leaf) give the share
     by the duplicate's layer and kind; `details.same_layer` and
     `details.same_parent` count the duplicates whose original sits on the
-    same layer / has the same parent (the per-layer comparison of v6 would
-    only see the first). A node no reply answers counts as not a duplicate
-    and is listed in `details.unanswered`.
+    same layer / has the same parent. A pair whose call failed is listed in
+    `details.unanswered` (its later query) and counts as not a repeat.
+    `redundancy_votes` > 1 asks each pair that many times and takes the
+    majority (`details.unstable` lists split pairs).
 
     Without a judge (`details.method` = "lexical"): sibling pairs whose
     symmetric BM25-weighted term overlap reaches the threshold, IDF over the
@@ -148,16 +148,41 @@ class SubqueryRedundancy(Metric):
     """
 
     name, category = "subquery_redundancy", "retrieval.query_quality"
-    version = "11"          # 4: only a reworded request for the same facts; 5: sub-queries only;
+    version = "12"          # 4: only a reworded request for the same facts; 5: sub-queries only;
                             # 6: own call per layer over every node; 7: whole tree but ancestors, one call;
                             # 8: overlaps beside repeats (too broad, dropped); 9: majority of VOTES calls;
                             # 10: "repeat" from the query-quality skill, with examples;
-                            # 11: the skill rewritten short, with shared principles
+                            # 11: the skill rewritten short, with shared principles;
+                            # 12: code-picked candidate pairs, one pair per call
     higher_is_better = False
     uses_llm = True         # the lexical fallback only runs when no judge is configured at all
     prompts = (SUBQUERY_REDUNDANCY,)
     DEFAULT_THRESHOLD = 0.6
-    VOTES = 3
+    VOTES = 1
+    CANDIDATES = 3          # most similar other nodes per node
+    MIN_OVERLAP = 0.15
+
+    @classmethod
+    def candidate_pairs(cls, archive: RunArchive, k: int | None = None,
+                        min_overlap: float | None = None) -> tuple[list[tuple[int, int]], int]:
+        """(i, j) node numbers (1-based, i searched first) to judge, and the
+        number of comparable pairs in all."""
+        nodes = archive.query_nodes
+        k = cls.CANDIDATES if k is None else k
+        floor = cls.MIN_OVERLAP if min_overlap is None else min_overlap
+        index = {n.span_id: i for i, n in enumerate(nodes, 1)}
+        above = {i: {index[a] for a in archive.query_node_ancestors[n.span_id]} for i, n in enumerate(nodes, 1)}
+        related = lambda i, j: i in above[j] or j in above[i]
+        texts = [" ".join(n.query.split()) for n in nodes]
+        idf = idf_table(texts)
+        comparable = [(i, j) for i, j in combinations(range(1, len(nodes) + 1), 2) if not related(i, j)]
+        sim = {(i, j): symmetric_overlap(texts[i - 1], texts[j - 1], idf) for i, j in comparable}
+        picked = set()
+        for x in range(1, len(nodes) + 1):
+            mine = sorted(((s, pair) for pair, s in sim.items() if x in pair and s >= floor),
+                          key=lambda e: (-e[0], e[1]))
+            picked.update(pair for _, pair in mine[:k])
+        return sorted(picked), len(comparable)
 
     async def score(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:
         if ctx.judge is None:
@@ -165,77 +190,63 @@ class SubqueryRedundancy(Metric):
         nodes = archive.query_nodes
         if not nodes:
             return self.skip("no searched query below the run's question")
-        index = {n.span_id: i for i, n in enumerate(nodes, 1)}
-        above = {i: {index[a] for a in archive.query_node_ancestors[n.span_id]} for i, n in enumerate(nodes, 1)}
-        related = lambda i, j: i in above[j] or j in above[i]
         if len(nodes) == 1:
-            return self.result(0.0, method="judge_tree", nodes=1, duplicates=0, reason="one node")
-
-        lines = []
-        for i, n in enumerate(nodes, 1):
-            path = [index[a] for a in reversed(archive.query_node_ancestors[n.span_id])]
-            tag = f" [{' > '.join(map(str, path))}]" if path else ""
-            lines.append(f"{i}.{tag} {' '.join(n.query.split())}")
-        prompt = SUBQUERY_REDUNDANCY.render(question=archive.query.strip(), queries="\n".join(lines))
+            return self.result(0.0, method="judge_pairs", nodes=1, duplicates=0, reason="one node")
+        pairs, comparable = self.candidate_pairs(
+            archive, int(ctx.option("redundancy_candidates", self.CANDIDATES)),
+            float(ctx.option("redundancy_min_overlap", self.MIN_OVERLAP)))
         votes = max(1, int(ctx.option("redundancy_votes", self.VOTES)))
-        # The first call keeps the plain cache key, so a single-call verdict is reused.
-        replies = await ctx.gather(
-            ctx.judge.ask(SUBQUERY_REDUNDANCY.id, SUBQUERY_REDUNDANCY.version, prompt, **({"vote": k} if k else {}))
-            for k in range(votes))
-        ballots = [r.parsed.get("queries") for r in replies
-                   if isinstance(r.parsed, dict) and isinstance(r.parsed.get("queries"), list)]
-        if not ballots:
-            res = self.skip("judge call failed", errors=[r.error for r in replies],
+        question = archive.query.strip()
+
+        async def ask(i, j, k):
+            prompt = SUBQUERY_REDUNDANCY.render(question=question, query_a=" ".join(nodes[i - 1].query.split()),
+                                                query_b=" ".join(nodes[j - 1].query.split()))
+            # The first call keeps the plain cache key, so a single-call verdict is reused.
+            return (i, j), await ctx.judge.ask(SUBQUERY_REDUNDANCY.id, SUBQUERY_REDUNDANCY.version, prompt,
+                                               **({"vote": k} if k else {}))
+
+        answers = await ctx.gather(ask(i, j, k) for i, j in pairs for k in range(votes))
+        replies = [r for _, r in answers]
+        ballots: dict[tuple[int, int], list[dict]] = {}
+        for pair, r in answers:
+            if isinstance(r.parsed, dict) and isinstance(r.parsed.get("repeat"), bool):
+                ballots.setdefault(pair, []).append(r.parsed)
+        if pairs and not ballots:
+            res = self.skip("judge call failed", errors=[r.error for r in replies][:5],
                             raw=(replies[0].raw or "")[:300])
             res.llm = self.llm_record(ctx, replies)
             return res
 
-        marks: dict[int, list[tuple[int, str]]] = {}
-        answered, dropped = set(), {}
-        for entries in ballots:
-            for e in entries:
-                try:
-                    i = int(e["query"])
-                except (KeyError, TypeError, ValueError):
-                    continue
-                if not 1 <= i <= len(nodes):
-                    continue
-                answered.add(i)
-                j = None if isinstance(e.get("repeats"), bool) else _number(e.get("repeats"))
-                if j is None or j != int(j) or not 1 <= j <= len(nodes) or j == i:
-                    continue
-                j = int(j)
-                if related(i, j):
-                    dropped[(i, j)] = {"query": nodes[i - 1].query, "marked": nodes[j - 1].query}
-                    continue
-                marks.setdefault(i, []).append((j, str(e.get("evidence") or "")))
-        need = len(ballots) // 2 + 1
         links, unstable = {}, []
-        for i, ms in sorted(marks.items()):
-            targets = [j for j, _ in ms]
-            j = min(set(targets), key=lambda t: (-targets.count(t), t))
-            if len(ms) < len(ballots):
-                unstable.append({"query": nodes[i - 1].query, "repeats": nodes[j - 1].query,
-                                 "marks": len(ms), "replies": len(ballots), "counted": len(ms) >= need})
-            if len(ms) >= need:
-                links[i] = (j, next(ev for t, ev in ms if t == j))
+        for (i, j), bs in sorted(ballots.items()):
+            yes = [b for b in bs if b["repeat"]]
+            counted = len(yes) > len(bs) / 2
+            if yes and len(yes) < len(bs):
+                unstable.append({"query": nodes[j - 1].query, "repeats": nodes[i - 1].query,
+                                 "marks": len(yes), "replies": len(bs), "counted": counted})
+            if counted and j not in links:      # the earliest original it repeats
+                b = yes[0]
+                links[j] = (i, f"only in A: {b.get('only_in_a', '')}; only in B: {b.get('only_in_b', '')}")
         # Groups of repeats; the node searched first is each group's original.
         group = list(range(len(nodes) + 1))
         find = lambda x: x if group[x] == x else find(group[x])
-        for i, (j, _) in links.items():
+        for j, (i, _) in links.items():
             a, b = sorted((find(i), find(j)))
             group[b] = a
+        index = {n.span_id: i for i, n in enumerate(nodes, 1)}
+        above = {i: {index[a] for a in archive.query_node_ancestors[n.span_id]} for i, n in enumerate(nodes, 1)}
+        related = lambda i, j: i in above[j] or j in above[i]
         members: dict[int, list[int]] = {}
         for i in range(1, len(nodes) + 1):
             members.setdefault(find(i), []).append(i)
         duplicates = []
-        for i, n in enumerate(nodes, 1):
-            if find(i) == i:
+        for x, n in enumerate(nodes, 1):
+            if find(x) == x:
                 continue
-            j, evidence = links.get(i, (None, ""))
-            if j is None:                       # in a group only through another node's mark
-                j = next((k for k in members[find(i)] if k != i and not related(i, k)), find(i))
-            o = nodes[j - 1]
+            o_i, evidence = links.get(x, (None, ""))
+            if o_i is None:                     # in a group only through another node's link
+                o_i = next((k for k in members[find(x)] if k != x and not related(x, k)), find(x))
+            o = nodes[o_i - 1]
             duplicates.append({"query": n.query, "layer": n.layer, "kind": n.kind, "repeats": o.query,
                                "repeats_layer": o.layer, "same_layer": o.layer == n.layer,
                                "same_parent": o.parent == n.parent, "evidence": evidence,
@@ -249,13 +260,14 @@ class SubqueryRedundancy(Metric):
         by = lambda key: {k: share([n for n in nodes if getattr(n, key) == k])
                           for k in sorted({getattr(n, key) for n in nodes})}
         res = self.result(
-            rounded(len(dup_ids) / len(nodes)), method="judge_tree", nodes=len(nodes),
+            rounded(len(dup_ids) / len(nodes)), method="judge_pairs", nodes=len(nodes),
             duplicates=len(dup_ids), same_layer=sum(d["same_layer"] for d in duplicates),
             same_parent=sum(d["same_parent"] for d in duplicates),
-            per_layer=by("layer"), per_kind=by("kind"), votes=votes, replies=len(ballots),
+            per_layer=by("layer"), per_kind=by("kind"), votes=votes,
+            pairs=len(pairs), all_pairs=comparable, repeat_pairs=sum(1 for bs in ballots.values()
+                                                                     if sum(b["repeat"] for b in bs) > len(bs) / 2),
             not_unique=duplicates, unstable=unstable,
-            unanswered=[nodes[i - 1].query for i in range(1, len(nodes) + 1) if i not in answered],
-            dropped_marks=list(dropped.values()))
+            unanswered=list(dict.fromkeys(nodes[j - 1].query for i, j in pairs if (i, j) not in ballots)))
         res.llm = self.llm_record(ctx, replies)
         return res
 
