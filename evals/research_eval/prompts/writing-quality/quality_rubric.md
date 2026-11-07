@@ -1,24 +1,37 @@
 ---
 id: quality_rubric
-version: 2
+version: 3
 used_by: insight, readability
 ---
 
-You are preparing a grading rubric for research reports that answer the question
-below. Write criteria for two dimensions, specific to THIS question:
+# Task: grading rubric
 
-- insight: depth of analysis, e.g. comparisons, causes and effects, trade-offs,
-  synthesis across sources, a clear and justified conclusion, beyond listing facts.
-- readability: logical progression of sections, explained terminology, concise
-  and clear wording, appropriate use of structure (headings, lists, tables).
+## Goal
+- You are preparing a grading rubric for research reports that answer the
+  question below.
+- Write criteria for two dimensions, insight and readability (as defined
+  above), specific to THIS question.
 
-Give 3 to 5 criteria per dimension. Each criterion has a short name, one
-sentence saying what a strong report does on it for this question, and a weight;
-weights within a dimension sum to 1.
+## What to write
+- 3 to 5 criteria per dimension.
+- Each criterion has:
+  - criterion: a short name;
+  - description: one sentence saying what a strong report does on it for
+    this question;
+  - weight: its share of the dimension; weights within a dimension sum
+    to 1.
 
+## Good criteria
+- Each can be judged from the report text alone.
+- Each names something this question needs: for insight, the comparisons,
+  causes, trade-offs or conclusions a good answer to it draws; for
+  readability, the order, terms and structure its readers need.
+- Criteria do not overlap, and none is about length, citations or whether
+  the facts are true: those are judged elsewhere.
+
+## Answer format
 Return ONLY JSON:
-{"insight": [{"criterion": "...", "description": "...", "weight": 0.3}],
-  "readability": [{"criterion": "...", "description": "...", "weight": 0.3}]}
+{"insight": [{"criterion": "...", "description": "...", "weight": 0.3}], "readability": [{"criterion": "...", "description": "...", "weight": 0.3}]}
 
 @user
 

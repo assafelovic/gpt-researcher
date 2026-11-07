@@ -9,6 +9,9 @@
           "point": {
             "type": "integer"
           },
+          "evidence": {
+            "type": "string"
+          },
           "coverage": {
             "type": "string",
             "enum": [
@@ -16,15 +19,12 @@
               "partial",
               "none"
             ]
-          },
-          "evidence": {
-            "type": "string"
           }
         },
         "required": [
           "point",
-          "coverage",
-          "evidence"
+          "evidence",
+          "coverage"
         ],
         "additionalProperties": false
       }

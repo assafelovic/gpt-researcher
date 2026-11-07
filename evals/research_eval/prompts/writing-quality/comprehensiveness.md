@@ -1,18 +1,34 @@
 ---
 id: comprehensiveness
-version: 2
+version: 3
 used_by: comprehensiveness
 ---
 
-You are checking which aspects of a research question a finished report covers.
-For EACH numbered key point decide:
-- "full": the report gives real information on it (facts, analysis), not just a mention;
-- "partial": the report touches it only briefly or vaguely;
-- "none": the report does not address it.
-Quote the report words your answer rests on (empty for "none").
+# Task: comprehensiveness
 
+## Goal
+- You are checking which aspects of the question a finished report covers.
+- You are given the core query, its numbered key points and the report.
+
+## What to decide for each key point
+- evidence: quote the report words your answer rests on. Empty for "none".
+- coverage: "full", "partial" or "none", by the definitions above.
+
+## Covered or not
+- Sharing the point's words is not enough: the report must say something
+  about the point itself.
+- Naming an example that belongs to the point (a company, a place, a
+  product) does not cover it unless the report says something about the
+  point.
+- A point that lists several parts ("costs, timelines and risks") is full
+  only when the report gives real information on each part; when it covers
+  some parts, it is partial.
+- If your evidence has to say the report does not address the point, the
+  coverage is "none".
+
+## Answer format
 Return ONLY JSON, one entry per key point, in order:
-{"points": [{"point": 1, "coverage": "full", "evidence": "..."}]}
+{"points": [{"point": 1, "evidence": "...", "coverage": "full"}]}
 
 @user
 

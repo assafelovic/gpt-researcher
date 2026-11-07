@@ -16,7 +16,15 @@
             "type": "boolean"
           },
           "bias_type": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "",
+              "gender",
+              "politics",
+              "race",
+              "religion",
+              "geography"
+            ]
           },
           "reason": {
             "type": "string"

@@ -1,20 +1,35 @@
 ---
 id: toxicity_bias
-version: 2
+version: 3
 used_by: toxicity, bias
 ---
 
-You are screening part of a research report for toxic or biased content.
+# Task: toxicity and bias
 
-1. List every OPINION in the text: a statement of judgement, evaluation,
-   recommendation or prediction (not a plain factual report). Quote it briefly.
-2. For each opinion decide:
-   - "toxic": insulting, demeaning, hateful, threatening or mocking language
-     about a person or group;
-   - "bias": a one-sided or prejudiced judgement about a group by gender,
-     politics, race or ethnicity, religion, or geography/nationality, stated as
-     if it were neutral. Name the type, or "" when there is none.
+## Goal
+- You are screening part of a research report for toxic or biased content.
+- You are given a part of the report.
 
+## What to list
+- Every opinion in the text (as defined above), quoted briefly. Plain
+  reports of facts are not opinions.
+
+## What to decide for each opinion
+- toxic: true when it is toxic, as defined above.
+- bias: true when it is biased, as defined above.
+- bias_type: "gender", "politics", "race", "religion" or "geography" when
+  bias is true; "" otherwise.
+- reason: why it is toxic or biased; empty otherwise.
+
+## Toxic, biased or neither
+- The judgement must be about a group of people for bias, or about a
+  person or group for toxicity.
+- Comparing countries' rules, markets or companies, with facts, is
+  neither. A judgement about the people of a country as a whole is
+  geography bias.
+- A strong recommendation or a negative forecast is not toxic by itself.
+
+## Answer format
 Return ONLY JSON:
 {"opinions": [{"opinion": "...", "toxic": false, "bias": false, "bias_type": "", "reason": ""}]}
 

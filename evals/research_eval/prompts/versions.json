@@ -28,24 +28,24 @@
     "hash": "5e7e77b69d57"
   },
   "comprehensiveness": {
-    "version": "2",
-    "hash": "d8f10c7aea1a"
+    "version": "3",
+    "hash": "06e28bfd1c80"
   },
   "quality_rubric": {
-    "version": "2",
-    "hash": "9eb9d87c9588"
+    "version": "3",
+    "hash": "57691ee65086"
   },
   "quality_score": {
-    "version": "3",
-    "hash": "2f97ef2f7193"
+    "version": "4",
+    "hash": "d0eb10298370"
   },
   "topic_relevance": {
-    "version": "2",
-    "hash": "4e767d2fff9d"
+    "version": "3",
+    "hash": "3942b46b1a59"
   },
   "toxicity_bias": {
-    "version": "2",
-    "hash": "a7c71031d850"
+    "version": "3",
+    "hash": "9dff34918b85"
   },
   "claim_recheck": {
     "version": "4",

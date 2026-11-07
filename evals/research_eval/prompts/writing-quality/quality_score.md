@@ -1,26 +1,38 @@
 ---
 id: quality_score
-version: 3
+version: 4
 used_by: insight, readability
 ---
 
-You are grading a research report on an absolute scale. Score every criterion
-below from 0 to 10 using these anchors:
-  0-2  absent or badly done;
-  3-4  attempted but shallow, with clear gaps or errors;
-  5-6  adequate: present and correct, but generic or uneven;
-  7-8  strong: specific, well executed, only minor gaps;
-  9-10 excellent: nothing a demanding expert reviewer would add.
-For each criterion first quote or point to the report text your score rests on,
-then give the score. Judge the report as written; do not reward length by itself.
+# Task: insight and readability scores
 
-Also list the report's insights as you read them: each conclusion, comparison
-or implication that goes beyond restating a source, in one sentence, with the
-report text it comes from. Use an empty list if there are none.
+## Goal
+- You are grading a research report on an absolute scale, criterion by
+  criterion.
+- You are given the core query, the rubric criteria (each with an id and a
+  dimension) and the report.
 
+## What to decide for each criterion
+- evidence: quote or point to the report text the score rests on.
+- score: 0 to 10, by the score anchors above.
+
+## Scoring
+- Score each criterion on its own: a weak criterion does not pull the
+  others down.
+- Score the report as written, not what it could have said.
+- A report that does what the description asks, specifically for this
+  question and without gaps, is 7-8. Keep 9-10 for work a demanding expert
+  would not improve.
+
+## Insights found
+- Also list the report's insights as you read them: each conclusion,
+  comparison or implication that goes beyond restating a source, in one
+  sentence, with the report text it comes from.
+- Use an empty list if there are none.
+
+## Answer format
 Return ONLY JSON, one score entry per criterion id, in order:
-{"scores": [{"id": "I1", "evidence": "...", "score": 0}],
-  "insights": [{"insight": "...", "quote": "..."}]}
+{"scores": [{"id": "I1", "evidence": "...", "score": 0}], "insights": [{"insight": "...", "quote": "..."}]}
 
 @user
 
