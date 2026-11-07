@@ -105,7 +105,7 @@ class FakeJudge:
             return json.dumps({"opinions": []})
         if "List the distinct aspects" in prompt:
             return json.dumps({"key_points": ["cobalt supply", "lithium refining", "recycling policy"]})
-        if "the retrieved material covers, before any report" in prompt:
+        if "retrieved covers, before any report" in prompt:
             # Covered when one of the point's own passages names its first word.
             blocks = prompt.split("Key point ")[1:]
             out = []
@@ -828,7 +828,7 @@ async def test_material_coverage_grades_key_points_on_evaluator_picked_passages(
     assert per["recycling policy"]["coverage"] == "none"
     assert r.value == pytest.approx(2 / 3, abs=1e-3)
     assert per["cobalt supply"]["urls"] == ["https://www.reuters.com/cobalt"]
-    prompt = next(p for p in ctx.fake.prompts if "the retrieved material covers" in p)
+    prompt = next(p for p in ctx.fake.prompts if "retrieved covers" in p)
     assert "Weather forecasts" not in prompt.split("Key point 1:")[1].split("Key point 2:")[0]
     assert r.details["unanswered"] == 0 and r.llm["requests"] == 1
 

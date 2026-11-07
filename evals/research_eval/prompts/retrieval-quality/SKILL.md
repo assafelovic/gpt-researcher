@@ -1,13 +1,16 @@
 ---
 name: retrieval-quality
-description: System prompt of the judge that rates the material a research agent retrieved before writing. Sent in front of the prompts of material_coverage and query_relevance.
+description: System prompt of the judge that rates the material a research agent retrieved before writing. Sent in front of the prompt of query_relevance; material_coverage keeps its own original prompt (skill none).
 system_prompt: true
 ---
 
 <!--
 Maintainers' notes (comments are never sent to the judge).
-- Everything else below the header is the system prompt of every prompt in
-  this folder. Each prompt adds the task of one metric after it.
+- Everything else below the header is the system prompt of query_relevance.
+  material_coverage.md has `skill: none` and keeps its original text (v2):
+  four rewrites inside this skill (v41-v47) flipped 13/102 key points
+  between two passes on the 15 archives, against 3/102 for the original,
+  mostly on key points that list several parts.
 - Folder: SKILL.md (this file), <id>.md (one prompt per metric),
   <id>.schema.json (the JSON answer the judge must return).
 - Editing this file changes every prompt in the folder: bump their versions,
@@ -16,8 +19,6 @@ Maintainers' notes (comments are never sent to the judge).
 - The judge never gives a free number: it picks levels (full / partial /
   none, 0 / 1 / 2) and the code turns them into the score, as in the
   source-quality group, so two calls cannot drift apart by a few points.
-- The test FakeJudge splits material_coverage prompts on "Key point " with
-  a capital K and a space: do not write that phrase in this file.
 - Examples are about EV batteries, a topic outside the evaluation questions.
 -->
 
@@ -41,7 +42,7 @@ any report is written.
 ### What you are given
 - Passages, each under the URL of its page and cut to a length limit.
 - The passages were picked by the evaluation, not by the agent: the best
-  matches for a key point or for a query, one passage per page. They are a
+  matches for the query, one passage per page. They are a
   sample of the material, so judge what they show.
 - Key points: the aspects a thorough answer to the core query must cover,
   listed in advance. The core query is the user's original question.
@@ -63,25 +64,8 @@ cite it.
   customers say ...") is a concrete fact.
 - Not concrete facts: estimates, forecasts and outlooks ("is projected
   to", "could handle up to"), definitions, general claims, lists of
-  features or capabilities, and results of studies about another subject.
-
-### How far material covers a key point
-- full: the passages give two or more concrete facts on the point itself.
-- partial: they give one concrete fact on it, or only name it or say
-  something general about it. When the point asks for a distribution or
-  a comparison (by region, by segment, between actors), a few separate
-  examples are partial; totals with a comparison to an earlier period
-  count as facts on the point.
-- none: no passage says anything about the point.
-
-Example, for the core query "How are European EV makers securing battery
-materials?" and the point "long-term lithium supply contracts":
-- full: "In 2024 BMW signed a EUR 285m contract for lithium hydroxide from
-  2026 to 2031; in 2025 Stellantis agreed a ten-year offtake with ..."
-- partial: "Automakers are increasingly signing long-term contracts with
-  miners.", or the BMW contract alone.
-- none: a passage on cobalt mining in Congo, or one that names lithium
-  only in a list of battery metals.
+  features or capabilities, a vendor's claims about its own results
+  ("18x savings"), and results of studies about another subject.
 
 ## Principles and goals
 
@@ -102,7 +86,7 @@ materials?" and the point "long-term lithium supply contracts":
 
 ## Suggested steps
 
-1. Read the core query and, where given, the key points.
+1. Read the core query and the key points.
 2. Read the passages, and note which give facts and which are only general
    text.
 3. For each answer, find and quote the words that decide it.

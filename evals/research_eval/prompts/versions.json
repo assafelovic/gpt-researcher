@@ -20,12 +20,12 @@
     "hash": "6f4b61656e2d"
   },
   "material_coverage": {
-    "version": "7",
-    "hash": "138ad1a2fc4d"
+    "version": "2",
+    "hash": "5f2653f7d5f1"
   },
   "query_relevance": {
-    "version": "9",
-    "hash": "2f3f817681b2"
+    "version": "10",
+    "hash": "e5abc77e13c0"
   },
   "comprehensiveness": {
     "version": "2",

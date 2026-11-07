@@ -1,6 +1,6 @@
 ---
 id: query_relevance
-version: 9
+version: 10
 used_by: query_relevance
 ---
 
@@ -13,6 +13,16 @@ used_by: query_relevance
   query.
 - You are given the core query, its key points, the query under review and
   the material, one passage per page, best matches first.
+
+## First, sort out pages with nothing to judge
+- Only page furniture, a repository or file listing, a video page with no
+  transcript, a job listing or a list of links: relevance 0, substance 0.
+- A vendor's or agency's article on the industry in general, or a personal
+  post (LinkedIn, Medium, Substack): relevance at most 1. A vendor's own
+  docs or prices are judged as usual when the query asks about that
+  vendor's product.
+- The query names a year and the material's facts are two or more years
+  older: relevance at most 1.
 
 ## What to decide
 - key_points: the numbers of the key points the material gives real
