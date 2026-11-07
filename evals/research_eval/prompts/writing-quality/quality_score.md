@@ -1,6 +1,6 @@
 ---
 id: quality_score
-version: 4
+version: 5
 used_by: insight, readability
 ---
 
@@ -14,15 +14,21 @@ used_by: insight, readability
 
 ## What to decide for each criterion
 - evidence: quote or point to the report text the score rests on.
-- score: 0 to 10, by the score anchors above.
+- gaps: what a demanding expert would still want on this criterion for
+  this question, as a short list; empty when there is nothing.
+- score: 0 to 10, from the gaps:
+  - 9-10: no gaps.
+  - 7-8: one or two minor gaps.
+  - 5-6: a clear gap, or several minor ones; the criterion is met only in
+    general terms.
+  - 3-4: the criterion is attempted but mostly unmet.
+  - 0-2: absent or badly done.
 
 ## Scoring
 - Score each criterion on its own: a weak criterion does not pull the
   others down.
 - Score the report as written, not what it could have said.
-- A report that does what the description asks, specifically for this
-  question and without gaps, is 7-8. Keep 9-10 for work a demanding expert
-  would not improve.
+- Write the gaps before the score, and let the score follow from them.
 
 ## Insights found
 - Also list the report's insights as you read them: each conclusion,
@@ -32,7 +38,7 @@ used_by: insight, readability
 
 ## Answer format
 Return ONLY JSON, one score entry per criterion id, in order:
-{"scores": [{"id": "I1", "evidence": "...", "score": 0}], "insights": [{"insight": "...", "quote": "..."}]}
+{"scores": [{"id": "I1", "evidence": "...", "gaps": ["..."], "score": 0}], "insights": [{"insight": "...", "quote": "..."}]}
 
 @user
 

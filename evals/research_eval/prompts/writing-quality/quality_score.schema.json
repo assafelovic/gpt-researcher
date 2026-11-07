@@ -12,6 +12,12 @@
           "evidence": {
             "type": "string"
           },
+          "gaps": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "score": {
             "type": "integer",
             "enum": [
@@ -32,6 +38,7 @@
         "required": [
           "id",
           "evidence",
+          "gaps",
           "score"
         ],
         "additionalProperties": false

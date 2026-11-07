@@ -141,7 +141,8 @@ async def quality_scores(archive: RunArchive, ctx: ScoringContext) -> dict:
     scores = {}
     for e in (sc.parsed or {}).get("scores", []) if isinstance(sc.parsed, dict) else []:
         try:
-            scores[str(e["id"]).strip()] = (max(0.0, min(10.0, float(e["score"]))), e.get("evidence", ""))
+            scores[str(e["id"]).strip()] = (max(0.0, min(10.0, float(e["score"]))), e.get("evidence", ""),
+                                            e.get("gaps") or [])
         except (KeyError, TypeError, ValueError):
             continue
     for dim in ("insight", "readability"):
@@ -149,8 +150,8 @@ async def quality_scores(archive: RunArchive, ctx: ScoringContext) -> dict:
         for c in criteria:
             if c["dimension"] != dim:
                 continue
-            s, ev = scores.get(c["id"], (None, ""))
-            rows.append({**c, "score": s, "evidence": ev})
+            s, ev, gaps = scores.get(c["id"], (None, "", []))
+            rows.append({**c, "score": s, "evidence": ev, "gaps": gaps})
         scored = [r for r in rows if r["score"] is not None]
         wsum = sum(r["weight"] for r in scored)
         if scored and wsum <= 0:      # weights missing: treat criteria equally
