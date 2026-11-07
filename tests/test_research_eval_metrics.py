@@ -285,6 +285,12 @@ async def test_subquery_redundancy_compares_across_branches_and_layers_but_not_a
     assert ("Congo cobalt mining", "Congo cobalt mining sites") not in named
     assert ("Congo cobalt output 2024", "Congo cobalt output 2024 figures") in named
     assert comparable < 9 * 8 // 2
+    # Every node gets its own most similar nodes (v13 once took the 3 best pairs
+    # of the whole tree for every node).
+    for x in range(1, 10):
+        mine = [p for p in pairs if x in p]
+        assert mine, nodes[x - 1]
+    assert len(pairs) >= 9 * 3 // 2
     r = await SubqueryRedundancy().score(a, ctx)
     assert r.details["nodes"] == 9 and r.details["duplicates"] == 3
     assert r.value == pytest.approx(3 / 9, abs=1e-3)

@@ -180,7 +180,7 @@ class SubqueryRedundancy(Metric):
         sim = {(i, j): symmetric_overlap(texts[i - 1], texts[j - 1], idf) for i, j in comparable}
         picked = set()
         for x in range(1, len(nodes) + 1):
-            mine = sorted(((s, pair) for pair, s in sim.items() if x in pair and s > floor or floor <= 0),
+            mine = sorted(((s, pair) for pair, s in sim.items() if x in pair and s >= floor),
                           key=lambda e: (-e[0], e[1]))
             picked.update(pair for _, pair in mine[:k])
         return sorted(picked), len(comparable)
