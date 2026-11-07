@@ -16,7 +16,7 @@ from .citation import _AuditMetric
 
 
 class Faithfulness(_AuditMetric):
-    """Mean verdict score of the report's fact claims, in [-1, 1].
+    """Mean verdict score of the report's fact claims, in [0, 1].
 
     Claims are extracted per paragraph by the judge (not taken as the cited
     sentences) and typed `fact` or `analysis`. Each is checked against the
