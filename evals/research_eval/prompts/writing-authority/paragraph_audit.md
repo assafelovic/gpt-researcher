@@ -1,6 +1,6 @@
 ---
 id: paragraph_audit
-version: 6
+version: 7
 used_by: citation audit (citation_audit.py), source_utilization, citation_recall, citation_precision, effective_citations, faithfulness
 ---
 
@@ -31,8 +31,8 @@ used_by: citation audit (citation_audit.py), source_utilization, citation_recall
      - "rest_suffice": with this source removed, would the item's other cited sources still fully support it? (false when it is the only citation)
 
 ## Rules
-- Split by the system prompt's rules: one claim per fact a source could confirm on its own. Do not split a list, a figure or a qualifier off its statement.
-- A claim whose evidence has to say the material does not give it is unsupported, whatever its type.
+- Split by the system prompt's rules: atomic claims; a figure or a qualifier stays with its statement.
+- A claim whose evidence has to say the material gives none of it is unsupported, whatever its type.
 - A cited source shown as not available supports nothing.
 
 ## Output

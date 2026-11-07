@@ -48,11 +48,11 @@
     "hash": "9dff34918b85"
   },
   "claim_recheck": {
-    "version": "5",
-    "hash": "9bbcd8bb81bc"
+    "version": "6",
+    "hash": "8313c8d33a35"
   },
   "paragraph_audit": {
-    "version": "6",
-    "hash": "7ba6d8d06c7f"
+    "version": "7",
+    "hash": "43bb9a996aea"
   }
 }

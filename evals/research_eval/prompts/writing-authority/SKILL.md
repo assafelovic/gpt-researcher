@@ -57,14 +57,11 @@ A claim is one piece of information that someone holding the right source
 could confirm or deny.
 - Self-contained: understandable without the paragraph. Replace pronouns, and
   never refer to item or source numbers ("item 1", "[2]").
-- One claim per fact a source could confirm on its own. Split "A raised $2bn
-  and opened a plant in Hungary" into two claims.
-- Keep together what belongs together:
-  - a figure with what it measures, its unit, place and date;
-  - a list of the same kind of thing ("its partners include A, B and C" is
-    one claim);
-  - a qualifier with the statement it qualifies ("about", "in 2024", "in
-    Europe" stay inside the claim).
+- Atomic: one piece of information. Split "A raised $2bn and opened a plant
+  in Hungary" into two claims, and "its partners include A, B and C" into one
+  claim per partner when each can be checked on its own.
+- Keep a figure together with what it measures, its unit, place and date, and
+  a qualifier ("about", "in 2024", "in Europe") with its statement.
 - Do not make a claim from a heading, a transition, or the report's notes
   about itself.
 
@@ -98,31 +95,35 @@ Judge each claim against all the material shown, and quote the material
 words your verdict rests on before you give it.
 - supported: a passage states the claim: the same subject (entity, market,
   region, period) and the same strength. A paraphrase counts.
-- inferred: no passage states it, but it follows from what the passages state
-  in one clear step: putting two stated facts together, simple arithmetic, a
-  direct consequence of a stated rule, or a summary of several passages that
-  all point the same way. You could name the passages and the step.
-- unsupported: anything weaker. The material is about something related but
-  not this; it gives only some of the parts; or getting there needs outside
-  knowledge, a guess or a leap.
+- inferred: no passage states the whole claim, but the material backs it in
+  part and the rest is a reasonable step from what it states: putting stated
+  facts together, simple arithmetic, a direct consequence of a stated rule, a
+  summary of passages that point the same way, or a detail (a date, a figure's
+  exact wording) the passages leave slightly looser than the claim.
+- unsupported: the material does not address the claim, or only shares its
+  topic; or getting there needs a fact the material does not give, a guess or
+  a leap.
 - contradicted: a passage about the same subject states the opposite or a
   different figure.
 
 How to tell them apart:
 - supported vs inferred: if you must explain a step, it is inferred.
-- inferred vs unsupported: if the step needs a fact the material does not
-  give, it is unsupported. Scattered figures that are related but do not add
-  up to the claim are unsupported.
+- inferred vs unsupported: name the passage that backs part of the claim. If
+  there is none, or the rest needs a fact the material does not give, it is
+  unsupported. Scattered figures that are related but do not add up to the
+  claim are unsupported.
 - unsupported vs contradicted: only a passage about the same subject can
   contradict. Different figures for different years, regions or definitions
   are unsupported, not contradicted.
-- An analysis claim is judged the same way: inferred when its conclusion
-  follows from the material in one clear step, unsupported when it goes
-  further.
+- An analysis claim is judged the same way: inferred when the material backs
+  its premises and the conclusion is a reasonable step from them, unsupported
+  when it goes further.
 
 Examples (material: "CATL shipped 321 GWh in 2023. BYD shipped 159 GWh."):
 - "CATL shipped more than twice as much as BYD in 2023." -> inferred
 - "CATL shipped 321 GWh in 2023." -> supported
+- "CATL shipped about 320 GWh of batteries for EVs in 2023." -> inferred
+  (the passage does not say the batteries were for EVs)
 - "CATL is the largest battery maker in the world." -> unsupported (no other
   makers are given)
 - "CATL shipped 280 GWh in 2023." -> contradicted
