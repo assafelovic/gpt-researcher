@@ -60,8 +60,14 @@ judged elsewhere.
 - Insight: analysis beyond restating sources: comparisons, causes and
   effects, trade-offs, synthesis across sources, a clear and justified
   conclusion.
-- Readability: sections in a logical order, terms explained, concise and
-  clear wording, structure that fits the content (headings, lists, tables).
+- Readability: how clearly the report says what it says. The reader is a
+  student or junior researcher in the field: they know its basic concepts,
+  common terms and the names of its main techniques, so these need no
+  explanation. Readability is fluent sentences, precise word choice,
+  sections in a logical order, structure that fits the content (headings,
+  lists, tables), and no description made harder to follow than it needs to
+  be. Hard content is not poor readability: judge the description, not the
+  complexity of the subject, and not what the report covers.
 - On topic: a paragraph is on topic when it helps answer the core query.
   Background the question needs counts; padding and text about other
   subjects do not.

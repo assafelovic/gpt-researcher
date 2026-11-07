@@ -1,6 +1,6 @@
 ---
 id: topic_relevance
-version: 6
+version: 7
 used_by: topic_relevance
 ---
 

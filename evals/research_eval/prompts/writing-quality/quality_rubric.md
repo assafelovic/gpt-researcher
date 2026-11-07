@@ -1,6 +1,6 @@
 ---
 id: quality_rubric
-version: 3
+version: 4
 used_by: insight, readability
 ---
 
@@ -25,7 +25,11 @@ used_by: insight, readability
 - Each can be judged from the report text alone.
 - Each names something this question needs: for insight, the comparisons,
   causes, trade-offs or conclusions a good answer to it draws; for
-  readability, the order, terms and structure its readers need.
+  readability, how clearly its content can be presented: order, structure,
+  fluent and precise wording, for the reader defined above.
+- A readability criterion is about the description only: never about what
+  the report covers (scope, dates, which items it includes), and never asks
+  to explain terms that reader already knows.
 - Criteria do not overlap, and none is about length, citations or whether
   the facts are true: those are judged elsewhere.
 

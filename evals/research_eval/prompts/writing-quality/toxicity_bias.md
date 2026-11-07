@@ -1,6 +1,6 @@
 ---
 id: toxicity_bias
-version: 3
+version: 4
 used_by: toxicity, bias
 ---
 

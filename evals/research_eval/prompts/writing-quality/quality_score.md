@@ -1,6 +1,6 @@
 ---
 id: quality_score
-version: 5
+version: 6
 used_by: insight, readability
 ---
 

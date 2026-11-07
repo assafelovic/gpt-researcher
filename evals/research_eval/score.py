@@ -42,6 +42,8 @@ async def main(argv: list[str] | None = None) -> int:
                          "cover (first-pass only: follow-up calls that depend on a verdict are not counted)")
     ap.add_argument("--max-calls", type=int, default=None,
                     help="cap on uncached judge calls; past it, judge metrics are skipped with an error")
+    ap.add_argument("--rubrics-dir", default=str(RUBRICS_DIR),
+                    help="frozen insight/readability rubrics; 'none' makes the judge write them")
     ap.add_argument("--judge-salt", default="",
                     help="key the judge cache apart so cached verdicts are asked again")
     args = ap.parse_args(argv)
@@ -66,7 +68,7 @@ async def main(argv: list[str] | None = None) -> int:
                          judge=Judge(cache, salt=args.judge_salt, max_calls=args.max_calls,
                                      dry_run=args.dry_run) if needs_llm else None,
                          embedder=Embedder(cache) if needs_emb else None,
-                         key_points_dir=KEY_POINTS_DIR, rubrics_dir=RUBRICS_DIR,
+                         key_points_dir=KEY_POINTS_DIR, rubrics_dir=None if args.rubrics_dir == "none" else Path(args.rubrics_dir),
                          max_concurrency=args.concurrency)
     for path in args.archives:
         archive = RunArchive.load(path)
