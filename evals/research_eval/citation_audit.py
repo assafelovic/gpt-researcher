@@ -26,7 +26,7 @@ first call shows only cited material, because more material in one call made
 the judge more lenient on the citations too.
 and returns:
   kind       factual | non_factual (opinion, transition: no claims judged)
-  claims     the paragraph's factual claims, each with a 6-level verdict and
+  claims     the paragraph's factual claims, each with a 4-level verdict and
              the passage ids it rests on (-> chunk ids)
   sentences  for each citing sentence, whether its sources together support it,
              and per source whether it alone supports it and whether the others
@@ -54,11 +54,13 @@ if TYPE_CHECKING:
 # Bump when the audit's material or unit logic changes (prompt changes bump the
 # prompt version instead); every metric that reads the audit carries it in its
 # version, so the scorer version changes and old results are not overwritten.
-AUDIT_VERSION = "11"    # 7: recall / precision per claim; 8: fact / analysis claims; 9: entity roles are facts; 10: independent recheck; 11: recheck uncited paragraphs and unshown passages of cited pages
+AUDIT_VERSION = "12"    # 7: recall / precision per claim; 8: fact / analysis claims; 9: entity roles are facts; 10: independent recheck; 11: recheck uncited paragraphs and unshown passages of cited pages; 12: one inferred level
 
 # Faithfulness points per verdict (eval-design/generation-metrics.md §3.2 B).
-VERDICT_SCORES = {"supported": 1.0, "inferred_a": 0.5, "inferred_b": 0.4, "inferred_c": 0.3,
-                  "unsupported": 0.0, "contradicted": -1.0}
+# One "inferred" level since paragraph_audit v6: the judge could not keep the
+# three earlier levels apart (inferred_a/b/c, kept so old answers still score).
+VERDICT_SCORES = {"supported": 1.0, "inferred": 0.5, "unsupported": 0.0, "contradicted": -1.0,
+                  "inferred_a": 0.5, "inferred_b": 0.4, "inferred_c": 0.3}
 
 MIN_UNCITED_CHARS = 80      # shorter uncited paragraphs are headings-in-disguise or transitions
 PASSAGE_CHARS = 1200        # one chunk shown to the judge

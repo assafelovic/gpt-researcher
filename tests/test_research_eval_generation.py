@@ -78,7 +78,7 @@ def audit_reply(prompt):
         return {"kind": "factual",
                 "claims": [{"claim": "Congo 74% cobalt", "sentences": [1], "verdict": "supported",
                             "passages": ["1a"]},
-                           {"claim": "China refines 65%", "sentences": [2], "verdict": "inferred_b",
+                           {"claim": "China refines 65%", "sentences": [2], "verdict": "inferred",
                             "passages": ["2a"]}],
                 "sentences": [
                     {"sentence": 1, "supported": True, "citations": [{"source": 1, "alone": True}]},
@@ -99,7 +99,7 @@ def audit_reply(prompt):
                     {"sentence": 2, "supported": True, "citations": [{"source": 2, "alone": True}]}]}
     if "Lithium refining is concentrated" in para:
         return {"kind": "factual",
-                "claims": [{"claim": "China concentration", "verdict": "inferred_a", "passages": ["1a"]}],
+                "claims": [{"claim": "China concentration", "verdict": "inferred", "passages": ["1a"]}],
                 "sentences": []}
     return {"kind": "non_factual", "claims": [{"claim": "ignored", "verdict": "unsupported"}],
             "sentences": []}
@@ -208,7 +208,7 @@ async def test_citation_recall_is_per_claim(ctx):
     r = await CitationRecall().score(make_archive(), ctx)
     # 6 fact claims: 5 cited, plus the uncited paragraph's claim, which counts
     # as unsupported. Supported: Congo (reuters) and 2027 (recycle). Not: China
-    # (inferred_b: strict), Glencore (contradicted), prices (unsupported; its
+    # (inferred: strict), Glencore (contradicted), prices (unsupported; its
     # only source was never retrieved).
     assert (r.details["cited_claims"], r.details["supported"]) == (5, 2)
     assert r.value == round(2 / 6, 3) and r.details["cited_only"] == 0.4
@@ -280,8 +280,8 @@ def test_effective_citations_merges_near_duplicate_evidence():
 
 async def test_faithfulness(ctx):
     r = await Faithfulness().score(make_archive(), ctx)
-    # supported 1, inferred_b .4, supported 1, contradicted -1, unsupported 0, inferred_a .5
-    assert r.value == pytest.approx((1 + 0.4 + 1 - 1 + 0 + 0.5) / 6, abs=1e-3)
+    # supported 1, inferred .5, supported 1, contradicted -1, unsupported 0, inferred .5
+    assert r.value == pytest.approx((1 + 0.5 + 1 - 1 + 0 + 0.5) / 6, abs=1e-3)
     assert r.details["verdicts"]["contradicted"] == 1
     assert r.details["uncited_factual_paragraphs"] == 1
     assert {f["claim"] for f in r.details["flagged"]} == {"Glencore dominates", "prices triple"}
@@ -509,7 +509,7 @@ async def test_score_record_keeps_the_full_citation_audit(ctx):
     rec = await score_archive(make_archive(), [CitationRecall(), Faithfulness()], ctx)
     paras = rec["citation_audit"]["paragraphs"]
     first = next(p for p in paras if p["para_id"] == "sec1-p1")
-    assert [c["verdict"] for c in first["claims"]] == ["supported", "inferred_b"]
+    assert [c["verdict"] for c in first["claims"]] == ["supported", "inferred"]
     assert first["sentences"] and all("supported" in s for s in first["sentences"])
     json.dumps(rec)                                     # serialisable as saved
     rules = await score_archive(make_archive(), [FactGrounding()], ctx)
@@ -588,7 +588,7 @@ def test_analysis_claims_stay_out_of_citation_metrics():
                         [{"n": 1, "url": "https://a", "found": True, "passages": [{"id": "1a", "chunk_id": "ca"}]}])
     pa.response = JudgeResponse({"kind": "factual", "claims": [
         {"claim": "x", "type": "fact", "sentences": [1], "verdict": "supported", "passages": ["1a"]},
-        {"claim": "y leads", "type": "analysis", "sentences": [1], "verdict": "inferred_b", "passages": ["1a"]},
+        {"claim": "y leads", "type": "analysis", "sentences": [1], "verdict": "inferred", "passages": ["1a"]},
         {"claim": "z", "sentences": [1], "verdict": "unsupported", "passages": []}]},
         "", False, "paragraph_audit", "3")
     interpret(pa)
@@ -603,7 +603,7 @@ async def test_recheck_judges_unsupported_facts_on_checker_picked_passages(ctx):
     ctx.fake.recheck = {"Glencore dominates": {"verdict": "supported", "passages": ["1a"]}}
     audit = await citation_audit(make_archive(), ctx)
     rechecks = [p for p in ctx.fake.prompts if "not fully supported by the material checked" in p]
-    # Paragraph 1: only "China refines 65%" (inferred_b); paragraph 2: both
+    # Paragraph 1: only "China refines 65%" (inferred); paragraph 2: both
     # unsupported facts. Uncited paragraphs get no recheck.
     assert len(rechecks) == 2
     second = next(p for p in rechecks if "Glencore" in p)

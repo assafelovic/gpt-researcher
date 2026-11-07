@@ -9,14 +9,6 @@
           "claim": {
             "type": "integer"
           },
-          "verdict": {
-            "type": "string",
-            "enum": [
-              "supported",
-              "contradicted",
-              "unsupported"
-            ]
-          },
           "passages": {
             "type": "array",
             "items": {
@@ -25,13 +17,21 @@
           },
           "evidence": {
             "type": "string"
+          },
+          "verdict": {
+            "type": "string",
+            "enum": [
+              "supported",
+              "contradicted",
+              "unsupported"
+            ]
           }
         },
         "required": [
           "claim",
-          "verdict",
           "passages",
-          "evidence"
+          "evidence",
+          "verdict"
         ],
         "additionalProperties": false
       }

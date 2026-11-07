@@ -29,17 +29,6 @@
               "type": "integer"
             }
           },
-          "verdict": {
-            "type": "string",
-            "enum": [
-              "supported",
-              "inferred_a",
-              "inferred_b",
-              "inferred_c",
-              "unsupported",
-              "contradicted"
-            ]
-          },
           "passages": {
             "type": "array",
             "items": {
@@ -48,15 +37,24 @@
           },
           "evidence": {
             "type": "string"
+          },
+          "verdict": {
+            "type": "string",
+            "enum": [
+              "supported",
+              "inferred",
+              "unsupported",
+              "contradicted"
+            ]
           }
         },
         "required": [
           "claim",
           "type",
           "sentences",
-          "verdict",
           "passages",
-          "evidence"
+          "evidence",
+          "verdict"
         ],
         "additionalProperties": false
       }

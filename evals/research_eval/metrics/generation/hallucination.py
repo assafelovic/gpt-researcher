@@ -27,7 +27,9 @@ class Faithfulness(_AuditMetric):
     shown, and becomes "supported" only when one of them plainly states it, so
     a claim is not judged only on what the agent chose to cite.
 
-        supported 1 | inferred 0.5 / 0.4 / 0.3 | unsupported 0 | contradicted -1
+        supported 1 | inferred 0.5 | unsupported 0 | contradicted -1
+
+    (Before paragraph_audit v6, inferred had three levels: 0.5 / 0.4 / 0.3.)
 
     Only fact claims make the value. An analysis claim is the writer's own
     evaluation or conclusion, which a source rarely states outright, so
