@@ -68,8 +68,10 @@ cite it.
 ### How far material covers a key point
 - full: the passages give two or more concrete facts on the point itself.
 - partial: they give one concrete fact on it, or only name it or say
-  something general about it. When the point asks for a distribution, a
-  trend or a comparison, a few separate examples are partial.
+  something general about it. When the point asks for a distribution or
+  a comparison (by region, by segment, between actors), a few separate
+  examples are partial; totals with a comparison to an earlier period
+  count as facts on the point.
 - none: no passage says anything about the point.
 
 Example, for the core query "How are European EV makers securing battery
