@@ -64,8 +64,7 @@ cite it.
   customers say ...") is a concrete fact.
 - Not concrete facts: estimates, forecasts and outlooks ("is projected
   to", "could handle up to"), definitions, general claims, lists of
-  features or capabilities, a vendor's claims about its own results
-  ("18x savings"), and results of studies about another subject.
+  features or capabilities, and results of studies about another subject.
 
 ## Principles and goals
 

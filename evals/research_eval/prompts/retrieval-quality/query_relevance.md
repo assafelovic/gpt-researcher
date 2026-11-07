@@ -1,6 +1,6 @@
 ---
 id: query_relevance
-version: 10
+version: 11
 used_by: query_relevance
 ---
 
@@ -14,16 +14,6 @@ used_by: query_relevance
 - You are given the core query, its key points, the query under review and
   the material, one passage per page, best matches first.
 
-## First, sort out pages with nothing to judge
-- Only page furniture, a repository or file listing, a video page with no
-  transcript, a job listing or a list of links: relevance 0, substance 0.
-- A vendor's or agency's article on the industry in general, or a personal
-  post (LinkedIn, Medium, Substack): relevance at most 1. A vendor's own
-  docs or prices are judged as usual when the query asks about that
-  vendor's product.
-- The query names a year and the material's facts are two or more years
-  older: relevance at most 1.
-
 ## What to decide
 - key_points: the numbers of the key points the material gives real
   information on. May be empty.
@@ -35,8 +25,10 @@ used_by: query_relevance
   - 1: the material is near the topic but does not give that information:
     background, definitions, another industry or kind of actor, a general
     study, or a vendor's claims about its own product.
-  - 0: every passage is off the subject of the core query, such as job
-    listings, page furniture or another meaning of a word.
+  - 0: every passage is off the subject of the core query or has nothing
+    to judge: job listings, page furniture, a repository or file listing,
+    a video page with no transcript, a list of links, or another meaning
+    of a word.
 - substance_evidence: quote the most concrete fact in the material about
   what the query asks, or say that there is none.
 - substance:
@@ -55,6 +47,8 @@ used_by: query_relevance
   is relevance 1, substance 0.
 - Decide from your evidence: if your relevance_evidence has to say the
   material does not give what is asked, relevance is not 2.
+- The query names a year and the material's facts are two or more years
+  older: relevance is at most 1.
 - Shared words are not shared subject: an article on nursing-home handoff
   software is not about bank call centres because both mention "handoff"
   and "compliance".
