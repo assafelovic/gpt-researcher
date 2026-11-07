@@ -1,128 +1,41 @@
 {
   "type": "object",
   "properties": {
-    "q1": {
-      "type": "object",
-      "properties": {
-        "evidence": {
-          "type": "string"
-        },
-        "score": {
-          "type": "integer",
-          "enum": [
-            0,
-            1,
-            2
-          ]
-        }
-      },
-      "required": [
-        "evidence",
-        "score"
-      ],
-      "additionalProperties": false
+    "key_points": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      }
     },
-    "q2": {
-      "type": "object",
-      "properties": {
-        "evidence": {
-          "type": "string"
-        },
-        "key_points": {
-          "type": "array",
-          "items": {
-            "type": "integer"
-          }
-        }
-      },
-      "required": [
-        "evidence",
-        "key_points"
-      ],
-      "additionalProperties": false
+    "relevance_evidence": {
+      "type": "string"
     },
-    "q3": {
-      "type": "object",
-      "properties": {
-        "evidence": {
-          "type": "string"
-        },
-        "score": {
-          "type": "integer",
-          "enum": [
-            0,
-            1,
-            2
-          ]
-        }
-      },
-      "required": [
-        "evidence",
-        "score"
-      ],
-      "additionalProperties": false
-    },
-    "q4": {
-      "type": "object",
-      "properties": {
-        "evidence": {
-          "type": "string"
-        },
-        "unique": {
-          "type": "boolean"
-        }
-      },
-      "required": [
-        "evidence",
-        "unique"
-      ],
-      "additionalProperties": false
-    },
-    "q5": {
-      "type": "object",
-      "properties": {
-        "evidence": {
-          "type": "string"
-        },
-        "score": {
-          "type": "integer",
-          "enum": [
-            0,
-            1,
-            2
-          ]
-        }
-      },
-      "required": [
-        "evidence",
-        "score"
-      ],
-      "additionalProperties": false
-    },
-    "total": {
+    "relevance": {
       "type": "integer",
       "enum": [
         0,
         1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-        9,
-        10
+        2
+      ]
+    },
+    "substance_evidence": {
+      "type": "string"
+    },
+    "substance": {
+      "type": "integer",
+      "enum": [
+        0,
+        1,
+        2
       ]
     }
   },
   "required": [
-    "q1",
-    "q2",
-    "q3",
-    "q4",
-    "q5",
-    "total"
+    "key_points",
+    "relevance_evidence",
+    "relevance",
+    "substance_evidence",
+    "substance"
   ],
   "additionalProperties": false
 }

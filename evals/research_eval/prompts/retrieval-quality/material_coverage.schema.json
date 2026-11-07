@@ -9,14 +9,6 @@
           "point": {
             "type": "integer"
           },
-          "coverage": {
-            "type": "string",
-            "enum": [
-              "full",
-              "partial",
-              "none"
-            ]
-          },
           "passages": {
             "type": "array",
             "items": {
@@ -25,13 +17,21 @@
           },
           "evidence": {
             "type": "string"
+          },
+          "coverage": {
+            "type": "string",
+            "enum": [
+              "full",
+              "partial",
+              "none"
+            ]
           }
         },
         "required": [
           "point",
-          "coverage",
           "passages",
-          "evidence"
+          "evidence",
+          "coverage"
         ],
         "additionalProperties": false
       }

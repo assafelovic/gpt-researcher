@@ -1,49 +1,47 @@
 ---
 id: query_relevance
-version: 4
+version: 5
 used_by: query_relevance
 ---
 
-You are auditing one retrieval step of a research agent. The agent searched the
-web with a sub-query and kept the material shown below. Judge the sub-query and
-its material TOGETHER as one unit, against the core research question. Answer
-the five questions IN ORDER. For every answer quote the sub-query or material
-text it rests on.
+# Task: query relevance
 
-Q1 Topic relevance: does the unit serve the core question? 0 = no, 1 = partly, 2 = yes.
-Q2 Key points: which of the numbered key points does the material give real
-   information about? List their numbers (may be empty).
-Q3 Specificity: is the material concrete (facts, figures, named entities,
-   dates) rather than generic? 0 / 1 / 2.
-Q4 Uniqueness: compared with the other sub-queries listed (the ones at the same
-   level of the research plan), does this one go after something they do not?
-   Answer false ONLY when another listed sub-query asks for the same
-   information in other words, so that both would be answered by the same
-   facts. A different perspective, a different source or authority, or a
-   separate subtopic about the same object counts as unique, even when the
-   wording overlaps heavily. true / false.
-Q5 Usability: could a writer cite this material directly in the report? 0 / 1 / 2.
+## Goal
+- You are auditing one retrieval step of a research agent: one query it
+  searched and the material it kept for it.
+- Judge the query and its material together, as one unit, against the core
+  query.
+- You are given the core query, its key points, the query under review and
+  the material, one passage per page, best matches first.
 
-Then give "total" from 0 to 10: your overall judgement of how much this unit
-contributes to answering the core question.
+## What to decide
+- key_points: the numbers of the key points the material gives real
+  information on. May be empty.
+- relevance_evidence: quote the words of the material that decide its
+  relevance.
+- relevance:
+  - 2: most passages are about what the core query asks.
+  - 1: some passages are; the rest are off topic or only background.
+  - 0: no passage helps answer the core query.
+- substance_evidence: quote the most concrete fact in the material, or say
+  that there is none.
+- substance:
+  - 2: the passages give concrete facts a writer could cite: figures,
+    dates, named actors, rules, decisions or results.
+  - 1: a few such facts among general text.
+  - 0: general text, marketing, page furniture or cut-off text only.
 
-Examples (abbreviated):
-- Good (total 9): core "EV battery supply chain risks"; sub-query "cobalt supply
-  concentration DRC 2024"; material gives DRC's share of cobalt output and named
-  refiners. Q1=2, Q2=[2], Q3=2, Q4=true, Q5=2.
-- Medium (total 5): same core; sub-query "electric vehicles overview"; material
-  is a general explainer with one paragraph on batteries. Q1=1, Q2=[], Q3=1,
-  Q4=false, Q5=1.
-- Poor (total 1): same core; sub-query "best EV models to buy"; material is car
-  reviews. Q1=0, Q2=[], Q3=1, Q4=true, Q5=0.
+## Judging the unit
+- Relevance is to the core query, not to the query under review: a query
+  can find exactly what it asked for and still not help the core query.
+- Judge relevance and substance apart: an on-topic explainer with no facts
+  is relevance 2, substance 0.
+- Other queries of the same plan are not shown: whether two queries repeat
+  each other is judged elsewhere.
 
+## Answer format
 Return ONLY JSON:
-{"q1": {"evidence": "...", "score": 0},
-  "q2": {"evidence": "...", "key_points": []},
-  "q3": {"evidence": "...", "score": 0},
-  "q4": {"evidence": "...", "unique": true},
-  "q5": {"evidence": "...", "score": 0},
-  "total": 0}
+{"key_points": [2], "relevance_evidence": "...", "relevance": 2, "substance_evidence": "...", "substance": 1}
 
 @user
 
@@ -53,10 +51,7 @@ Core question:
 Key points:
 {key_points}
 
-Other sub-queries at the same level of the plan:
-{other_queries}
-
-Sub-query under review:
+Query under review:
 {query}
 
 Material retrieved for it:

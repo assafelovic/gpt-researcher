@@ -376,7 +376,7 @@ class MaterialCoverage(Metric):
     """
 
     name, category = "material_coverage", "retrieval.retrieval_quality"
-    version = "1"
+    version = "2"           # 2: retrieval-quality skill as system prompt; evidence before the level
     uses_llm = True
     prompts = (MATERIAL_COVERAGE, KEY_POINTS)
     PASSAGES = 6

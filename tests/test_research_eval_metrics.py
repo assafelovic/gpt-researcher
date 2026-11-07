@@ -105,7 +105,7 @@ class FakeJudge:
             return json.dumps({"opinions": []})
         if "List the distinct aspects" in prompt:
             return json.dumps({"key_points": ["cobalt supply", "lithium refining", "recycling policy"]})
-        if "retrieved covers, before any report" in prompt:
+        if "the retrieved material covers, before any report" in prompt:
             # Covered when one of the point's own passages names its first word.
             blocks = prompt.split("Key point ")[1:]
             out = []
@@ -151,9 +151,10 @@ class FakeJudge:
                 out.append({"query": int(n), "evidence": "", "repeats": rep})
             return json.dumps({"queries": out[:-1] if any("drop-last" in q for _, q in qs) else out})
         if "auditing one retrieval step" in prompt:
-            q = re.search(r"Sub-query under review:\n(.*)\n", prompt).group(1)
-            return json.dumps({"total": 8 if "cobalt" in q else 4,
-                               "q4": {"evidence": "", "unique": "cobalt" in q}})
+            q = re.search(r"Query under review:\n(.*)\n", prompt).group(1)
+            return json.dumps({"key_points": [1] if "cobalt" in q else [], "relevance_evidence": "",
+                               "relevance": 2 if "cobalt" in q else 1, "substance_evidence": "",
+                               "substance": 2 if "cobalt" in q else 0})
         if "used information from a source passage" in prompt:
             return json.dumps({"used": "Lithium" in prompt.split("Report sentences")[0], "evidence": ""})
         if "Rate how authoritative each domain is" in prompt:
@@ -532,12 +533,18 @@ async def test_source_utilization_uncited_overlap_is_echo_not_use(ctx):
 async def test_query_relevance(ctx):
     r = await QueryRelevance().score(make_archive(), ctx)
     scores = {q["query"]: q["score"] for q in r.details["per_query"]}
-    assert scores == {"cobalt supply concentration": 0.8, "lithium refining capacity": 0.4}
+    assert scores == {"cobalt supply concentration": 1.0, "lithium refining capacity": 0.25}
     assert r.details["no_material"] == ["lithium refining capacity worldwide"]
-    assert r.value == pytest.approx(0.6)
-    prompt = next(p for p in ctx.fake.prompts if "Sub-query under review:\ncobalt" in p)
-    assert "1. cobalt supply" in prompt and "- lithium refining capacity" in prompt
-    assert CORE not in prompt.split("Other sub-queries at the same level of the plan:")[1].split("Sub-query under review")[0]
+    assert r.value == pytest.approx(0.625)
+    prompt = next(p for p in ctx.fake.prompts if "Query under review:\ncobalt" in p)
+    assert "1. cobalt supply" in prompt and "lithium refining capacity" not in prompt
+
+
+def test_query_relevance_unit_score_comes_from_the_levels():
+    s = QueryRelevance.unit_score
+    assert s({"relevance": 0, "substance": 2}) == 0.0
+    assert s({"relevance": 2, "substance": 1}) == 0.75
+    assert s({"relevance": 2, "substance": 7}) is None and s("x") is None
 
 
 async def test_query_relevance_material_and_initial_search(ctx):
@@ -633,7 +640,7 @@ def test_query_layer_counts_researchers_and_plans():
     assert layers == {"q0": 0, "q1": 1, "i1": 1, "q2": 1, "q3": 2, "q4": 2}
 
 
-async def test_query_relevance_compares_only_the_same_layer(ctx):
+async def test_query_relevance_records_the_layer(ctx):
     a = make_archive()
     cid = {k: _chunk(k)[0] for k in CHUNK_TEXT}
     a.data["spans"] += [
@@ -648,10 +655,6 @@ async def test_query_relevance_compares_only_the_same_layer(ctx):
     layer = {q["query"]: q["layer"] for q in r.details["per_query"]}
     assert layer == {"cobalt supply concentration": 1, "lithium refining capacity": 1,
                      "cobalt mine ownership Congo": 2}
-    others = lambda q: next(p for p in ctx.fake.prompts if f"Sub-query under review:\n{q}" in p
-                            ).split("same level of the plan:")[1].split("Sub-query under review")[0]
-    assert "cobalt mine ownership" not in others("cobalt supply concentration")
-    assert others("cobalt mine ownership Congo").strip() == "(none)"
 
 
 def test_concentration_measures():
@@ -825,7 +828,7 @@ async def test_material_coverage_grades_key_points_on_evaluator_picked_passages(
     assert per["recycling policy"]["coverage"] == "none"
     assert r.value == pytest.approx(2 / 3, abs=1e-3)
     assert per["cobalt supply"]["urls"] == ["https://www.reuters.com/cobalt"]
-    prompt = next(p for p in ctx.fake.prompts if "retrieved covers" in p)
+    prompt = next(p for p in ctx.fake.prompts if "the retrieved material covers" in p)
     assert "Weather forecasts" not in prompt.split("Key point 1:")[1].split("Key point 2:")[0]
     assert r.details["unanswered"] == 0 and r.llm["requests"] == 1
 

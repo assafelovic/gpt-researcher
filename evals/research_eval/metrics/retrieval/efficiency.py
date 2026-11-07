@@ -191,9 +191,16 @@ def sources_seen(steps: list[dict]) -> bool:
 class QueryRelevance(Metric):
     """Judge rubric on each search step packaged with its material.
 
-    One call per search step that returned material (Q1 topic relevance, Q2
-    key points hit, Q3 specificity, Q4 uniqueness, Q5 usability, then a 0-10
-    total). v1 uses only the judge's total: value = mean(total / 10).
+    One call per search step that returned material. The judge picks levels
+    and the code scores them, so no free 0-10 number drifts between calls:
+    relevance to the core query (0/1/2), substance (0/1/2: concrete facts a
+    writer could cite) and the key points the material informs (diagnostic).
+
+        unit score = 0 if relevance == 0 else (relevance + substance) / 4
+        value      = mean unit score
+
+    Whether two queries repeat each other is subquery_redundancy's job, so
+    the judge no longer sees the other queries of the plan (v4 asked it).
 
     Units: every executed sub-query except the run's core query, plus each
     researcher's initial (planning) search, which is often where the most-cited
@@ -208,13 +215,13 @@ class QueryRelevance(Metric):
     """
 
     name, category = "query_relevance", "retrieval.retrieval_quality"
-    version = "4"           # 4: Q4 counts only reworded requests for the same facts
+    version = "5"           # 4: Q4 counts only reworded requests for the same facts; 5: levels scored by code, no total, no Q4
     uses_llm = True
     prompts = (QUERY_RELEVANCE, KEY_POINTS)
     CHUNK_CHARS, MATERIAL_CHARS = 1500, 12000
 
     async def score(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:
-        # Shared with subquery_redundancy (it reads Q4), so each scoring judges once.
+        # Memoised so a scoring judges each step once.
         memo = ctx.archive_memo(archive)
         if "query_relevance" not in memo:
             memo["query_relevance"] = await self._score(archive, ctx)
@@ -234,13 +241,7 @@ class QueryRelevance(Metric):
             return self.skip("no key points", key_points=provenance)
         judged = [u for u in units if u.chunk_ids]
         empty = [u.query for u in units if not u.chunk_ids]
-        # Uniqueness (Q4) is judged against the same layer of the query tree
-        # only: a parent and its own children overlap by design.
         layer = {u.span_id: archive.query_layer(u.span_id) for u in units}
-        by_layer: dict[int, list[str]] = {}
-        for u in units:
-            if u.kind == "sub_query":
-                by_layer.setdefault(layer[u.span_id], []).append(u.query)
 
         async def judge_one(u):
             material, shown = self._material(archive, u)
@@ -249,19 +250,13 @@ class QueryRelevance(Metric):
             prompt = QUERY_RELEVANCE.render(
                 question=archive.query,
                 key_points="\n".join(f"{i}. {p}" for i, p in enumerate(points, 1)),
-                other_queries="\n".join(f"- {q}" for q in dict.fromkeys(by_layer.get(layer[u.span_id], []))
-                                         if q != u.query) or "(none)",
                 query=label, material=material)
             return u, shown, await ctx.judge.ask(QUERY_RELEVANCE.id, QUERY_RELEVANCE.version, prompt)
 
         results = await ctx.gather(judge_one(u) for u in judged)
         per_query, scores = [], []
         for u, shown, r in results:
-            total = r.parsed.get("total") if isinstance(r.parsed, dict) else None
-            try:
-                norm = max(0.0, min(1.0, float(total) / 10))
-            except (TypeError, ValueError):
-                norm = None
+            norm = self.unit_score(r.parsed)
             if norm is not None:
                 scores.append(norm)
             per_query.append({"span_id": u.span_id, "kind": u.kind, "query": u.query,
@@ -277,6 +272,15 @@ class QueryRelevance(Metric):
             res.skipped = "no sub-query returned material"
         res.llm = self.llm_record(ctx, [r for _, _, r in results])
         return res
+
+    @staticmethod
+    def unit_score(parsed) -> float | None:
+        if not isinstance(parsed, dict):
+            return None
+        rel, sub = parsed.get("relevance"), parsed.get("substance")
+        if rel not in (0, 1, 2) or sub not in (0, 1, 2):
+            return None
+        return 0.0 if rel == 0 else (rel + sub) / 4
 
     def _material(self, archive: RunArchive, unit) -> tuple[str, dict]:
         """One best-matching chunk per URL, best URLs first, within the budget."""
