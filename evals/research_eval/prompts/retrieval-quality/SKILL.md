@@ -59,15 +59,17 @@ cite it.
 
 ### Concrete facts
 - A concrete fact is a figure, a date, or a named deal, organisation, rule,
-  product or result, stated as what is or was.
-- Not concrete facts: forecasts and outlooks ("is projected to", "will
-  likely"), definitions, general claims, and results of studies about
-  another subject.
+  product or result, stated as what is or was. A survey result ("72% of
+  customers say ...") is a concrete fact.
+- Not concrete facts: estimates, forecasts and outlooks ("is projected
+  to", "could handle up to"), definitions, general claims, lists of
+  features or capabilities, and results of studies about another subject.
 
 ### How far material covers a key point
 - full: the passages give two or more concrete facts on the point itself.
 - partial: they give one concrete fact on it, or only name it or say
-  something general about it.
+  something general about it. When the point asks for a distribution, a
+  trend or a comparison, a few separate examples are partial.
 - none: no passage says anything about the point.
 
 Example, for the core query "How are European EV makers securing battery

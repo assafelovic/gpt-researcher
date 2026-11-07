@@ -1,6 +1,6 @@
 ---
 id: query_relevance
-version: 7
+version: 8
 used_by: query_relevance
 ---
 
@@ -17,14 +17,17 @@ used_by: query_relevance
 ## What to decide
 - key_points: the numbers of the key points the material gives real
   information on. May be empty.
-- relevance_evidence: quote the words of the material that decide its
-  relevance.
+- relevance_evidence: quote the words of the material that give what the
+  query under review asks for, or say that it is not there.
 - relevance:
-  - 2: the material gives information the core query asks for, about the
-    same subject: the same industry, the same kind of actor.
-  - 1: the material is near the topic but does not give that information:
-    background, definitions, another industry or kind of actor, a general
-    study, or a vendor's claims about its own product.
+  - 2: the material gives what the query under review asks for (the
+    multiples, the ranking, the named bank's deployment), and that serves
+    the core query, about the same subject: the same industry, the same
+    kind of actor.
+  - 1: the material is on the topic of the core query but does not give
+    what the query asks for: background, definitions, another industry or
+    kind of actor, a general study, a vendor's claims about its own
+    product, or a listing page with no content.
   - 0: every passage is off the subject of the core query, such as job
     listings, page furniture or another meaning of a word.
 - substance_evidence: quote the most concrete fact in the material about
@@ -39,12 +42,13 @@ used_by: query_relevance
     text.
 
 ## Judging the unit
-- Relevance is to the core query, not to the query under review: a query
-  can find exactly what it asked for and still not help the core query.
+- A query can find exactly what it asked for and still not help the core
+  query: then relevance is 1.
 - Judge relevance and substance apart: an on-topic explainer with no facts
   is relevance 1, substance 0.
-- Decide from your evidence: if your relevance_evidence has to say the
-  material does not give what is asked, relevance is not 2.
+- Decide from your evidence: relevance 2 only when your relevance_evidence
+  quotes what the query asks for. If it has to say that is not there,
+  relevance is 1 or 0.
 - Shared words are not shared subject: an article on nursing-home handoff
   software is not about bank call centres because both mention "handoff"
   and "compliance".

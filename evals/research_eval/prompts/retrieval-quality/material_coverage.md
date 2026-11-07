@@ -1,6 +1,6 @@
 ---
 id: material_coverage
-version: 5
+version: 6
 used_by: material_coverage
 ---
 
