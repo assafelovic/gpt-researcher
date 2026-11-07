@@ -167,6 +167,24 @@ Thresholds (0.6 redundancy, 0.5 for the utilization chunk diagnostic and for the
 first guesses; `details` keeps the underlying similarities so they can be tuned
 against human labels. Override per scoring run via `ScoringContext.options`.
 
+## Shared judgments: metrics that move together
+
+Some metrics read the same judge answers, so one change in that judge
+(stricter, more lenient, a new prompt) moves all of them at once. Read them as
+one piece of evidence, not several:
+
+| Shared judgment | Metrics that read it | What moves them together |
+|---|---|---|
+| citation audit (paragraph_audit + claim_recheck, one call per paragraph) | citation_recall, citation_precision, effective_citations, faithfulness, source_utilization (chunk view) | a claim judged supported or not changes recall, precision (a citation is precise only if it backs a supported claim), effective citations and faithfulness together |
+| frozen key points (dataset/key_points) | decomposition_coverage, material_coverage, query_relevance (diagnostic field only), comprehensiveness | an overlapping or missing key point counts in every one of them |
+| frozen rubrics (dataset/rubrics) | insight, readability | a rubric criterion sets the standard of both passes |
+| domain kinds (domain_authority) | source_authority only | source_diversity counts domains by rule, not kinds |
+
+Each dimension is penalised by one metric only: authority by
+source_authority (query_relevance does not cap vendor pages), truth against
+the material by the citation audit (insight and readability judge the text
+alone).
+
 ## Implementation notes
 
 - **Which URLs are "retrieved".** Source and efficiency metrics use the URLs of the
