@@ -326,13 +326,23 @@ def estimate_embedding_cost(model: str, docs: list) -> float:
     Returns:
         The estimated embedding cost in USD.
     """
-    try:
-        encoding = tiktoken.encoding_for_model(model)
-    except KeyError:
-        # tiktoken only knows OpenAI model names. Non-OpenAI embedding
-        # providers (Ollama, Cohere, Nomic, HuggingFace, ...) raise KeyError
-        # here, which would otherwise abort cost tracking mid-research. Fall
-        # back to the default OpenAI encoding for a best-effort token estimate.
+    if not docs:
+        return 0.0
+
+    if not model or not isinstance(model, str):
         encoding = tiktoken.get_encoding(ENCODING_MODEL)
+    else:
+        try:
+            encoding = tiktoken.encoding_for_model(model)
+        except (KeyError, ValueError):
+            # tiktoken only knows OpenAI model names. Non-OpenAI embedding
+            # providers (Ollama, Cohere, Nomic, HuggingFace, ...) raise KeyError
+            # here, which would otherwise abort cost tracking mid-research. Fall
+            # back to the default OpenAI encoding for a best-effort token estimate.
+            encoding = tiktoken.get_encoding(ENCODING_MODEL)
+
+    if isinstance(docs, (str, bytes)) or not hasattr(docs, "__iter__"):
+        docs = [docs]
+
     total_tokens = sum(len(encoding.encode(str(doc))) for doc in docs)
     return total_tokens * EMBEDDING_COST
