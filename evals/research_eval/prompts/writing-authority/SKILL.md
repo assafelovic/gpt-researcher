@@ -117,7 +117,10 @@ How to tell them apart:
   are unsupported, not contradicted.
 - An analysis claim is judged the same way: inferred when the material backs
   its premises and the conclusion is a reasonable step from them, unsupported
-  when it goes further.
+  when it goes further. A hedged conclusion ("may", "could", "is likely to")
+  is inferred when the material gives the reason for it.
+- Words of degree ("many", "significant", "heavily") need material that shows
+  the degree; one example does not show "many".
 
 Examples (material: "CATL shipped 321 GWh in 2023. BYD shipped 159 GWh."):
 - "CATL shipped more than twice as much as BYD in 2023." -> inferred
@@ -128,10 +131,22 @@ Examples (material: "CATL shipped 321 GWh in 2023. BYD shipped 159 GWh."):
   makers are given)
 - "CATL shipped 280 GWh in 2023." -> contradicted
 
+More examples of "inferred":
+- Putting facts together. Material: "the plant assembles cells, builds
+  modules and tests finished packs on one site". Claim: "The plant covers
+  several stages of battery production." -> inferred
+- A direct consequence. Material: "from 2027 every EV battery sold in the EU
+  must carry a battery passport". Claim: "Carmakers selling in the EU will
+  need passport data for their batteries." -> inferred
+- A hedged conclusion. Material: "the new rules cap the cobalt content of
+  cells sold from 2028". Claim: "The cap may push makers towards low-cobalt
+  chemistries." -> inferred
+
 ## Principles
 1. Judge by the material words, not by how plausible the claim sounds.
-2. The evidence comes first: quote, then decide. If your quote does not
-   show the claim, the verdict is not supported.
+2. The evidence comes first: read all the passages shown, quote the ones
+   that back the claim best, then decide. If your quote does not show the
+   claim, the verdict is not supported.
 3. A statement about one subject does not back the same claim about another
    (retail is not banking; Europe is not the world; one example is not a
    general rule).

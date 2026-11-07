@@ -1,6 +1,6 @@
 ---
 id: paragraph_audit
-version: 7
+version: 8
 used_by: citation audit (citation_audit.py), source_utilization, citation_recall, citation_precision, effective_citations, faithfulness
 ---
 

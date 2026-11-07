@@ -1,6 +1,6 @@
 ---
 id: claim_recheck
-version: 6
+version: 7
 used_by: citation audit recheck (citation_audit.py)
 ---
 
