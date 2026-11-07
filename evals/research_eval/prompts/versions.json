@@ -7,6 +7,18 @@
     "version": "2",
     "hash": "0792d43b553a"
   },
+  "key_points_layered": {
+    "version": "1",
+    "hash": "97f94fb89bff"
+  },
+  "key_points_merge": {
+    "version": "1",
+    "hash": "cc702d383243"
+  },
+  "key_points_structured": {
+    "version": "1",
+    "hash": "97f662401103"
+  },
   "subquery_redundancy": {
     "version": "14",
     "hash": "7c5da586be80"
