@@ -1,6 +1,6 @@
 ---
 id: material_coverage
-version: 3
+version: 4
 used_by: material_coverage
 ---
 
@@ -26,8 +26,10 @@ used_by: material_coverage
 - Naming an example that belongs to the point (a company, a place, a
   product) does not cover it unless the passage says something about the
   point.
-- If your evidence has to say the passages do not give information on the
-  point, the coverage is "none".
+- Decide from your evidence: if it quotes a concrete fact on the point,
+  the coverage is "full"; if it quotes only the point's name or general
+  statements, "partial"; if it has to say the passages do not address the
+  point, "none".
 
 ## Answer format
 Return ONLY JSON, one entry per key point, in order:

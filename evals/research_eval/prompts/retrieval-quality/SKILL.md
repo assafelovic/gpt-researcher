@@ -58,16 +58,16 @@ cite it.
   lists of links, text cut off before it says anything.
 
 ### How far material covers a key point
-- full: the passages give real information on the point (facts, figures,
-  explanations), enough for a writer to write a paragraph on it.
-- partial: the passages touch the point only briefly or vaguely: they name
-  it, or give one fact with no detail.
-- none: no passage gives information on the point.
+- full: the passages give at least one concrete fact on the point itself:
+  a figure, a date, a named actor, deal, rule, product or result.
+- partial: they name the point or say something general about it, but give
+  no concrete fact on it.
+- none: no passage says anything about the point.
 
 Example, for the core query "How are European EV makers securing battery
 materials?" and the point "long-term lithium supply contracts":
 - full: "In 2024 BMW signed a EUR 285m contract for lithium hydroxide from
-  2026 to 2031, at prices indexed to ..."
+  2026 to 2031."
 - partial: "Automakers are increasingly signing long-term contracts with
   miners."
 - none: a passage on cobalt mining in Congo, or one that names lithium
