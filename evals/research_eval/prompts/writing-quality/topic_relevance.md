@@ -1,6 +1,6 @@
 ---
 id: topic_relevance
-version: 5
+version: 6
 used_by: topic_relevance
 ---
 
@@ -30,7 +30,8 @@ used_by: topic_relevance
 - Generic statements that would fit any report ("this is a complex and
   evolving field") are padding: "no".
 - The report's notes about itself (its method, its sources, its date, its
-  scope) are "idk": they neither answer nor leave the question.
+  scope, a table of contents or list of its section headings) are "idk": they
+  neither answer nor leave the question.
 
 ## Answer format
 Return ONLY JSON, one entry per paragraph, in order:
