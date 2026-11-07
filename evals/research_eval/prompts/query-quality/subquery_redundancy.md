@@ -1,6 +1,6 @@
 ---
 id: subquery_redundancy
-version: 12
+version: 13
 used_by: subquery_redundancy
 ---
 
@@ -15,6 +15,7 @@ used_by: subquery_redundancy
 - Shared wording is not enough.
 - Check what facts each query asks for that the other does not. Wording, word order, a year, synonyms ("top vendors", "leading companies") and the example names in a list ("including CATL, BYD, LG") are not facts asked for: when only they differ, it is a repeat. Long keyword queries that list the same topics in another order are repeats.
 - Different names make a different query only when the query is about those named actors themselves ("CATL's recycling plants" and "BYD's recycling plants").
+- Two comparisons of the same kind of thing are a repeat when the things compared mostly overlap ("compare CATL, BYD, LG and Panasonic cell prices" and "CATL, BYD, LG and CALB cell price comparison"): a name or two more or less is wording. Asking for a source ("official pricing pages") is wording too.
 - These are not repeats:
   - a different perspective or source (the Commission's view, industry's criticism);
   - a different period or place, or a different type of actor (banks and insurers; the EU and the US);
