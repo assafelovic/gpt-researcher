@@ -854,3 +854,14 @@ def test_company_docs_and_investor_subdomains_are_scored_by_rule():
     assert rule_score("investor.uber.com") == (0.6, "company-primary")
     assert rule_score("ir.com") is None
     assert rule_score("pinecone.io") is None
+
+
+async def test_source_authority_shows_the_question_and_page_openings(ctx):
+    from evals.research_eval.metrics.retrieval.source import rule_score
+    await SourceAuthority().score(make_archive(), ctx)
+    [prompt] = [p for p in ctx.fake.prompts if "Rate how authoritative each domain is" in p]
+    domains = prompt.split("Domains:\n")[1]
+    assert "Core question:\n" in prompt and CORE in prompt.split("Domains:")[0]
+    assert domains.startswith("- weather-blog.com\n  page: ") and "\n  opening: " in domains
+    # Wikipedia is no longer a rule tier: the judge sees its articles.
+    assert rule_score("en.wikipedia.org") is None

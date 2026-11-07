@@ -142,7 +142,6 @@ def rule_score(domain: str) -> tuple[float, str] | None:
         return 0.9, "high-authority"
     if any(d == h or d.endswith("." + h) for h in _MAJOR_NEWS_DOMAINS):
         return 0.8, "major-news"
-    if "wikipedia.org" in d:         return 0.75, "wikipedia"
     if d.split(".", 1)[0] in _PRIMARY_COMPANY_SUBDOMAINS and d.count(".") >= 2:
         return 0.6, "company-primary"
     return None
@@ -152,7 +151,42 @@ def rule_score(domain: str) -> tuple[float, str] | None:
 # same scale as the rule tiers above. Neighbouring kinds the judge wavers
 # between (company / unknown / low_editorial) sit 0.1 apart or less.
 KIND_SCORES = {"official": 1.0, "academic": 0.9, "news": 0.8, "specialist": 0.7,
-               "company": 0.4, "low_editorial": 0.3, "unknown": 0.3, "unreliable": 0.1}
+               "company": 0.4, "low_editorial": 0.3, "unknown": 0.3, "off_field": 0.3,
+               "unreliable": 0.1}
+
+AUTHORITY_PAGES = 3         # pages per domain shown to the judge
+OPENING_WORDS = 200         # of each page's first retrieved passage
+DOMAINS_PER_CALL = 10
+
+
+def domain_pages(archive: RunArchive, domain: str, cited: list[str]) -> list[dict]:
+    """Up to AUTHORITY_PAGES pages the run retrieved from the domain, cited
+    ones first: title and the opening words of the first retrieved passage."""
+    urls = [u for u in dict.fromkeys(cited + list(archive.retrieved_urls)) if domain_of(u) == domain]
+    pages = []
+    for u in urls:
+        cids = archive.chunks_by_url.get(normalize_url(u), [])
+        if not cids:
+            continue
+        first = archive.chunks[cids[0]]
+        words = " ".join(str(first.get("content") or "").split()).split(" ")
+        pages.append({"url": u, "title": " ".join(str(first.get("title") or "").split()),
+                      "opening": " ".join(words[:OPENING_WORDS])})
+        if len(pages) == AUTHORITY_PAGES:
+            break
+    return pages
+
+
+def render_domains(archive: RunArchive, domains: list[str], cited: list[str]) -> str:
+    blocks = []
+    for d in domains:
+        lines = [f"- {d}"]
+        for p in domain_pages(archive, d, cited):
+            lines.append(f"  page: {p['title'] or '(no title)'}")
+            if p["opening"]:
+                lines.append(f"  opening: {p['opening']}")
+        blocks.append("\n".join(lines))
+    return "\n\n".join(blocks)
 
 
 def fallback_score(domain: str) -> tuple[float, str]:
@@ -177,20 +211,28 @@ class SourceAuthority(Metric):
     and coverage already score it 0); v2 fell back to the retrieved mean,
     which gave an uncited report an ordinary-looking value.
 
-    Rule tiers first. The judge does not give numbers: it names the kind of
-    each site (official, academic, news, specialist, company, low_editorial,
-    unreliable, unknown) and `KIND_SCORES` turns it into the
+    Rule tiers first (government, universities, listed journals and
+    international bodies, major news, company docs and investor subdomains).
+    The judge does not give numbers: it names the kind of each site
+    (official, academic, news, specialist, company, low_editorial,
+    off_field, unreliable, unknown) and `KIND_SCORES` turns it into the
     score, so a domain cannot drift between 0.62 and 0.68 from one call to the
-    next. Deferred domains are looked up in the global domain
-    cache (domain + prompt version), and the rest are scored in ONE batched
-    judge call whose verdicts are cached per domain, so the cost per run
-    falls towards zero as the cache fills. Without a judge, or for domains the
+    next. The judge sees the core question and, per domain, up to 3 pages the
+    run retrieved from it (cited ones first: title and the first 200 words of
+    the first passage), so it can tell what an unknown site is, and whether
+    the site is a source on the question's subject at all (off_field when it
+    is an authority only in an unrelated field). Wikipedia is judged like any
+    other site, from the articles shown. Deferred domains are looked up in the
+    domain cache (domain + core question + prompt version: the pages shown
+    are those of the first run of the question scored), and the rest are
+    scored in batched calls of 10 domains whose verdicts are cached per
+    domain and question. Without a judge, or for domains the
     judge skipped, the rule fallback (.org 0.65 / .com 0.5 / other 0.4) is used
     and the domains are listed in `fallback_domains`.
     """
 
     name, category = "source_authority", "retrieval.source_quality"
-    version = "6"           # 3: no fallback to retrieved sources when nothing is cited; 4: judge names a kind, code scores it; 5: unknown fixed at 0.3; 6: company 0.4, docs/investor subdomains 0.6 by rule
+    version = "7"           # 3: no fallback to retrieved sources when nothing is cited; 4: judge names a kind, code scores it; 5: unknown fixed at 0.3; 6: company 0.4, docs/investor subdomains 0.6 by rule; 7: judge sees the question and page openings, per question; Wikipedia judged
     uses_llm = True
     prompts = (DOMAIN_AUTHORITY,)
 
@@ -201,6 +243,8 @@ class SourceAuthority(Metric):
         if not domains and not cited:
             return self.skip("no retrieved sources")
 
+        question = archive.query.strip()
+        key = lambda d: stable_hash(d, question, DOMAIN_AUTHORITY.version)
         verdicts: dict[str, dict] = {}
         deferred = []
         for d in sorted(set(domains) | set(cited)):
@@ -208,38 +252,48 @@ class SourceAuthority(Metric):
             if rule is not None:
                 verdicts[d] = {"score": rule[0], "tier": rule[1], "basis": "rule"}
                 continue
-            cached = ctx.cache.get("domain", stable_hash(d, DOMAIN_AUTHORITY.version))
+            cached = ctx.cache.get("domain", key(d))
             if cached is not None:
                 verdicts[d] = {**cached, "basis": "domain_cache"}
             else:
                 deferred.append(d)
 
         responses = []
-        if deferred and ctx.judge is not None:
-            r = await ctx.judge.ask(DOMAIN_AUTHORITY.id, DOMAIN_AUTHORITY.version,
-                                    DOMAIN_AUTHORITY.render(domains="\n".join(f"- {d}" for d in deferred)))
-            responses.append(r)
-            items = r.parsed.get("domains") if isinstance(r.parsed, dict) else r.parsed
-            if r.error is not None or not isinstance(items, list):
+        cited_urls_ = [c["url"] for p in body_paragraphs(archive.report) for c in p["citations"]]
+        batches = [deferred[i:i + DOMAINS_PER_CALL] for i in range(0, len(deferred), DOMAINS_PER_CALL)]
+        if batches and ctx.judge is not None:
+            replies = await ctx.gather(
+                ctx.judge.ask(DOMAIN_AUTHORITY.id, DOMAIN_AUTHORITY.version,
+                              DOMAIN_AUTHORITY.render(question=question,
+                                                      domains=render_domains(archive, b, cited_urls_)))
+                for b in batches)
+            responses.extend(replies)
+            failed = [b for b, r in zip(batches, replies) if r.error is not None or not isinstance(
+                (r.parsed.get("domains") if isinstance(r.parsed, dict) else r.parsed), list)]
+            if len(failed) == len(batches):
                 # A failed call must not turn into fallback scores that look like a real result.
+                r = replies[0]
                 res = self.skip("judge call failed", n_sources=len(domains),
-                                unscored_domains=deferred, error=r.error, raw=r.raw[:500])
+                                unscored_domains=deferred, error=r.error, raw=(r.raw or "")[:500])
                 res.llm = self.llm_record(ctx, responses)
                 return res
-            for item in items:
-                try:
-                    d = str(item["domain"]).lower().removeprefix("www.")
-                    kind = str(item["kind"]).strip().lower()
-                except (KeyError, TypeError, ValueError):
+            for batch, r in zip(batches, replies):
+                items = r.parsed.get("domains") if isinstance(r.parsed, dict) else r.parsed
+                if not isinstance(items, list):
                     continue
-                if kind not in KIND_SCORES:
-                    continue
-                score = KIND_SCORES[kind]
-                v = {"score": score, "kind": kind, "tier": f"llm:{kind}:{item.get('reason', '')}",
-                     "judge_model": ctx.judge.model}
-                if d in deferred and not r.dry:
-                    ctx.cache.put("domain", stable_hash(d, DOMAIN_AUTHORITY.version), v)
-                    verdicts[d] = {**v, "basis": "judge"}
+                for item in items:
+                    try:
+                        d = str(item["domain"]).lower().removeprefix("www.")
+                        kind = str(item["kind"]).strip().lower()
+                    except (KeyError, TypeError, ValueError):
+                        continue
+                    if kind not in KIND_SCORES:
+                        continue
+                    v = {"score": KIND_SCORES[kind], "kind": kind, "tier": f"llm:{kind}:{item.get('reason', '')}",
+                         "judge_model": ctx.judge.model}
+                    if d in batch and not r.dry:
+                        ctx.cache.put("domain", key(d), v)
+                        verdicts[d] = {**v, "basis": "judge"}
 
         fallback = []
         for d in deferred:

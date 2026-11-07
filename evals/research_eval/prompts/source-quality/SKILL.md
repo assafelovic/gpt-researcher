@@ -16,14 +16,15 @@ Maintainers' notes (comments are never sent to the judge).
 - The judge names a kind for each domain; the code turns the kind into the
   score (KIND_SCORES in source.py: official 1.0, academic 0.9, news 0.8,
   specialist 0.7, company 0.4, low_editorial 0.3, unknown 0.3, unreliable
-  0.1). docs.*, developer(s).*, investor(s).* and ir.* subdomains score
+  0.1, off_field 0.3). docs.*, developer(s).*, investor(s).* and ir.* subdomains score
   0.6 by rule: v37 asked the judge to split companies into "company" and
   "marketing" from the domain alone, and it flipped 45 vendors between
   0.3 and 0.6 from one call to the next. Those numbers line up with the rule tiers
-  that score .gov, .edu, listed journals, major news and Wikipedia before
-  the judge is asked, so rule and judge scores sit on one scale.
-- Verdicts are cached per domain and prompt version, across all questions:
-  the score is the site's authority in general, not for one question.
+  that score .gov, .edu, listed journals and major news before the judge is
+  asked, so rule and judge scores sit on one scale.
+- Since domain_authority v6 the judge sees the core question and the
+  openings of up to 3 pages per domain, and Wikipedia is judged (it was a
+  0.75 rule). Verdicts are cached per domain, question and prompt version.
 -->
 
 # Source quality judgement
@@ -43,12 +44,15 @@ writing". Your job is to evaluate where the agent's information came from.
   example "reuters.com".
 
 ### What you are given
-- Domain names only, not pages: judge the site as a whole, not one article.
+- The core question the agent was researching.
+- Domains, each with up to three pages the agent retrieved from it: the
+  page title and its opening words. The pages show what kind of site it is;
+  judge the site as a whole, not how good one article is.
 - Some domains are scored by fixed rules before you see the list:
   government sites, universities, major journals and international bodies,
-  major news outlets, Wikipedia, and company docs or investor subdomains
-  such as docs.example.com. The list you get holds the rest, such as
-  company sites, trade press, blogs, regional outlets and niche publishers.
+  major news outlets, and company docs or investor subdomains such as
+  docs.example.com. The list you get holds the rest, such as company sites,
+  trade press, blogs, regional outlets, wikis and niche publishers.
 
 ### Quality of a source
 Authority is how far a careful researcher can rely on what a site publishes
@@ -76,11 +80,15 @@ without checking it elsewhere.
   about competitors.
 - low_editorial: personal blogs, newsletters, press-release wires,
   sites that sell market-size reports on many unrelated industries,
-  directories, aggregators, Q&A and forum sites, wikis, and platforms that
-  host what anyone posts (GitHub, LinkedIn, YouTube, Medium, Substack).
+  directories, aggregators, Q&A and forum sites, and platforms that host
+  what anyone posts (GitHub, LinkedIn, YouTube, Medium, Substack).
+- off_field: a site that may be authoritative, but in a field unrelated to
+  the core question, so it is no authority on it (a medical journal for a
+  question on software licensing).
 - unreliable: content farms, AI-written or SEO pages, sites that copy
   others, sites with no clear owner.
-- unknown: you do not know the site and its name does not show what it is.
+- unknown: you do not know the site, and neither its name nor the pages
+  shown say what it is.
 
 ### Boundaries that need care
 - specialist or company for professional firms: law firms and the Big
@@ -93,6 +101,12 @@ without checking it elsewhere.
 - Platforms: judge the platform, not the account on it. An official
   repository on GitHub or a company page on LinkedIn is still on a
   platform that hosts what anyone posts.
+- Open wikis such as Wikipedia: anyone can edit them, so judge by the
+  articles shown. Detailed reference articles on the question's subject
+  are specialist; thin, promotional or off-subject ones are low_editorial.
+- Field: judge whether the site is a source on the question's subject. A
+  general outlet (news, a government) covers every field; a specialist
+  site in another field is off_field.
 
 ## Principles and goals
 
@@ -103,8 +117,9 @@ without checking it elsewhere.
 
 ## Instructions
 
-- Judge only the domain you are shown and what is widely known about the
-  site. Do not guess a reputation: a site you do not know is "unknown".
+- Judge from what is widely known about the site and from the pages shown.
+  Do not guess a reputation from the name alone: when neither tells you what
+  the site is, it is "unknown".
 - Rest each answer on who runs the site and what kind of site it is.
 - These answers are counted and compared across runs, so the same domain
   must get the same answer every time. When two kinds fit, pick the less
@@ -112,8 +127,8 @@ without checking it elsewhere.
 
 ## Suggested steps
 
-1. Read the domain and recall who runs the site.
-2. Decide what the site mainly publishes and for whom.
+1. Read the domain and the pages shown, and recall who runs the site.
+2. Decide what the site mainly publishes, for whom, and in which field.
 3. Pick the one kind that fits the site as a whole.
 4. Write the reason in a few words: the owner and the kind of site.
 5. Answer in the JSON format the task gives, and nothing else.
