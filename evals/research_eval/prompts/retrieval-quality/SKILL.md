@@ -57,19 +57,25 @@ cite it.
   marketing text, page furniture (menus, cookie notices, sign-up prompts),
   lists of links, text cut off before it says anything.
 
+### Concrete facts
+- A concrete fact is a figure, a date, or a named deal, organisation, rule,
+  product or result, stated as what is or was.
+- Not concrete facts: forecasts and outlooks ("is projected to", "will
+  likely"), definitions, general claims, and results of studies about
+  another subject.
+
 ### How far material covers a key point
-- full: the passages give at least one concrete fact on the point itself:
-  a figure, a date, a named actor, deal, rule, product or result.
-- partial: they name the point or say something general about it, but give
-  no concrete fact on it.
+- full: the passages give two or more concrete facts on the point itself.
+- partial: they give one concrete fact on it, or only name it or say
+  something general about it.
 - none: no passage says anything about the point.
 
 Example, for the core query "How are European EV makers securing battery
 materials?" and the point "long-term lithium supply contracts":
 - full: "In 2024 BMW signed a EUR 285m contract for lithium hydroxide from
-  2026 to 2031."
+  2026 to 2031; in 2025 Stellantis agreed a ten-year offtake with ..."
 - partial: "Automakers are increasingly signing long-term contracts with
-  miners."
+  miners.", or the BMW contract alone.
 - none: a passage on cobalt mining in Congo, or one that names lithium
   only in a list of battery metals.
 

@@ -1,6 +1,6 @@
 ---
 id: query_relevance
-version: 6
+version: 7
 used_by: query_relevance
 ---
 
@@ -20,19 +20,21 @@ used_by: query_relevance
 - relevance_evidence: quote the words of the material that decide its
   relevance.
 - relevance:
-  - 2: the material gives information the core query asks for.
-  - 1: the material is on the topic but does not give that information:
-    background, definitions, related subjects, or a vendor's claims about
-    its own product.
-  - 0: every passage is off the subject of the core query.
+  - 2: the material gives information the core query asks for, about the
+    same subject: the same industry, the same kind of actor.
+  - 1: the material is near the topic but does not give that information:
+    background, definitions, another industry or kind of actor, a general
+    study, or a vendor's claims about its own product.
+  - 0: every passage is off the subject of the core query, such as job
+    listings, page furniture or another meaning of a word.
 - substance_evidence: quote the most concrete fact in the material about
   what the query asks, or say that there is none.
 - substance:
-  - 2: your substance_evidence quotes at least one concrete fact about what
-    the query asks: a figure, a date, or a named deal, organisation, rule
-    or product. One such fact is enough, even among general text.
-  - 1: the material has facts, but only general statements or facts about
-    other subjects than the query asks.
+  - 2: your substance_evidence quotes at least one concrete fact (as
+    defined above) about what the query asks. One is enough, even among
+    general text.
+  - 1: the material has only general statements, forecasts, or concrete
+    facts about other subjects than the query asks.
   - 0: no fact at all: marketing, definitions, page furniture or cut-off
     text.
 
@@ -43,6 +45,9 @@ used_by: query_relevance
   is relevance 1, substance 0.
 - Decide from your evidence: if your relevance_evidence has to say the
   material does not give what is asked, relevance is not 2.
+- Shared words are not shared subject: an article on nursing-home handoff
+  software is not about bank call centres because both mention "handoff"
+  and "compliance".
 - Keep relevance 0 for material wholly off the subject (another industry,
   another meaning of a word): it sets the unit's score to 0.
 - Other queries of the same plan are not shown: whether two queries repeat
