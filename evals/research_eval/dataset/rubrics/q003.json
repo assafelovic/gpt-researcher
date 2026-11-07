@@ -1,0 +1,41 @@
+{
+ "insight": [
+  {
+   "criterion": "Pricing-model comparison",
+   "description": "Compares the platforms’ pricing models and explains how their billing units and cost drivers affect relative cost for different usage patterns.",
+   "weight": 0.3
+  },
+  {
+   "criterion": "Feature trade-offs",
+   "description": "Synthesizes differences in core vector-search capabilities and related features, explaining what users gain or give up across platforms.",
+   "weight": 0.3
+  },
+  {
+   "criterion": "Deployment and scaling implications",
+   "description": "Connects deployment options and scaling or operational characteristics to their practical trade-offs for platform selection.",
+   "weight": 0.2
+  },
+  {
+   "criterion": "Use-case conclusions",
+   "description": "Draws clear, differentiated conclusions about which platforms best fit particular needs, based on the pricing and feature comparisons.",
+   "weight": 0.2
+  }
+ ],
+ "readability": [
+  {
+   "criterion": "Consistent platform comparisons",
+   "description": "Presents pricing and features in a consistent structure across platforms so readers can compare them directly.",
+   "weight": 0.35
+  },
+  {
+   "criterion": "Clear pricing and technical terminology",
+   "description": "Explains pricing units and technical terms needed to understand the comparison without assuming specialist knowledge.",
+   "weight": 0.3
+  },
+  {
+   "criterion": "Logical organization and synthesis",
+   "description": "Moves from an overview of the platforms through pricing and feature comparisons to a clear, easy-to-find takeaway.",
+   "weight": 0.35
+  }
+ ]
+}

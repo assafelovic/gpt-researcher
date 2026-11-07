@@ -1,0 +1,46 @@
+{
+ "insight": [
+  {
+   "criterion": "Cross-deal patterns",
+   "description": "Compares transactions to identify meaningful patterns in deal size, pace, buyer type, subsector, or geography rather than presenting deals as an unconnected list.",
+   "weight": 0.3
+  },
+  {
+   "criterion": "Strategic rationale",
+   "description": "Explains what buyers seek through healthtech acquisitions—such as technology, data, customers, or new capabilities—and connects those motives to the deals discussed.",
+   "weight": 0.25
+  },
+  {
+   "criterion": "Subsector contrasts",
+   "description": "Shows how M&A activity differs across healthtech areas and explains what those differences suggest about the sector’s opportunities or pressures.",
+   "weight": 0.2
+  },
+  {
+   "criterion": "Implications and synthesis",
+   "description": "Draws a clear, appropriately qualified conclusion about what recent deal activity signals for the sector, including relevant trade-offs or uncertainties.",
+   "weight": 0.25
+  }
+ ],
+ "readability": [
+  {
+   "criterion": "Scope and timeframe",
+   "description": "Clearly states what period counts as recent and what kinds of companies or transactions are included as healthtech M&A.",
+   "weight": 0.25
+  },
+  {
+   "criterion": "Logical organization",
+   "description": "Arranges deal examples and analysis in a clear structure, such as by subsector, chronology, or strategic theme, with transitions that make relationships easy to follow.",
+   "weight": 0.3
+  },
+  {
+   "criterion": "Clear deal explanations",
+   "description": "Presents transactions in a consistent, easy-to-understand way and distinguishes announced, pending, and completed deals where relevant.",
+   "weight": 0.25
+  },
+  {
+   "criterion": "Accessible terminology",
+   "description": "Uses concise language and explains specialized M&A or healthtech terms so readers can understand the significance of the activity without unnecessary jargon.",
+   "weight": 0.2
+  }
+ ]
+}

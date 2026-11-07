@@ -1,0 +1,46 @@
+{
+ "insight": [
+  {
+   "criterion": "Basis for leadership",
+   "description": "The report explains what makes a vendor a leader—such as operational scale, deployment maturity, customer adoption, regulatory progress, or geographic reach—and uses those dimensions to compare vendors.",
+   "weight": 0.35
+  },
+  {
+   "criterion": "Vendor differentiation",
+   "description": "The report compares how leading vendors differ in their delivery models, target use cases, and competitive strengths rather than presenting them as an undifferentiated list.",
+   "weight": 0.25
+  },
+  {
+   "criterion": "Market context and constraints",
+   "description": "The report explains how factors such as regulation, operating geography, and technical or commercial limits shape vendors’ opportunities and make leadership context-dependent.",
+   "weight": 0.2
+  },
+  {
+   "criterion": "Synthesis and conclusion",
+   "description": "The report gives a clear, justified takeaway about which vendors stand out and distinguishes established leaders from promising or more limited contenders.",
+   "weight": 0.2
+  }
+ ],
+ "readability": [
+  {
+   "criterion": "Clear vendor landscape structure",
+   "description": "The report organizes vendors in a logical way, using consistent comparison dimensions or useful groupings so readers can readily compare their positions.",
+   "weight": 0.4
+  },
+  {
+   "criterion": "Accessible terminology",
+   "description": "The report explains specialized terms and delivery models that readers need to understand how autonomous drone delivery works and how vendors differ.",
+   "weight": 0.25
+  },
+  {
+   "criterion": "Clear scope",
+   "description": "The report makes clear which companies and activities count as autonomous drone delivery, avoiding confusion with adjacent drone services.",
+   "weight": 0.2
+  },
+  {
+   "criterion": "Easy-to-follow presentation",
+   "description": "Headings, transitions, and any tables or lists guide readers from the market overview to vendor comparisons and the final takeaway.",
+   "weight": 0.15
+  }
+ ]
+}

@@ -1,0 +1,46 @@
+{
+ "insight": [
+  {
+   "criterion": "Synthesize the main regulatory changes",
+   "description": "Connects major EU crypto rules and adjacent measures—such as market regulation, AML, and tax reporting—into a coherent account of how the regulatory landscape is changing.",
+   "weight": 0.3
+  },
+  {
+   "criterion": "Explain practical effects and trade-offs",
+   "description": "Analyzes how the changes affect crypto firms, users, and markets, including relevant compliance burdens, protections, or shifts in business activity.",
+   "weight": 0.3
+  },
+  {
+   "criterion": "Distinguish regulatory layers and scope",
+   "description": "Compares EU-wide rules with national approaches and explains which activities or entities fall within, or outside, the measures discussed.",
+   "weight": 0.2
+  },
+  {
+   "criterion": "Assess timing, gaps, and implications",
+   "description": "Draws clear conclusions about implementation timelines, remaining uncertainty or uneven coverage, and what these mean for the industry's near-term direction.",
+   "weight": 0.2
+  }
+ ],
+ "readability": [
+  {
+   "criterion": "Organize by regulatory theme",
+   "description": "Presents the changes in a logical order, grouping related measures such as market rules, AML, and tax rather than blending distinct regimes together.",
+   "weight": 0.3
+  },
+  {
+   "criterion": "Clarify scope and jurisdiction",
+   "description": "Makes it easy to tell whether each measure applies across the EU or reflects a national approach, and which crypto activities it covers.",
+   "weight": 0.25
+  },
+  {
+   "criterion": "Make timelines easy to follow",
+   "description": "Clearly distinguishes adoption, entry into force, and application dates where relevant, so readers can follow when changes take effect.",
+   "weight": 0.2
+  },
+  {
+   "criterion": "Explain specialist language",
+   "description": "Defines or briefly explains regulatory acronyms and technical terms needed to understand the changes and their effects.",
+   "weight": 0.25
+  }
+ ]
+}
