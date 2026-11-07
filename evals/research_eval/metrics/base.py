@@ -48,6 +48,7 @@ class ScoringContext:
     judge: "Judge | None" = None          # None -> LLM metrics are skipped
     embedder: "Embedder | None" = None    # None -> embedding metrics are skipped
     key_points_dir: Path | None = None    # frozen, human-reviewed key points
+    rubrics_dir: Path | None = None       # frozen insight/readability rubrics
     max_concurrency: int = 4
     options: dict[str, Any] = field(default_factory=dict)
     _memo: dict[Any, Any] = field(default_factory=dict)

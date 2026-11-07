@@ -1,6 +1,6 @@
 ---
 id: topic_relevance
-version: 3
+version: 4
 used_by: topic_relevance
 ---
 
@@ -26,6 +26,8 @@ used_by: topic_relevance
   answer the question (a comparison, a cause, a context).
 - Generic statements that would fit any report ("this is a complex and
   evolving field") are padding: "no".
+- The report's notes about itself (its method, its sources, its date, its
+  scope) are "idk": they neither answer nor leave the question.
 
 ## Answer format
 Return ONLY JSON, one entry per paragraph, in order:

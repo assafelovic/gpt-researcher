@@ -24,6 +24,7 @@ from .metrics.base import ScoringContext
 from .scoring import RESULTS_DIR, save_results, score_archive, summary_rows
 
 KEY_POINTS_DIR = Path(__file__).parent / "dataset" / "key_points"
+RUBRICS_DIR = Path(__file__).parent / "dataset" / "rubrics"
 
 
 async def main(argv: list[str] | None = None) -> int:
@@ -65,7 +66,7 @@ async def main(argv: list[str] | None = None) -> int:
                          judge=Judge(cache, salt=args.judge_salt, max_calls=args.max_calls,
                                      dry_run=args.dry_run) if needs_llm else None,
                          embedder=Embedder(cache) if needs_emb else None,
-                         key_points_dir=KEY_POINTS_DIR,
+                         key_points_dir=KEY_POINTS_DIR, rubrics_dir=RUBRICS_DIR,
                          max_concurrency=args.concurrency)
     for path in args.archives:
         archive = RunArchive.load(path)

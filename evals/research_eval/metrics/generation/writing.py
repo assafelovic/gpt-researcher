@@ -6,6 +6,8 @@ All scores are absolute; nothing is compared with a reference report.
 
 from __future__ import annotations
 
+import json
+
 from gpt_researcher.context.lexical import tokenize
 
 from ...archive import RunArchive, normalize_url
@@ -98,13 +100,26 @@ async def quality_scores(archive: RunArchive, ctx: ScoringContext) -> dict:
     if key in memo:
         return memo[key]
     out: dict = {"responses": [], "error": None, "dims": {}}
-    rub = await ctx.judge.ask(QUALITY_RUBRIC.id, QUALITY_RUBRIC.version,
-                              QUALITY_RUBRIC.render(question=archive.query))
-    out["responses"].append(rub)
+    # A frozen rubric (dataset/rubrics/<question_id>.json) keeps the criteria
+    # fixed across cache rebuilds and prompt versions: regenerated, the
+    # rubric differed for 15/15 questions between two passes and moved
+    # insight by up to 0.13 (v51).
+    qid = archive.question_id or ""
+    frozen = ctx.rubrics_dir / f"{qid}.json" if ctx.rubrics_dir and qid else None
+    if frozen is not None and frozen.exists():
+        rubric = json.loads(frozen.read_text(encoding="utf-8"))
+        out["rubric_source"] = {"source": "frozen", "path": str(frozen)}
+    else:
+        rub = await ctx.judge.ask(QUALITY_RUBRIC.id, QUALITY_RUBRIC.version,
+                                  QUALITY_RUBRIC.render(question=archive.query))
+        out["responses"].append(rub)
+        rubric = rub.parsed if isinstance(rub.parsed, dict) else None
+        out["rubric_source"] = {"source": "judge", "prompt_version": QUALITY_RUBRIC.version,
+                                "error": rub.error}
     criteria = []
-    if isinstance(rub.parsed, dict):
+    if isinstance(rubric, dict):
         for dim, prefix in (("insight", "I"), ("readability", "R")):
-            items = [c for c in rub.parsed.get(dim) or [] if isinstance(c, dict)]
+            items = [c for c in rubric.get(dim) or [] if isinstance(c, dict)]
             for j, c in enumerate(items, 1):
                 try:
                     w = max(0.0, float(c.get("weight", 0)))
@@ -114,7 +129,7 @@ async def quality_scores(archive: RunArchive, ctx: ScoringContext) -> dict:
                                  "criterion": c.get("criterion", ""),
                                  "description": c.get("description", ""), "weight": w})
     if not criteria:
-        out["error"] = "rubric generation failed: " + (rub.error or "no criteria")
+        out["error"] = "rubric generation failed: " + (out["rubric_source"].get("error") or "no criteria")
         memo[key] = out
         return out
     text, truncated = report_text(archive)
@@ -155,8 +170,10 @@ async def quality_scores(archive: RunArchive, ctx: ScoringContext) -> dict:
 class _RubricDimension(Metric):
     """RACE-style rubric score on an absolute 0-10 scale, normalised to [0, 1].
 
-    The rubric (3-5 weighted criteria per dimension) is generated once per
-    question and cached; insight and readability are scored in the same call.
+    The rubric (3-5 weighted criteria per dimension) comes from
+    `dataset/rubrics/<question_id>.json` when frozen, else it is generated
+    once per question and cached; insight and readability are scored in the
+    same call.
         value = sum(weight * score) / sum(weight) / 10
     `details.criteria` keeps the rubric with each criterion's score and the
     judge's evidence; insight also keeps `insights_found`, the insights the
@@ -164,7 +181,7 @@ class _RubricDimension(Metric):
     """
 
     category = "generation.writing_quality"
-    version = "3"           # 3: records the insights the judge found
+    version = "4"           # 3: records the insights the judge found; 4: frozen rubrics
     uses_llm = True
     prompts = (QUALITY_RUBRIC, QUALITY_SCORE)
     dimension = ""
@@ -180,6 +197,7 @@ class _RubricDimension(Metric):
             res = self.skip(q["error"] or "no scored criteria")
         else:
             res = self.result(rounded(dim["value"]), criteria=dim["criteria"],
+                              rubric=q.get("rubric_source"),
                               report_truncated=dim["report_truncated"])
             if self.dimension == "insight":
                 res.details["insights_found"] = q.get("insights_found", [])

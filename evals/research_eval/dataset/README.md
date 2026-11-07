@@ -21,3 +21,9 @@ comprehensiveness and decomposition coverage by up to 0.29 between reps.
 `key_points/q002.json`–`q005.json` freeze the judge-generated lists (judge
 gpt-6-luna, prompt v1) used in the 2026-10-31 five-question scores, so later
 re-scores compare against the same points. Not yet reviewed item by item.
+
+`rubrics/<question_id>.json` (optional) freezes a question's insight and
+readability rubric: `{"insight": [{"criterion", "description", "weight"}],
+"readability": [...]}`. When present it replaces the rubric judge call.
+Regenerated on every cache rebuild, the rubric differed for 15/15 questions
+between two passes and moved insight by up to 0.13 (2026-11-07, v51).

@@ -674,3 +674,17 @@ def test_uncited_paragraph_facts_are_rechecked_too():
     todo = _recheck(pa)
     assert len(todo) == 1 and pa.claims[0]["faith_verdict"] == "supported"
     assert pa.claim_checks == []        # nothing cited: no citation checks
+
+
+async def test_frozen_rubric_replaces_the_rubric_call(tmp_path):
+    from evals.research_eval.metrics.generation.writing import Insight
+    (tmp_path / "q1.json").write_text(json.dumps({
+        "insight": [{"criterion": "causes", "description": "d", "weight": 1}],
+        "readability": [{"criterion": "flow", "description": "d", "weight": 1}]}))
+    judge = ScriptedJudge()
+    cache = EvalCache(":memory:")
+    ctx = ScoringContext(cache=cache, judge=Judge(cache, model="judge-x", complete=judge),
+                         rubrics_dir=tmp_path)
+    r = await Insight().score(make_archive(), ctx)
+    assert not any("preparing a grading rubric" in p for p in judge.prompts)
+    assert r.details["rubric"]["source"] == "frozen" and r.value == 0.8
