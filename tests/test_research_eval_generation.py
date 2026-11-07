@@ -280,8 +280,9 @@ def test_effective_citations_merges_near_duplicate_evidence():
 
 async def test_faithfulness(ctx):
     r = await Faithfulness().score(make_archive(), ctx)
-    # supported 1, inferred .5, supported 1, contradicted -1, unsupported 0, inferred .5
-    assert r.value == pytest.approx((1 + 0.5 + 1 - 1 + 0 + 0.5) / 6, abs=1e-3)
+    # supported 1, inferred .5, supported 1, contradicted 0 (counted per
+    # paragraph by contradicted_paragraphs), unsupported 0, inferred .5
+    assert r.value == pytest.approx((1 + 0.5 + 1 + 0 + 0 + 0.5) / 6, abs=1e-3)
     assert r.details["verdicts"]["contradicted"] == 1
     assert r.details["uncited_factual_paragraphs"] == 1
     assert {f["claim"] for f in r.details["flagged"]} == {"Glencore dominates", "prices triple"}
@@ -688,3 +689,12 @@ async def test_frozen_rubric_replaces_the_rubric_call(tmp_path):
     r = await Insight().score(make_archive(), ctx)
     assert not any("preparing a grading rubric" in p for p in judge.prompts)
     assert r.details["rubric"]["source"] == "frozen" and r.value == 0.8
+
+
+async def test_contradicted_paragraphs_counts_paragraphs_not_claims(ctx):
+    from evals.research_eval.metrics.generation import ContradictedParagraphs
+    r = await ContradictedParagraphs().score(make_archive(), ctx)
+    # Three factual paragraphs; only the recycling one has a contradicted fact.
+    assert (r.details["paragraphs"], r.details["contradicted"]) == (3, 1)
+    assert r.value == pytest.approx(1 / 3, abs=1e-3) and r.higher_is_better is False
+    assert [c["claim"] for c in r.details["flagged"][0]["claims"]] == ["Glencore dominates"]

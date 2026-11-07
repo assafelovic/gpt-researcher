@@ -27,7 +27,12 @@ class Faithfulness(_AuditMetric):
     shown, and becomes "supported" only when one of them plainly states it, so
     a claim is not judged only on what the agent chose to cite.
 
-        supported 1 | inferred 0.5 | unsupported 0 | contradicted -1
+        supported 1 | inferred 0.5 | unsupported 0 | contradicted 0
+
+    A contradicted claim scores 0 here, like an unsupported one, and is
+    counted per paragraph by `contradicted_paragraphs` instead: as -1 inside
+    a mean, its weight depended on how many claims the judge split the
+    paragraph into (v2 and earlier).
 
     (Before paragraph_audit v6, inferred had three levels: 0.5 / 0.4 / 0.3.)
 
@@ -43,13 +48,13 @@ class Faithfulness(_AuditMetric):
     """
 
     name, category = "faithfulness", "generation.writing_authority"
-    version = f"2.audit{AUDIT_VERSION}"     # 2: fact claims only; analysis in details
+    version = f"3.audit{AUDIT_VERSION}"     # 2: fact claims only; analysis in details; 3: contradicted 0, counted per paragraph elsewhere
 
     def from_audit(self, audit: CitationAudit, archive: RunArchive) -> MetricResult:
         claims = [(p, c) for p in audit.judged for c in p.claims]
         claims = [(p, {**c, "cited_verdict": c["verdict"],
                        "verdict": c.get("faith_verdict", c["verdict"]),
-                       "score": c.get("faith_score", c["score"])}) for p, c in claims]
+                       "score": _no_negative(c.get("faith_score", c["score"]))}) for p, c in claims]
         scored = [c["score"] for _, c in claims if c["score"] is not None]
         facts = [c["score"] for _, c in claims
                  if c.get("type", "fact") == "fact" and c["score"] is not None]
@@ -62,7 +67,7 @@ class Faithfulness(_AuditMetric):
             by_type[t] = {"claims": len(ts), "score": rounded(sum(ts) / len(ts)) if ts else None}
         per_para = []
         for p in audit.judged:
-            s = [c.get("faith_score", c["score"]) for c in p.claims
+            s = [_no_negative(c.get("faith_score", c["score"])) for c in p.claims
                  if c.get("faith_score", c["score"]) is not None]
             per_para.append({"para_id": p.para_id, "mode": p.mode, "kind": p.kind,
                              "claims": len(p.claims), "score": rounded(sum(s) / len(s)) if s else None})
@@ -84,6 +89,44 @@ class Faithfulness(_AuditMetric):
                                                           for p in audit.judged),
                            flagged=flagged, per_paragraph=per_para,
                            verdict_scores=VERDICT_SCORES)
+
+
+def _no_negative(score):
+    """Contradicted (-1) counts as 0 in the mean; contradicted_paragraphs counts it."""
+    return None if score is None else max(score, 0.0)
+
+
+class ContradictedParagraphs(_AuditMetric):
+    """Share of factual paragraphs with at least one fact claim the material
+    contradicts (lower is better).
+
+        value = paragraphs with a contradicted fact claim / factual paragraphs
+
+    The paragraph is the unit, so the count does not depend on how many
+    claims the judge split a paragraph into. Contradicted means the first
+    call's verdict for the claim, kept unless the recheck found plain support
+    elsewhere (sources may disagree; support anywhere lifts it). No extra
+    judge call: it reads the citation audit faithfulness uses.
+    `details.flagged` lists the paragraphs and their contradicted claims.
+    """
+
+    name, category = "contradicted_paragraphs", "generation.writing_authority"
+    version = f"1.audit{AUDIT_VERSION}"
+    higher_is_better = False
+
+    def from_audit(self, audit: CitationAudit, archive: RunArchive) -> MetricResult:
+        factual = [p for p in audit.judged if p.kind == "factual"]
+        if not factual:
+            return self.skip("no factual paragraph judged")
+        flagged = []
+        for p in factual:
+            bad = [c for c in p.claims if c.get("type", "fact") == "fact"
+                   and c.get("faith_verdict", c["verdict"]) == "contradicted"]
+            if bad:
+                flagged.append({"para_id": p.para_id, "mode": p.mode,
+                                "claims": [{k: c.get(k) for k in ("claim", "evidence")} for c in bad]})
+        return self.result(rounded(len(flagged) / len(factual)), paragraphs=len(factual),
+                           contradicted=len(flagged), flagged=flagged)
 
 
 _NUMBER = re.compile(r"(?<![\w.])\d{1,3}(?:,\d{3})+(?:\.\d+)?|(?<![\w.,])\d+(?:\.\d+)?")
