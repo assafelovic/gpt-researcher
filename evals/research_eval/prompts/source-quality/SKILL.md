@@ -104,9 +104,13 @@ without checking it elsewhere.
 - Open wikis such as Wikipedia: anyone can edit them, so judge by the
   articles shown. Detailed reference articles on the question's subject
   are specialist; thin, promotional or off-subject ones are low_editorial.
-- Field: judge whether the site is a source on the question's subject. A
-  general outlet (news, a government) covers every field; a specialist
-  site in another field is off_field.
+- Field: decide off_field from the pages shown, not from the field the
+  organisation belongs to. off_field only when the pages shown are about
+  nothing the question needs (a weather service, a dictionary entry, a
+  brewery). When the pages cover any side of the question (its policy,
+  regulation, financing, technology or market), judge the site by its kind
+  as usual: a policy think tank writing on drone rules is specialist for a
+  question on drone delivery vendors.
 
 ## Principles and goals
 
