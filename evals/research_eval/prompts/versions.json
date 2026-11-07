@@ -7,13 +7,21 @@
     "version": "2",
     "hash": "0792d43b553a"
   },
+  "key_points_describe": {
+    "version": "1",
+    "hash": "f27505de8b6f"
+  },
   "key_points_layered": {
     "version": "1",
     "hash": "97f94fb89bff"
   },
   "key_points_merge": {
+    "version": "2",
+    "hash": "de99b4aa5b88"
+  },
+  "key_points_outline": {
     "version": "1",
-    "hash": "cc702d383243"
+    "hash": "528da03e18fd"
   },
   "key_points_structured": {
     "version": "1",
