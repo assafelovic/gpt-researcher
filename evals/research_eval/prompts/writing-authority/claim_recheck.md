@@ -1,6 +1,6 @@
 ---
 id: claim_recheck
-version: 9
+version: 10
 used_by: citation audit recheck (citation_audit.py)
 ---
 
@@ -13,7 +13,7 @@ used_by: citation audit recheck (citation_audit.py)
 
 ## Verdicts (stricter than the system prompt: there is no "inferred" here)
 - "supported": one passage states the claim itself, with the same subject (entity, market, sector, region, period) and the same strength.
-- "contradicted": a passage about exactly the same thing (subject, scope, definition, period) states the opposite or a different figure. A claim that differs from the passage in any of these is "unsupported".
+- "contradicted": a passage about exactly the same thing (subject, scope, definition, period, etc.) states the opposite or a different figure. A claim that differs from the passage in any such respect is "unsupported".
 - "unsupported": anything else, including partial support and support that needs a step of reasoning.
 
 ## Rules

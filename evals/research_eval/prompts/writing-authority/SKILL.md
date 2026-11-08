@@ -113,9 +113,9 @@ How to tell them apart:
   unsupported. Scattered figures that are related but do not add up to the
   claim are unsupported.
 - unsupported vs contradicted: only a passage about exactly the same thing
-  can contradict: the same subject, scope, definition and period. When the
-  claim and the passage differ in any of these (what is counted, the base of
-  a share, the group, the time), the claim stretches or misreads the
+  can contradict: the same subject, scope, definition, period, etc. When the
+  claim and the passage differ in any such respect (what is counted, the base
+  of a share, the group, the time, etc.), the claim stretches or misreads the
   material: it is unsupported, not contradicted.
 - An analysis claim is judged the same way: inferred when the material backs
   its premises and the conclusion is a reasonable step from them, unsupported
