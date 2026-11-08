@@ -1,6 +1,6 @@
 ---
 id: quality_rubric
-version: 4
+version: 5
 used_by: insight, readability
 ---
 
@@ -30,8 +30,19 @@ used_by: insight, readability
 - A readability criterion is about the description only: never about what
   the report covers (scope, dates, which items it includes), and never asks
   to explain terms that reader already knows.
-- Criteria do not overlap, and none is about length, citations or whether
-  the facts are true: those are judged elsewhere.
+  - Test: a report that leaves out a topic, a distinction or a section
+    loses nothing on readability; only how it presents what it does say
+    counts.
+  - Do not name the sections or the order of topics a report should have
+    ("from X to Y to Z"), even as an example; say what makes any order easy
+    to follow.
+- An insight criterion asks for analysis, never for coverage: which
+  topics, uses or dimensions a report mentions is judged elsewhere.
+  - Test: a report that mentions every relevant fact but only lists them
+    scores low on every insight criterion.
+- Criteria do not overlap, within a dimension or across the two, and none
+  is about length, citations or whether the facts are true: those are
+  judged elsewhere.
 
 ## Answer format
 Return ONLY JSON:
