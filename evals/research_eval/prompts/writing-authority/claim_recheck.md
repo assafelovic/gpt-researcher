@@ -1,6 +1,6 @@
 ---
 id: claim_recheck
-version: 8
+version: 9
 used_by: citation audit recheck (citation_audit.py)
 ---
 
@@ -9,7 +9,7 @@ used_by: citation audit recheck (citation_audit.py)
 ## Goal
 - You are checking claims from a research report against source material.
 - These claims were not fully supported by the material checked so far.
-- The material below is more of what the writer had retrieved, picked by the checker.
+- The material below is more of what the writer had retrieved, picked by the checker. It may also hold a passage an earlier check read as contradicting a claim: judge it afresh by the rules below.
 
 ## Verdicts (stricter than the system prompt: there is no "inferred" here)
 - "supported": one passage states the claim itself, with the same subject (entity, market, sector, region, period) and the same strength.

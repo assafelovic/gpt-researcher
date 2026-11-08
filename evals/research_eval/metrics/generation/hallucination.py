@@ -104,10 +104,12 @@ class ContradictedParagraphs(_AuditMetric):
 
     The paragraph is the unit, so the count does not depend on how many
     claims the judge split a paragraph into. Contradicted means the first
-    call's verdict for the claim, kept unless the recheck found plain support
-    elsewhere (sources may disagree; support anywhere lifts it). No extra
-    judge call: it reads the citation audit faithfulness uses.
-    `details.flagged` lists the paragraphs and their contradicted claims.
+    call's verdict, confirmed by the recheck, which is shown the same
+    contradicting passages: unconfirmed, it is unsupported; plain support
+    found elsewhere lifts it. No extra judge call: it reads the citation
+    audit faithfulness uses. `details.flagged` lists the paragraphs and their
+    contradicted claims, `details.dropped` the contradictions the recheck did
+    not confirm.
     """
 
     name, category = "contradicted_paragraphs", "generation.writing_authority"
@@ -118,15 +120,17 @@ class ContradictedParagraphs(_AuditMetric):
         factual = [p for p in audit.judged if p.kind == "factual"]
         if not factual:
             return self.skip("no factual paragraph judged")
-        flagged = []
+        flagged, dropped = [], []
         for p in factual:
+            dropped += [{"para_id": p.para_id, "claim": c.get("claim")} for c in p.claims
+                        if c.get("contradiction_dropped")]
             bad = [c for c in p.claims if c.get("type", "fact") == "fact"
                    and c.get("faith_verdict", c["verdict"]) == "contradicted"]
             if bad:
                 flagged.append({"para_id": p.para_id, "mode": p.mode,
                                 "claims": [{k: c.get(k) for k in ("claim", "evidence")} for c in bad]})
         return self.result(rounded(len(flagged) / len(factual)), paragraphs=len(factual),
-                           contradicted=len(flagged), flagged=flagged)
+                           contradicted=len(flagged), flagged=flagged, dropped=dropped)
 
 
 _NUMBER = re.compile(r"(?<![\w.])\d{1,3}(?:,\d{3})+(?:\.\d+)?|(?<![\w.,])\d+(?:\.\d+)?")

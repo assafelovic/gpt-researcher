@@ -108,7 +108,8 @@ def audit_reply(prompt):
 class ScriptedJudge:
     def __init__(self):
         self.prompts = []
-        self.recheck = {}
+        # The recheck confirms the first call's contradiction unless a test says otherwise.
+        self.recheck = {"Glencore dominates": {"verdict": "contradicted", "passages": []}}
 
     async def __call__(self, prompt):
         self.prompts.append(prompt)
@@ -610,7 +611,11 @@ async def test_recheck_judges_unsupported_facts_on_checker_picked_passages(ctx):
     second = next(p for p in rechecks if "Glencore" in p)
     assert "1. Glencore dominates\n2. prices triple" in second.split("Material:")[0]
     material = second.split("Material:")[1]
-    assert "recycle.org" not in material and "never-retrieved" not in material
+    assert "never-retrieved" not in material
+    # The cited page is shown again only for the passage first read as contradicting.
+    pa = audit.paragraphs[1]
+    assert material.count("recycle.org") == 1 and pa.confirm[0]["url"] == "https://recycle.org/eu"
+    assert pa.confirm[0]["n"] > max(s["n"] for s in pa.sources + pa.extra)
     assert re.search(r"Source \[1\] https://(reuters\.com/cobalt|energy\.gov/lithium) passage 1a:", material)
     pa = audit.paragraphs[1]
     glencore = next(c for c in pa.claims if c["claim"] == "Glencore dominates")
@@ -689,6 +694,17 @@ async def test_frozen_rubric_replaces_the_rubric_call(tmp_path):
     r = await Insight().score(make_archive(), ctx)
     assert not any("preparing a grading rubric" in p for p in judge.prompts)
     assert r.details["rubric"]["source"] == "frozen" and r.value == 0.8
+
+
+async def test_a_contradiction_the_recheck_does_not_confirm_is_unsupported(ctx):
+    from evals.research_eval.metrics.generation import ContradictedParagraphs
+    ctx.fake.recheck = {}
+    audit = await citation_audit(make_archive(), ctx)
+    glencore = next(c for c in audit.paragraphs[1].claims if c["claim"] == "Glencore dominates")
+    assert glencore["verdict"] == "contradicted" and glencore["faith_verdict"] == "unsupported"
+    assert glencore["contradiction_dropped"] is True
+    r = await ContradictedParagraphs().score(make_archive(), ctx)
+    assert r.details["contradicted"] == 0 and r.details["dropped"][0]["claim"] == "Glencore dominates"
 
 
 async def test_contradicted_paragraphs_counts_paragraphs_not_claims(ctx):

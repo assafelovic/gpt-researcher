@@ -54,8 +54,9 @@ if TYPE_CHECKING:
 # Bump when the audit's material or unit logic changes (prompt changes bump the
 # prompt version instead); every metric that reads the audit carries it in its
 # version, so the scorer version changes and old results are not overwritten.
-AUDIT_VERSION = "13"    # 7: recall / precision per claim; 8: fact / analysis claims; 9: entity roles are facts; 10: independent recheck; 11: recheck uncited paragraphs and unshown passages of cited pages; 12: one inferred level;
-                        # 13: contradicted only about exactly the same thing (scope, definition, period)
+AUDIT_VERSION = "14"    # 7: recall / precision per claim; 8: fact / analysis claims; 9: entity roles are facts; 10: independent recheck; 11: recheck uncited paragraphs and unshown passages of cited pages; 12: one inferred level;
+                        # 13: contradicted only about exactly the same thing (scope, definition, period);
+                        # 14: the recheck sees the contradicting passages; a contradiction it does not confirm is unsupported
 
 # Faithfulness points per verdict (eval-design/generation-metrics.md §3.2 B).
 # One "inferred" level since paragraph_audit v6: the judge could not keep the
@@ -82,6 +83,7 @@ class ParagraphAudit:
     sources: list[dict]                         # [{"n", "url", "found", "cited", "passages": [{"id", "chunk_id"}]}]
     response: "JudgeResponse | None" = None
     extra: list[dict] = field(default_factory=list)            # independent sources (recheck)
+    confirm: list[dict] = field(default_factory=list)          # passages first read as contradicting (recheck)
     recheck: "JudgeResponse | None" = None
     kind: str | None = None                     # factual | non_factual
     claims: list[dict] = field(default_factory=list)
@@ -102,6 +104,9 @@ class ParagraphAudit:
                 "independent": [{"n": s["n"], "url": s["url"],
                                  "chunk_ids": [p["chunk_id"] for p in s["passages"]]}
                                 for s in self.extra],
+                "confirm": [{"n": s["n"], "url": s["url"],
+                             "chunk_ids": [p["chunk_id"] for p in s["passages"]]}
+                            for s in self.confirm],
                 "error": self.error,
                 # the judge's reply when it could not be used, to see why
                 "raw_on_error": (self.response.raw or "")[:4000]
@@ -480,27 +485,48 @@ def claim_level(pa: ParagraphAudit) -> None:
 
 def recheck_todo(pa: ParagraphAudit) -> list[dict]:
     """Fact claims that the first call's passages did not support."""
-    if pa.error or not pa.extra:
+    if pa.error:
         return []
-    return [c for c in pa.claims if c.get("type", "fact") == "fact" and c["verdict"] != "supported"]
+    todo = [c for c in pa.claims if c.get("type", "fact") == "fact" and c["verdict"] != "supported"]
+    pa.confirm = _confirm_sources(pa, todo)
+    return todo if pa.extra or pa.confirm else []
+
+
+def _confirm_sources(pa: ParagraphAudit, todo: list[dict]) -> list[dict]:
+    """The passages the first call read as contradicting a claim, shown again
+    to the recheck: a contradiction stands only when the recheck finds it too."""
+    shown = {p["chunk_id"] for s in pa.extra for p in s["passages"]}
+    chunk_url = {p["chunk_id"]: s["url"] for s in pa.sources for p in s["passages"]}
+    by_url: dict[str, list[str]] = {}
+    for c in todo:
+        if c["verdict"] == "contradicted":
+            for cid in c.get("chunk_ids") or []:
+                if cid not in shown and cid in chunk_url and cid not in by_url.get(chunk_url[cid] or "", []):
+                    by_url.setdefault(chunk_url[cid] or "", []).append(cid)
+    start = max([s["n"] for s in pa.sources + pa.extra] or [0]) + 1
+    return [{"n": n, "url": url or None, "found": True, "cited": True,
+             "passages": [{"id": f"{n}{ascii_lowercase[i]}", "chunk_id": cid} for i, cid in enumerate(cids)]}
+            for n, (url, cids) in enumerate(by_url.items(), start)]
 
 
 def render_recheck(archive: "RunArchive", pa: ParagraphAudit, todo: list[dict]) -> str:
     claims = "\n".join(f"{i}. {c['claim']}" for i, c in enumerate(todo, 1))
     blocks = [f"Source [{s['n']}] {s['url'] or 'unknown source'} passage {p['id']}:\n"
               f"{archive.chunks[p['chunk_id']]['content'][:PASSAGE_CHARS]}"
-              for s in pa.extra for p in s["passages"]]
+              for s in pa.extra + pa.confirm for p in s["passages"]]
     return CLAIM_RECHECK.render(question=archive.query, claims=claims, material="\n\n".join(blocks))
 
 
 def apply_recheck(pa: ParagraphAudit, todo: list[dict]) -> None:
-    """Record the recheck on each claim; the faithfulness verdict becomes the
-    supported verdict when the recheck finds plain support. Citation checks are
-    rebuilt (backed_by_uncited)."""
+    """Record the recheck on each claim. The faithfulness verdict becomes
+    supported when the recheck finds plain support; a contradiction of the
+    first call stands only when the recheck, shown the same passages, finds it
+    too (otherwise it is unsupported). Citation checks are rebuilt
+    (backed_by_uncited)."""
     r = pa.recheck
     if r is None or not isinstance(r.parsed, dict):
         return
-    passage_chunk = {p["id"]: p["chunk_id"] for s in pa.extra for p in s["passages"]}
+    passage_chunk = {p["id"]: p["chunk_id"] for s in pa.extra + pa.confirm for p in s["passages"]}
     for got in r.parsed.get("claims") or []:
         try:
             c = todo[int(got.get("claim")) - 1]
@@ -512,10 +538,13 @@ def apply_recheck(pa: ParagraphAudit, todo: list[dict]) -> None:
                  elsewhere_chunk_ids=[passage_chunk[str(x)] for x in got.get("passages") or []
                                       if str(x) in passage_chunk],
                  elsewhere_evidence=got.get("evidence", ""))
-        # Only plain support found elsewhere lifts a verdict (a contradiction
-        # elsewhere is recorded, not scored: sources may simply disagree).
+        # Plain support found elsewhere lifts a verdict. A contradiction found
+        # only elsewhere is recorded, not scored: sources may simply disagree.
         if verdict == "supported" and (c["faith_score"] is None or score > c["faith_score"]):
             c["faith_verdict"], c["faith_score"] = verdict, score
+        elif c["verdict"] == "contradicted" and score is not None and verdict != "contradicted":
+            c["faith_verdict"], c["faith_score"] = "unsupported", VERDICT_SCORES["unsupported"]
+            c["contradiction_dropped"] = True
     pa.claim_checks, pa.citation_checks = [], []
     claim_level(pa)
 
