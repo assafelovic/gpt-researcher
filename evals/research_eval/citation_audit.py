@@ -54,7 +54,8 @@ if TYPE_CHECKING:
 # Bump when the audit's material or unit logic changes (prompt changes bump the
 # prompt version instead); every metric that reads the audit carries it in its
 # version, so the scorer version changes and old results are not overwritten.
-AUDIT_VERSION = "12"    # 7: recall / precision per claim; 8: fact / analysis claims; 9: entity roles are facts; 10: independent recheck; 11: recheck uncited paragraphs and unshown passages of cited pages; 12: one inferred level
+AUDIT_VERSION = "13"    # 7: recall / precision per claim; 8: fact / analysis claims; 9: entity roles are facts; 10: independent recheck; 11: recheck uncited paragraphs and unshown passages of cited pages; 12: one inferred level;
+                        # 13: contradicted only about exactly the same thing (scope, definition, period)
 
 # Faithfulness points per verdict (eval-design/generation-metrics.md §3.2 B).
 # One "inferred" level since paragraph_audit v6: the judge could not keep the

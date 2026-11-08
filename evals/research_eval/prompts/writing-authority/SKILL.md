@@ -103,8 +103,8 @@ words your verdict rests on before you give it.
 - unsupported: the material does not address the claim, or only shares its
   topic; or getting there needs a fact the material does not give, a guess or
   a leap.
-- contradicted: a passage about the same subject states the opposite or a
-  different figure.
+- contradicted: a passage about exactly the same thing states the opposite
+  or a different figure.
 
 How to tell them apart:
 - supported vs inferred: if you must explain a step, it is inferred.
@@ -112,9 +112,11 @@ How to tell them apart:
   there is none, or the rest needs a fact the material does not give, it is
   unsupported. Scattered figures that are related but do not add up to the
   claim are unsupported.
-- unsupported vs contradicted: only a passage about the same subject can
-  contradict. Different figures for different years, regions or definitions
-  are unsupported, not contradicted.
+- unsupported vs contradicted: only a passage about exactly the same thing
+  can contradict: the same subject, scope, definition and period. When the
+  claim and the passage differ in any of these (what is counted, the base of
+  a share, the group, the time), the claim stretches or misreads the
+  material: it is unsupported, not contradicted.
 - An analysis claim is judged the same way: inferred when the material backs
   its premises and the conclusion is a reasonable step from them, unsupported
   when it goes further. A hedged conclusion ("may", "could", "is likely to")
