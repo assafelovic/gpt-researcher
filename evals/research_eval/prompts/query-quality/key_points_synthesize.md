@@ -1,6 +1,6 @@
 ---
 id: key_points_synthesize
-version: 1
+version: 2
 skill: none
 used_by: key points for the question when drafts > 1 (key_points.py); key point method comparison (key_points_methods.py, "layered-merged")
 ---
@@ -13,7 +13,7 @@ layers.
 - Keep everything a thorough answer to this question needs, even when only
   one draft names it; merge aspects or sub-points that name the same thing.
 - Drop what is about the report rather than its subject (scope, method,
-  introduction, instructions for writing), and what falls outside the
+  introduction, instructions for writing, etc.), and what falls outside the
   question.
 - 4 to 6 aspects, each a short noun phrase (at most 8 words); no two
   overlap. Each has 2 to 4 sub-points naming one thing each (at most 10

@@ -1,6 +1,6 @@
 ---
 id: comprehensiveness
-version: 6
+version: 7
 used_by: comprehensiveness
 ---
 
@@ -22,7 +22,7 @@ used_by: comprehensiveness
 - Sharing the point's words is not enough: the report must say something
   about the point itself.
 - Naming an example that belongs to the point (a company, a place, a
-  product) does not cover it unless the report says something about the
+  product, etc.) does not cover it unless the report says something about the
   point.
 - A point is full when the report gives real information on the point and
   on most of what it includes; when it covers only some of it, it is

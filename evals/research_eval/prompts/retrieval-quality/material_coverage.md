@@ -1,6 +1,6 @@
 ---
 id: material_coverage
-version: 3
+version: 4
 used_by: material_coverage
 skill: none
 ---
@@ -10,7 +10,7 @@ agent retrieved covers, before any report is written. Under each numbered key
 point are the sub-points it includes ("includes", when given) and the
 retrieved passages that match it best (a sample, picked by word overlap).
 For EACH key point decide, from the passages shown (under any key point):
-- "full": they give real information on it (facts, figures, explanations),
+- "full": they give real information on it (facts, figures, explanations, etc.),
   enough to write a paragraph about it and most of what it includes;
 - "partial": they touch it only briefly or vaguely, or only a small part of
   what it includes;

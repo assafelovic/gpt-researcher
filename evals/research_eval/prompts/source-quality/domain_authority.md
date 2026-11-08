@@ -1,6 +1,6 @@
 ---
 id: domain_authority
-version: 7
+version: 8
 used_by: source_authority
 ---
 

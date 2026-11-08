@@ -1,6 +1,6 @@
 ---
 id: tree_quality
-version: 20
+version: 21
 used_by: decomposition_tree_quality
 ---
 
@@ -15,7 +15,7 @@ used_by: decomposition_tree_quality
 
 ## What to decide for each child
 - left_out: what the parent asks that the child does not: the topics,
-  questions, actors or periods it lists that the child drops. Write
+  questions, actors, periods, etc. it lists that the child drops. Write
   "nothing" when the child keeps all of them.
 - problem: "restated" or "drifted" when the child takes no step away from
   its parent; otherwise "none".
@@ -37,7 +37,7 @@ used_by: decomposition_tree_quality
 
 ## Building on a finding (deep mode)
 - A child builds on a finding when it asks more about something the finding
-  states: a company, figure, event, trend or open question it names, in the
+  states: a company, figure, event, trend, open question, etc. it names, in the
   same or other words.
 - Count it even when that topic is one of several in the child.
 - Sharing only the broad subject of the whole search is not enough.

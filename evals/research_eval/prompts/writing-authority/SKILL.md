@@ -39,7 +39,7 @@ elsewhere.
 - Citations are links placed in the text. A citation vouches for the whole
   item it ends, which may be several sentences.
 - The writer may also add its own analysis: comparisons, rankings,
-  conclusions, recommendations.
+  conclusions, recommendations, etc.
 
 ### What you are given
 - The core question of the report.
@@ -56,26 +56,26 @@ elsewhere.
 A claim is one piece of information that someone holding the right source
 could confirm or deny.
 - Self-contained: understandable without the paragraph. Replace pronouns, and
-  never refer to item or source numbers ("item 1", "[2]").
+  never refer to item or source numbers ("item 1", "[2]", etc.).
 - Atomic: one piece of information. Split "A raised $2bn and opened a plant
   in Hungary" into two claims, and "its partners include A, B and C" into one
   claim per partner when each can be checked on its own.
 - Keep a figure together with what it measures, its unit, place and date, and
-  a qualifier ("about", "in 2024", "in Europe") with its statement.
-- Do not make a claim from a heading, a transition, or the report's notes
-  about itself.
+  a qualifier ("about", "in 2024", "in Europe", etc.) with its statement.
+- Do not make a claim from a heading, a transition, the report's notes
+  about itself, etc.
 
 ### Fact or analysis
-- fact: an event, number, date, an entity's action or property, or what a
-  named source found or said. A source could state it word for word.
+- fact: an event, number, date, an entity's action or property, what a
+  named source found or said, etc. A source could state it word for word.
   - What a named entity is or does (its role, type, products, partners,
-    markets, business model) is a fact, even when worded loosely.
+    markets, business model, etc.) is a fact, even when worded loosely.
   - "BloombergNEF ranks CATL first" is a fact: that BloombergNEF says so is
     checkable.
   - A figure computed from two stated figures ("sales doubled from 2023 to
     2024") is a fact.
 - analysis: the writer's own evaluation, ranking, comparison, prediction,
-  recommendation or conclusion, or a statement about the report or its
+  recommendation, conclusion, etc., or a statement about the report or its
   sources. No source would state it as such; at best it follows from them.
 - A sentence holding both is split into a fact claim and an analysis claim.
 - If unsure, use fact.
@@ -119,9 +119,9 @@ How to tell them apart:
   material: it is unsupported, not contradicted.
 - An analysis claim is judged the same way: inferred when the material backs
   its premises and the conclusion is a reasonable step from them, unsupported
-  when it goes further. A hedged conclusion ("may", "could", "is likely to")
+  when it goes further. A hedged conclusion ("may", "could", "is likely to", etc.)
   is inferred when the material gives the reason for it.
-- Words of degree ("many", "significant", "heavily") need material that shows
+- Words of degree ("many", "significant", "heavily", etc.) need material that shows
   the degree; one example does not show "many".
 
 Examples (material: "CATL shipped 321 GWh in 2023. BYD shipped 159 GWh."):
@@ -151,5 +151,5 @@ More examples of "inferred":
    claim, the verdict is not supported.
 3. A statement about one subject does not back the same claim about another
    (retail is not banking; Europe is not the world; one example is not a
-   general rule).
+   general rule; etc.).
 4. Return only the JSON asked for.

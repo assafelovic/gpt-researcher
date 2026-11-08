@@ -1,6 +1,6 @@
 ---
 id: quality_rubric
-version: 5
+version: 6
 used_by: insight, readability
 ---
 
@@ -24,11 +24,11 @@ used_by: insight, readability
 ## Good criteria
 - Each can be judged from the report text alone.
 - Each names something this question needs: for insight, the comparisons,
-  causes, trade-offs or conclusions a good answer to it draws; for
+  causes, trade-offs, conclusions, etc. a good answer to it draws; for
   readability, how clearly its content can be presented: order, structure,
-  fluent and precise wording, for the reader defined above.
+  fluent and precise wording, etc., for the reader defined above.
 - A readability criterion is about the description only: never about what
-  the report covers (scope, dates, which items it includes), and never asks
+  the report covers (scope, dates, which items it includes, etc.), and never asks
   to explain terms that reader already knows.
   - Test: a report that leaves out a topic, a distinction or a section
     loses nothing on readability; only how it presents what it does say
@@ -37,7 +37,7 @@ used_by: insight, readability
     ("from X to Y to Z"), even as an example; say what makes any order easy
     to follow.
 - An insight criterion asks for analysis, never for coverage: which
-  topics, uses or dimensions a report mentions is judged elsewhere.
+  topics, uses, dimensions, etc. a report mentions is judged elsewhere.
   - Test: a report that mentions every relevant fact but only lists them
     scores low on every insight criterion.
 - Criteria do not overlap, within a dimension or across the two, and none

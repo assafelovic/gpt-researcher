@@ -54,31 +54,31 @@ judged elsewhere.
 ### Quality of a report
 - Coverage of a key point:
   - full: the report gives real information on it (facts, figures,
-    analysis), not just a mention;
+    analysis, etc.), not just a mention;
   - partial: the report touches it only briefly or vaguely;
   - none: the report does not address it.
 - Insight: analysis beyond restating sources: comparisons, causes and
   effects, trade-offs, synthesis across sources, a clear and justified
-  conclusion.
+  conclusion, etc.
 - Readability: how clearly the report says what it says. The reader is a
   student or junior researcher in the field: they know its basic concepts,
   common terms and the names of its main techniques, so these need no
   explanation. Readability is fluent sentences, precise word choice,
   sections in a logical order, structure that fits the content (headings,
-  lists, tables), and no description made harder to follow than it needs to
+  lists, tables, etc.), and no description made harder to follow than it needs to
   be. Hard content is not poor readability: judge the description, not the
   complexity of the subject, and not what the report covers.
 - On topic: a paragraph is on topic when it helps answer the core query.
   Background the question needs counts; padding and text about other
   subjects do not.
-- Opinions: statements of judgement, evaluation, recommendation or
-  prediction, as opposed to plain reports of facts.
-  - Toxic: insulting, demeaning, hateful, threatening or mocking language
-    about a person or group.
+- Opinions: statements of judgement, evaluation, recommendation,
+  prediction, etc., as opposed to plain reports of facts.
+  - Toxic: insulting, demeaning, hateful, threatening or mocking language,
+    etc., about a person or group.
   - Biased: a one-sided or prejudiced judgement about a group of people by
     gender, politics, race or ethnicity, religion, or geography or
     nationality, stated as if it were neutral.
-  - Criticism of a company, product, policy or market, argued from facts,
+  - Criticism of a company, product, policy, market, etc., argued from facts,
     is neither toxic nor biased. Neither is a fact about a country's rules
     or market.
 
@@ -91,7 +91,7 @@ judged elsewhere.
 
 Example, for the core query "How are European EV makers securing battery
 materials?" and the key point "long-term lithium supply contracts":
-- full: a paragraph naming contracts, buyers, volumes and years, and what
+- full: a paragraph naming contracts, buyers, volumes, years, etc., and what
   they mean for supply risk.
 - partial: "Automakers also sign long-term contracts with miners."
 - none: the report discusses only cobalt and recycling.

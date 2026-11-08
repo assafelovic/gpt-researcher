@@ -54,18 +54,18 @@ writing". Your job is to evaluate the queries.
 ### Quality of a split
 A good child takes a step away from its parent in one or more directions:
 - Wider: it brings up an angle the parent does not name but that helps
-  answer it, such as another actor, a side effect or a comparison.
+  answer it, such as another actor, a side effect, a comparison, etc.
 - Deeper: it asks why something in the parent happens or what it leads to:
-  its causes, effects, drivers, mechanisms or trade-offs.
+  its causes, effects, drivers, mechanisms, trade-offs, etc.
 - Specific: it asks a narrower part of the parent's question: a named actor,
-  place, period, product or figure the parent does not already pin down, or
+  place, period, product, figure, etc. the parent does not already pin down, or
   one of several topics or questions the parent lists, taken alone.
 
 A child takes no step when it is:
 - Restated (duplicated): it asks the same thing as the parent in other
   words, so the same facts would answer both. Rewording, reordering or
   dropping words does not change that, nor does adding only a year or scope
-  the parent already implies ("in 2026", "worldwide", "commercial") or a
+  the parent already implies ("in 2026", "worldwide", "commercial", etc.) or a
   list of the names the parent's answer would give anyway.
 - Drifted: it no longer serves the core query, even if it serves its parent.
   Drift builds up one step at a time in deep trees, so read the path from
@@ -110,7 +110,7 @@ Example, for the parent "EU battery recycling rules 2025":
 1. Read the core query and, where given, the path from it down to the
    parent.
 2. Read what you are asked to judge, and note what the parent or earlier
-   queries already ask and already pin down (period, place, names).
+   queries already ask and already pin down (period, place, names, etc.).
 3. For each answer, find and quote the words that decide it.
 4. Apply the definitions as written; when two answers fit, pick the one
    that needs fewer assumptions.

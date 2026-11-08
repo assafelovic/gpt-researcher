@@ -1,7 +1,7 @@
 {
   "decomposition_coverage": {
-    "version": "10",
-    "hash": "f68ef389560f"
+    "version": "11",
+    "hash": "39fa3b7f60de"
   },
   "key_points": {
     "version": "2",
@@ -12,8 +12,8 @@
     "hash": "f27505de8b6f"
   },
   "key_points_layered": {
-    "version": "3",
-    "hash": "41d131f2dcec"
+    "version": "4",
+    "hash": "c4ef1d7816d3"
   },
   "key_points_merge": {
     "version": "2",
@@ -28,55 +28,55 @@
     "hash": "97f662401103"
   },
   "key_points_synthesize": {
-    "version": "1",
-    "hash": "6ce98096ff50"
+    "version": "2",
+    "hash": "e723ff99057e"
   },
   "subquery_redundancy": {
-    "version": "14",
-    "hash": "7c5da586be80"
+    "version": "15",
+    "hash": "d7f8d593d3e7"
   },
   "tree_quality": {
-    "version": "20",
-    "hash": "41af58f277e8"
+    "version": "21",
+    "hash": "9143447d5f05"
   },
   "domain_authority": {
-    "version": "7",
-    "hash": "ed620b964876"
+    "version": "8",
+    "hash": "a7979e783f26"
   },
   "material_coverage": {
-    "version": "3",
-    "hash": "b757cdd83db5"
+    "version": "4",
+    "hash": "f6b9c3161c60"
   },
   "query_relevance": {
-    "version": "13",
-    "hash": "5404f3aaf596"
+    "version": "14",
+    "hash": "bd8b4ea123af"
   },
   "comprehensiveness": {
-    "version": "6",
-    "hash": "3d3160307bc2"
+    "version": "7",
+    "hash": "0c57e0282ad1"
   },
   "quality_rubric": {
-    "version": "5",
-    "hash": "dfa7a77c911f"
+    "version": "6",
+    "hash": "af0835d98198"
   },
   "quality_score": {
-    "version": "6",
-    "hash": "740d09c5dda2"
+    "version": "7",
+    "hash": "ea0b5dc14255"
   },
   "topic_relevance": {
-    "version": "7",
-    "hash": "1145fcf9dbf2"
+    "version": "8",
+    "hash": "d9d2ed40a1d1"
   },
   "toxicity_bias": {
-    "version": "4",
-    "hash": "9a77d23dde0c"
+    "version": "5",
+    "hash": "16b8d946eb08"
   },
   "claim_recheck": {
-    "version": "11",
-    "hash": "249d8fc57d22"
+    "version": "12",
+    "hash": "fece173c0b0c"
   },
   "paragraph_audit": {
-    "version": "11",
-    "hash": "036680d327a4"
+    "version": "12",
+    "hash": "d5b5fb0bd3e2"
   }
 }

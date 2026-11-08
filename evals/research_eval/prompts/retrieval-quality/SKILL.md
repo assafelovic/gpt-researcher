@@ -53,18 +53,18 @@ cite it.
 - Relevant: it is about what the core query asks, not only the same broad
   topic.
 - Substantive: it gives concrete facts a writer could cite: figures, dates,
-  named actors, rules, decisions, results, and where they come from.
+  named actors, rules, decisions, results, etc., and where they come from.
 - Not substantive: general explanations, claims with no figures or names,
-  marketing text, page furniture (menus, cookie notices, sign-up prompts),
-  lists of links, text cut off before it says anything.
+  marketing text, page furniture (menus, cookie notices, sign-up prompts,
+  etc.), lists of links, text cut off before it says anything, etc.
 
 ### Concrete facts
 - A concrete fact is a figure, a date, or a named deal, organisation, rule,
-  product or result, stated as what is or was. A survey result ("72% of
+  product, result, etc., stated as what is or was. A survey result ("72% of
   customers say ...") is a concrete fact.
 - Not concrete facts: estimates, forecasts and outlooks ("is projected
-  to", "could handle up to"), definitions, general claims, lists of
-  features or capabilities, and results of studies about another subject.
+  to", "could handle up to", etc.), definitions, general claims, lists of
+  features or capabilities, results of studies about another subject, etc.
 
 ## Principles and goals
 

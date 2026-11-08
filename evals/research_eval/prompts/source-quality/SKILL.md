@@ -52,41 +52,41 @@ writing". Your job is to evaluate where the agent's information came from.
   government sites, universities, major journals and international bodies,
   major news outlets, and company docs or investor subdomains such as
   docs.example.com. The list you get holds the rest, such as company sites,
-  trade press, blogs, regional outlets, wikis and niche publishers.
+  trade press, blogs, regional outlets, wikis, niche publishers, etc.
 
 ### Quality of a source
 Authority is how far a careful researcher can rely on what a site publishes
 without checking it elsewhere.
 - Raises it: editorial standards, named authors, corrections, primary data
-  or official records, peer review, a long public record.
+  or official records, peer review, a long public record, etc.
 - Lowers it: no clear owner, a marketing aim, pages written for search
-  traffic, user posts without review, text copied from other sites.
+  traffic, user posts without review, text copied from other sites, etc.
 
 ### Kinds of site, from most to least authoritative
-- official: a government, regulator, court, central bank, legislature or
-  standards body, publishing its own rules, decisions or statistics.
+- official: a government, regulator, court, central bank, legislature,
+  standards body, etc., publishing its own rules, decisions, statistics, etc.
 - academic: a university, research institute, international organisation,
-  or a peer-reviewed journal, preprint server or academic publisher that
+  or a peer-reviewed journal, preprint server, academic publisher, etc. that
   you know by name. A journal site you do not know, such as an
   "International Journal of ..." with no known publisher, is low_editorial.
 - news: a national or international news outlet with editorial standards,
-  or a major data, ratings or market-data provider.
+  or a major data, ratings or market-data provider, etc.
 - specialist: trade press, industry analysts that cover one field, think
   tanks, professional associations, edited dictionaries and reference
-  works, and the published research of law firms and of large accounting
-  or consulting firms.
+  works, the published research of law firms and of large accounting
+  or consulting firms, etc.
 - company: a company's own site, of any size: product pages, docs, blog,
-  press releases. Reliable on its own products and figures, not neutral
+  press releases, etc. Reliable on its own products and figures, not neutral
   about competitors.
 - low_editorial: personal blogs, newsletters, press-release wires,
   sites that sell market-size reports on many unrelated industries,
-  directories, aggregators, Q&A and forum sites, and platforms that host
-  what anyone posts (GitHub, LinkedIn, YouTube, Medium, Substack).
+  directories, aggregators, Q&A and forum sites, platforms that host
+  what anyone posts (GitHub, LinkedIn, YouTube, Medium, Substack, etc.), etc.
 - off_field: a site that may be authoritative, but in a field unrelated to
   the core question, so it is no authority on it (a medical journal for a
   question on software licensing).
 - unreliable: content farms, AI-written or SEO pages, sites that copy
-  others, sites with no clear owner.
+  others, sites with no clear owner, etc.
 - unknown: you do not know the site, and neither its name nor the pages
   shown say what it is.
 
@@ -107,8 +107,8 @@ without checking it elsewhere.
 - Field: decide off_field from the pages shown, not from the field the
   organisation belongs to. off_field only when the pages shown are about
   nothing the question needs (a weather service, a dictionary entry, a
-  brewery). When the pages cover any side of the question (its policy,
-  regulation, financing, technology or market), judge the site by its kind
+  brewery, etc.). When the pages cover any side of the question (its policy,
+  regulation, financing, technology, market, etc.), judge the site by its kind
   as usual: a policy think tank writing on drone rules is specialist for a
   question on drone delivery vendors.
 

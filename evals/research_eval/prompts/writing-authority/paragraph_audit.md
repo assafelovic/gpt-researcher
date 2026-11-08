@@ -1,6 +1,6 @@
 ---
 id: paragraph_audit
-version: 11
+version: 12
 used_by: citation audit (citation_audit.py), source_utilization, citation_recall, citation_precision, effective_citations, faithfulness
 ---
 
@@ -12,7 +12,7 @@ used_by: citation audit (citation_audit.py), source_utilization, citation_recall
 
 ## Steps (in this order)
 1. kind:
-   - "factual": the paragraph states facts, figures, events or findings.
+   - "factual": the paragraph states facts, figures, events, findings, etc.
    - "non_factual": only opinion, recommendation, transition or structure.
    - For a non_factual paragraph return an empty "claims" list, and still do step 3.
 2. claims: split the paragraph into claims as the system prompt defines them.

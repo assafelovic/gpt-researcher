@@ -1,6 +1,6 @@
 ---
 id: topic_relevance
-version: 7
+version: 8
 used_by: topic_relevance
 ---
 
@@ -16,7 +16,7 @@ used_by: topic_relevance
   - "yes": it helps answer the question; background the question needs
     counts;
   - "no": it is off topic, or padding that says nothing about the question;
-  - "idk": you cannot tell, such as a short transition.
+  - "idk": you cannot tell, such as a short transition, etc.
 - reason: a short reason for every "no"; empty otherwise.
 
 ## On topic or not
@@ -26,11 +26,11 @@ used_by: topic_relevance
   answer the whole question: valuations or financing terms in a report on
   M&A activity are on topic.
 - A paragraph on a related subject is "yes" when the report uses it to
-  answer the question (a comparison, a cause, a context).
+  answer the question (a comparison, a cause, a context, etc.).
 - Generic statements that would fit any report ("this is a complex and
-  evolving field") are padding: "no".
+  evolving field", etc.) are padding: "no".
 - The report's notes about itself (its method, its sources, its date, its
-  scope, a table of contents or list of its section headings) are "idk": they
+  scope, a table of contents or list of its section headings, etc.) are "idk": they
   neither answer nor leave the question.
 
 ## Answer format

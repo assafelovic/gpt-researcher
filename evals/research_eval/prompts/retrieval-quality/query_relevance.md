@@ -1,6 +1,6 @@
 ---
 id: query_relevance
-version: 13
+version: 14
 used_by: query_relevance
 ---
 
@@ -22,11 +22,11 @@ used_by: query_relevance
     same subject: the same industry, the same kind of actor, etc.
   - 1: the material is near the topic but does not give that information:
     background, definitions, another industry or kind of actor, a general
-    study, or a vendor's claims about its own product.
+    study, a vendor's claims about its own product, etc.
   - 0: every passage is off the subject of the core query or has nothing
     to judge: job listings, page furniture, a repository or file listing,
-    a video page with no transcript, a list of links, or another meaning
-    of a word.
+    a video page with no transcript, a list of links, another meaning
+    of a word, etc.
 - substance_evidence: quote the most concrete fact in the material about
   what the query asks, or say that there is none.
 - substance:
@@ -35,8 +35,8 @@ used_by: query_relevance
     general text.
   - 1: the material has only general statements, forecasts, or concrete
     facts about other subjects than the query asks.
-  - 0: no fact at all: marketing, definitions, page furniture or cut-off
-    text.
+  - 0: no fact at all: marketing, definitions, page furniture, cut-off
+    text, etc.
 
 ## Judging the unit
 - Relevance is to the core query, not to the query under review: a query
@@ -51,7 +51,7 @@ used_by: query_relevance
   software is not about bank call centres because both mention "handoff"
   and "compliance".
 - Keep relevance 0 for material wholly off the subject (another industry,
-  another meaning of a word): it sets the unit's score to 0.
+  another meaning of a word, etc.): it sets the unit's score to 0.
 - Other queries of the same plan are not shown: whether two queries repeat
   each other is judged elsewhere.
 

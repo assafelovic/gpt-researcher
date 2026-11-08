@@ -1,6 +1,6 @@
 ---
 id: quality_score
-version: 6
+version: 7
 used_by: insight, readability
 ---
 
@@ -32,7 +32,7 @@ used_by: insight, readability
 
 ## Insights found
 - Also list the report's insights as you read them: each conclusion,
-  comparison or implication that goes beyond restating a source, in one
+  comparison, implication, etc. that goes beyond restating a source, in one
   sentence, with the report text it comes from.
 - Use an empty list if there are none.
 
