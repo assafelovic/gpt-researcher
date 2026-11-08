@@ -1,7 +1,7 @@
 {
   "decomposition_coverage": {
-    "version": "9",
-    "hash": "fa6edffe5011"
+    "version": "10",
+    "hash": "f68ef389560f"
   },
   "key_points": {
     "version": "2",
@@ -12,8 +12,8 @@
     "hash": "f27505de8b6f"
   },
   "key_points_layered": {
-    "version": "1",
-    "hash": "97f94fb89bff"
+    "version": "2",
+    "hash": "508a96643015"
   },
   "key_points_merge": {
     "version": "2",
@@ -40,16 +40,16 @@
     "hash": "ed620b964876"
   },
   "material_coverage": {
-    "version": "2",
-    "hash": "5f2653f7d5f1"
+    "version": "3",
+    "hash": "b757cdd83db5"
   },
   "query_relevance": {
     "version": "12",
     "hash": "85f59cea50b3"
   },
   "comprehensiveness": {
-    "version": "5",
-    "hash": "4e86ee0faa14"
+    "version": "6",
+    "hash": "3d3160307bc2"
   },
   "quality_rubric": {
     "version": "4",

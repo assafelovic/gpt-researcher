@@ -21,7 +21,7 @@ from gpt_researcher.context.lexical import tokenize
 from ...archive import RunArchive, normalize_url
 from ...cache import stable_hash
 from ...key_points import get_key_points
-from ...prompts import DOMAIN_AUTHORITY, KEY_POINTS, MATERIAL_COVERAGE
+from ...prompts import DOMAIN_AUTHORITY, KEY_POINTS_LAYERED, MATERIAL_COVERAGE
 from ...report_parser import body_paragraphs, cited_urls
 from ..base import Metric, MetricResult, ScoringContext, rounded
 from ..lexical import idf_table, weighted_overlap
@@ -430,9 +430,10 @@ class MaterialCoverage(Metric):
     """
 
     name, category = "material_coverage", "retrieval.retrieval_quality"
-    version = "1"
+    version = "2"           # 2: layered key points: passages are picked by the point and its
+                            # sub-points, and the judge sees the sub-points
     uses_llm = True
-    prompts = (MATERIAL_COVERAGE, KEY_POINTS)
+    prompts = (MATERIAL_COVERAGE, KEY_POINTS_LAYERED)
     PASSAGES = 6
     PASSAGE_CHARS = 1200
     POINTS = {"full": 1.0, "partial": 0.5, "none": 0.0}
@@ -460,10 +461,12 @@ class MaterialCoverage(Metric):
         if not points:
             return self.skip("no key points", key_points=provenance)
         idf = idf_table([archive.chunks[c]["content"] for c in archive.writer_chunk_ids])
+        subs = provenance.get("sub_points") or []
         shown, blocks = {}, []
         for i, p in enumerate(points, 1):
-            lines = [f"Key point {i}: {p}"]
-            for j, c in enumerate(self.picks(archive, p, idf)):
+            sub = subs[i - 1] if i <= len(subs) else []
+            lines = [f"Key point {i}: {p}" + (f"\nincludes: {'; '.join(sub)}" if sub else "")]
+            for j, c in enumerate(self.picks(archive, " ".join([p, *sub]), idf)):
                 pid = f"{i}{ascii_lowercase[j]}"
                 shown[pid] = c
                 lines.append(f"[{pid}] {archive.chunks[c].get('url') or 'unknown source'}\n"

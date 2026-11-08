@@ -38,7 +38,8 @@ dataset/questions_*.jsonl -> runner.py -> capture.py (hooks) -> runs/<dataset>/<
 | `cache.py` | One SQLite file: `question`, `domain`, `llm`, `embedding` namespaces. |
 | `judge.py` | Cached judge (model from `evals/judge.py`): each prompt goes out as a system message (the fixed task) and a user message (the data), with the prompt's answer schema in strict structured-output mode; cached embedder (repo `EMBEDDING` setting). |
 | `prompts/` | Every judge prompt as its own `<id>.md` file (header: id, version, metrics that use it), in one folder per metric group whose `SKILL.md` holds the group's shared definitions; `versions.json` locks each version to its text hash; see `prompts/README.md`. Version + content hash go into cache keys and results. |
-| `key_points.py` | Per-question key points: frozen file > cache > one judge call. |
+| `key_points.py` | Per-question key points: frozen file > cache > one judge call (`key_points_layered`: 4-6 aspects, each with 2-4 sub-points; the aspect is scored, the judge sees its sub-points as what it includes). `--write DIR` writes the frozen files. |
+| `key_points_methods.py` | Compares five ways of writing key points by coverage of a shared pool (all lists + two independent answer outlines); chose the layered method. Prints and saves JSON, no scores. |
 | `citation_audit.py` | Shared paragraph-level judge audit: claims, ALCE sentence checks, which chunks were used. |
 | `metrics/` | `Metric` interface and registry; `retrieval/` holds the nine retrieval metrics, `generation/` the thirteen generation ones. |
 | `scoring.py` | Runs metrics on an archive; results keyed by run_id + scorer version. |
@@ -176,7 +177,7 @@ one piece of evidence, not several:
 | Shared judgment | Metrics that read it | What moves them together |
 |---|---|---|
 | citation audit (paragraph_audit + claim_recheck, one call per paragraph) | citation_recall, citation_precision, effective_citations, faithfulness, source_utilization (chunk view) | a claim judged supported or not changes recall, precision (a citation is precise only if it backs a supported claim), effective citations and faithfulness together |
-| frozen key points (dataset/key_points) | decomposition_coverage, material_coverage, query_relevance (diagnostic field only), comprehensiveness | an overlapping or missing key point counts in every one of them |
+| frozen key points (dataset/key_points) | decomposition_coverage, material_coverage, comprehensiveness | an overlapping or missing key point counts in every one of them |
 | frozen rubrics (dataset/rubrics) | insight, readability | a rubric criterion sets the standard of both passes |
 | domain kinds (domain_authority) | source_authority only | source_diversity counts domains by rule, not kinds |
 

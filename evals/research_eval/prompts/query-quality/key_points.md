@@ -2,7 +2,7 @@
 id: key_points
 version: 2
 skill: none
-used_by: key points for the question (key_points.py), decomposition_coverage, material_coverage, query_relevance, comprehensiveness
+used_by: key point method comparison (key_points_methods.py, "current"); the key points until key_points_layered replaced it
 ---
 
 You are planning a research report. List the distinct aspects that a thorough,

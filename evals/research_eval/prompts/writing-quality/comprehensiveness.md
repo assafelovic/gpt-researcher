@@ -1,6 +1,6 @@
 ---
 id: comprehensiveness
-version: 5
+version: 6
 used_by: comprehensiveness
 ---
 
@@ -9,6 +9,8 @@ used_by: comprehensiveness
 ## Goal
 - You are checking which aspects of the question a finished report covers.
 - You are given the core query, its numbered key points and the report.
+- Under a key point, "includes" lists the sub-points a good answer gives on
+  it. They show what the point means; the point is still judged as a whole.
 
 ## What to decide for each key point
 - evidence: quote the report words your answer rests on. Empty for "none".
@@ -22,9 +24,10 @@ used_by: comprehensiveness
 - Naming an example that belongs to the point (a company, a place, a
   product) does not cover it unless the report says something about the
   point.
-- A point that lists several parts ("costs, timelines and risks") is full
-  only when the report gives real information on each part; when it covers
-  some parts, it is partial.
+- A point is full when the report gives real information on the point and
+  on most of what it includes; when it covers only some of it, it is
+  partial. The same holds for a point that names several parts ("costs,
+  timelines and risks").
 - If your evidence has to say the report does not address the point, the
   coverage is "none".
 

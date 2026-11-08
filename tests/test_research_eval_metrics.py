@@ -217,6 +217,37 @@ async def test_key_points_frozen_file_wins(ctx, tmp_path):
     assert not any("List the distinct aspects" in p for p in ctx.fake.prompts)
 
 
+async def test_layered_key_points_show_their_sub_points(ctx, tmp_path):
+    (tmp_path / "q1.json").write_text(json.dumps({"aspects": [
+        {"aspect": "cobalt supply", "sub_points": ["Congo mine output", "refining in China"]},
+        {"aspect": "recycling policy", "sub_points": []}]}))
+    ctx.key_points_dir = tmp_path
+    r = await DecompositionCoverage().score(make_archive(), ctx)
+    assert [p["key_point"] for p in r.details["per_point"]] == ["cobalt supply", "recycling policy"]
+    assert r.details["key_points"]["sub_points"][0] == ["Congo mine output", "refining in China"]
+    prompt = next(p for p in ctx.fake.prompts if "which key points of the core query" in p)
+    points = prompt.split("Key points:")[1].split("Sub-queries:")[0]
+    assert "1. cobalt supply\n   includes: Congo mine output; refining in China\n2. recycling policy\n" in points
+    await MaterialCoverage().score(make_archive(), ctx)
+    prompt = next(p for p in ctx.fake.prompts if "retrieved covers" in p)
+    assert "Key point 1: cobalt supply\nincludes: Congo mine output; refining in China\n" in prompt
+
+
+async def test_generated_key_points_are_cached_with_their_sub_points(ctx):
+    from evals.research_eval.key_points import get_key_points
+
+    async def layered(prompt):
+        if "in two layers" in prompt:
+            return json.dumps({"aspects": [{"aspect": "cobalt supply", "sub_points": ["Congo mine output"]}]})
+        return await ctx.fake(prompt)
+    ctx.judge = Judge(ctx.cache, model="judge-x", complete=layered)
+    points, prov = await get_key_points(make_archive(), ctx)
+    assert points == ["cobalt supply"] and prov["source"] == "judge"
+    ctx._memo.clear()
+    points, prov = await get_key_points(make_archive(), ctx)
+    assert prov["source"] == "cache" and prov["sub_points"] == [["Congo mine output"]]
+
+
 async def test_subquery_redundancy_judges_candidate_pairs_one_per_call(ctx):
     r = await SubqueryRedundancy().score(make_archive(), ctx)
     # The core repeat (layer 0) is the run's question, not a node; the step

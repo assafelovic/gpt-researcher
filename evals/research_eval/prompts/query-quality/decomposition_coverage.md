@@ -1,6 +1,6 @@
 ---
 id: decomposition_coverage
-version: 9
+version: 10
 used_by: decomposition_coverage
 ---
 
@@ -10,6 +10,8 @@ used_by: decomposition_coverage
 - Judge which key points of the core query the agent decided to search for.
 - You are given the core query, its key points and the sub-queries the agent
   searched.
+- Under a key point, "includes" lists the sub-points a good answer gives on
+  it. A sub-query aimed at one of them is aimed at the point.
 
 ## What to decide for each key point
 - subqueries: the numbers of the sub-queries aimed at it. A sub-query may

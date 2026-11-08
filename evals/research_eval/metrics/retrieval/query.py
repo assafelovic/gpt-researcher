@@ -8,8 +8,8 @@ from itertools import combinations
 
 from ...archive import RunArchive
 from ...judge import cosine
-from ...key_points import get_key_points
-from ...prompts import DECOMPOSITION_COVERAGE, KEY_POINTS, SUBQUERY_REDUNDANCY, TREE_QUALITY
+from ...key_points import get_key_points, render_key_points
+from ...prompts import DECOMPOSITION_COVERAGE, KEY_POINTS_LAYERED, SUBQUERY_REDUNDANCY, TREE_QUALITY
 from ..base import Metric, MetricResult, ScoringContext, rounded
 from ..lexical import idf_table, symmetric_overlap
 
@@ -43,10 +43,11 @@ class DecompositionCoverage(Metric):
     """
 
     name, category = "decomposition_coverage", "retrieval.query_quality"
-    version = "5"           # 3: deep clarifying questions are not sub-queries; 4: "aimed at" from the query-quality skill;
-                            # 5: the skill rewritten short, with shared principles
+    version = "6"           # 3: deep clarifying questions are not sub-queries; 4: "aimed at" from the query-quality skill;
+                            # 5: the skill rewritten short, with shared principles;
+                            # 6: layered key points, the judge sees each point's sub-points
     uses_llm = True
-    prompts = (KEY_POINTS, DECOMPOSITION_COVERAGE)
+    prompts = (KEY_POINTS_LAYERED, DECOMPOSITION_COVERAGE)
     EMBEDDING_THRESHOLD = 0.5
 
     async def score(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:
@@ -63,7 +64,7 @@ class DecompositionCoverage(Metric):
 
         prompt = DECOMPOSITION_COVERAGE.render(
             question=archive.query,
-            key_points="\n".join(f"{i}. {p}" for i, p in enumerate(points, 1)),
+            key_points=render_key_points(points, provenance),
             subqueries="\n".join(f"{i}. {q}" for i, q in enumerate(queries, 1)))
         r = await ctx.judge.ask(DECOMPOSITION_COVERAGE.id, DECOMPOSITION_COVERAGE.version, prompt)
         entries = r.parsed.get("points") if isinstance(r.parsed, dict) else None

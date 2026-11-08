@@ -12,8 +12,8 @@ from gpt_researcher.context.lexical import tokenize
 
 from ...archive import RunArchive, normalize_url
 from ...citation_audit import material_idf
-from ...key_points import get_key_points
-from ...prompts import (COMPREHENSIVENESS, KEY_POINTS, QUALITY_RUBRIC, QUALITY_SCORE,
+from ...key_points import get_key_points, render_key_points
+from ...prompts import (COMPREHENSIVENESS, KEY_POINTS_LAYERED, QUALITY_RUBRIC, QUALITY_SCORE,
                         TOPIC_RELEVANCE)
 from ...report_parser import TOC_HEADING, body_paragraphs, cited_urls, report_ending
 from ..base import Metric, MetricResult, ScoringContext, rounded
@@ -39,9 +39,10 @@ class Comprehensiveness(Metric):
     """
 
     name, category = "comprehensiveness", "generation.writing_quality"
-    version = "4"           # 4: key points the reply skipped are counted in details
+    version = "5"           # 4: key points the reply skipped are counted in details;
+                            # 5: layered key points, the judge sees each point's sub-points
     uses_llm = True
-    prompts = (COMPREHENSIVENESS, KEY_POINTS)
+    prompts = (COMPREHENSIVENESS, KEY_POINTS_LAYERED)
     HINT = 0.6
 
     async def score(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:
@@ -56,7 +57,7 @@ class Comprehensiveness(Metric):
         r = await ctx.judge.ask(COMPREHENSIVENESS.id, COMPREHENSIVENESS.version,
                                 COMPREHENSIVENESS.render(
                                     question=archive.query, report=text,
-                                    key_points="\n".join(f"{i}. {p}" for i, p in enumerate(points, 1))))
+                                    key_points=render_key_points(points, provenance)))
         got = {}
         for e in (r.parsed or {}).get("points", []) if isinstance(r.parsed, dict) else []:
             try:
