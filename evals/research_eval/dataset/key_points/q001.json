@@ -1,12 +1,59 @@
 {
- "key_points": [
-  "MiCA authorization, passporting, and transition deadlines for crypto-asset service providers",
-  "MiCA token-issuance and stablecoin reserve and redemption rules",
-  "MiCA disclosure, consumer-protection, and market-abuse obligations",
-  "EU crypto-transfer travel-rule requirements",
-  "EU AML package and AMLA supervision of crypto businesses",
-  "DORA operational-resilience requirements for crypto firms",
-  "DAC8 crypto-asset tax reporting and information exchange",
-  "UK crypto-promotion restrictions and evolving FCA authorization rules"
+ "prompt": "key_points_layered v3, 3 drafts + key_points_synthesize v1",
+ "judge_model": "gpt-6-luna",
+ "aspects": [
+  {
+   "aspect": "MiCA service-provider and market rules",
+   "sub_points": [
+    "CASP authorization, passporting, and transitional permissions",
+    "White-paper disclosures and issuer governance",
+    "Market-abuse controls and customer-conduct requirements",
+    "National supervision and transition periods"
+   ]
+  },
+  {
+   "aspect": "Stablecoin issuance and oversight",
+   "sub_points": [
+    "Authorization for ART and EMT issuers",
+    "Reserve assets, redemption rights, and safeguards",
+    "Restrictions on large-token use and liquidity"
+   ]
+  },
+  {
+   "aspect": "Anti-money-laundering and transfer transparency",
+   "sub_points": [
+    "EU AML package and AMLA oversight",
+    "Travel Rule requirements for crypto transfers",
+    "Customer due diligence and beneficial-ownership checks",
+    "Sanctions screening and suspicious-activity reporting"
+   ]
+  },
+  {
+   "aspect": "Adjacent financial and operational regulation",
+   "sub_points": [
+    "DORA ICT-risk and incident-reporting duties",
+    "Custody and safeguarding requirements",
+    "Payment-services and e-money rules",
+    "Prudential treatment and MiFID rules for crypto instruments"
+   ]
+  },
+  {
+   "aspect": "Crypto tax reporting and taxation",
+   "sub_points": [
+    "DAC8 obligations and CARF alignment",
+    "Cross-border tax information exchange",
+    "Provider reporting and customer-data collection",
+    "National taxation of crypto transactions"
+   ]
+  },
+  {
+   "aspect": "National and non-EU European regimes",
+   "sub_points": [
+    "UK authorization, AML oversight, and financial promotions",
+    "UK stablecoin and trading-platform rules",
+    "EEA adoption and national implementation differences",
+    "Swiss licensing and financial-market rules"
+   ]
+  }
  ]
 }

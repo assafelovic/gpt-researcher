@@ -103,7 +103,7 @@ class FakeJudge:
             return json.dumps({"verdicts": [{"paragraph": i, "verdict": "yes"} for i in range(1, n + 1)]})
         if "screening part of a research report" in prompt:
             return json.dumps({"opinions": []})
-        if "List the distinct aspects" in prompt:
+        if "List the distinct aspects" in prompt or "Write the final list from them" in prompt:
             return json.dumps({"key_points": ["cobalt supply", "lithium refining", "recycling policy"]})
         if "retrieved covers, before any report" in prompt:
             # Covered when one of the point's own passages names its first word.
@@ -201,7 +201,7 @@ async def test_decomposition_coverage_embedding_fallback_with_frozen_points(ctx,
 
 async def test_decomposition_coverage_judge_failure_is_skipped(ctx):
     async def bad(prompt):
-        if "List the distinct aspects" in prompt:
+        if "List the distinct aspects" in prompt or "Write the final list from them" in prompt:
             return json.dumps({"key_points": ["cobalt supply"]})
         return "not json"
     ctx.judge = Judge(ctx.cache, model="judge-y", complete=bad)
@@ -237,12 +237,16 @@ async def test_generated_key_points_are_cached_with_their_sub_points(ctx):
     from evals.research_eval.key_points import get_key_points
 
     async def layered(prompt):
+        if "Write the final list from them" in prompt:
+            # Three drafts, each shown with its sub-points.
+            assert prompt.count("includes: Congo mine output") == 3
+            return json.dumps({"aspects": [{"aspect": "cobalt supply", "sub_points": ["Congo mine output"]}]})
         if "in two layers" in prompt:
             return json.dumps({"aspects": [{"aspect": "cobalt supply", "sub_points": ["Congo mine output"]}]})
         return await ctx.fake(prompt)
     ctx.judge = Judge(ctx.cache, model="judge-x", complete=layered)
     points, prov = await get_key_points(make_archive(), ctx)
-    assert points == ["cobalt supply"] and prov["source"] == "judge"
+    assert points == ["cobalt supply"] and prov["source"] == "judge" and prov["drafts"] == 3
     ctx._memo.clear()
     points, prov = await get_key_points(make_archive(), ctx)
     assert prov["source"] == "cache" and prov["sub_points"] == [["Congo mine output"]]
@@ -425,11 +429,11 @@ async def test_dry_run_counts_follow_up_requests_and_caches_nothing():
     cache = EvalCache(":memory:")
     j = Judge(cache, model="m", dry_run=True)
     r = await DecompositionCoverage().score(nested_archive(), ScoringContext(cache=cache, judge=j))
-    # The key points, then the mapping that is asked only once they are known.
-    assert j.calls == 2 and r.value is not None
+    # The key points (3 drafts + 1 merge), then the mapping asked only once they are known.
+    assert j.calls == 5 and r.value is not None
     j2 = Judge(cache, model="m", dry_run=True)
     await DecompositionCoverage().score(nested_archive(), ScoringContext(cache=cache, judge=j2))
-    assert j2.calls == 2 and j2.cache_hits == 0
+    assert j2.calls == 5 and j2.cache_hits == 0
 
 
 async def test_tree_quality_leaves_out_deep_clarifying_questions(ctx):

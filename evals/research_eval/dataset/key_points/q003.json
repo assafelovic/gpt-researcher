@@ -1,11 +1,49 @@
 {
- "key_points": [
-  "Leading platforms selected and comparison scope",
-  "Pricing models, tiers, and usage-based cost drivers",
-  "Vector indexing, similarity metrics, and search capabilities",
-  "Hybrid search, metadata filtering, and retrieval features",
-  "Performance, scalability, and capacity limits",
-  "Deployment options, security, and operational requirements",
-  "Integrations, developer tooling, and ecosystem support"
+ "prompt": "key_points_layered v3, 3 drafts + key_points_synthesize v1",
+ "judge_model": "gpt-6-luna",
+ "aspects": [
+  {
+   "aspect": "Platform coverage",
+   "sub_points": [
+    "Dedicated systems: Pinecone, Weaviate, Qdrant, Milvus/Zilliz",
+    "Open-source options: Chroma and LanceDB",
+    "Database and search platforms: MongoDB Atlas, Elasticsearch, Redis"
+   ]
+  },
+  {
+   "aspect": "Pricing structures and costs",
+   "sub_points": [
+    "Free tiers and entry-level plans",
+    "Usage-based versus capacity-based billing",
+    "Compute, storage, and query cost drivers",
+    "Enterprise plans and self-hosting costs"
+   ]
+  },
+  {
+   "aspect": "Search and data capabilities",
+   "sub_points": [
+    "Similarity metrics and approximate-nearest-neighbor indexes",
+    "Metadata filtering and hybrid lexical-vector search",
+    "Dense, sparse, and multimodal support",
+    "Data ingestion and update behavior"
+   ]
+  },
+  {
+   "aspect": "Deployment and operations",
+   "sub_points": [
+    "Managed cloud and self-hosted deployment options",
+    "Cloud availability and ecosystem integrations",
+    "Security and access controls",
+    "Monitoring, backup, and replication"
+   ]
+  },
+  {
+   "aspect": "Performance and workload fit",
+   "sub_points": [
+    "Query latency and throughput",
+    "Dataset capacity and horizontal scaling",
+    "Workload-specific strengths and limitations"
+   ]
+  }
  ]
 }

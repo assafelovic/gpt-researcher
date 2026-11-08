@@ -4,8 +4,9 @@ Per-question key points: the K aspects a good answer must cover.
 Generated once per question and shared by every run of it (decomposition
 coverage, material coverage, comprehensiveness). Each key point is an aspect
 with 2-4 sub-points: the aspect is the unit that is scored, the sub-points
-show the judge what it includes. The method (key_points_layered) was chosen
-by comparison with four others (key_points_methods.py). Lookup order:
+show the judge what it includes. The method (3 key_points_layered drafts merged
+by key_points_synthesize, "layered-merged") was chosen
+by comparison with five others (key_points_methods.py). Lookup order:
 
   1. a frozen file `<key_points_dir>/<question_id>.json`
      ({"aspects": [{"aspect": ..., "sub_points": [...]}]}, or the older
@@ -27,7 +28,7 @@ from .cache import stable_hash
 from .prompts import KEY_POINTS_LAYERED as KEY_POINTS
 from .prompts import KEY_POINTS_SYNTHESIZE
 
-DRAFTS = 1      # > 1: that many layered drafts, then one call writes the final list from them
+DRAFTS = 3      # layered drafts; with > 1, one more call (key_points_synthesize) writes the final list
 
 if TYPE_CHECKING:
     from .archive import RunArchive

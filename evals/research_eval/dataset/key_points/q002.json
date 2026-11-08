@@ -1,10 +1,59 @@
 {
- "key_points": [
-  "AI customer-service use cases, including chatbots and virtual assistants",
-  "Integration with existing banking channels and service systems",
-  "Human-agent collaboration and escalation for complex customer needs",
-  "Personalization and automation benefits for customers and banks",
-  "Data privacy, security, bias, and regulatory safeguards",
-  "Implementation challenges, costs, and customer adoption"
+ "prompt": "key_points_layered v3, 3 drafts + key_points_synthesize v1",
+ "judge_model": "gpt-6-luna",
+ "aspects": [
+  {
+   "aspect": "Customer-facing AI applications",
+   "sub_points": [
+    "Chatbots and virtual assistants",
+    "Account, payment, and transaction inquiries",
+    "Personalized financial guidance and recommendations",
+    "Fraud and dispute assistance"
+   ]
+  },
+  {
+   "aspect": "Service-channel deployment",
+   "sub_points": [
+    "Mobile and online banking",
+    "Telephone, contact centers, and interactive voice response",
+    "Messaging and social platforms",
+    "Branch-based service interfaces"
+   ]
+  },
+  {
+   "aspect": "Human-AI service workflows",
+   "sub_points": [
+    "Agent recommendations and knowledge retrieval",
+    "Interaction summaries for service staff",
+    "Inquiry routing and human handoffs",
+    "Employee training and role changes"
+   ]
+  },
+  {
+   "aspect": "Technology integration and sourcing",
+   "sub_points": [
+    "Connections to core banking, CRM, and customer data",
+    "Cloud, hybrid, and on-premises infrastructure",
+    "Vendor platforms and in-house models",
+    "Legacy-system modernization"
+   ]
+  },
+  {
+   "aspect": "Governance and safeguards",
+   "sub_points": [
+    "Customer data privacy and security",
+    "Model accuracy, fairness, and bias controls",
+    "Regulatory compliance and auditability"
+   ]
+  },
+  {
+   "aspect": "Service outcomes and adoption",
+   "sub_points": [
+    "Response times and resolution rates",
+    "Customer satisfaction, accessibility, and trust",
+    "Staff productivity and contact-center costs",
+    "Digital inclusion"
+   ]
+  }
  ]
 }

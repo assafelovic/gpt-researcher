@@ -124,7 +124,7 @@ class ScriptedJudge:
             return json.dumps({"points": [{"point": 1, "coverage": "full"},
                                           {"point": 2, "coverage": "partial"},
                                           {"point": 3, "coverage": "none"}]})
-        if "List the distinct aspects" in prompt:
+        if "List the distinct aspects" in prompt or "Write the final list from them" in prompt:
             return json.dumps({"key_points": ["cobalt mining", "lithium refining", "EU battery regulation"]})
         if "preparing a grading rubric" in prompt:
             return json.dumps({"insight": [{"criterion": "causes", "weight": 0.75},

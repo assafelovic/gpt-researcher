@@ -1,10 +1,60 @@
 {
- "key_points": [
-  "Recent deal volume, aggregate value, and year-over-year trends",
-  "Major healthtech acquisitions, mergers, buyers, and sellers",
-  "Subsector concentration across digital health, software, devices, and services",
-  "Geographic distribution of transactions",
-  "Strategic and financial buyer motivations",
-  "Valuations, deal structures, and financing conditions"
+ "prompt": "key_points_layered v3, 3 drafts + key_points_synthesize v1",
+ "judge_model": "gpt-6-luna",
+ "aspects": [
+  {
+   "aspect": "Deal volume, values, and structures",
+   "sub_points": [
+    "Deal counts and announced, completed, or withdrawn status",
+    "Aggregate deal values and valuations",
+    "Large acquisitions, tuck-ins, and platform purchases",
+    "Take-privates and asset sales"
+   ]
+  },
+  {
+   "aspect": "Regional and cross-border patterns",
+   "sub_points": [
+    "North American deal activity",
+    "European deal activity",
+    "Asia-Pacific deal activity",
+    "Cross-border transactions"
+   ]
+  },
+  {
+   "aspect": "Healthtech subsectors",
+   "sub_points": [
+    "Digital health and virtual care",
+    "Health IT and clinical software",
+    "Medical devices and diagnostics",
+    "Data, analytics, and artificial intelligence"
+   ]
+  },
+  {
+   "aspect": "Acquirers and targets",
+   "sub_points": [
+    "Healthcare providers, payers, and services firms",
+    "Technology, pharmaceutical, and life-sciences companies",
+    "Private-equity and other financial investors",
+    "Startups and established healthtech vendors"
+   ]
+  },
+  {
+   "aspect": "Strategic and financial drivers",
+   "sub_points": [
+    "Technology and data capabilities",
+    "Scale, consolidation, and market expansion",
+    "Care-delivery and operational efficiencies",
+    "Financing, profitability, and reimbursement conditions"
+   ]
+  },
+  {
+   "aspect": "Regulatory and integration considerations",
+   "sub_points": [
+    "Antitrust and competition review",
+    "Health-data privacy and interoperability requirements",
+    "Closing delays and deal cancellations",
+    "Post-acquisition integration and market effects"
+   ]
+  }
  ]
 }

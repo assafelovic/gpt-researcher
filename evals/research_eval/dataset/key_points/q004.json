@@ -1,11 +1,58 @@
 {
- "key_points": [
-  "Leading end-to-end delivery operators and their service models",
-  "Retailer- and logistics-backed drone delivery ventures",
-  "Regional leaders and geographic coverage",
-  "Commercial scale, delivery volumes, and operational maturity",
-  "Regulatory approvals and active operating jurisdictions",
-  "Key customer, retailer, and logistics partnerships",
-  "Distinction between delivery operators and drone technology suppliers"
+ "prompt": "key_points_layered v3, 3 drafts + key_points_synthesize v1",
+ "judge_model": "gpt-6-luna",
+ "aspects": [
+  {
+   "aspect": "Autonomous delivery-network operators",
+   "sub_points": [
+    "Zipline",
+    "Wing",
+    "Manna",
+    "Flytrex"
+   ]
+  },
+  {
+   "aspect": "Retailer and logistics-backed programs",
+   "sub_points": [
+    "Amazon Prime Air",
+    "Walmart–DroneUp",
+    "Retailer-backed delivery programs"
+   ]
+  },
+  {
+   "aspect": "China-based delivery platforms",
+   "sub_points": [
+    "Meituan",
+    "JD Logistics",
+    "SF Express"
+   ]
+  },
+  {
+   "aspect": "Third-party delivery platforms",
+   "sub_points": [
+    "Matternet",
+    "Swoop Aero",
+    "Wingcopter",
+    "Medical and specialized delivery sectors"
+   ]
+  },
+  {
+   "aspect": "Cargo-drone suppliers and capabilities",
+   "sub_points": [
+    "Dronamics",
+    "Elroy Air",
+    "Aircraft payload capacity",
+    "Autonomy and fleet-management systems"
+   ]
+  },
+  {
+   "aspect": "Vendor leadership indicators",
+   "sub_points": [
+    "Commercial operating scale",
+    "Geographic reach",
+    "Regulatory approvals",
+    "Delivery-service partnerships"
+   ]
+  }
  ]
 }
