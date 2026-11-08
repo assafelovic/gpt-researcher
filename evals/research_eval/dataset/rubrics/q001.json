@@ -1,45 +1,40 @@
 {
  "insight": [
   {
-   "criterion": "Synthesize the main regulatory changes",
-   "description": "Connects major EU crypto rules and adjacent measures—such as market regulation, AML, and tax reporting—into a coherent account of how the regulatory landscape is changing.",
-   "weight": 0.3
+   "criterion": "Regulatory interaction and convergence",
+   "description": "Explains how the regulatory changes relate to one another and analyzes whether they move crypto activity toward a more consistent EU framework or leave meaningful differences across jurisdictions.",
+   "weight": 0.25
   },
   {
-   "criterion": "Explain practical effects and trade-offs",
-   "description": "Analyzes how the changes affect crypto firms, users, and markets, including relevant compliance burdens, protections, or shifts in business activity.",
-   "weight": 0.3
+   "criterion": "Effects on industry activity",
+   "description": "Draws causal conclusions about how new obligations and constraints affect relevant crypto businesses, their operations, or the products and services they can offer.",
+   "weight": 0.25
   },
   {
-   "criterion": "Distinguish regulatory layers and scope",
-   "description": "Compares EU-wide rules with national approaches and explains which activities or entities fall within, or outside, the measures discussed.",
-   "weight": 0.2
+   "criterion": "Policy trade-offs",
+   "description": "Weighs the intended benefits of regulation, such as investor protection or financial integrity, against potential costs to innovation, competition, or market access, grounding its conclusions in the changes discussed.",
+   "weight": 0.25
   },
   {
-   "criterion": "Assess timing, gaps, and implications",
-   "description": "Draws clear conclusions about implementation timelines, remaining uncertainty or uneven coverage, and what these mean for the industry's near-term direction.",
-   "weight": 0.2
+   "criterion": "Implementation and uncertainty",
+   "description": "Analyzes how timing, transition arrangements, enforcement, or remaining discretion may shape the practical impact of the regulatory changes, rather than treating their effects as immediate and uniform.",
+   "weight": 0.25
   }
  ],
  "readability": [
   {
-   "criterion": "Organize by regulatory theme",
-   "description": "Presents the changes in a logical order, grouping related measures such as market rules, AML, and tax rather than blending distinct regimes together.",
-   "weight": 0.3
+   "criterion": "Clear organization and signposting",
+   "description": "Uses a coherent structure and transitions that help readers follow the relationships among regulatory changes and their implications, without abrupt or confusing shifts.",
+   "weight": 0.4
   },
   {
-   "criterion": "Clarify scope and jurisdiction",
-   "description": "Makes it easy to tell whether each measure applies across the EU or reflects a national approach, and which crypto activities it covers.",
-   "weight": 0.25
+   "criterion": "Precise, fluent prose",
+   "description": "Explains legal and industry effects in direct, well-formed sentences, using precise wording and avoiding ambiguity, unnecessary repetition, or cumbersome phrasing.",
+   "weight": 0.35
   },
   {
-   "criterion": "Make timelines easy to follow",
-   "description": "Clearly distinguishes adoption, entry into force, and application dates where relevant, so readers can follow when changes take effect.",
-   "weight": 0.2
-  },
-  {
-   "criterion": "Explain specialist language",
-   "description": "Defines or briefly explains regulatory acronyms and technical terms needed to understand the changes and their effects.",
+   "criterion": "Readable presentation of complexity",
+   "description": "Presents comparisons, qualifications, and timelines in a consistent, easy-to-scan form when useful, so that distinctions among rules and their effects are not obscured.",
    "weight": 0.25
   }
  ]

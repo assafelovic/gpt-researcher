@@ -1,46 +1,41 @@
 {
  "insight": [
   {
-   "criterion": "Basis for leadership",
-   "description": "The report explains what makes a vendor a leader—such as operational scale, deployment maturity, customer adoption, regulatory progress, or geographic reach—and uses those dimensions to compare vendors.",
+   "criterion": "Evidence-weighted leadership",
+   "description": "Distinguishes sustained commercial operations and demonstrated delivery activity from pilots, plans, or announcements when judging which vendors lead.",
    "weight": 0.35
   },
   {
-   "criterion": "Vendor differentiation",
-   "description": "The report compares how leading vendors differ in their delivery models, target use cases, and competitive strengths rather than presenting them as an undifferentiated list.",
+   "criterion": "Comparative positioning",
+   "description": "Draws meaningful comparisons among vendors’ competitive strengths and limitations rather than presenting them as an undifferentiated list.",
    "weight": 0.25
   },
   {
-   "criterion": "Market context and constraints",
-   "description": "The report explains how factors such as regulation, operating geography, and technical or commercial limits shape vendors’ opportunities and make leadership context-dependent.",
+   "criterion": "Operating-context effects",
+   "description": "Explains how differences in operating environments, including regulatory conditions, affect vendors’ ability to deploy and compete.",
    "weight": 0.2
   },
   {
-   "criterion": "Synthesis and conclusion",
-   "description": "The report gives a clear, justified takeaway about which vendors stand out and distinguishes established leaders from promising or more limited contenders.",
+   "criterion": "Calibrated conclusion",
+   "description": "Offers a clear, appropriately qualified judgment about who leads and recognizes where leadership may vary or remain uncertain.",
    "weight": 0.2
   }
  ],
  "readability": [
   {
-   "criterion": "Clear vendor landscape structure",
-   "description": "The report organizes vendors in a logical way, using consistent comparison dimensions or useful groupings so readers can readily compare their positions.",
-   "weight": 0.4
+   "criterion": "Clear organization and flow",
+   "description": "Presents ideas in a coherent structure with transitions that make the reasoning easy to follow.",
+   "weight": 0.35
   },
   {
-   "criterion": "Accessible terminology",
-   "description": "The report explains specialized terms and delivery models that readers need to understand how autonomous drone delivery works and how vendors differ.",
-   "weight": 0.25
+   "criterion": "Precise comparisons",
+   "description": "Uses clear, parallel phrasing when comparing vendors so readers can readily understand how the stated differences relate.",
+   "weight": 0.35
   },
   {
-   "criterion": "Clear scope",
-   "description": "The report makes clear which companies and activities count as autonomous drone delivery, avoiding confusion with adjacent drone services.",
-   "weight": 0.2
-  },
-  {
-   "criterion": "Easy-to-follow presentation",
-   "description": "Headings, transitions, and any tables or lists guide readers from the market overview to vendor comparisons and the final takeaway.",
-   "weight": 0.15
+   "criterion": "Fluent, unambiguous prose",
+   "description": "Uses concise sentences and precise wording, avoiding confusing references, repetition, and unnecessary jargon for a student or junior researcher in the field.",
+   "weight": 0.3
   }
  ]
 }

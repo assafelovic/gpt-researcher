@@ -1,41 +1,46 @@
 {
  "insight": [
   {
-   "criterion": "Pricing-model comparison",
-   "description": "Compares the platforms’ pricing models and explains how their billing units and cost drivers affect relative cost for different usage patterns.",
+   "criterion": "Comparative positioning",
+   "description": "Draws clear, evidence-based contrasts among platforms’ pricing and capabilities instead of presenting isolated product descriptions.",
+   "weight": 0.25
+  },
+  {
+   "criterion": "Price–feature trade-offs",
+   "description": "Explains how differences in pricing models and cost drivers relate to differences in platform capabilities, performance, or operational flexibility.",
    "weight": 0.3
   },
   {
-   "criterion": "Feature trade-offs",
-   "description": "Synthesizes differences in core vector-search capabilities and related features, explaining what users gain or give up across platforms.",
-   "weight": 0.3
+   "criterion": "Cost under comparable use",
+   "description": "Interprets price differences using comparable usage or deployment assumptions and explains how changes in scale or workload could alter the comparison.",
+   "weight": 0.25
   },
   {
-   "criterion": "Deployment and scaling implications",
-   "description": "Connects deployment options and scaling or operational characteristics to their practical trade-offs for platform selection.",
-   "weight": 0.2
-  },
-  {
-   "criterion": "Use-case conclusions",
-   "description": "Draws clear, differentiated conclusions about which platforms best fit particular needs, based on the pricing and feature comparisons.",
+   "criterion": "Platform fit and judgment",
+   "description": "Reaches qualified conclusions about which platforms may suit different needs, making the trade-offs behind those judgments clear rather than declaring a universal winner.",
    "weight": 0.2
   }
  ],
  "readability": [
   {
-   "criterion": "Consistent platform comparisons",
-   "description": "Presents pricing and features in a consistent structure across platforms so readers can compare them directly.",
-   "weight": 0.35
-  },
-  {
-   "criterion": "Clear pricing and technical terminology",
-   "description": "Explains pricing units and technical terms needed to understand the comparison without assuming specialist knowledge.",
+   "criterion": "Consistent comparison format",
+   "description": "Presents platform comparisons with consistent labels and parallel formatting so readers can readily compare like with like.",
    "weight": 0.3
   },
   {
-   "criterion": "Logical organization and synthesis",
-   "description": "Moves from an overview of the platforms through pricing and feature comparisons to a clear, easy-to-find takeaway.",
-   "weight": 0.35
+   "criterion": "Clear price presentation",
+   "description": "Labels price figures and their units, billing bases, and qualifications unambiguously wherever they are presented.",
+   "weight": 0.25
+  },
+  {
+   "criterion": "Precise feature descriptions",
+   "description": "Uses precise, consistent wording to distinguish platform capabilities without vague shorthand or confusingly similar labels.",
+   "weight": 0.25
+  },
+  {
+   "criterion": "Fluent, navigable prose",
+   "description": "Uses clear transitions, readable sentences, and headings or other signposts that make the discussion easy to follow.",
+   "weight": 0.2
   }
  ]
 }

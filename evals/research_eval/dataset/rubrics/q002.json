@@ -1,46 +1,41 @@
 {
  "insight": [
   {
-   "criterion": "Synthesize customer-service use cases",
-   "description": "Connects banks’ uses of AI—such as chatbots, voice assistants, personalization, and tools that support human agents—into a clear account of how adoption is changing service delivery.",
+   "criterion": "Service-model comparison",
+   "description": "Explains how AI changes the roles of customer-facing automation and staff-facing tools, including how they complement or shift traditional service channels.",
+   "weight": 0.25
+  },
+  {
+   "criterion": "Benefits and trade-offs",
+   "description": "Weighs service gains such as speed and availability against risks such as errors, weak customer experience, and the need for human escalation.",
    "weight": 0.3
   },
   {
-   "criterion": "Explain deployment and human handoffs",
-   "description": "Analyzes how AI fits into service journeys, including which tasks it handles, when customers are transferred to staff, and how automation and human support complement or limit each other.",
+   "criterion": "Adoption drivers and constraints",
+   "description": "Connects factors such as legacy systems, data, privacy, regulation, and customer trust to banks’ choices about how and where to deploy AI in service.",
    "weight": 0.25
   },
   {
-   "criterion": "Weigh benefits against risks",
-   "description": "Examines the trade-offs between gains such as faster service or greater availability and concerns such as errors, privacy, trust, accessibility, and regulatory demands.",
-   "weight": 0.25
-  },
-  {
-   "criterion": "Assess adoption outcomes and maturity",
-   "description": "Draws a grounded conclusion about what the forms of adoption imply for service quality and how far traditional banks are moving from pilots or narrow automation toward more integrated AI service.",
+   "criterion": "Synthesis of adoption patterns",
+   "description": "Draws a reasoned conclusion about the significance or maturity of banks’ AI adoption rather than leaving examples and outcomes as an unconnected list.",
    "weight": 0.2
   }
  ],
  "readability": [
   {
-   "criterion": "Organize the account around adoption",
-   "description": "Moves logically from the main AI applications in bank customer service to how they are deployed and what their implications are.",
+   "criterion": "Clear distinctions",
+   "description": "Labels and describes customer-facing AI, employee-facing assistance, and other service applications precisely enough that their functions are not conflated.",
+   "weight": 0.35
+  },
+  {
+   "criterion": "Coherent progression",
+   "description": "Organizes its discussion so that points connect logically and the reader can follow the relationships among AI applications, service effects, and constraints.",
+   "weight": 0.35
+  },
+  {
+   "criterion": "Fluent, precise presentation",
+   "description": "Uses clear sentences, consistent terminology, and effective paragraphing or formatting to make its explanations easy to follow.",
    "weight": 0.3
-  },
-  {
-   "criterion": "Clarify AI terms and service channels",
-   "description": "Explains technical terms and identifies the channels or service tasks involved so readers can understand how each application works for customers or staff.",
-   "weight": 0.25
-  },
-  {
-   "criterion": "Distinguish types of AI use",
-   "description": "Clearly separates customer-facing systems from AI that assists human service employees, and distinguishes these uses from conventional scripted automation where relevant.",
-   "weight": 0.25
-  },
-  {
-   "criterion": "Make comparisons easy to follow",
-   "description": "Uses clear grouping and transitions to show how applications, implementation approaches, and trade-offs relate, rather than presenting disconnected examples.",
-   "weight": 0.2
   }
  ]
 }
