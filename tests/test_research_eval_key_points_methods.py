@@ -23,6 +23,9 @@ async def fake(prompt):
             for w in THINGS if any(w in text for _, text in ids)]})
     if "Work in two steps" in prompt:
         return json.dumps({"asked": ["prices"], "key_points": ["prices of cells", "recycling plants"]})
+    if "Write the final list from them" in prompt:
+        assert prompt.count("Draft ") == 3 and "includes: prices by chemistry" in prompt
+        return json.dumps({"aspects": [{"aspect": "cell prices", "sub_points": ["prices by chemistry", "recycling"]}]})
     if "in two layers" in prompt:
         return json.dumps({"aspects": [{"aspect": "cell prices", "sub_points": ["prices by chemistry"]}]})
     if "list 2 to 4 sub-points" in prompt:
@@ -47,6 +50,9 @@ async def test_compare_question_scores_every_method():
     layered = res["stats"]["layered"][0]
     assert layered["coverage"] == pytest.approx(2 / 3, abs=1e-3) and layered["sub_points"] == 1
     assert layered["outline_coverage"] == 1.0
+    merged = res["methods"]["layered-merged"][0]
+    assert merged["sub_points"] == {"cell prices": ["prices by chemistry", "recycling"]}
+    assert res["stats"]["layered-merged"][0]["coverage"] == 1.0
     plus = res["methods"]["consensus+"][0]
     assert plus["key_points"] == res["methods"]["consensus"][0]["key_points"]
     assert all(plus["sub_points"][k] for k in plus["key_points"])

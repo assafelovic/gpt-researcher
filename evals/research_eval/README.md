@@ -39,7 +39,7 @@ dataset/questions_*.jsonl -> runner.py -> capture.py (hooks) -> runs/<dataset>/<
 | `judge.py` | Cached judge (model from `evals/judge.py`): each prompt goes out as a system message (the fixed task) and a user message (the data), with the prompt's answer schema in strict structured-output mode; cached embedder (repo `EMBEDDING` setting). |
 | `prompts/` | Every judge prompt as its own `<id>.md` file (header: id, version, metrics that use it), in one folder per metric group whose `SKILL.md` holds the group's shared definitions; `versions.json` locks each version to its text hash; see `prompts/README.md`. Version + content hash go into cache keys and results. |
 | `key_points.py` | Per-question key points: frozen file > cache > one judge call (`key_points_layered`: 4-6 aspects, each with 2-4 sub-points; the aspect is scored, the judge sees its sub-points as what it includes). `--write DIR` writes the frozen files. |
-| `key_points_methods.py` | Compares five ways of writing key points by coverage of a shared pool (all lists + two independent answer outlines); chose the layered method. Prints and saves JSON, no scores. |
+| `key_points_methods.py` | Compares six ways of writing key points (incl. layered drafts merged by `key_points_synthesize`) by coverage of a shared pool (all lists + two independent answer outlines). Prints and saves JSON, no scores. |
 | `citation_audit.py` | Shared paragraph-level judge audit: claims, ALCE sentence checks, which chunks were used. |
 | `metrics/` | `Metric` interface and registry; `retrieval/` holds the nine retrieval metrics, `generation/` the thirteen generation ones. |
 | `scoring.py` | Runs metrics on an archive; results keyed by run_id + scorer version. |

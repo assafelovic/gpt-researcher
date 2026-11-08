@@ -14,6 +14,8 @@ per question (cache keys apart), so its stability can be read too:
   layered      key_points_layered: 4-6 aspects with 2-4 sub-points each
   consensus+   the consensus aspects, each described by 2-4 sub-points
                (key_points_describe)
+  layered-merged  DRAFTS layered drafts, then key_points_synthesize writes
+               one list from them (key_points.generate_key_points)
 
 The key points are the top level; sub-points describe them (a judge could be
 shown them) and count for coverage.
@@ -46,14 +48,16 @@ from pathlib import Path
 
 from .cache import DEFAULT_CACHE_PATH, EvalCache
 from .judge import Judge
+from .key_points import generate_key_points
 from .prompts import (KEY_POINTS, KEY_POINTS_DESCRIBE, KEY_POINTS_LAYERED, KEY_POINTS_MERGE,
                       KEY_POINTS_OUTLINE, KEY_POINTS_STRUCTURED)
 
 QUESTIONS = Path(__file__).parent / "dataset" / "questions_v0.jsonl"
-METHODS = ("current", "structured", "consensus", "layered", "consensus+")
+METHODS = ("current", "structured", "consensus", "layered", "consensus+", "layered-merged")
 RUNS = 2
 SAMPLES = 5
 POOL_SUPPORT = 2
+DRAFTS = 3
 
 
 def _points(parsed, field="key_points") -> list[str]:
@@ -116,6 +120,9 @@ async def run_method(judge: Judge, method: str, question: str, run: int, memo: d
         aspects = _aspects(r.parsed)
         return {"key_points": [a["aspect"] for a in aspects],
                 "sub_points": {a["aspect"]: a["sub_points"] for a in aspects}}
+    if method == "layered-merged":
+        points, subs, _ = await generate_key_points(judge, question, DRAFTS, vote=run)
+        return {"key_points": points, "sub_points": dict(zip(points, subs))}
     if run not in memo:
         memo[run] = asyncio.ensure_future(consensus(judge, question, run))
     base = await memo[run]

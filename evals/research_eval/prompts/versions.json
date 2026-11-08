@@ -12,8 +12,8 @@
     "hash": "f27505de8b6f"
   },
   "key_points_layered": {
-    "version": "2",
-    "hash": "508a96643015"
+    "version": "3",
+    "hash": "41d131f2dcec"
   },
   "key_points_merge": {
     "version": "2",
@@ -26,6 +26,10 @@
   "key_points_structured": {
     "version": "1",
     "hash": "97f662401103"
+  },
+  "key_points_synthesize": {
+    "version": "1",
+    "hash": "6ce98096ff50"
   },
   "subquery_redundancy": {
     "version": "14",

@@ -11,7 +11,7 @@ from evals.research_eval.metrics import all_metrics
 
 def test_every_prompt_file_loads_and_is_locked():
     ps = P.all_prompts()
-    assert len(ps) == 19 and all(p.used_by for p in ps.values())
+    assert len(ps) == 20 and all(p.used_by for p in ps.values())
     assert P.lock_problems(ps) == [], "run: python -m evals.research_eval.prompts --lock (after bumping versions)"
 
 

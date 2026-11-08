@@ -1,6 +1,6 @@
 ---
 id: key_points_layered
-version: 2
+version: 3
 skill: none
 used_by: key points for the question (key_points.py), decomposition_coverage, material_coverage, comprehensiveness; key point method comparison (key_points_methods.py)
 ---
@@ -13,13 +13,16 @@ in two layers.
   words), specific to this question, about its subject (not about the
   report: no "scope", "methodology", "introduction" or "conclusion"). No two
   aspects overlap.
-- For each aspect, 2 to 4 sub-points: the specific things a good answer says
-  about it, each naming one thing (at most 10 words).
-  - Name what this question is about: the actors, rules, products, markets,
-    figures or events it asks for. A sub-point that would fit any question
-    of its kind ("pricing", "security", "trade-offs") is too generic.
+- For each aspect, 2 to 4 sub-points: the parts of it that a good answer
+  covers, each naming one thing (at most 10 words).
+  - Sub-points say what the answer must report on, not which facts it will
+    find: no particular figure, date, deal or event a report may or may not
+    pick. When the question asks for actors (vendors, platforms, rules), a
+    sub-point may name the main ones.
   - A sub-point is content, never an instruction for writing the report
     ("define the period", "compare the vendors", "cite sources").
+- Together the aspects cover the whole question: every region, kind of
+  actor and part it asks about or implies.
 
 Return ONLY JSON:
 {"aspects": [{"aspect": "...", "sub_points": ["...", "..."]}]}

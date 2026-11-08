@@ -15,7 +15,7 @@ by comparison with four others (key_points_methods.py). Lookup order:
 
 Writing the frozen files (one judge call per question, prints the lists):
 
-    python -m evals.research_eval.key_points --write DIR [--questions FILE] [--cache PATH]
+    python -m evals.research_eval.key_points --write DIR [--drafts N] [--questions FILE] [--cache PATH]
 """
 
 from __future__ import annotations
@@ -25,6 +25,9 @@ from typing import TYPE_CHECKING
 
 from .cache import stable_hash
 from .prompts import KEY_POINTS_LAYERED as KEY_POINTS
+from .prompts import KEY_POINTS_SYNTHESIZE
+
+DRAFTS = 1      # > 1: that many layered drafts, then one call writes the final list from them
 
 if TYPE_CHECKING:
     from .archive import RunArchive
@@ -46,6 +49,26 @@ def parse_key_points(data) -> tuple[list[str], list[list[str]]]:
             points.append(str(p).strip())
             subs.append([])
     return points, subs
+
+
+async def generate_key_points(judge, question: str, drafts: int = DRAFTS, **params):
+    """(aspects, sub-points, responses): one layered call, or `drafts` drafts merged by one more call."""
+    if drafts <= 1:
+        r = await judge.ask(KEY_POINTS.id, KEY_POINTS.version, KEY_POINTS.render(question=question), **params)
+        return (*parse_key_points(r.parsed), [r])
+    import asyncio
+    rs = await asyncio.gather(*(judge.ask(KEY_POINTS.id, KEY_POINTS.version, KEY_POINTS.render(question=question),
+                                          draft=k, **params) for k in range(drafts)))
+    text = "\n\n".join(f"Draft {k}:\n" + render_key_points(*_with_subs(r.parsed))
+                        for k, r in enumerate(rs, 1))
+    r = await judge.ask(KEY_POINTS_SYNTHESIZE.id, KEY_POINTS_SYNTHESIZE.version,
+                        KEY_POINTS_SYNTHESIZE.render(question=question, drafts=text), drafts=drafts, **params)
+    return (*parse_key_points(r.parsed), [*rs, r])
+
+
+def _with_subs(parsed) -> tuple[list[str], dict]:
+    points, subs = parse_key_points(parsed)
+    return points, {"sub_points": subs}
 
 
 def render_key_points(points: list[str], provenance: dict) -> str:
@@ -74,21 +97,21 @@ async def get_key_points(archive: "RunArchive", ctx: "ScoringContext") -> tuple[
     elif ctx.judge is None:
         out = (None, {"source": "unavailable", "reason": "no frozen key points and no judge"})
     else:
-        key = stable_hash(qid, KEY_POINTS.id, KEY_POINTS.version, ctx.judge.model)
+        key = stable_hash(qid, KEY_POINTS.id, KEY_POINTS.version, DRAFTS,
+                          KEY_POINTS_SYNTHESIZE.version if DRAFTS > 1 else "", ctx.judge.model)
         cached = ctx.cache.get("question", key)
         if cached is not None:
             points, subs = parse_key_points(cached)
             out = (points, {"source": "cache", "prompt_version": KEY_POINTS.version,
                             "judge_model": ctx.judge.model, "sub_points": subs})
         else:
-            resp = await ctx.judge.ask(KEY_POINTS.id, KEY_POINTS.version,
-                                       KEY_POINTS.render(question=archive.query))
-            points, subs = parse_key_points(resp.parsed)
+            points, subs, rs = await generate_key_points(ctx.judge, archive.query)
+            resp = rs[-1]
             if points:
-                if not resp.dry:
+                if not any(x.dry for x in rs):
                     ctx.cache.put("question", key, {"aspects": [
                         {"aspect": p, "sub_points": s} for p, s in zip(points, subs)]})
-                out = (points, {"source": "judge", "prompt_version": KEY_POINTS.version,
+                out = (points, {"source": "judge", "prompt_version": KEY_POINTS.version, "drafts": DRAFTS,
                                 "judge_model": ctx.judge.model, "cache_hit": resp.cache_hit,
                                 "sub_points": subs})
             else:
@@ -108,6 +131,7 @@ async def write_frozen(argv: list[str] | None = None) -> int:
     ap.add_argument("--write", required=True, help="directory for <question_id>.json")
     ap.add_argument("--questions", default=str(Path(__file__).parent / "dataset" / "questions_v0.jsonl"))
     ap.add_argument("--cache", default=str(DEFAULT_CACHE_PATH))
+    ap.add_argument("--drafts", type=int, default=DRAFTS)
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args(argv)
     from dotenv import load_dotenv
@@ -121,9 +145,11 @@ async def write_frozen(argv: list[str] | None = None) -> int:
             continue
         q = json.loads(line)
         qid, text = q.get("id") or q.get("question_id"), q.get("query") or q.get("question")
-        r = await judge.ask(KEY_POINTS.id, KEY_POINTS.version, KEY_POINTS.render(question=text))
-        points, subs = parse_key_points(r.parsed)
-        doc = {"prompt": f"{KEY_POINTS.id} v{KEY_POINTS.version}", "judge_model": judge.model,
+        points, subs, _ = await generate_key_points(judge, text, args.drafts)
+        prompt = f"{KEY_POINTS.id} v{KEY_POINTS.version}" + (
+            f", {args.drafts} drafts + {KEY_POINTS_SYNTHESIZE.id} v{KEY_POINTS_SYNTHESIZE.version}"
+            if args.drafts > 1 else "")
+        doc = {"prompt": prompt, "judge_model": judge.model,
                "aspects": [{"aspect": p, "sub_points": s} for p, s in zip(points, subs)]}
         if not args.dry_run:
             (out / f"{qid}.json").write_text(json.dumps(doc, indent=1, ensure_ascii=False) + "\n")
