@@ -48,8 +48,8 @@
     "hash": "b757cdd83db5"
   },
   "query_relevance": {
-    "version": "12",
-    "hash": "85f59cea50b3"
+    "version": "13",
+    "hash": "5404f3aaf596"
   },
   "comprehensiveness": {
     "version": "6",
@@ -72,11 +72,11 @@
     "hash": "9a77d23dde0c"
   },
   "claim_recheck": {
-    "version": "10",
-    "hash": "1c2712b12098"
+    "version": "11",
+    "hash": "249d8fc57d22"
   },
   "paragraph_audit": {
-    "version": "10",
-    "hash": "2abbba99a606"
+    "version": "11",
+    "hash": "036680d327a4"
   }
 }

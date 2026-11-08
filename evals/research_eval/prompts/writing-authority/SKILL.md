@@ -94,7 +94,7 @@ Examples:
 Judge each claim against all the material shown, and quote the material
 words your verdict rests on before you give it.
 - supported: a passage states the claim: the same subject (entity, market,
-  region, period) and the same strength. A paraphrase counts.
+  region, period, etc.) and the same strength. A paraphrase counts.
 - inferred: no passage states the whole claim, but the material backs it in
   part and the rest is a reasonable step from what it states: putting stated
   facts together, simple arithmetic, a direct consequence of a stated rule, a

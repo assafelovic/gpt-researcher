@@ -1,6 +1,6 @@
 ---
 id: query_relevance
-version: 12
+version: 13
 used_by: query_relevance
 ---
 
@@ -19,7 +19,7 @@ used_by: query_relevance
   relevance.
 - relevance:
   - 2: the material gives information the core query asks for, about the
-    same subject: the same industry, the same kind of actor.
+    same subject: the same industry, the same kind of actor, etc.
   - 1: the material is near the topic but does not give that information:
     background, definitions, another industry or kind of actor, a general
     study, or a vendor's claims about its own product.
