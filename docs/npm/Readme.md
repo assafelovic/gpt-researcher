@@ -4,10 +4,7 @@ The gpt-researcher npm package is a WebSocket client for interacting with GPT Re
 
 <div align="center" id="top">
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/assafelovic/gpt-researcher/main/docs/static/img/gptr-logo-white.png">
-  <img src="https://raw.githubusercontent.com/assafelovic/gpt-researcher/main/docs/static/img/gptr-logo-black.png" alt="GPT Researcher logo" width="80">
-</picture>
+<img src="https://raw.githubusercontent.com/assafelovic/gpt-researcher/main/docs/static/img/gptr-logo-tile.png" alt="GPT Researcher logo" width="80">
 
 ####
 
