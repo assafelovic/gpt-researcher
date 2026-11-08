@@ -23,6 +23,7 @@ from . import (
     BrowserScraper,
     FireCrawl,
     NoDriverScraper,
+    Outcrawl,
     PyMuPDFScraper,
     TavilyExtract,
     WebBaseLoaderScraper,
@@ -330,6 +331,7 @@ class Scraper:
             "nodriver": NoDriverScraper,
             "tavily_extract": TavilyExtract,
             "firecrawl": FireCrawl,
+            "outcrawl": Outcrawl,
         }
 
         scraper_key = None

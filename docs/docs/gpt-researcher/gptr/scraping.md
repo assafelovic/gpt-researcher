@@ -31,6 +31,11 @@ You can choose your preferred scraping method by setting the `SCRAPER` environme
    ```bash
    export SCRAPER="firecrawl"
    ```
+   [Outcrawl](https://outcrawl.ai) loads each page in a cloud browser and returns it as markdown, which helps with JavaScript-rendered sites. It needs an Outcrawl API key and no extra pip package:
+   ```bash
+   export SCRAPER="outcrawl"
+   export OUTCRAWL_API_KEY=<your-outcrawl-api-key>
+   ```
 
 Note: If not set, GPT Researcher will default to BeautifulSoup for scraping.
 
@@ -170,6 +175,23 @@ Usage Considerations:
 - Best for production environments where reliability is crucial (for their cloud service)
 - Ideal for businesses and applications that need consistent scraping results
 - Need robust scraping option for personal use
+
+### Outcrawl
+When `SCRAPER="outcrawl"`, GPT Researcher uses the Outcrawl scrape API (`POST https://api.outcrawl.ai/v1/scrape`) to fetch each page as markdown. This method:
+
+- Loads pages in a cloud browser, so pages that only render with JavaScript still return their content
+- Returns the page title from the API metadata
+- Falls back to an empty result, which the scraper drops, if the key is missing, the request fails or the page status is not 200
+
+Setup:
+1. Create an Outcrawl account at [outcrawl.ai](https://outcrawl.ai) and create an API key
+2. Set your key:
+   ```bash
+   export OUTCRAWL_API_KEY=<your-outcrawl-api-key>
+   ```
+
+Usage Considerations:
+- Requires an Outcrawl API key; calls are metered against your Outcrawl credits
 
 ## Additional Setup for Selenium
 
