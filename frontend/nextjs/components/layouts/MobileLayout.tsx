@@ -56,7 +56,7 @@ export default function MobileLayout({
   // Handle history item selection
   const handleHistoryItemClick = (id: string) => {
     setShowHistory(false);
-    window.location.href = `/research/${id}`;
+    window.location.href = `/classic/research/${id}`;
   };
   
   return (
@@ -71,7 +71,7 @@ export default function MobileLayout({
         <div className="flex items-center justify-between px-4 h-14">
           {/* Logo */}
           <div className="flex items-center">
-            <a href="/" className="flex items-center">
+            <a href="/classic" className="flex items-center">
               <img
                 src="/img/gptr-logo.png"
                 alt="GPT Researcher"

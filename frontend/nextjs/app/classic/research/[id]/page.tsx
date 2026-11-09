@@ -86,7 +86,7 @@ export default function ResearchPage({ params }: { params: { id: string } }) {
   // Handle selecting a research from the sidebar
   const handleSelectResearch = async (researchId: string) => {
     if (researchId !== id) {
-      router.push(`/research/${researchId}`);
+      router.push(`/classic/research/${researchId}`);
     }
     setSidebarOpen(false);
   };
@@ -416,7 +416,7 @@ export default function ResearchPage({ params }: { params: { id: string } }) {
   };
 
   const handleNewResearch = () => {
-    router.push('/');
+    router.push('/classic');
   };
 
   const handleCopyUrl = () => {

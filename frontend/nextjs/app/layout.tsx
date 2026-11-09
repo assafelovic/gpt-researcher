@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Lexend } from "next/font/google";
 import PlausibleProvider from "next-plausible";
 import { GoogleAnalytics } from '@next/third-parties/google'
@@ -21,8 +21,8 @@ export const metadata: Metadata = {
   description,
   manifest: '/manifest.json',
   icons: {
-    icon: "/img/gptr-black-logo.png",
-    apple: '/img/gptr-black-logo.png',
+    icon: [{ url: '/favicon.ico', sizes: 'any' }],
+    apple: '/apple-touch-icon.png',
   },
   appleWebApp: {
     capable: true,
@@ -44,12 +44,13 @@ export const metadata: Metadata = {
     title,
     description,
   },
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-  },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
   themeColor: '#111827',
 };
 
@@ -66,7 +67,6 @@ export default function RootLayout({
         <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID!} />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <link rel="apple-touch-icon" href="/img/gptr-black-logo.png" />
       </head>
       <body
         className={`app-container ${inter.className} flex min-h-screen flex-col justify-between`}
