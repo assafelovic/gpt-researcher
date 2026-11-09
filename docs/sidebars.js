@@ -24,6 +24,7 @@
         'gpt-researcher/getting-started/cli',
         'gpt-researcher/getting-started/getting-started-with-docker',
         'gpt-researcher/getting-started/linux-deployment',
+        'gpt-researcher/getting-started/deploy-on-render',
       ]
     },
     {
