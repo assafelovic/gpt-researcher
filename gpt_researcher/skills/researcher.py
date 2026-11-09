@@ -696,9 +696,17 @@ class ResearchConductor:
                     self.researcher.websocket,
                 )
             
-            # Execute the two-stage MCP search
-            results = retriever_instance.search(
-                max_results=self.researcher.cfg.max_search_results_per_query
+            # MCPRetriever.search() is the synchronous interface: it starts its
+            # own thread and waits for it (future.result(timeout=300)), so it
+            # holds its caller for the whole MCP round -- LLM tool selection
+            # plus every remote tool call. Run it on a worker thread, as the
+            # other retriever call sites do; called from here directly, it
+            # freezes the event loop for that whole round: websocket log
+            # streaming cannot flush and the sibling sub-queries gathered by
+            # _get_context_by_web_search cannot make progress.
+            results = await asyncio.to_thread(
+                retriever_instance.search,
+                max_results=self.researcher.cfg.max_search_results_per_query,
             )
             
             if results:
