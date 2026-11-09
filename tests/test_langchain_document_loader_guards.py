@@ -25,7 +25,7 @@ async def _load(docs):
     return await _loader(docs).load()
 
 
-def test_normal_documents_pass_through():
+async def test_normal_documents_pass_through():
     docs = [
         Document(page_content="hello", metadata={"title": "http://a.example"}),
         Document(page_content="world", metadata={"title": "http://b.example"}),
@@ -36,12 +36,12 @@ def test_normal_documents_pass_through():
     ]
 
 
-def test_missing_metadata_key_yields_empty_url():
+async def test_missing_metadata_key_yields_empty_url():
     docs = [Document(page_content="no title", metadata={})]
     assert await _load(docs) == [{"raw_content": "no title", "url": ""}]
 
 
-def test_metadata_none_is_treated_as_empty_dict():
+async def test_metadata_none_is_treated_as_empty_dict():
     # Realistic path: a custom Document subclass or a legacy loader omits
     # metadata. The default LangChain Document model rejects None at
     # construction, so simulate with a duck-typed object. Previously this
@@ -58,7 +58,7 @@ def test_metadata_none_is_treated_as_empty_dict():
     ]
 
 
-def test_non_document_rows_are_skipped():
+async def test_non_document_rows_are_skipped():
     # A caller that serialised through JSON and forgot to reconstruct the
     # Document object ends up with a dict in the list. Real bug: previously
     # AttributeError on .page_content aborted the entire load.
@@ -75,11 +75,11 @@ def test_non_document_rows_are_skipped():
     ]
 
 
-def test_empty_list_returns_empty():
+async def test_empty_list_returns_empty():
     assert await _load([]) == []
 
 
-def test_empty_page_content_is_skipped():
+async def test_empty_page_content_is_skipped():
     rows = [
         Document(page_content="", metadata={"title": "http://empty"}),
         Document(page_content="kept", metadata={"title": "http://kept"}),
@@ -87,7 +87,7 @@ def test_empty_page_content_is_skipped():
     assert await _load(rows) == [{"raw_content": "kept", "url": "http://kept"}]
 
 
-def test_custom_metadata_source_index_is_respected():
+async def test_custom_metadata_source_index_is_respected():
     docs = [Document(page_content="x", metadata={"source": "http://src", "title": "http://title"})]
     out = await _load(docs)
     assert out[0]["url"] == "http://title"
@@ -97,7 +97,7 @@ def test_custom_metadata_source_index_is_respected():
     assert out2[0]["url"] == "http://src"
 
 
-def test_magic_mock_with_attributes_works():
+async def test_magic_mock_with_attributes_works():
     # MagicMock auto-creates page_content/metadata attrs, so it passes the
     # hasattr gate. This sanity check documents the contract — a row that
     # quacks like a Document must not be filtered.
