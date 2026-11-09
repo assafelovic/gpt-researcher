@@ -4,7 +4,7 @@
 import os
 import requests
 import json
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlparse
 
 
 class GoogleSearch:
@@ -101,7 +101,10 @@ class GoogleSearch:
             if not isinstance(result, dict):
                 continue
             link = result.get("link") or ""
-            if not link or "youtube.com" in link.lower():
+            if not link:
+                continue
+            hostname = urlparse(link).hostname or ""
+            if hostname == "youtube.com" or hostname.endswith(".youtube.com"):
                 continue
             search_response.append(
                 {
