@@ -27,8 +27,16 @@ logger = logging.getLogger(__name__)
 
 # (patterns, input $/MTok, output $/MTok) - first match wins, so more
 # specific patterns (e.g. "-mini") must come before their base model.
-# Prices as of July 2026: https://openai.com/api/pricing/
+# Prices as of November 2026: https://developers.openai.com/api/docs/pricing
 OPENAI_MODEL_PRICING = (
+    (("gpt-6.1-sol",), 2.0, 10.0),
+    (("gpt-6.1-terra",), 1.0, 5.0),
+    (("gpt-6-astra",), 10.0, 50.0),
+    (("gpt-6-sol",), 2.0, 10.0),
+    (("gpt-6-luna",), 0.1, 0.5),
+    (("gpt-5.6-sol",), 4.0, 20.0),
+    (("gpt-5.6-terra",), 2.0, 12.0),
+    (("gpt-5.6-luna",), 0.2, 1.2),
     (("gpt-5.5-pro",), 30.0, 180.0),
     (("gpt-5.5",), 5.0, 30.0),
     (("gpt-5.4-pro",), 30.0, 180.0),
