@@ -50,6 +50,30 @@ def test_preformatted_text_keeps_its_line_breaks():
     assert _scraped_text(markup) == "Example:\nfirst line\nsecond line\nDone."
 
 
+def test_preformatted_text_keeps_indentation_and_blank_lines():
+    markup = (
+        "<p>Example:</p>"
+        "<pre>def f():\n    return 1\n\nprint(f())</pre>"
+        "<p>Done.</p>"
+    )
+    assert _scraped_text(markup) == (
+        "Example:\ndef f():\n    return 1\n\nprint(f())\nDone."
+    )
+
+
+def test_preformatted_text_keeps_runs_of_spaces():
+    assert _scraped_text("<pre>a  b</pre>") == "a  b"
+
+
+def test_non_preformatted_text_keeps_existing_whitespace_normalization():
+    assert _scraped_text("<p>a&nbsp;&nbsp;b</p><p>&nbsp;c</p>") == "a b c"
+
+
+def test_long_nested_preformatted_text_is_not_duplicated():
+    text = ("line\n    indented\n\n" * 10_000) + "end"
+    assert _scraped_text(f"<pre><code>{text}</code></pre>") == text
+
+
 def test_script_style_and_comment_text_is_not_page_text():
     markup = "<p>Visible</p><script>var hidden = 1;</script><style>p { color: red; }</style><!-- note -->"
     assert _load().get_text_from_soup(BeautifulSoup(markup, "lxml")) == "Visible"
