@@ -69,7 +69,8 @@ async def test_repeat_run_publishes_current_sources(monkeypatch, second_result):
         ),
         websocket=None, tone=None, headers={}, visited_urls=set(),
         mcp_configs=None, mcp_strategy=None, query="topic",
-        get_costs=lambda: 0, log_handler=None, research_sources=[],
+        get_costs=lambda: 0, add_costs=lambda _cost: None,
+        log_handler=None, research_sources=[],
     )
     skill = DeepResearchSkill(parent)
     stage = "first"
@@ -91,6 +92,9 @@ async def test_repeat_run_publishes_current_sources(monkeypatch, second_result):
             self.research_sources = [{"url": "https://example.invalid/" + stage}]
             if stage == "second" and second_result == "no_sources":
                 self.research_sources = []
+
+        def get_costs(self):
+            return 0.0
 
         async def conduct_research(self):
             if stage == "second" and second_result == "failed_queries":
