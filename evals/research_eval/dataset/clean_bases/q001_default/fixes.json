@@ -1,0 +1,98 @@
+[
+ {
+  "id": "F1",
+  "line": 15,
+  "kind": "无依据的说法 + 引用不对应",
+  "old": "Together, these rules reduce regulatory arbitrage and increase legal certainty, but they also **raise fixed compliance costs** and are likely to favor larger, better-capitalized operators over smaller or offshore firms ([Unit21, 2026](https://www.unit21.ai/blog/mica-regulation-2026-faqs-what-crypto-compliance-teams-need-to-know); [CoinTracking, 2026](https://cointracking.info/learn/dac8-crypto-regulation)).",
+  "new": "Together, these rules reduce regulatory arbitrage and legal uncertainty ([Unit21, 2026](https://www.unit21.ai/blog/mica-regulation-2026-faqs-what-crypto-compliance-teams-need-to-know); [Sumsub, 2026](https://sumsub.com/blog/crypto-regulations-in-the-european-union-markets-in-crypto-assets-mica)), but they also **raise compliance costs**: where dual licensing applies, it could double them ([Cyfrin, 2026](https://www.cyfrin.io/blog/mica-regulation-explained-a-guide-to-eu-crypto-compliance)).",
+  "why": "材料里没有“有利于大公司、不利于小公司或离岸公司”的说法；Unit21 和 CoinTracking 也没讲成本。改成材料里有的：Unit21“the era of regulatory arbitrage within Europe is over”，Sumsub“reduce legal uncertainty, eliminate regulatory arbitrage”，Cyfrin“potentially doubling compliance costs”。"
+ },
+ {
+  "id": "F2",
+  "line": 36,
+  "kind": "时间说法比材料更具体",
+  "old": "As of late 2026, MiCA is no longer a future compliance project; it is a live operational reality for firms serving EU clients",
+  "new": "In 2026, MiCA is no longer a future compliance project; it is already shaping how firms serving the EU market operate",
+  "why": "Hacken 原文是“In 2026, MiCA is no longer just a sign of where regulation is heading. It is already shaping how crypto businesses structure their operations”，没有“late 2026”。"
+ },
+ {
+  "id": "F3",
+  "line": 54,
+  "kind": "把两句话拼成了材料没说的意思",
+  "old": "Norton Rose warns that preparing the required documentation, policies, and procedures can be a **lengthy process**, especially for firms with complex operations or no existing European presence.",
+  "new": "Norton Rose warns that preparing the required documentation, policies, and procedures can be a **lengthy process**, depending on the organisation’s size, complexity and scale, and that firms with no existing European presence may face structural and jurisdictional issues.",
+  "why": "Norton Rose 说的是：耗时长短“depending on the organisation’s size, complexity, scale”；没有欧洲据点的公司面对的是“structural issues ... jurisdictional ones”。原句把后者说成了“更耗时”。"
+ },
+ {
+  "id": "F4",
+  "line": 74,
+  "kind": "无依据的评价",
+  "old": "The most visible early impact of MiCA has been on stablecoins. Since",
+  "new": "Stablecoins were the first area where MiCA’s rules applied. Since",
+  "why": "材料里没有“最明显的早期影响”这种比较。材料能支持的是：EMT 和 ART 的规则最早生效（2024-06-30）。"
+ },
+ {
+  "id": "F5",
+  "line": 80,
+  "kind": "程度和范围比材料更强",
+  "old": "These rules have had immediate commercial consequences.",
+  "new": "These rules have had commercial consequences.",
+  "why": "材料没说“immediate”；Binance 的限制是 2025-03-31 才开始。"
+ },
+ {
+  "id": "F6",
+  "line": 80,
+  "kind": "程度和范围比材料更强",
+  "old": "limiting USDT-related services in parts of Europe,",
+  "new": "limiting USDT-related services for EEA or European customers,",
+  "why": "StealthEX 原文是“for EEA users”“European retail customers”“EEA clients”，不是“欧洲部分地区”。"
+ },
+ {
+  "id": "F7",
+  "line": 88,
+  "kind": "含糊的说法",
+  "old": "the **Transfer of Funds Regulation**, and other adjacent laws",
+  "new": "the **Transfer of Funds Regulation**, and, for digital identity, eIDAS 2.0",
+  "why": "Didit 原文列的是三项：“the EU anti-money laundering framework, the Transfer of Funds Regulation and, for digital identity, eIDAS 2.0”。"
+ },
+ {
+  "id": "F8",
+  "line": 98,
+  "kind": "多加了材料没有的限定词",
+  "old": "requires firms to monitor critical third-party providers,",
+  "new": "requires firms to monitor third-party service providers,",
+  "why": "InnReg 原文是“Monitor third-party service providers, especially cloud and data vendors”，没有“critical”。"
+ },
+ {
+  "id": "F9",
+  "line": 126,
+  "kind": "出处说得不准",
+  "old": "Yahoo Finance, citing a Euronews report, said that",
+  "new": "Yahoo Finance, in an article built around a Euronews video, said that",
+  "why": "材料里“According to Euronews exclusive report”指的是域外公司绕过规则那件事，不是“不到五分之一”这个数字；这篇文章本身是 Euronews 的视频稿（“Watch the Euronews video in the player above”）。"
+ },
+ {
+  "id": "F10",
+  "line": 132,
+  "kind": "把一个来源的话安到了两个来源头上",
+  "old": "InnReg and Cyfrin both suggest European regulators are considering whether ambiguous or hybrid arrangements should face additional oversight ([InnReg, 2026](https://www.innreg.com/blog/eu-crypto-regulation-guide); [Cyfrin, 2026](https://www.cyfrin.io/blog/mica-regulation-explained-a-guide-to-eu-crypto-compliance)).",
+  "new": "InnReg says European regulators are assessing whether these areas warrant additional oversight and that projects with ambiguous or hybrid models may be reviewed, while Cyfrin notes that the European Commission is expected to assess developments in DeFi and NFTs and may propose new measures ([InnReg, 2026](https://www.innreg.com/blog/eu-crypto-regulation-guide); [Cyfrin, 2026](https://www.cyfrin.io/blog/mica-regulation-explained-a-guide-to-eu-crypto-compliance)).",
+  "why": "“ambiguous or hybrid models”只有 InnReg 说了。Cyfrin 说的是“The European Commission ... is expected to assess developments in DeFi and NFTs and may propose new regulatory measures”。"
+ },
+ {
+  "id": "F11",
+  "line": 138,
+  "kind": "无依据的细节",
+  "old": "governed largely by national registration, informal practice, and legal uncertainty",
+  "new": "governed by fragmented national regimes and legal uncertainty",
+  "why": "材料里没有“informal practice”。材料说的是“fragmented national laws”“patchwork of national regulations”“legal uncertainty”。"
+ },
+ {
+  "id": "F12",
+  "line": 140,
+  "kind": "无依据的说法",
+  "old": "This is good for legal certainty, investor protection, and institutional adoption, but it also raises barriers to entry and narrows the viability of lightly regulated or offshore operating models.",
+  "new": "This is good for legal certainty and investor protection, but it also raises barriers to entry and narrows the viability of lightly regulated operating models.",
+  "why": "材料里没有“机构采用”。“离岸模式更难生存”和材料相反：Yahoo 说域外公司可以绕过规则（“foreign companies bypass them”），Cyfrin 说规则把用户推向离岸替代品。"
+ }
+]
