@@ -26,7 +26,10 @@ class HumanAgent:
                         self.websocket,
                     )
                     # because websocket is wrapped inside a CustomLogsHandler in websocket_manager
-                    response = await self.websocket.websocket.receive_text()
+                    socket = self.websocket.websocket
+                    # The server's receive loop owns the socket and forwards feedback here.
+                    queue = getattr(getattr(socket, "state", None), "human_feedback", None)
+                    response = await (queue.get() if queue is not None else socket.receive_text())
                     print(f"Received response: {response}", flush=True)
                     response_data = json.loads(response)
                     if response_data.get("type") == "human_feedback":

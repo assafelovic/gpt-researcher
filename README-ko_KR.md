@@ -42,7 +42,14 @@
 - 웹 소스만을 사용하면 연구 작업에서 올바른 결론을 도출할 때 편향이 발생할 수 있습니다.
 
 ## 데모
-https://github.com/user-attachments/assets/092e9e71-7e27-475d-8c4f-9dddd28934a3
+<a href="https://github.com/user-attachments/assets/4d3f26cf-8ccc-413a-b17c-80aa9e1b52d1">
+  <picture>
+    <source media="(prefers-reduced-motion: reduce)" srcset="https://github.com/user-attachments/assets/25d92184-c59e-4115-9961-759ada1ec952">
+    <img src="https://github.com/user-attachments/assets/3a56a008-fcbd-4373-9e40-8d6027120cfb" alt="GPT Researcher가 질문을 출처가 달린 보고서로 만드는 모습" width="800">
+  </picture>
+</a>
+
+https://github.com/user-attachments/assets/4d3f26cf-8ccc-413a-b17c-80aa9e1b52d1
 
 ## 아키텍처
 주요 아이디어는 "플래너"와 "실행" 에이전트를 실행하는 것으로, 플래너는 연구할 질문을 생성하고, 실행 에이전트는 생성된 각 연구 질문에 따라 가장 관련성 높은 정보를 찾습니다. 마지막으로 플래너는 모든 관련 정보를 필터링하고 집계하여 연구 보고서를 작성합니다.

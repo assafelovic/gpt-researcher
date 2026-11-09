@@ -63,6 +63,14 @@ NO_SUPPORT_TEMPERATURE_MODELS = [
     "gpt-5.4-pro",
     "gpt-5.5",
     "gpt-5.5-pro",
+    "gpt-5.6-luna",
+    "gpt-5.6-terra",
+    "gpt-5.6-sol",
+    "gpt-6-luna",
+    "gpt-6-sol",
+    "gpt-6-astra",
+    "gpt-6.1-terra",
+    "gpt-6.1-sol",
     # Claude 4.x family: Anthropic deprecates temperature on these models
     "claude-sonnet-4-5",
     "claude-sonnet-4-5-20250929",
@@ -87,6 +95,14 @@ SUPPORT_REASONING_EFFORT_MODELS = [
     "gpt-5.4-pro",
     "gpt-5.5",
     "gpt-5.5-pro",
+    "gpt-5.6-luna",
+    "gpt-5.6-terra",
+    "gpt-5.6-sol",
+    "gpt-6-luna",
+    "gpt-6-sol",
+    "gpt-6-astra",
+    "gpt-6.1-terra",
+    "gpt-6.1-sol",
 ]
 
 class ReasoningEfforts(Enum):

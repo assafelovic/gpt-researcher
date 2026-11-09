@@ -53,7 +53,7 @@ The config JSON should follow the format/keys in the default config. Below is a 
   "SIMILARITY_THRESHOLD": 0.42,
   "CONTEXT_FILTER": "auto",
   "FAST_LLM": "openai:gpt-5.4-mini",
-  "SMART_LLM": "openai:gpt-5.4",
+  "SMART_LLM": "openai:gpt-6-sol",
   "STRATEGIC_LLM": "openai:gpt-5.4",
   "LANGUAGE": "english",
   "CURATE_SOURCES": false,
@@ -86,7 +86,7 @@ Below is a list of current supported options:
 - **`SIMILARITY_THRESHOLD`**: Threshold value for similarity comparison when processing documents. Defaults to `0.42`.
 - **`CONTEXT_FILTER`**: How scraped content is filtered before it reaches the writer: `auto` (default; Jev when `TYPESAFE_API_KEY` is set, otherwise keyword ranking), `jev`, `keyword`, `embeddings` or `none`. No mode requires an embeddings provider except `embeddings`. See [Context Filter](./context-filter.md).
 - **`FAST_LLM`**: Model name for fast LLM operations such summaries. Defaults to `openai:gpt-5.4-mini`.
-- **`SMART_LLM`**: Model name for smart operations like generating research reports and reasoning. Defaults to `openai:gpt-5.4`.
+- **`SMART_LLM`**: Model name for smart operations like generating research reports and reasoning. Defaults to `openai:gpt-6-sol`.
 - **`STRATEGIC_LLM`**: Model name for strategic operations like generating research plans and strategies. Defaults to `openai:gpt-5.4`.
 - **`LANGUAGE`**: Language to be used for the final research report. Defaults to `english`.
 - **`CURATE_SOURCES`**: Whether to curate sources for research. This step adds an LLM run which may increase costs and total run time but improves quality of source selection. Defaults to `False`.

@@ -79,7 +79,7 @@ const CopilotPanel: React.FC<CopilotPanelProps> = ({
       <div className="flex justify-between items-center px-2 py-3 border-b border-gray-800/60 bg-gray-900/40">
         {/* Left side */}
         <div className="flex items-center">
-          <a href="/" className="mr-3">
+          <a href="/classic" className="mr-3">
             <img
               src="/img/gptr-logo.png"
               alt="logo"

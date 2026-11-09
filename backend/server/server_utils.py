@@ -332,8 +332,18 @@ async def execute_multi_agents(manager) -> Any:
         return JSONResponse(status_code=400, content={"message": "No active WebSocket connection"})
 
 
+def is_human_feedback_message(data: str) -> bool:
+    try:
+        return json.loads(data).get("type") == "human_feedback"
+    except (ValueError, AttributeError):
+        return False
+
+
 async def handle_websocket_communication(websocket, manager):
     running_task: asyncio.Task | None = None
+    # This loop is the socket's only reader, so plan feedback for the
+    # multi agent HumanAgent is handed over through this queue.
+    websocket.state.human_feedback = asyncio.Queue()
 
     def run_long_running_task(awaitable: Awaitable) -> asyncio.Task:
         async def safe_run():
@@ -362,6 +372,8 @@ async def handle_websocket_communication(websocket, manager):
                 
                 if data == "ping":
                     await websocket.send_text("pong")
+                elif running_task and not running_task.done() and is_human_feedback_message(data):
+                    await websocket.state.human_feedback.put(data)
                 elif running_task and not running_task.done():
                     # discard any new request if a task is already running
                     logger.warning(
