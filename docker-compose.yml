@@ -8,6 +8,9 @@ services:
       OPENAI_BASE_URL: ${OPENAI_BASE_URL}
       TAVILY_API_KEY: ${TAVILY_API_KEY}
       LANGCHAIN_API_KEY: ${LANGCHAIN_API_KEY}
+      # Context filtering with TypeSafe's Jev (optional - used when TYPESAFE_API_KEY is set)
+      TYPESAFE_API_KEY: ${TYPESAFE_API_KEY:-}
+      TYPESAFE_BASE_URL: ${TYPESAFE_BASE_URL:-}
       LOGGING_LEVEL: INFO
       # Image generation (optional - set to enable inline images in reports)
       GOOGLE_API_KEY: ${GOOGLE_API_KEY}
