@@ -4,6 +4,8 @@ from types import SimpleNamespace
 
 import pytest
 
+from gpt_researcher.config.config import Config
+from gpt_researcher.llm_provider.image import ModelsLabImageGeneratorProvider
 from gpt_researcher.skills.image_generator import ImageGenerator
 
 
@@ -56,6 +58,50 @@ def test_parse_analysis_recovers_fenced_object():
     assert len(out) == 1
     assert out[0]["section_header"] == "Intro"
     assert out[0]["image_prompt"] == "p"
+
+
+def _config_from_env(monkeypatch):
+    """A real Config plus a researcher namespace, so _init_provider runs for real."""
+    cfg = Config()
+    return SimpleNamespace(cfg=cfg, verbose=False, websocket=None, headers={})
+
+
+def test_config_lowercases_image_generation_keys(monkeypatch):
+    """Config._set_attributes() stores keys as key.lower().
+
+    This is why ImageGenerator must read 'image_generation_enabled' rather
+    than 'IMAGE_GENERATION_ENABLED' -- the uppercase name never resolves.
+    """
+    monkeypatch.setenv("IMAGE_GENERATION_ENABLED", "true")
+    cfg = Config()
+    assert getattr(cfg, "image_generation_enabled", None) is True
+    assert not hasattr(cfg, "IMAGE_GENERATION_ENABLED")
+
+
+def test_init_provider_builds_provider_when_enabled(monkeypatch):
+    monkeypatch.setenv("IMAGE_GENERATION_ENABLED", "true")
+    monkeypatch.setenv("IMAGE_GENERATION_PROVIDER", "modelslab")
+    monkeypatch.setenv("IMAGE_GENERATION_MODEL", "flux")
+    monkeypatch.setenv("IMAGE_GENERATION_MAX_IMAGES", "9")
+    monkeypatch.setenv("MODELSLAB_API_KEY", "test-key")
+
+    gen = ImageGenerator(_config_from_env(monkeypatch))
+
+    assert isinstance(gen.image_provider, ModelsLabImageGeneratorProvider)
+    assert gen.is_enabled() is True
+    assert gen.max_images == 9
+
+
+def test_init_provider_stays_off_when_disabled(monkeypatch):
+    """The fix must not force-enable image generation."""
+    monkeypatch.setenv("IMAGE_GENERATION_ENABLED", "false")
+    monkeypatch.setenv("IMAGE_GENERATION_PROVIDER", "modelslab")
+    monkeypatch.setenv("MODELSLAB_API_KEY", "test-key")
+
+    gen = ImageGenerator(_config_from_env(monkeypatch))
+
+    assert gen.image_provider is None
+    assert gen.is_enabled() is False
 
 
 def test_parse_analysis_skips_non_dict_suggestions():

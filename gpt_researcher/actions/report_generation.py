@@ -321,6 +321,7 @@ Place each image on its own line after the relevant section header or paragraph.
                 **kwargs
             )
         except Exception as e:
-            print(f"Error in generate_report: {e}")
+            logger.error(f"Error in generate_report: {e}")
+            raise
 
     return report

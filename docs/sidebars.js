@@ -24,6 +24,7 @@
         'gpt-researcher/getting-started/cli',
         'gpt-researcher/getting-started/getting-started-with-docker',
         'gpt-researcher/getting-started/linux-deployment',
+        'gpt-researcher/getting-started/deploy-on-render',
       ]
     },
     {
@@ -84,7 +85,8 @@
       items: [
         'gpt-researcher/handling-logs/all-about-logs',
         'gpt-researcher/handling-logs/simple-logs-example',
-        'gpt-researcher/handling-logs/langsmith-logs'
+        'gpt-researcher/handling-logs/langsmith-logs',
+        'gpt-researcher/handling-logs/research-observer'
         ]
     },
     {

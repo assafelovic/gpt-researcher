@@ -122,6 +122,13 @@ def parse_search_queries_response(response: str, num_queries: int) -> List[Dict[
     return queries[:num_queries]
 
 
+def _question_strings(value: Any) -> List[str]:
+    """Read the prompted list-of-strings shape without coercing invalid entries."""
+    if not isinstance(value, list):
+        return []
+    return [item.strip() for item in value if isinstance(item, str) and item.strip()]
+
+
 def parse_follow_up_questions_response(response: str, num_questions: int) -> List[str]:
     parsed = _load_repaired_json(response)
     candidate_questions = parsed
@@ -129,7 +136,7 @@ def parse_follow_up_questions_response(response: str, num_questions: int) -> Lis
         candidate_questions = parsed.get("questions") or parsed.get("followUpQuestions") or parsed.get("items")
 
     if isinstance(candidate_questions, list):
-        questions = [str(item).strip() for item in candidate_questions if str(item).strip()]
+        questions = _question_strings(candidate_questions)
         if questions:
             return questions[:num_questions]
 
@@ -169,7 +176,7 @@ def parse_research_results_response(response: str, num_learnings: int) -> Dict[s
                     if citation:
                         citations[learning] = citation
 
-        questions = [str(item).strip() for item in follow_up_payload if str(item).strip()]
+        questions = _question_strings(follow_up_payload)
         if learnings or questions:
             return {
                 "learnings": learnings[:num_learnings],
@@ -290,7 +297,8 @@ class DeepResearchSkill:
             model=self.researcher.cfg.strategic_llm_model,
             reasoning_effort=self.researcher.cfg.reasoning_effort,
             temperature=0.4,
-            llm_kwargs=self.researcher.cfg.llm_kwargs
+            llm_kwargs=self.researcher.cfg.llm_kwargs,
+            cost_callback=getattr(self.researcher, "add_costs", None),
         )
 
         return parse_search_queries_response(response, num_queries)
@@ -344,7 +352,8 @@ Return ONLY a JSON object using this exact schema:
             model=self.researcher.cfg.strategic_llm_model,
             reasoning_effort=ReasoningEfforts.High.value,
             temperature=0.4,
-            llm_kwargs=self.researcher.cfg.llm_kwargs
+            llm_kwargs=self.researcher.cfg.llm_kwargs,
+            cost_callback=getattr(self.researcher, "add_costs", None),
         )
 
         return parse_follow_up_questions_response(response, num_questions)
@@ -377,8 +386,9 @@ Return ONLY a JSON object using this exact schema:
             temperature=0.4,
             reasoning_effort=ReasoningEfforts.High.value,
             # Needs headroom for reasoning tokens on reasoning models
-            max_tokens=4000,
-            llm_kwargs=self.researcher.cfg.llm_kwargs
+            max_tokens=getattr(self.researcher.cfg, "strategic_token_limit", 8000),
+            llm_kwargs=self.researcher.cfg.llm_kwargs,
+            cost_callback=getattr(self.researcher, "add_costs", None),
         )
 
         return parse_research_results_response(response, num_learnings)
@@ -455,6 +465,7 @@ Return ONLY a JSON object using this exact schema:
 
                     # Conduct research
                     context = await researcher.conduct_research()
+                    self.researcher.add_costs(researcher.get_costs())
 
                     # Get results and visited URLs
                     visited = researcher.visited_urls
@@ -625,9 +636,14 @@ Return ONLY a JSON object using this exact schema:
             else:
                 context_with_citations.append(learning)
 
-        # Add all research context
+        # Add research context in the space the learnings leave, since the
+        # final trim keeps the newest items and would drop the learnings first
         if results.get('context'):
-            context_with_citations.extend(results['context'])
+            context_budget = MAX_CONTEXT_WORDS - count_words(context_with_citations)
+            if context_budget > 0:
+                context_with_citations.extend(
+                    trim_context_to_word_limit(results['context'], context_budget)
+                )
 
         # Trim final context to word limit
         final_context = trim_context_to_word_limit(context_with_citations)
@@ -642,8 +658,7 @@ Return ONLY a JSON object using this exact schema:
         self.researcher.visited_urls = results['visited_urls']
 
         # Set research sources
-        if results.get('sources'):
-            self.researcher.research_sources = results['sources']
+        self.researcher.research_sources = results.get('sources') or []
 
         # Log total execution time
         end_time = time.time()

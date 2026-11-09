@@ -104,7 +104,6 @@ Research Phase          Image Planning          Report Writing
 | Model | Description |
 |-------|-------------|
 | `models/gemini-2.5-flash-image` | Recommended - fast and free |
-| `gemini-2.0-flash-exp-image-generation` | Experimental variant |
 
 **Paid Tier (Imagen) - requires Google Cloud billing:**
 | Model | Description |

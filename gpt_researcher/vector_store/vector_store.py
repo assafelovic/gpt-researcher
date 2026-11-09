@@ -17,10 +17,13 @@ class VectorStoreWrapper:
     def load(self, documents):
         """
         Load the documents into vector_store
-        Translate to langchain doc type, split to chunks then load
+        Translate to langchain doc type, split to chunks then load.
+        Empty chunk batches leave the vector store unchanged.
         """
         langchain_documents = self._create_langchain_documents(documents)
         splitted_documents = self._split_documents(langchain_documents)
+        if not splitted_documents:
+            return
         self.vector_store.add_documents(splitted_documents)
     
     def _create_langchain_documents(self, data: List[Dict[str, str]]) -> List[Document]:

@@ -341,3 +341,45 @@ def test_trim_context_to_word_limit_preserves_recent_context_and_keeps_one_overs
     result = trim_context_to_word_limit([earlier, oversized_latest], max_words=MAX_CONTEXT_WORDS)
 
     assert result == [" ".join(oversized_latest.split()[:MAX_CONTEXT_WORDS])]
+
+
+@pytest.mark.parametrize("field", ["followUpQuestions", "questions"])
+@pytest.mark.parametrize("payload", ["What next?", {"question": "What next?"}, 42])
+@pytest.mark.asyncio
+async def test_process_results_keeps_learnings_with_invalid_question_container(
+    monkeypatch, field, payload
+):
+    skill = make_skill()
+    response = json.dumps({
+        "learnings": [{"insight": "Verified fact", "sourceUrl": "https://example.test/fact"}],
+        field: payload,
+    })
+
+    async def fake_create_chat_completion(**kwargs):
+        return response
+
+    monkeypatch.setattr(deep_research_module, "create_chat_completion", fake_create_chat_completion)
+    result = await skill.process_research_results("topic", "source context")
+
+    assert result == {
+        "learnings": ["Verified fact"],
+        "citations": {"Verified fact": "https://example.test/fact"},
+        "followUpQuestions": [],
+    }
+
+
+def test_research_results_only_use_nonempty_string_questions():
+    response = json.dumps({
+        "learnings": ["Verified fact"],
+        "followUpQuestions": [None, 42, {"question": "not a string"}, "  What next?  ", "  "],
+    })
+    result = parse_research_results_response(response, num_learnings=1)
+    assert result["followUpQuestions"] == ["What next?"]
+    assert result["learnings"] == ["Verified fact"]
+
+
+def test_research_plan_only_uses_nonempty_string_questions():
+    response = json.dumps({
+        "questions": [None, 42, {"question": "not a string"}, "  What next?  ", "  "],
+    })
+    assert parse_follow_up_questions_response(response, num_questions=1) == ["What next?"]

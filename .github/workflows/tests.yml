@@ -122,15 +122,12 @@ jobs:
               print(f"cached {name}")
           PY
 
-      # --forked runs each test in its own process. The suite currently leaks
-      # global state across modules -- several files pass alone and fail when
-      # run together -- so without this the results depend on collection order.
-      # Removing the flag is the goal; it is tracked separately, and until then
-      # it keeps the signal trustworthy rather than hiding the failures.
+      # All tests share one process, so a test that leaks global state (such as
+      # a sys.modules stub) breaks whatever runs after it. Don't paper over that
+      # with --forked; see tests/test_module_stub_isolation.py.
       - name: Run offline suite
         run: |
           python -m pytest tests/ \
-            --forked \
             --timeout=60 \
             -p no:warnings \
             --deselect tests/test_researcher_logging.py \

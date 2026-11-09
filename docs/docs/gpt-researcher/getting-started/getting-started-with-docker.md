@@ -22,6 +22,8 @@ If that doesn't work, try running it without the dash:
 docker compose up --build
 ```
 
+The root `.env` is never copied into the images. Compose loads it into the backend containers at runtime, so every setting in it (`RETRIEVER`, `SMART_LLM`, provider keys, ...) still applies, and the stack also starts without one. Loading an optional `env_file` requires Docker Compose 2.24 or newer.
+
 > **Step 4** - By default, if you haven't uncommented anything in your docker-compose file, this flow will start 2 processes:
  - the Python server running on localhost:8000
  - the React app running on localhost:3000
@@ -38,3 +40,12 @@ docker run -it --name gpt-researcher -p 8000:8000 --env-file .env  -v /absolute/
 ```
 
 This will run the Docker container and mount the `/gptr_docs` directory to the container's `/my-docs` directory for analysis by the GPTR API Server.
+
+## Prebuilt images
+
+Every release publishes multi-arch (`linux/amd64`, `linux/arm64`) images to the GitHub Container Registry, tagged with the release version and `latest`. Builds of `main` are tagged `dev`.
+
+```bash
+docker pull ghcr.io/assafelovic/gpt-researcher:latest
+docker pull ghcr.io/assafelovic/gpt-researcher-frontend-nextjs:latest
+```

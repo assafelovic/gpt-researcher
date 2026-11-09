@@ -129,4 +129,4 @@ If you encounter issues with the integration:
 
 - Explore [advanced usage options](./advanced-usage) for customizing your research experience
 - Learn about [additional configuration options](../gptr/config) for the GPT Researcher
-- Check out [example prompts](./claude-integration#claude-specific-prompts) to effectively guide Claude in using the research tools
+- Check out [example usage](./getting-started#example-usage-with-claude) to effectively guide Claude in using the research tools

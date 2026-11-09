@@ -4,6 +4,45 @@ import xml.etree.ElementTree as ET
 import requests
 
 
+# JATS elements that start a block of their own. Text inside anything else, such as
+# <italic>, <sub> or <xref>, belongs to the word or sentence around it.
+_BLOCK_TAGS = {
+    "p", "sec", "title", "label", "caption", "list-item", "fig", "table-wrap",
+    "tr", "th", "td", "disp-formula", "disp-quote", "def-item", "term", "def",
+}
+
+
+def _element_text(element: Optional[ET.Element]) -> str:
+    """The text of `element`, with one line per block and its inline markup kept in place.
+
+    Joining `itertext()` with spaces split words at inline markup (`CO<sub>2</sub>` read
+    `CO 2`), and joining it with nothing would run paragraphs together.
+    """
+    if element is None:
+        return ""
+    parts: List[str] = []
+    # Walked with a stack rather than recursion, so a deeply nested document cannot
+    # exhaust the interpreter's recursion limit
+    stack: List[tuple] = [("start", element)]
+    while stack:
+        step, node = stack.pop()
+        if step == "start":
+            if node.tag in _BLOCK_TAGS:
+                parts.append("\n")
+            parts.append(node.text or "")
+            stack.append(("end", node))
+            for child in reversed(list(node)):
+                stack.append(("tail", child))
+                stack.append(("start", child))
+        elif step == "end":
+            if node.tag in _BLOCK_TAGS:
+                parts.append("\n")
+        else:
+            parts.append(node.tail or "")
+    lines = (" ".join(line.split()) for line in "".join(parts).split("\n"))
+    return "\n".join(line for line in lines if line)
+
+
 class PubMedCentralSearch:
     """
     PubMed Central Full-Text Search
@@ -16,6 +55,7 @@ class PubMedCentralSearch:
     def __init__(self, query: str, query_domains=None):
         self.base_search_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
         self.base_fetch_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
+        self.base_link_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi"
         
         # Get API key from environment
         self.api_key = os.getenv('NCBI_API_KEY')
@@ -83,12 +123,43 @@ class PubMedCentralSearch:
             print(f"Failed to search articles: {e}")
             return None
 
+    def _pmid_to_pmcid(self, pmid: str) -> Optional[str]:
+        """Resolve a PubMed ID to the numerical PMC ID used by EFetch."""
+        link_params = {
+            "dbfrom": "pubmed",
+            "db": "pmc",
+            "linkname": "pubmed_pmc",
+            "id": pmid,
+            "retmode": "xml",
+            "api_key": self.api_key,
+        }
+        try:
+            response = requests.get(self.base_link_url, params=link_params, timeout=20)
+            response.raise_for_status()
+            root = ET.fromstring(response.text)
+            if root.tag == "ERROR" or root.find(".//ERROR") is not None:
+                return None
+            for link_set in root.findall(".//LinkSetDb"):
+                if link_set.findtext("LinkName") != "pubmed_pmc":
+                    continue
+                pmc_id = link_set.findtext("Link/Id")
+                if pmc_id and pmc_id.strip().isdigit():
+                    return pmc_id.strip()
+        except (requests.RequestException, ET.ParseError):
+            return None
+        return None
+
     def _fetch_full_text(self, article_id: str) -> Optional[Dict[str, str]]:
         """
         Fetch full text content for a single article
         """
+        if self.db_type == "pubmed":
+            article_id = self._pmid_to_pmcid(article_id)
+            if article_id is None:
+                return None
+
         fetch_params = {
-            "db": "pmc" if self.db_type == "pmc" else "pmc",  # Always fetch from PMC for full text
+            "db": "pmc",  # Always fetch from PMC for full text
             "id": article_id,
             "rettype": "full",
             "retmode": "xml",
@@ -102,20 +173,20 @@ class PubMedCentralSearch:
             # Parse XML content
             try:
                 root = ET.fromstring(response.text)
-                
-                # Extract title (itertext so nested formatting tags are included)
-                title = root.find('.//article-title')
-                title_text = (
-                    " ".join(title.itertext()).strip() if title is not None else ""
-                )
-                
-                # Extract abstract
-                abstract = root.find('.//abstract')
-                abstract_text = " ".join(abstract.itertext()) if abstract is not None else ""
-                
-                # Extract body text
-                body = root.find('.//body')
-                body_text = " ".join(body.itertext()) if body is not None else ""
+                if root.tag == "ERROR" or root.find(".//ERROR") is not None:
+                    return None
+                article = root if root.tag == "article" else root.find(".//article")
+                if article is None:
+                    return None
+
+                # Error envelopes and metadata-only responses are not full text.
+                body_text = _element_text(article.find('.//body'))
+                if not body_text:
+                    return None
+
+                # Extract title and abstract, nested formatting tags included
+                title_text = _element_text(article.find('.//article-title'))
+                abstract_text = _element_text(article.find('.//abstract'))
                 
                 # Combine all text content
                 full_content = f"Title: {title_text}\n\nAbstract: {abstract_text}\n\nBody: {body_text}"

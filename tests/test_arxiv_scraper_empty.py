@@ -8,7 +8,7 @@ import sys
 from datetime import date
 from pathlib import Path
 from types import ModuleType, SimpleNamespace
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 ARXIV_PATH = (
     Path(__file__).resolve().parents[1]
@@ -23,8 +23,8 @@ spec.loader.exec_module(arxiv_mod)
 ArxivScraper = arxiv_mod.ArxivScraper
 
 
-def _install_fake_arxiv(papers):
-    """Install a fake `arxiv` module returning *papers* from Client.results."""
+def _fake_arxiv(papers):
+    """Patch in a fake `arxiv` module returning *papers* from Client.results."""
 
     class _FakeClient:
         def results(self, search):
@@ -33,17 +33,13 @@ def _install_fake_arxiv(papers):
     fake = ModuleType("arxiv")
     fake.Client = lambda *a, **k: _FakeClient()
     fake.Search = MagicMock()
-    sys.modules["arxiv"] = fake
-    return fake
+    return patch.dict(sys.modules, {"arxiv": fake})
 
 
 def test_scrape_returns_empty_when_no_paper():
     scraper = ArxivScraper("https://arxiv.org/abs/0000.00000")
-    _install_fake_arxiv([])
-    try:
+    with _fake_arxiv([]):
         content, images, title = scraper.scrape()
-    finally:
-        sys.modules.pop("arxiv", None)
     assert content == ""
     assert images == []
     assert title == ""
@@ -65,10 +61,7 @@ def test_scrape_returns_doc_when_present():
         summary="Body text",
         title="A Paper",
     )
-    _install_fake_arxiv([paper])
-    try:
+    with _fake_arxiv([paper]):
         content, images, title = scraper.scrape()
-    finally:
-        sys.modules.pop("arxiv", None)
     assert "Body text" in content
     assert title == "A Paper"

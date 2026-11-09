@@ -15,6 +15,8 @@ from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 
+# Drop the stubs below once loaded, so they can't leak into later tests.
+@patch.dict(sys.modules)
 def _load_scraper_module():
     # Minimal stubs so scraper.py imports without the full gptr stack.
     root = Path(__file__).resolve().parents[1]
@@ -30,6 +32,11 @@ def _load_scraper_module():
     utils_workers.WorkerPool = WorkerPool
     sys.modules["gpt_researcher.utils"] = types.ModuleType("gpt_researcher.utils")
     sys.modules["gpt_researcher.utils.workers"] = utils_workers
+    # scraper.py imports its SSRF guard; these tests never reach it.
+    url_security = types.ModuleType("gpt_researcher.utils.url_security")
+    url_security.UnsafeURLError = type("UnsafeURLError", (ValueError,), {})
+    url_security.validate_url = lambda url, **k: url
+    sys.modules[url_security.__name__] = url_security
 
     scraper_pkg = types.ModuleType("gpt_researcher.scraper")
     scraper_pkg.__path__ = [str(root / "gpt_researcher" / "scraper")]
@@ -51,7 +58,7 @@ def _load_scraper_module():
     colorama.Fore = types.SimpleNamespace(YELLOW="")
     colorama.init = lambda *a, **k: None
     sys.modules.setdefault("colorama", colorama)
-    sys.modules.setdefault("requests", types.ModuleType("requests"))
+    sys.modules["requests"] = types.ModuleType("requests")  # never patch the real one
     sys.modules["requests"].Session = MagicMock
 
     path = root / "gpt_researcher" / "scraper" / "scraper.py"
