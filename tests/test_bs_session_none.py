@@ -4,12 +4,14 @@ import importlib.util
 import sys
 import types
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 ROOT = Path(__file__).resolve().parents[1]
 MODULE_PATH = ROOT / "gpt_researcher" / "scraper" / "beautiful_soup" / "beautiful_soup.py"
 
 
+# Drop the stubs below once loaded, so they can't leak into later tests.
+@patch.dict(sys.modules)
 def _load():
     # package stubs for relative imports
     pkg = types.ModuleType("gpt_researcher")
