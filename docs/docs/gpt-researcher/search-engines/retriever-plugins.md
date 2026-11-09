@@ -20,7 +20,12 @@ Install them in the same Python environment as GPT Researcher.
 
 | Retriever | Package | Maintainer and support |
 | --- | --- | --- |
+| Keenable | [`gpt-researcher-keenable`](https://pypi.org/project/gpt-researcher-keenable/) | [PyPI project page](https://pypi.org/project/gpt-researcher-keenable/) |
 | Sciverse | [`gpt-researcher-sciverse`](https://pypi.org/project/gpt-researcher-sciverse/) | [Sciverse-Agent-Tools](https://github.com/opendatalab/Sciverse-Agent-Tools) · [Issues](https://github.com/opendatalab/Sciverse-Agent-Tools/issues) |
+
+### Keenable
+
+`pip install gpt-researcher-keenable`, then set `RETRIEVER=keenable`. It works without an API key; `KEENABLE_API_KEY` is optional.
 
 ### Sciverse
 
@@ -113,9 +118,3 @@ The entry-point name (`acme` above) is the value users put in `RETRIEVER`.
 - Return `[]` on network or parsing errors instead of raising, so one failing provider does not abort a research run.
 
 If a plugin fails to import, GPT Researcher logs a warning and falls back to the default retriever. Use the snippet in [Testing your Retriever](./test-your-retriever.md) to check your results.
-
-## Community plugins
-
-Retrievers published as separate packages. Install one and set `RETRIEVER` to the name it registers.
-
-- [Keenable](https://pypi.org/project/gpt-researcher-keenable/) - `pip install gpt-researcher-keenable`, Env: `RETRIEVER=keenable`; works without an API key, optional `KEENABLE_API_KEY`
