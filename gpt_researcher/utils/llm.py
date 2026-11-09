@@ -14,9 +14,9 @@ from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.prompts import PromptTemplate
 
 from gpt_researcher.llm_provider.generic.base import (
-    NO_SUPPORT_TEMPERATURE_MODELS,
     SUPPORT_REASONING_EFFORT_MODELS,
     ReasoningEfforts,
+    supports_temperature,
 )
 
 from ..prompts import PromptFamily
@@ -86,7 +86,7 @@ async def create_chat_completion(
     if model in SUPPORT_REASONING_EFFORT_MODELS:
         provider_kwargs['reasoning_effort'] = reasoning_effort
 
-    if model not in NO_SUPPORT_TEMPERATURE_MODELS:
+    if supports_temperature(model):
         provider_kwargs['temperature'] = temperature
     else:
         # These models enforce their default temperature, but output limits
