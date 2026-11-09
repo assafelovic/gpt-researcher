@@ -13,6 +13,44 @@ export RETRIEVER=acme
 
 Plugins can be combined with built-in retrievers, e.g. `RETRIEVER=acme,duckduckgo`. Built-in names always take precedence, so a plugin cannot replace `tavily`, `google` or any other shipped retriever.
 
+## Community retrievers
+
+These plugins are distributed and maintained separately from GPT Researcher.
+Install them in the same Python environment as GPT Researcher.
+
+| Retriever | Package | Maintainer and support |
+| --- | --- | --- |
+| Sciverse | [`gpt-researcher-sciverse`](https://pypi.org/project/gpt-researcher-sciverse/) | [Sciverse-Agent-Tools](https://github.com/opendatalab/Sciverse-Agent-Tools) · [Issues](https://github.com/opendatalab/Sciverse-Agent-Tools/issues) |
+
+### Sciverse
+
+[Sciverse](https://sciverse.space/) retrieves scientific literature passages and
+resolves citation links through its metadata API. Requires Python 3.12+ and
+GPT Researcher 0.16.1+ (installed as a package dependency).
+
+```bash
+pip install gpt-researcher-sciverse
+export RETRIEVER=sciverse
+export SCIVERSE_API_TOKEN="your-sciverse-token"
+```
+
+Obtain an API token at [sciverse.space](https://sciverse.space/). Optional settings:
+
+- `SCIVERSE_MODE`: `fast` for keyword retrieval, `balanced` (default) for hybrid
+  keyword/vector retrieval, or `quality` for hybrid retrieval with query rewriting.
+- `SCIVERSE_BASE_URL`: defaults to `https://api.sciverse.space`.
+- Combine with a built-in retriever, e.g. `RETRIEVER=sciverse,duckduckgo`.
+
+Results provide already-retrieved passages under `raw_content`, together with
+available titles and abstracts. These are excerpts, **not complete papers**.
+The plugin declares `requires_scraping=False` so this evidence is used directly
+rather than fetching the citation's publisher page. It accepts `query_domains`
+for interface compatibility but **does not apply domain filtering**.
+
+See the [plugin documentation](https://github.com/opendatalab/Sciverse-Agent-Tools/blob/main/packages/gpt-researcher/README.md)
+for configuration and development details. API access and integration support
+are provided by the plugin maintainer.
+
 ## Writing a plugin
 
 A plugin is a class with the same shape as the built-in retrievers, registered under the `gpt_researcher.retrievers` [entry-point group](https://packaging.python.org/en/latest/specifications/entry-points/).
