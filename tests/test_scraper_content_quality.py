@@ -19,6 +19,7 @@ too-short content.
 
 import random
 import unittest
+from unittest.mock import patch
 
 from gpt_researcher.scraper.scraper import (
     Scraper,
@@ -152,7 +153,10 @@ class ExtractDataFromUrlContentQualityTests(unittest.IsolatedAsyncioTestCase):
             {"_canned_content": canned_content},
         )
         scraper.get_scraper = lambda link: stub_cls
-        return await scraper.extract_data_from_url("https://example.com/x", scraper.session)
+        with patch("gpt_researcher.scraper.scraper.validate_url"):
+            return await scraper.extract_data_from_url(
+                "https://example.com/x", scraper.session
+            )
 
     async def test_anti_bot_page_treated_as_fetch_failure(self):
         text = (
@@ -173,6 +177,40 @@ class ExtractDataFromUrlContentQualityTests(unittest.IsolatedAsyncioTestCase):
         text = "This is a normal article about Catala, a domain-specific language for tax law. " * 5
         result = await self._extract_with_canned_content(text)
         self.assertEqual(result["raw_content"], text)
+
+    async def test_backend_http_failure_reason_is_preserved(self):
+        class FailedBackend:
+            failure_reason = "HTTP_403"
+
+            def __init__(self, link, session):
+                pass
+
+            def scrape(self):
+                return "", [], ""
+
+        scraper = Scraper(
+            urls=["https://example.com"],
+            user_agent="ua",
+            scraper="bs",
+            worker_pool=_FakeWorkerPool(),
+        )
+        scraper.get_scraper = lambda link: FailedBackend
+
+        with patch("gpt_researcher.scraper.scraper.validate_url"):
+            result = await scraper.extract_data_from_url(
+                "https://example.com/source", scraper.session
+            )
+
+        self.assertIsNone(result["raw_content"])
+        self.assertEqual(result["failure_reason"], "HTTP_403")
+
+    async def test_short_content_keeps_existing_failure_message(self):
+        result = await self._extract_with_canned_content("too short")
+
+        self.assertIsNone(result["raw_content"])
+        self.assertEqual(
+            result["failure_reason"], "Content too short or empty"
+        )
 
 
 class _FakeWorkerPool:

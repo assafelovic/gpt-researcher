@@ -265,7 +265,10 @@ class Scraper:
                     )
 
                 if not content or len(content) < 100:
-                    return self._reject(link, title, "Content too short or empty")
+                    reason = getattr(scraper, "failure_reason", None)
+                    return self._reject(
+                        link, title, reason or "Content too short or empty"
+                    )
 
                 # Log results
                 self.logger.info(f"\nTitle: {title}")
@@ -311,9 +314,19 @@ class Scraper:
     def _reject(self, link, title, reason):
         """Treat a fetched-but-unusable page as a scrape failure, in the same
         shape a raised exception or too-short content already returns --
-        downstream code (Scraper.run) drops any raw_content: None entry."""
+        downstream code (Scraper.run) drops any raw_content: None entry.
+
+        ``failure_reason`` is additive metadata for callers that inspect a
+        failed row before that filtering step.
+        """
         self.logger.warning(f"{reason} for {link}, treating as fetch failure")
-        return {"url": link, "raw_content": None, "image_urls": [], "title": title}
+        return {
+            "url": link,
+            "raw_content": None,
+            "image_urls": [],
+            "title": title,
+            "failure_reason": reason,
+        }
 
 
     async def _retry_as_pdf(self, link, session):
