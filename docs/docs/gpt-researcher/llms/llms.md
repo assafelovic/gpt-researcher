@@ -172,9 +172,9 @@ __NOTE:__ As of the writing of this Doc (May 2024), the available Language Model
 Refer to Anthropic [Getting started page](https://docs.anthropic.com/en/api/getting-started) to obtain Anthropic API key. Update the corresponding env vars, for example:
 ```env
 ANTHROPIC_API_KEY=[Your Key]
-FAST_LLM=anthropic:claude-2.1
-SMART_LLM=anthropic:claude-3-opus-20240229
-STRATEGIC_LLM=anthropic:claude-3-opus-20240229
+FAST_LLM=anthropic:claude-haiku-4-5-20251001
+SMART_LLM=anthropic:claude-opus-4-7
+STRATEGIC_LLM=anthropic:claude-opus-4-7
 ```
 
 Add `langchain-anthropic` to [requirements.txt](https://github.com/assafelovic/gpt-researcher/blob/master/requirements.txt) for Docker Support or `pip install` it
@@ -244,11 +244,11 @@ Add `langchain-huggingface` to [requirements.txt](https://github.com/assafelovic
 Sign up [here](https://ai.google.dev/gemini-api/docs/api-key) for obtaining a Google Gemini API Key and update the following env vars:
 ```env
 GOOGLE_API_KEY=[Your Key]
-FAST_LLM=google_genai:gemini-1.5-flash
-SMART_LLM=google_genai:gemini-1.5-pro
-STRATEGIC_LLM=google_genai:gemini-1.5-pro
+FAST_LLM=google_genai:gemini-3.5-flash-lite
+SMART_LLM=google_genai:gemini-3.8-flash
+STRATEGIC_LLM=google_genai:gemini-3.8-flash
 
-EMBEDDING=google_genai:models/text-embedding-004
+EMBEDDING=google_genai:models/gemini-embedding-2
 ```
 
 Add `langchain-google-genai` to [requirements.txt](https://github.com/assafelovic/gpt-researcher/blob/master/requirements.txt) for Docker Support or `pip install` it
@@ -354,7 +354,7 @@ FAST_LLM=openrouter:google/gemini-2.0-flash-lite-001
 SMART_LLM=openrouter:google/gemini-2.0-flash-001
 STRATEGIC_LLM=openrouter:google/gemini-2.5-pro-exp-03-25
 OPENROUTER_LIMIT_RPS=1  # Ratelimit request per second
-EMBEDDING=google_genai:models/text-embedding-004 # openrouter doesn't support embedding models, use google instead its free
+EMBEDDING=google_genai:models/gemini-embedding-2 # openrouter doesn't support embedding models, use google instead its free
 GOOGLE_API_KEY=[Your *google gemini* key]
 ```
 ## Forge

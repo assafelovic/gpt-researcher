@@ -113,7 +113,7 @@ class Config:
             elif embedding_provider == "gigachat":
                 self.embedding_model = "Embeddings"
             elif embedding_provider == "google_genai":
-                self.embedding_model = "text-embedding-004"
+                self.embedding_model = "gemini-embedding-2"
             else:
                 raise Exception("Embedding provider not found.")
 

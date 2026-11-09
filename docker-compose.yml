@@ -12,7 +12,7 @@ services:
       # Image generation (optional - set to enable inline images in reports)
       GOOGLE_API_KEY: ${GOOGLE_API_KEY}
       IMAGE_GENERATION_ENABLED: ${IMAGE_GENERATION_ENABLED:-false}
-      IMAGE_GENERATION_MODEL: ${IMAGE_GENERATION_MODEL:-gemini-2.0-flash-preview-image-generation}
+      IMAGE_GENERATION_MODEL: ${IMAGE_GENERATION_MODEL:-models/gemini-2.5-flash-image}
       IMAGE_GENERATION_MAX_IMAGES: ${IMAGE_GENERATION_MAX_IMAGES:-3}
     volumes:
       - ${PWD}/my-docs:/usr/src/app/my-docs:rw
