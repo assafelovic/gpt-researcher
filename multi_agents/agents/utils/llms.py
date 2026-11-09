@@ -21,6 +21,10 @@ async def call_model(
             model=model,
             messages=lc_messages,
             temperature=0,
+            # Reasoning models count their thinking against this limit; the
+            # 4000 default leaves the writer's long prompts with an empty answer.
+            max_tokens=cfg.smart_token_limit,
+            reasoning_effort=cfg.reasoning_effort,
             llm_provider=cfg.smart_llm_provider,
             llm_kwargs=cfg.llm_kwargs,
             # cost_callback=cost_callback,
