@@ -1,6 +1,7 @@
 import os
 import aiohttp
 import tempfile
+from urllib.parse import urlsplit
 
 from gpt_researcher.utils.url_security import UnsafeURLError, validate_url
 from langchain_community.document_loaders import (
@@ -97,8 +98,6 @@ class OnlineDocumentLoader:
 
     @staticmethod
     def _get_extension(url: str) -> str:
-        # Lower-case the extension so loader lookup (whose keys are lower-case,
-        # e.g. "pdf"/"docx") matches URLs that use upper-case extensions like
-        # "report.PDF" or "doc.DOCX". The leading "?" split drops query strings
-        # (signed CDN/S3 URLs) before extracting the suffix.
-        return os.path.splitext(url.split("?")[0])[1].lower()
+        # Only the URL path identifies the document type. Query strings and
+        # fragments (e.g. PDF page anchors) must not become part of the suffix.
+        return os.path.splitext(urlsplit(url).path)[1].lower()
