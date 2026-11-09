@@ -12,7 +12,7 @@ import os
 from bs4 import BeautifulSoup
 from typing import Iterable, cast
 
-from .processing.scrape_skills import (scrape_pdf_with_pymupdf,
+from .processing.scrape_skills import (scrape_pdf_with_pypdf,
                                        scrape_pdf_with_arxiv)
 
 from urllib.parse import urljoin, urlparse
@@ -218,11 +218,10 @@ class BrowserScraper:
         self._scroll_to_bottom()
 
         if _is_pdf_url(self.url):
-            text = scrape_pdf_with_pymupdf(self.url)
+            text = scrape_pdf_with_pypdf(self.url, self.session)
             return text, [], ""
         elif "arxiv" in self.url:
-            doc_num = self.url.split("/")[-1]
-            text = scrape_pdf_with_arxiv(doc_num)
+            text = scrape_pdf_with_arxiv(self.url, self.session)
             return text, [], ""
         else:
             page_source = self.driver.execute_script(

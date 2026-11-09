@@ -3,14 +3,14 @@
 PDFs served from institutional repository download endpoints (DSpace/
 EPrints-style, e.g. "scholarspace.manoa.hawaii.edu/bitstreams/<uuid>/
 download") have no ".pdf" suffix, so Scraper.get_scraper() routes them to
-a text/HTML backend instead of PyMuPDFScraper. That backend has no way to
+a text/HTML backend instead of PyPDFScraper. That backend has no way to
 decode the PDF body and returns its raw bytes (FlateDecode streams, xref
 tables, /Annot objects) as if it were real page text -- silently: no
 exception, a normal-looking content_length, unusable content.
 
 _looks_like_unextracted_pdf is unit-tested directly; the retry path is
 exercised through extract_data_from_url with both the originally-dispatched
-backend and PyMuPDFScraper replaced by stubs, to confirm the method
+backend and PyPDFScraper replaced by stubs, to confirm the method
 actually retries and recovers, or falls back to a fetch-failure shape if
 the retry also fails.
 """
@@ -70,7 +70,7 @@ class _FakeWorkerPool:
 
 class ExtractDataFromUrlPdfRetryTests(unittest.IsolatedAsyncioTestCase):
     """Drives the real extract_data_from_url/_retry_as_pdf path, with
-    get_scraper() and the module-level PyMuPDFScraper name replaced by
+    get_scraper() and the module-level PyPDFScraper name replaced by
     stubs -- no real network or PDF parsing involved."""
 
     PDF_GARBAGE = (
@@ -95,7 +95,7 @@ class ExtractDataFromUrlPdfRetryTests(unittest.IsolatedAsyncioTestCase):
     def _scraper(self):
         return Scraper(urls=["https://example.com"], user_agent="ua", scraper="bs", worker_pool=_FakeWorkerPool())
 
-    async def test_retries_and_recovers_via_pymupdf(self):
+    async def test_retries_and_recovers_via_pypdf(self):
         scraper = self._scraper()
         scraper.logger = _NullLogger()
 
@@ -108,8 +108,8 @@ class ExtractDataFromUrlPdfRetryTests(unittest.IsolatedAsyncioTestCase):
             },
         )
         clean_pdf_text = "This is the real, cleanly-extracted PDF text. " * 10
-        pymupdf_stub = type(
-            "PyMuPDFStub",
+        pypdf_stub = type(
+            "PyPDFStub",
             (),
             {
                 "__init__": lambda self, link, session: None,
@@ -121,12 +121,12 @@ class ExtractDataFromUrlPdfRetryTests(unittest.IsolatedAsyncioTestCase):
 
         import gpt_researcher.scraper.scraper as scraper_module
 
-        original_pymupdf = scraper_module.PyMuPDFScraper
-        scraper_module.PyMuPDFScraper = pymupdf_stub
+        original_pypdf = scraper_module.PyPDFScraper
+        scraper_module.PyPDFScraper = pypdf_stub
         try:
             result = await scraper.extract_data_from_url("https://repo.example.edu/bitstream/x/download", scraper.session)
         finally:
-            scraper_module.PyMuPDFScraper = original_pymupdf
+            scraper_module.PyPDFScraper = original_pypdf
 
         self.assertEqual(result["raw_content"], clean_pdf_text)
         self.assertEqual(result["title"], "Recovered Title")
@@ -143,8 +143,8 @@ class ExtractDataFromUrlPdfRetryTests(unittest.IsolatedAsyncioTestCase):
                 "scrape": lambda self: (ExtractDataFromUrlPdfRetryTests.PDF_GARBAGE, [], ""),
             },
         )
-        pymupdf_stub_fails = type(
-            "PyMuPDFStubFails",
+        pypdf_stub_fails = type(
+            "PyPDFStubFails",
             (),
             {
                 "__init__": lambda self, link, session: None,
@@ -156,12 +156,12 @@ class ExtractDataFromUrlPdfRetryTests(unittest.IsolatedAsyncioTestCase):
 
         import gpt_researcher.scraper.scraper as scraper_module
 
-        original_pymupdf = scraper_module.PyMuPDFScraper
-        scraper_module.PyMuPDFScraper = pymupdf_stub_fails
+        original_pypdf = scraper_module.PyPDFScraper
+        scraper_module.PyPDFScraper = pypdf_stub_fails
         try:
             result = await scraper.extract_data_from_url("https://repo.example.edu/bitstream/x/download", scraper.session)
         finally:
-            scraper_module.PyMuPDFScraper = original_pymupdf
+            scraper_module.PyPDFScraper = original_pypdf
 
         self.assertIsNone(result["raw_content"])
 

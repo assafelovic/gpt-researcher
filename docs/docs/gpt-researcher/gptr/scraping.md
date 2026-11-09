@@ -36,6 +36,14 @@ Note: If not set, GPT Researcher will default to BeautifulSoup for scraping.
 
 ## Scraping Methods Explained
 
+### PDF Documents
+
+PDF URLs (including `.PDF` and signed URLs with query strings) are routed to
+the pypdf-based `PyPDFScraper`. If an HTML scraper returns raw PDF data from a
+download URL without a `.pdf` extension, the PDF retry uses the same backend.
+See [PDF text extraction](../context/local-docs.md#pdf-text-extraction) for
+parser compatibility and scanned-document limitations.
+
 ### BeautifulSoup (Static Scraping)
 
 When `SCRAPER="bs"`, GPT Researcher uses BeautifulSoup for static scraping. This method:

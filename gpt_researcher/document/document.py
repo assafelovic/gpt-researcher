@@ -2,7 +2,7 @@ import asyncio
 import os
 from typing import List, Union
 from langchain_community.document_loaders import (
-    PyMuPDFLoader,
+    PyPDFLoader,
     TextLoader,
     UnstructuredCSVLoader,
 UnstructuredEPubLoader,
@@ -70,7 +70,7 @@ class DocumentLoader:
         ret_data = []
         try:
             loader_dict = {
-                "pdf": PyMuPDFLoader(file_path),
+                "pdf": PyPDFLoader(file_path),
 "epub": UnstructuredEPubLoader(file_path),
                 "txt": TextLoader(file_path),
                 "doc": UnstructuredWordDocumentLoader(file_path),

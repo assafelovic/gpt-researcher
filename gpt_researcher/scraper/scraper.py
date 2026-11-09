@@ -1,7 +1,7 @@
 """Web scraper module for GPT Researcher.
 
 This module provides the Scraper class that extracts content from URLs
-using various scraping backends (BeautifulSoup, PyMuPDF, Browser, etc.).
+using various scraping backends (BeautifulSoup, PyPDF, Browser, etc.).
 """
 
 import asyncio
@@ -23,7 +23,7 @@ from . import (
     BrowserScraper,
     FireCrawl,
     NoDriverScraper,
-    PyMuPDFScraper,
+    PyPDFScraper,
     TavilyExtract,
     WebBaseLoaderScraper,
 )
@@ -245,16 +245,16 @@ class Scraper:
                 if _looks_like_word_list(content):
                     return self._reject(link, title, "Word-list-like content detected")
 
-                if _looks_like_unextracted_pdf(content) and Scraper is not PyMuPDFScraper:
+                if _looks_like_unextracted_pdf(content) and Scraper is not PyPDFScraper:
                     self.logger.warning(
                         f"{link} looks like unextracted PDF binary via {scraper_name} "
                         f"(no .pdf suffix, so get_scraper() didn't route it to "
-                        f"PyMuPDFScraper) -- retrying with PyMuPDFScraper"
+                        f"PyPDFScraper) -- retrying with PyPDFScraper"
                     )
                     retried = await self._retry_as_pdf(link, session)
                     if retried is not None:
                         return retried
-                    self.logger.warning(f"PyMuPDFScraper retry also failed for {link}")
+                    self.logger.warning(f"PyPDFScraper retry also failed for {link}")
                     return {
                         "url": link,
                         "raw_content": None,
@@ -282,7 +282,7 @@ class Scraper:
 
 
     async def _retry_as_pdf(self, link, session):
-        """Re-fetch link with PyMuPDFScraper after the scraper get_scraper()
+        """Re-fetch link with PyPDFScraper after the scraper get_scraper()
         originally picked returned unextracted PDF binary.
 
         Returns the normal extract_data_from_url result dict on success, or
@@ -290,13 +290,13 @@ class Scraper:
         caller falls back to treating this as an ordinary fetch failure
         instead of passing binary through).
         """
-        scraper = PyMuPDFScraper(link, session)
+        scraper = PyPDFScraper(link, session)
         content, image_urls, title = await asyncio.get_running_loop().run_in_executor(
             self.worker_pool.executor, scraper.scrape
         )
         if not content or len(content) < 100:
             return None
-        self.logger.info(f"PyMuPDFScraper retry recovered {len(content)} characters for {link}")
+        self.logger.info(f"PyPDFScraper retry recovered {len(content)} characters for {link}")
         return {
             "url": link,
             "raw_content": content,
@@ -318,11 +318,11 @@ class Scraper:
           The `get_scraper` method returns the scraper class based on the provided link. The method
         checks the link to determine the appropriate scraper class to use based on predefined mappings
         in the `SCRAPER_CLASSES` dictionary. If the link ends with ".pdf", it selects the
-        `PyMuPDFScraper` class. If the link contains "arxiv.org", it selects the `ArxivScraper
+        `PyPDFScraper` class. If the link contains "arxiv.org", it selects the `ArxivScraper
         """
 
         SCRAPER_CLASSES = {
-            "pdf": PyMuPDFScraper,
+            "pdf": PyPDFScraper,
             "arxiv": ArxivScraper,
             "bs": BeautifulSoupScraper,
             "web_base_loader": WebBaseLoaderScraper,

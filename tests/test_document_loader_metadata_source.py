@@ -27,7 +27,7 @@ def _load():
     lcc = types.ModuleType("langchain_community")
     lcc_loaders = types.ModuleType("langchain_community.document_loaders")
     for name in (
-        "PyMuPDFLoader",
+        "PyPDFLoader",
         "TextLoader",
         "UnstructuredCSVLoader",
         "UnstructuredEPubLoader",

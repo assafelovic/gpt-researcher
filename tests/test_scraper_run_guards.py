@@ -40,7 +40,7 @@ def _load_scraper_module():
         "BrowserScraper",
         "FireCrawl",
         "NoDriverScraper",
-        "PyMuPDFScraper",
+        "PyPDFScraper",
         "TavilyExtract",
         "WebBaseLoaderScraper",
     ):
@@ -73,7 +73,7 @@ def _load_scraper_module():
         "BrowserScraper",
         "FireCrawl",
         "NoDriverScraper",
-        "PyMuPDFScraper",
+        "PyPDFScraper",
         "TavilyExtract",
         "WebBaseLoaderScraper",
     ):
