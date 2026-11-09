@@ -44,8 +44,6 @@
   </picture>
 </a>
 
-https://github.com/user-attachments/assets/4d3f26cf-8ccc-413a-b17c-80aa9e1b52d1
-
 ## Установка как Claude Skill
 
 Расширьте возможности глубокого исследования Claude, установив GPT Researcher как [Claude Skill](https://skills.sh/assafelovic/gpt-researcher/gpt-researcher):

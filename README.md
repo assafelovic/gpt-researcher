@@ -44,8 +44,6 @@ The agent produces detailed, factual, and unbiased research reports with citatio
   </picture>
 </a>
 
-https://github.com/user-attachments/assets/4d3f26cf-8ccc-413a-b17c-80aa9e1b52d1
-
 ## Install as Claude Skill
 
 Extend Claude's deep research capabilities by installing GPT Researcher as a [Claude Skill](https://skills.sh/assafelovic/gpt-researcher/gpt-researcher):
