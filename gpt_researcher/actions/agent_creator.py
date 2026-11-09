@@ -55,6 +55,10 @@ async def choose_agent(
             **kwargs
         )
 
+        # --- ADD THESE TWO LINES TO FIX THE GOOGLE LIST BUG ---
+        if isinstance(response, list):
+            response = response[0].get("text", str(response[0])) if isinstance(response[0], dict) else str(response[0])
+        # ------------------------------------------------------
         # Prefer json_repair so fenced / lightly broken LLM JSON succeeds
         # on the hot path instead of always falling through exception handling.
         try:
