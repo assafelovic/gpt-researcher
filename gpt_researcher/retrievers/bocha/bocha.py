@@ -1,13 +1,12 @@
 # BoCha Search Retriever
 
 # libraries
+import logging
 import os
 import requests
-import json
-import logging
 
 
-class BoChaSearch():
+class BoChaSearch:
     """
     BoCha Search Retriever
     """
@@ -20,7 +19,22 @@ class BoChaSearch():
         """
         self.query = query
         self.query_domains = query_domains or None
-        self.api_key = os.environ["BOCHA_API_KEY"]
+        self.api_key = self.get_api_key()
+
+    def get_api_key(self):
+        """
+        Gets the BoCha API key
+        Returns:
+
+        """
+        try:
+            api_key = os.environ["BOCHA_API_KEY"]
+        except KeyError:
+            raise Exception(
+                "BoCha API key not found. Please set the BOCHA_API_KEY environment variable. "
+                "Get a key at https://api.bochaai.com"
+            )
+        return api_key
 
     def search(self, max_results=7) -> list[dict[str]]:
         """
@@ -60,9 +74,6 @@ class BoChaSearch():
             return []
 
         search_results = []
-
-        if not isinstance(results, list):
-            return []
 
         # Normalize the results to match the format of the other search APIs.
         # Skip non-dict rows / empty URLs; default missing fields to "".
