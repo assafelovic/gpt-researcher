@@ -3,6 +3,9 @@ services:
     pull_policy: build
     image: gptresearcher/gpt-researcher
     build: ./
+    env_file:
+      - path: .env
+        required: false
     environment: 
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       OPENAI_BASE_URL: ${OPENAI_BASE_URL}
@@ -50,6 +53,9 @@ services:
   gpt-researcher-tests:
     image: gptresearcher/gpt-researcher-tests
     build: ./
+    env_file:
+      - path: .env
+        required: false
     environment: 
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       OPENAI_BASE_URL: ${OPENAI_BASE_URL}
