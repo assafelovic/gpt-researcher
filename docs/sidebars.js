@@ -84,7 +84,8 @@
       items: [
         'gpt-researcher/handling-logs/all-about-logs',
         'gpt-researcher/handling-logs/simple-logs-example',
-        'gpt-researcher/handling-logs/langsmith-logs'
+        'gpt-researcher/handling-logs/langsmith-logs',
+        'gpt-researcher/handling-logs/research-observer'
         ]
     },
     {

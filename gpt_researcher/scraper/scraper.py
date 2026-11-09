@@ -14,6 +14,7 @@ from urllib.parse import urlparse
 import requests
 from colorama import Fore, init
 
+from gpt_researcher.observability import emit_research_event
 from gpt_researcher.utils.workers import WorkerPool
 from gpt_researcher.utils.url_security import UnsafeURLError, validate_url
 
@@ -117,7 +118,14 @@ class Scraper:
     Scraper class to extract the content from the links
     """
 
-    def __init__(self, urls, user_agent, scraper, worker_pool: WorkerPool):
+    def __init__(
+        self,
+        urls,
+        user_agent,
+        scraper,
+        worker_pool: WorkerPool,
+        event_handler=None,
+    ):
         """
         Initialize the Scraper class.
         Args:
@@ -137,6 +145,7 @@ class Scraper:
             self._check_pkg(self.scraper)
         self.logger = logging.getLogger(__name__)
         self.worker_pool = worker_pool
+        self.event_handler = event_handler
 
         # Log deduplication results if duplicates were found
         if duplicates_removed > 0:
@@ -152,6 +161,26 @@ class Scraper:
         contents = await asyncio.gather(
             *(self.extract_data_from_url(url, self.session) for url in self.urls)
         )
+
+        for content in contents:
+            if not isinstance(content, dict):
+                continue
+            raw_content = content.get("raw_content")
+            event = "fetch_succeeded" if raw_content is not None else "fetch_failed"
+            fields = {
+                "url": content.get("url") or "",
+                "scraper": self.scraper,
+                "content_length": len(raw_content or ""),
+            }
+            if raw_content is None:
+                fields["reason_code"] = (
+                    content.get("failure_reason") or "CONTENT_UNAVAILABLE"
+                )
+            await emit_research_event(
+                self.event_handler,
+                event,
+                **fields,
+            )
 
         # extract_data_from_url is expected to return a dict, but a buggy backend
         # or cancelled worker can still yield None / non-dict. Indexing those with

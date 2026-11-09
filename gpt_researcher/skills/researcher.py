@@ -14,6 +14,7 @@ from ..actions.agent_creator import choose_agent
 from ..actions.query_processing import get_search_results, plan_research_outline
 from ..actions.utils import stream_output
 from ..document import DocumentLoader, LangChainDocumentLoader, OnlineDocumentLoader
+from ..observability import emit_research_event
 from ..utils.enum import ReportSource, ReportType
 from ..utils.logging_config import get_json_handler
 
@@ -47,6 +48,14 @@ class ResearchConductor:
         # Track MCP query count for balanced mode
         self._mcp_query_count = 0
 
+    async def _emit_research_event(self, event: str, **fields) -> None:
+        """Emit through an optional observer without requiring GPTResearcher."""
+        await emit_research_event(
+            getattr(self.researcher, "research_observer", None),
+            event,
+            **fields,
+        )
+
     async def _get_initial_search_results(self, query, query_domains=None):
         await stream_output(
             "logs",
@@ -55,13 +64,22 @@ class ResearchConductor:
             self.researcher.websocket,
         )
 
-        search_results = await get_search_results(
-            query,
-            self.researcher.retrievers[0],
-            query_domains,
-            researcher=self.researcher,
-            max_results=self.researcher.cfg.max_search_results_per_query,
-        )
+        try:
+            search_results = await get_search_results(
+                query,
+                self.researcher.retrievers[0],
+                query_domains,
+                researcher=self.researcher,
+                max_results=self.researcher.cfg.max_search_results_per_query,
+            )
+        except Exception as exc:
+            await self._emit_research_event(
+                "search_failed",
+                query=query,
+                provider=self.researcher.retrievers[0].__name__,
+                reason_code=type(exc).__name__,
+            )
+            raise
         self.logger.info(f"Initial search results obtained: {len(search_results)} results")
         return search_results
 
@@ -91,6 +109,12 @@ class ResearchConductor:
             retriever_names=retriever_names,  # Pass retriever names for MCP optimization
             **self.researcher.kwargs
         )
+        for position, planned_query in enumerate(outline, start=1):
+            await self._emit_research_event(
+                "query_planned",
+                query=planned_query,
+                position=position,
+            )
         self.logger.info(f"Research outline planned: {outline}")
         return outline
 
@@ -885,6 +909,11 @@ class ResearchConductor:
                     search_results = initial_results
 
                 if not search_results:
+                    await self._emit_research_event(
+                        "search_empty",
+                        query=query,
+                        provider=retriever_class.__name__,
+                    )
                     continue
 
                 # Does this retriever return URLs to scrape, or content it
@@ -895,12 +924,20 @@ class ResearchConductor:
                 requires_scraping = getattr(retriever, "requires_scraping", None)
 
                 # Separate results that already have content from those needing scraping
-                for result in search_results:
+                for rank, result in enumerate(search_results, start=1):
                     url = result.get("href") or result.get("url")
                     raw_content = result.get("raw_content")
 
                     if not url:
                         continue
+
+                    await self._emit_research_event(
+                        "candidate_discovered",
+                        query=query,
+                        provider=retriever_class.__name__,
+                        url=url,
+                        rank=rank,
+                    )
 
                     if requires_scraping is True:
                         # Declared: anything alongside the URL is a preview,
@@ -919,6 +956,14 @@ class ResearchConductor:
                             # #2100: prefetched URLs must join visited_urls like scraped
                             # ones do in _get_new_urls, or repeats re-merge and references vanish.
                             self.researcher.visited_urls.add(url)
+                            await self._emit_research_event(
+                                "content_prefetched",
+                                query=query,
+                                provider=retriever_class.__name__,
+                                url=url,
+                                rank=rank,
+                                content_length=len(raw_content),
+                            )
                         else:
                             new_search_urls.append(url)
                     elif raw_content and len(raw_content) > 100:
@@ -930,13 +975,43 @@ class ResearchConductor:
                         self.researcher.add_research_sources([{"url": url}])
                         # #2100: same visited_urls bookkeeping as above.
                         self.researcher.visited_urls.add(url)
+                        await self._emit_research_event(
+                            "content_prefetched",
+                            query=query,
+                            provider=retriever_class.__name__,
+                            url=url,
+                            rank=rank,
+                            content_length=len(raw_content),
+                        )
                     else:
                         new_search_urls.append(url)
             except Exception as e:
                 self.logger.error(f"Error searching with {retriever_class.__name__}: {e}")
+                await self._emit_research_event(
+                    "search_failed",
+                    query=query,
+                    provider=retriever_class.__name__,
+                    reason_code=type(e).__name__,
+                )
 
         # Get unique URLs
+        requested_urls = list(dict.fromkeys(new_search_urls))
         new_search_urls = await self._get_new_urls(new_search_urls)
+        selected = set(new_search_urls)
+        for url in requested_urls:
+            if url in selected:
+                await self._emit_research_event(
+                    "selected_for_fetch",
+                    query=query,
+                    url=url,
+                )
+            else:
+                await self._emit_research_event(
+                    "candidate_deduplicated",
+                    query=query,
+                    url=url,
+                    reason_code="ALREADY_VISITED",
+                )
         random.shuffle(new_search_urls)
 
         return new_search_urls, prefetched_content
@@ -1153,4 +1228,3 @@ class ResearchConductor:
                     "progress": progress
                 }
             )
-

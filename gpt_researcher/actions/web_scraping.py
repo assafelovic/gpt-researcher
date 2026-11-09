@@ -10,7 +10,7 @@ logger = get_formatted_logger()
 
 
 async def scrape_urls(
-    urls, cfg: Config, worker_pool: WorkerPool
+    urls, cfg: Config, worker_pool: WorkerPool, event_handler=None
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """
     Scrapes the urls
@@ -32,7 +32,13 @@ async def scrape_urls(
 
     scraper = None
     try:
-        scraper = Scraper(urls, user_agent, cfg.scraper, worker_pool=worker_pool)
+        scraper = Scraper(
+            urls,
+            user_agent,
+            cfg.scraper,
+            worker_pool=worker_pool,
+            event_handler=event_handler,
+        )
         scraped_data = await scraper.run()
         for item in scraped_data:
             if not isinstance(item, dict):
