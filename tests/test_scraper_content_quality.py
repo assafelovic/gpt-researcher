@@ -62,6 +62,26 @@ class LooksLikeBlockPageTests(unittest.TestCase):
         ) * 5
         self.assertFalse(_looks_like_block_page(text))
 
+    def test_client_challenge_interstitial_detected(self):
+        # As BeautifulSoupScraper returns it: one sentence per line.
+        text = (
+            "Client Challenge\nJavaScript is disabled in your browser.\n"
+            "Please enable JavaScript to proceed.\n"
+            "A required part of this site couldn\u2019t load. This may be due to a "
+            "browser extension, network issues, or browser settings."
+        )
+        self.assertTrue(_looks_like_block_page(text))
+        self.assertTrue(_looks_like_block_page(text.replace("\u2019", "'")))
+
+    def test_article_mentioning_disabled_javascript_not_detected(self):
+        # The interstitial's own sentence is the marker, not an article that
+        # talks about JavaScript being disabled.
+        text = (
+            "If JavaScript is disabled in your browser, some menus won't open. "
+            "This guide shows how to turn it back on in Firefox and Chrome. " * 5
+        )
+        self.assertFalse(_looks_like_block_page(text))
+
     def test_marker_beyond_prefix_window_not_detected(self):
         # Block pages are checked via a size-bounded prefix (they're always
         # short); a marker string appearing far into a large legitimate

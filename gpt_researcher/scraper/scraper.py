@@ -46,6 +46,12 @@ _BLOCK_PAGE_MARKERS = (
     "please verify you are a human",
     "attention required! | cloudflare",
     "sorry, you have been blocked",
+    # "Client Challenge" interstitial (e.g. wikiHow, Clas Ohlson): served to
+    # plain HTTP clients in place of the page, ~300 chars, so it clears the
+    # 100-char minimum. Its sentences sit on separate lines, so the marker is
+    # one sentence, in both apostrophe styles.
+    "a required part of this site couldn\u2019t load",
+    "a required part of this site couldn't load",
 )
 
 # Block pages are the entire response body -- a "please wait" message, not
