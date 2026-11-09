@@ -4,7 +4,7 @@
 
 This example uses GPT Researcher as the **research engine inside a deep agent**: the harness provides the orchestration that the [LangGraph example](./langgraph.md) implements manually as a hardcoded graph, while `GPTResearcher` provides citation-grade research for each section of the report.
 
-The full example lives in [`deep_agents/`](https://github.com/assafelovic/gpt-researcher/tree/master/deep_agents) in the repository.
+The full example lives in [`deep_agents/`](https://github.com/assafelovic/gpt-researcher/tree/main/deep_agents) in the repository.
 
 ## Use case
 
@@ -30,7 +30,7 @@ We measured this setup against the deepagents quickstart (same harness, same `gp
 | **Effective (verified) citations per report** | 18.6 | **35.2 (+89%)** |
 | Citation precision | 53.9% | **56.0%** |
 
-With GPT Researcher as the engine, the same agent grounds its reports in roughly **2x the verified evidence**: a raw search tool returns snippets, while GPT Researcher plans sub-queries, scrapes and reads the full pages, filters them for relevance and returns pre-cited synthesis. Full methodology and reproduction steps live in [`deep_agents/BENCHMARK.md`](https://github.com/assafelovic/gpt-researcher/blob/master/deep_agents/BENCHMARK.md).
+With GPT Researcher as the engine, the same agent grounds its reports in roughly **2x the verified evidence**: a raw search tool returns snippets, while GPT Researcher plans sub-queries, scrapes and reads the full pages, filters them for relevance and returns pre-cited synthesis. Full methodology and reproduction steps live in [`deep_agents/BENCHMARK.md`](https://github.com/assafelovic/gpt-researcher/blob/main/deep_agents/BENCHMARK.md).
 
 ## How it works
 
@@ -154,4 +154,4 @@ Why use GPT Researcher as the research engine instead of a raw search tool? We b
 | **Verified citations per report (FACT)** | 18.6 | **35.2 (+89%)** |
 | Reports with zero verifiable citations | 2/10 | **0/10** |
 
-FACT scrapes every cited page and verifies each claim against its source, so the headline number measures **real, checkable evidence**: the same chief agent puts nearly twice as much of it behind every report when its research tool scrapes and synthesizes full sources instead of reading search snippets. Full methodology and reproduction steps live in [`deep_agents/BENCHMARK.md`](https://github.com/assafelovic/gpt-researcher/blob/master/deep_agents/BENCHMARK.md).
+FACT scrapes every cited page and verifies each claim against its source, so the headline number measures **real, checkable evidence**: the same chief agent puts nearly twice as much of it behind every report when its research tool scrapes and synthesizes full sources instead of reading search snippets. Full methodology and reproduction steps live in [`deep_agents/BENCHMARK.md`](https://github.com/assafelovic/gpt-researcher/blob/main/deep_agents/BENCHMARK.md).

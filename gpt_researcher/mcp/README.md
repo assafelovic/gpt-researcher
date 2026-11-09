@@ -237,7 +237,7 @@ logging.getLogger('gpt_researcher.mcp').setLevel(logging.DEBUG)
 ## 📚 Resources
 
 - **MCP Specification**: [Model Context Protocol Docs](https://spec.modelcontextprotocol.io/)
-- **langchain-mcp-adapters**: [GitHub Repository](https://github.com/modelcontextprotocol/langchain-mcp-adapters)
+- **langchain-mcp-adapters**: [GitHub Repository](https://github.com/langchain-ai/langchain-mcp-adapters)
 - **GPT Researcher Docs**: [Documentation](https://docs.gptr.dev/)
 - **Example MCP Servers**: [MCP Examples](https://github.com/modelcontextprotocol/servers)
 

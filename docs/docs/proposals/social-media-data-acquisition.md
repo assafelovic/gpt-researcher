@@ -1395,7 +1395,7 @@ v4.3 ─────────────────────────
 - [Bright Data Documentation](https://docs.brightdata.com/)
 - [PhantomBuster Documentation](https://phantombuster.com/phantombuster)
 - [Data365 API Documentation](https://data365.co/docs)
-- [Scrapingdog Documentation](https://www.scrapingdog.com/docs)
+- [Scrapingdog Documentation](https://docs.scrapingdog.com)
 
 ### 11.3 调研来源
 
