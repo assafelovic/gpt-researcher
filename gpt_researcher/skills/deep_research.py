@@ -458,6 +458,7 @@ Return ONLY a JSON object using this exact schema:
 
                     # Conduct research
                     context = await researcher.conduct_research()
+                    self.researcher.add_costs(researcher.get_costs())
 
                     # Get results and visited URLs
                     visited = researcher.visited_urls
