@@ -65,8 +65,6 @@
   </picture>
 </a>
 
-https://github.com/user-attachments/assets/4d3f26cf-8ccc-413a-b17c-80aa9e1b52d1
-
 ## チュートリアル
  - [動作原理](https://docs.gptr.dev/blog/building-gpt-researcher)
  - [インストール方法](https://www.loom.com/share/04ebffb6ed2a4520a27c3e3addcdde20?sid=da1848e8-b1f1-42d1-93c3-5b0b9c3b24ea)
