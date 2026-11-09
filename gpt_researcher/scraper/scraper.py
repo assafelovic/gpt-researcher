@@ -318,7 +318,8 @@ class Scraper:
           The `get_scraper` method returns the scraper class based on the provided link. The method
         checks the link to determine the appropriate scraper class to use based on predefined mappings
         in the `SCRAPER_CLASSES` dictionary. If the link ends with ".pdf", it selects the
-        `PyMuPDFScraper` class. If the link contains "arxiv.org", it selects the `ArxivScraper
+        `PyMuPDFScraper` class. URLs hosted by arxiv.org or its subdomains
+        select `ArxivScraper`.
         """
 
         SCRAPER_CLASSES = {
@@ -337,10 +338,13 @@ class Scraper:
         # Inspect only the path component so query strings / fragments don't
         # hide the extension (e.g. signed CDN/S3 links like "…/doc.pdf?sig=…").
         # Match case-insensitively because ".PDF" is a perfectly valid suffix.
-        path = urlparse(link).path
+        parsed_url = urlparse(link)
+        path = parsed_url.path
+        # A trailing DNS root dot still identifies the same host.
+        hostname = (parsed_url.hostname or "").removesuffix(".")
         if path.lower().endswith(".pdf"):
             scraper_key = "pdf"
-        elif "arxiv.org" in link:
+        elif hostname == "arxiv.org" or hostname.endswith(".arxiv.org"):
             scraper_key = "arxiv"
         else:
             scraper_key = self.scraper
