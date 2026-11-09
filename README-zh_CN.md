@@ -60,7 +60,14 @@
 * 最后，对所有汇总的资料来源进行过滤和汇总，并生成最终研究报告。
 
 ## 演示
-https://github.com/assafelovic/gpt-researcher/assets/13554167/a00c89a6-a295-4dd0-b58d-098a31c40fda
+<a href="https://github.com/user-attachments/assets/4d3f26cf-8ccc-413a-b17c-80aa9e1b52d1">
+  <picture>
+    <source media="(prefers-reduced-motion: reduce)" srcset="https://github.com/user-attachments/assets/25d92184-c59e-4115-9961-759ada1ec952">
+    <img src="https://github.com/user-attachments/assets/3a56a008-fcbd-4373-9e40-8d6027120cfb" alt="GPT Researcher 将一个问题变成带引用的报告" width="800">
+  </picture>
+</a>
+
+https://github.com/user-attachments/assets/4d3f26cf-8ccc-413a-b17c-80aa9e1b52d1
 
 ## 教程
  - [运行原理](https://docs.gptr.dev/blog/building-gpt-researcher)
