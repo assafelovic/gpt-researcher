@@ -149,6 +149,18 @@ async def update_cost(
     Returns:
         None
     """
+    # Sanitize token counts before using them for both cost and display
+    try:
+        prompt_tokens = int(prompt_tokens or 0)
+        completion_tokens = int(completion_tokens or 0)
+    except (TypeError, ValueError):
+        prompt_tokens = 0
+        completion_tokens = 0
+    if prompt_tokens < 0:
+        prompt_tokens = 0
+    if completion_tokens < 0:
+        completion_tokens = 0
+
     cost = calculate_cost(prompt_tokens, completion_tokens, model)
     total_tokens = prompt_tokens + completion_tokens
 
