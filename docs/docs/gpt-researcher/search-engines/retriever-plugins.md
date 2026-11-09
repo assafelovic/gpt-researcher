@@ -22,6 +22,7 @@ Install them in the same Python environment as GPT Researcher.
 | --- | --- | --- |
 | Keenable | [`gpt-researcher-keenable`](https://pypi.org/project/gpt-researcher-keenable/) | [PyPI project page](https://pypi.org/project/gpt-researcher-keenable/) |
 | Sciverse | [`gpt-researcher-sciverse`](https://pypi.org/project/gpt-researcher-sciverse/) | [Sciverse-Agent-Tools](https://github.com/opendatalab/Sciverse-Agent-Tools) · [Issues](https://github.com/opendatalab/Sciverse-Agent-Tools/issues) |
+| cloro | [`gpt-researcher-cloro`](https://pypi.org/project/gpt-researcher-cloro/) | [cloro-dev/gpt-researcher-cloro](https://github.com/cloro-dev/gpt-researcher-cloro) · [Issues](https://github.com/cloro-dev/gpt-researcher-cloro/issues) |
 
 ### Keenable
 
@@ -55,6 +56,27 @@ for interface compatibility but **does not apply domain filtering**.
 See the [plugin documentation](https://github.com/opendatalab/Sciverse-Agent-Tools/blob/main/packages/gpt-researcher/README.md)
 for configuration and development details. API access and integration support
 are provided by the plugin maintainer.
+
+### cloro
+
+[cloro](https://cloro.dev) returns live Google results and AI answers with their
+sources. The package registers three retrievers:
+
+- `cloro`: Google organic results (about 10 per search). GPT Researcher scrapes each page.
+- `cloro_aimode`: the Google AI Mode answer under `raw_content`, then the sources it cites.
+- `cloro_bing_aimode`: the Bing AI Mode answer under `raw_content`, then the sources it cites.
+
+```bash
+pip install gpt-researcher-cloro
+export CLORO_API_KEY="your-cloro-key"
+export RETRIEVER=cloro            # or cloro_aimode, cloro_bing_aimode
+```
+
+Get an API key at [dashboard.cloro.dev](https://dashboard.cloro.dev/api-keys). `CLORO_COUNTRY`
+sets the country (default `US`). Each search is one cloro request and costs credits on the
+user's cloro plan. Requires GPT Researcher 0.16.1+. See the
+[plugin README](https://github.com/cloro-dev/gpt-researcher-cloro#readme) for the result
+shapes and limits. Support is provided by the plugin maintainer.
 
 ## Writing a plugin
 
