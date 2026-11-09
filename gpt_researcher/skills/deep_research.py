@@ -122,6 +122,13 @@ def parse_search_queries_response(response: str, num_queries: int) -> List[Dict[
     return queries[:num_queries]
 
 
+def _question_strings(value: Any) -> List[str]:
+    """Read the prompted list-of-strings shape without coercing invalid entries."""
+    if not isinstance(value, list):
+        return []
+    return [item.strip() for item in value if isinstance(item, str) and item.strip()]
+
+
 def parse_follow_up_questions_response(response: str, num_questions: int) -> List[str]:
     parsed = _load_repaired_json(response)
     candidate_questions = parsed
@@ -129,7 +136,7 @@ def parse_follow_up_questions_response(response: str, num_questions: int) -> Lis
         candidate_questions = parsed.get("questions") or parsed.get("followUpQuestions") or parsed.get("items")
 
     if isinstance(candidate_questions, list):
-        questions = [str(item).strip() for item in candidate_questions if str(item).strip()]
+        questions = _question_strings(candidate_questions)
         if questions:
             return questions[:num_questions]
 
@@ -169,7 +176,7 @@ def parse_research_results_response(response: str, num_learnings: int) -> Dict[s
                     if citation:
                         citations[learning] = citation
 
-        questions = [str(item).strip() for item in follow_up_payload if str(item).strip()]
+        questions = _question_strings(follow_up_payload)
         if learnings or questions:
             return {
                 "learnings": learnings[:num_learnings],
