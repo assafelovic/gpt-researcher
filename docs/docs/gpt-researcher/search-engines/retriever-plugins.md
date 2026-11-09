@@ -22,6 +22,7 @@ Install them in the same Python environment as GPT Researcher.
 | --- | --- | --- |
 | Keenable | [`gpt-researcher-keenable`](https://pypi.org/project/gpt-researcher-keenable/) | [PyPI project page](https://pypi.org/project/gpt-researcher-keenable/) |
 | Sciverse | [`gpt-researcher-sciverse`](https://pypi.org/project/gpt-researcher-sciverse/) | [Sciverse-Agent-Tools](https://github.com/opendatalab/Sciverse-Agent-Tools) · [Issues](https://github.com/opendatalab/Sciverse-Agent-Tools/issues) |
+| SpecStream | [`gpt-researcher-specstream`](https://pypi.org/project/gpt-researcher-specstream/) | [specstream-tools](https://github.com/specstream/specstream-tools) · [Issues](https://github.com/specstream/specstream-tools/issues) |
 
 ### Keenable
 
@@ -55,6 +56,28 @@ for interface compatibility but **does not apply domain filtering**.
 See the [plugin documentation](https://github.com/opendatalab/Sciverse-Agent-Tools/blob/main/packages/gpt-researcher/README.md)
 for configuration and development details. API access and integration support
 are provided by the plugin maintainer.
+
+### SpecStream
+
+[SpecStream](https://specstream.ai) answers each research sub-query from the live
+web through its Search API and returns every result with its source.
+
+```bash
+pip install gpt-researcher-specstream
+export RETRIEVER=specstream
+export SPECSTREAM_API_KEY="your-specstream-key"
+```
+
+Create an API key at [specstream.ai](https://specstream.ai). Optional settings:
+
+- `SPECSTREAM_EXTRACT`: set to `true` to read the top results through the
+  SpecStream Extract API and hand GPT Researcher their text.
+- `SPECSTREAM_BASE_URL`: defaults to `https://api.specstream.ai`.
+- Combine with a built-in retriever, e.g. `RETRIEVER=specstream,duckduckgo`.
+
+See the [plugin documentation](https://pypi.org/project/gpt-researcher-specstream/)
+for configuration details. API access and integration support are provided by
+the plugin maintainer.
 
 ## Writing a plugin
 
