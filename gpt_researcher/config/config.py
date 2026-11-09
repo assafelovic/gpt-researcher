@@ -85,7 +85,7 @@ class Config:
         self.fast_llm_provider, self.fast_llm_model = self.parse_llm(self.fast_llm)
         self.smart_llm_provider, self.smart_llm_model = self.parse_llm(self.smart_llm)
         self.strategic_llm_provider, self.strategic_llm_model = self.parse_llm(self.strategic_llm)
-        self.reasoning_effort = self.parse_reasoning_effort(os.getenv("REASONING_EFFORT"))
+        self.reasoning_effort = self.parse_reasoning_effort(self.reasoning_effort)
 
     def _handle_deprecated_attributes(self) -> None:
         """Handle deprecated configuration attributes with warnings."""
