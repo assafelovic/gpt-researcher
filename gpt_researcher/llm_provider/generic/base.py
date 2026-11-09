@@ -486,6 +486,13 @@ class GenericLLMProvider:
                 content = chunk.text if self._text_only else chunk.content
                 if not content:
                     continue
+                
+                # --- FIX FOR GOOGLE LIST CONCATENATION BUG ---
+                if isinstance(content, list):
+                    content = content[0].get("text", str(content[0])) if isinstance(content[0], dict) else str(content[0])
+
+                response += content
+                # ---------------------------------------------
                 response += content
                 paragraph += content
                 if "\n" in paragraph:
