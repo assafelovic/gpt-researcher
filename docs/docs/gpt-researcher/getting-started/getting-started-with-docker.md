@@ -40,3 +40,12 @@ docker run -it --name gpt-researcher -p 8000:8000 --env-file .env  -v /absolute/
 ```
 
 This will run the Docker container and mount the `/gptr_docs` directory to the container's `/my-docs` directory for analysis by the GPTR API Server.
+
+## Prebuilt images
+
+Every release publishes multi-arch (`linux/amd64`, `linux/arm64`) images to the GitHub Container Registry, tagged with the release version and `latest`. Builds of `main` are tagged `dev`.
+
+```bash
+docker pull ghcr.io/assafelovic/gpt-researcher:latest
+docker pull ghcr.io/assafelovic/gpt-researcher-frontend-nextjs:latest
+```
