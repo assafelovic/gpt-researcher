@@ -134,16 +134,8 @@ async def create_chat_completion(
                 continue
             break
 
-        if not response:
-            last_exception = RuntimeError("Empty response from LLM provider")
-            logging.getLogger(__name__).warning(
-                f"LLM returned empty response (attempt {attempt}/{max_attempts})"
-            )
-            if attempt < max_attempts:
-                await asyncio.sleep(min(2 ** (attempt - 1), 8))
-                continue
-            break
-
+        # A provider can bill a completed request that returns empty content
+        # after spending its budget on reasoning, so account for every call.
         if cost_callback:
             llm_costs = calculate_llm_cost(
                 llm_provider=llm_provider,
@@ -155,6 +147,16 @@ async def create_chat_completion(
                 request_options=provider_kwargs,
             )
             cost_callback(llm_costs)
+
+        if not response:
+            last_exception = RuntimeError("Empty response from LLM provider")
+            logging.getLogger(__name__).warning(
+                f"LLM returned empty response (attempt {attempt}/{max_attempts})"
+            )
+            if attempt < max_attempts:
+                await asyncio.sleep(min(2 ** (attempt - 1), 8))
+                continue
+            break
 
         return response
 
