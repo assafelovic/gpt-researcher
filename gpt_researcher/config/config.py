@@ -48,7 +48,7 @@ class Config:
         self._set_embedding_attributes()
         self._set_llm_attributes()
         self._handle_deprecated_attributes()
-        if config_to_use['REPORT_SOURCE'] != 'web':
+        if (os.getenv('REPORT_SOURCE') or config_to_use['REPORT_SOURCE']) != 'web':
           self._set_doc_path(config_to_use)
 
     def _set_attributes(self, config: Dict[str, Any]) -> None:
@@ -137,7 +137,8 @@ class Config:
             self.smart_llm_model = os.environ["SMART_LLM_MODEL"] or self.smart_llm_model
 
     def _set_doc_path(self, config: Dict[str, Any]) -> None:
-        self.doc_path = config['DOC_PATH']
+        if not self.doc_path:
+            self.doc_path = config['DOC_PATH']
         if self.doc_path:
             try:
                 self.validate_doc_path()
