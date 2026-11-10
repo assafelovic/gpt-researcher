@@ -18,8 +18,8 @@ Per paragraph the judge sees:
              citations, the best-matching passages from everything retrieved.
 Second step: the fact claims the first call's passages did not support are
 judged again, in a separate call, against independent passages picked claim
-by claim: for each claim, the passages closest to it (embedding similarity,
-BM25 without an embedder) among everything retrieved that the first call did
+by claim: for each claim, the passages closest to it (embedding similarity and BM25,
+merged by reciprocal rank fusion; BM25 alone without an embedder) among everything retrieved that the first call did
 not show (other pages, and passages of a cited page left out by the material
 budget; support found there backs the citation). The recheck uses the same
 four verdicts as the first call, so support that puts several passages
@@ -57,10 +57,11 @@ if TYPE_CHECKING:
 # Bump when the audit's material or unit logic changes (prompt changes bump the
 # prompt version instead); every metric that reads the audit carries it in its
 # version, so the scorer version changes and old results are not overwritten.
-AUDIT_VERSION = "15"    # 7: recall / precision per claim; 8: fact / analysis claims; 9: entity roles are facts; 10: independent recheck; 11: recheck uncited paragraphs and unshown passages of cited pages; 12: one inferred level;
+AUDIT_VERSION = "16"    # 7: recall / precision per claim; 8: fact / analysis claims; 9: entity roles are facts; 10: independent recheck; 11: recheck uncited paragraphs and unshown passages of cited pages; 12: one inferred level;
                         # 13: contradicted only about exactly the same thing (scope, definition, period);
                         # 14: the recheck sees the contradicting passages; a contradiction it does not confirm is unsupported
                         # 15: recheck passages picked per claim by embedding over all retrieved material; recheck may say inferred
+                        # 16: per-claim pick merges the embedding and BM25 rankings (reciprocal rank fusion)
 
 # Faithfulness points per verdict (eval-design/generation-metrics.md §3.2 B).
 # One "inferred" level since paragraph_audit v6: the judge could not keep the
@@ -77,6 +78,7 @@ RECHECK_VERDICTS = ("supported", "inferred", "unsupported", "contradicted")   # 
 CLAIM_PASSAGES = 5          # recheck: passages picked for each claim (outside the first call's material)
 RECHECK_PASSAGES = 20       # recheck: at most this many passages per paragraph, shared by its claims
 EMBED_CHARS = 4000          # chunk text sent to the embedder
+RRF_K = 60                  # reciprocal rank fusion of the embedding and BM25 rankings
 UNAVAILABLE = "(not available: the agent never retrieved this URL)"
 
 
@@ -306,6 +308,18 @@ def _by_similarity(qvec: list[float], cids: list[str], vecs: dict[str, list[floa
     return [cids[i] for i in order]
 
 
+def fuse(*rankings: list[str], k: int = RRF_K) -> list[str]:
+    """Reciprocal rank fusion: each ranking gives a chunk 1 / (k + rank); a
+    chunk near the top of both comes first, one near the top of either still
+    ranks well. Ties keep the order of the first ranking."""
+    score: dict[str, float] = {}
+    for r in rankings:
+        for i, c in enumerate(r, 1):
+            score[c] = score.get(c, 0.0) + 1.0 / (k + i)
+    first = {c: i for i, c in enumerate(rankings[0])} if rankings else {}
+    return sorted(score, key=lambda c: (-score[c], first.get(c, len(first))))
+
+
 async def attach_independent(archive: "RunArchive", ctx: "ScoringContext", pa: ParagraphAudit,
                              claims: list[dict], idf: dict, per_claim: int = CLAIM_PASSAGES,
                              limit: int = RECHECK_PASSAGES) -> None:
@@ -313,8 +327,10 @@ async def attach_independent(archive: "RunArchive", ctx: "ScoringContext", pa: P
 
     For each claim, the `per_claim` passages closest to it among everything
     retrieved that the first call did not show (other pages, and passages of
-    the cited pages left out by the material budget): by embedding similarity,
-    or BM25 when no embedder is configured. The claims take turns, best first,
+    the cited pages left out by the material budget). Two rankings, merged by
+    reciprocal rank fusion: embedding similarity (the meaning, in other words)
+    and BM25 (the exact words: names, acronyms, figures). BM25 alone when no
+    embedder is configured. The claims take turns, best first,
     up to `limit` passages for the paragraph. Each claim keeps the chunk ids
     picked for it (`recheck_chunk_ids`). Grouped by URL into `pa.extra`;
     "cited" marks a page the paragraph cites."""
@@ -323,12 +339,13 @@ async def attach_independent(archive: "RunArchive", ctx: "ScoringContext", pa: P
     if not pool or not claims or per_claim <= 0:
         pa.extra = []
         return
+    lexical = [_rank(c["claim"], pool, archive, idf) for c in claims]
     if ctx.embedder is not None:
         vecs = await chunk_vectors(archive, ctx)
         qvecs = await ctx.embedder.embed([c["claim"] for c in claims])
-        ranked = [_by_similarity(q, pool, vecs)[:per_claim] for q in qvecs]
+        ranked = [fuse(_by_similarity(q, pool, vecs), lex)[:per_claim] for q, lex in zip(qvecs, lexical)]
     else:
-        ranked = [_rank(c["claim"], pool, archive, idf)[:per_claim] for c in claims]
+        ranked = [lex[:per_claim] for lex in lexical]
     picked: list[str] = []
     for i in range(per_claim):
         for r in ranked:

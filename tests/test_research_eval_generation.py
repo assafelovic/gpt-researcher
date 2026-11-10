@@ -755,3 +755,11 @@ def test_recheck_may_infer_which_lifts_faithfulness_but_not_the_citation():
     assert pa.claims[0]["faith_verdict"] == "inferred" and pa.claims[0]["faith_score"] == 0.5
     cc = pa.claim_checks[0]
     assert not cc["supported"] and not cc["supported_on_recheck"]
+
+
+def test_fuse_merges_meaning_and_exact_word_rankings():
+    from evals.research_eval.citation_audit import fuse
+    # Second in both beats first in one and last in the other.
+    assert fuse(["a", "b", "c"], ["c", "b", "a"])[0] == "b"
+    merged = fuse(["x", "shared", "y"], ["shared", "z", "x"])
+    assert merged[0] == "shared" and set(merged) == {"x", "shared", "y", "z"}
