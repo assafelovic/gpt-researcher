@@ -17,10 +17,13 @@ Per paragraph the judge sees:
              retrieved is shown as unavailable. For a paragraph without
              citations, the best-matching passages from everything retrieved.
 Second step: the fact claims the first call's passages did not support are
-judged again, in a separate call, against independent passages: the checker's
-own BM25 pick from everything retrieved that the first call did not show
-(other pages, and passages of a cited page left out by the material budget;
-support found there backs the citation).
+judged again, in a separate call, against independent passages picked claim
+by claim: for each claim, the passages closest to it (embedding similarity,
+BM25 without an embedder) among everything retrieved that the first call did
+not show (other pages, and passages of a cited page left out by the material
+budget; support found there backs the citation). The recheck uses the same
+four verdicts as the first call, so support that puts several passages
+together counts as inferred.
 So a claim is not judged only on the evidence the agent chose to cite. The
 first call shows only cited material, because more material in one call made
 the judge more lenient on the citations too.
@@ -54,9 +57,10 @@ if TYPE_CHECKING:
 # Bump when the audit's material or unit logic changes (prompt changes bump the
 # prompt version instead); every metric that reads the audit carries it in its
 # version, so the scorer version changes and old results are not overwritten.
-AUDIT_VERSION = "14"    # 7: recall / precision per claim; 8: fact / analysis claims; 9: entity roles are facts; 10: independent recheck; 11: recheck uncited paragraphs and unshown passages of cited pages; 12: one inferred level;
+AUDIT_VERSION = "15"    # 7: recall / precision per claim; 8: fact / analysis claims; 9: entity roles are facts; 10: independent recheck; 11: recheck uncited paragraphs and unshown passages of cited pages; 12: one inferred level;
                         # 13: contradicted only about exactly the same thing (scope, definition, period);
                         # 14: the recheck sees the contradicting passages; a contradiction it does not confirm is unsupported
+                        # 15: recheck passages picked per claim by embedding over all retrieved material; recheck may say inferred
 
 # Faithfulness points per verdict (eval-design/generation-metrics.md §3.2 B).
 # One "inferred" level since paragraph_audit v6: the judge could not keep the
@@ -69,8 +73,10 @@ PASSAGE_CHARS = 1200        # one chunk shown to the judge
 SOURCE_PASSAGES = 12        # chunks shown per cited URL: most pages fit whole
 MATERIAL_CHARS = 24000      # per paragraph, shared by its cited URLs
 UNCITED_PASSAGES = 4        # BM25 top-k for paragraphs without citations
-RECHECK_VERDICTS = ("supported", "unsupported", "contradicted")   # strict, CLAIM_RECHECK v2
-INDEPENDENT_PASSAGES = 6    # checker-picked passages outside the cited URLs (recheck step)
+RECHECK_VERDICTS = ("supported", "inferred", "unsupported", "contradicted")   # CLAIM_RECHECK v13
+CLAIM_PASSAGES = 5          # recheck: passages picked for each claim (outside the first call's material)
+RECHECK_PASSAGES = 20       # recheck: at most this many passages per paragraph, shared by its claims
+EMBED_CHARS = 4000          # chunk text sent to the embedder
 UNAVAILABLE = "(not available: the agent never retrieved this URL)"
 
 
@@ -276,32 +282,73 @@ def citation_units(paragraph: dict, scope: str = "preceding") -> list[dict]:
     return units + pending
 
 
-def _independent(archive: "RunArchive", paragraph: dict, cited_urls: list[str], shown: set[str],
-                 idf: dict, k: int, start: int) -> list[dict]:
-    """The checker's own evidence for the recheck: up to k passages from
-    everything retrieved that the first call did not show (other pages, and
-    passages of the cited pages left out by the material budget), first the
-    best one for each sentence, then by match with the whole paragraph.
-    Grouped by URL and numbered from `start`; "cited" marks a cited page."""
-    if k <= 0:
-        return []
-    cited = {normalize_url(u) for u in cited_urls}
+async def chunk_vectors(archive: "RunArchive", ctx: "ScoringContext") -> dict[str, list[float]]:
+    """Embeddings of every retrieved chunk, once per archive (cached by text)."""
+    memo, key = ctx.archive_memo(archive), "chunk_vectors"
+    if key not in memo:
+        cids = list(archive.retrieved_chunk_ids)
+        vecs = await ctx.embedder.embed([archive.chunks[c]["content"][:EMBED_CHARS] for c in cids])
+        memo[key] = dict(zip(cids, vecs))
+    return memo[key]
+
+
+def _by_similarity(qvec: list[float], cids: list[str], vecs: dict[str, list[float]]) -> list[str]:
+    try:
+        import numpy as np
+        m = np.array([vecs[c] for c in cids], dtype=float)
+        q = np.array(qvec, dtype=float)
+        sims = (m @ q) / ((np.linalg.norm(m, axis=1) * np.linalg.norm(q)) + 1e-12)
+        order = sorted(range(len(cids)), key=lambda i: (-float(sims[i]), i))
+    except ImportError:
+        from .judge import cosine
+        sims = [cosine(qvec, vecs[c]) for c in cids]
+        order = sorted(range(len(cids)), key=lambda i: (-sims[i], i))
+    return [cids[i] for i in order]
+
+
+async def attach_independent(archive: "RunArchive", ctx: "ScoringContext", pa: ParagraphAudit,
+                             claims: list[dict], idf: dict, per_claim: int = CLAIM_PASSAGES,
+                             limit: int = RECHECK_PASSAGES) -> None:
+    """The checker's own evidence for the recheck, picked claim by claim.
+
+    For each claim, the `per_claim` passages closest to it among everything
+    retrieved that the first call did not show (other pages, and passages of
+    the cited pages left out by the material budget): by embedding similarity,
+    or BM25 when no embedder is configured. The claims take turns, best first,
+    up to `limit` passages for the paragraph. Each claim keeps the chunk ids
+    picked for it (`recheck_chunk_ids`). Grouped by URL into `pa.extra`;
+    "cited" marks a page the paragraph cites."""
+    shown = {p["chunk_id"] for s in pa.sources for p in s["passages"]}
     pool = [c for c in archive.retrieved_chunk_ids if c not in shown]
-    if not pool:
-        return []
-    picked = _candidates(archive, cited_sentences(paragraph), paragraph["text"], pool, idf)[:k]
+    if not pool or not claims or per_claim <= 0:
+        pa.extra = []
+        return
+    if ctx.embedder is not None:
+        vecs = await chunk_vectors(archive, ctx)
+        qvecs = await ctx.embedder.embed([c["claim"] for c in claims])
+        ranked = [_by_similarity(q, pool, vecs)[:per_claim] for q in qvecs]
+    else:
+        ranked = [_rank(c["claim"], pool, archive, idf)[:per_claim] for c in claims]
+    picked: list[str] = []
+    for i in range(per_claim):
+        for r in ranked:
+            if i < len(r) and r[i] not in picked and len(picked) < limit:
+                picked.append(r[i])
+    for c, r in zip(claims, ranked):
+        c["recheck_chunk_ids"] = [x for x in r if x in picked]
+    cited = {normalize_url(u) for s in pa.sentences for u in s["urls"]}
     by_url: dict[str, list[str]] = {}
     for c in picked:
         by_url.setdefault(archive.chunks[c].get("url") or "", []).append(c)
-    return [{"n": n, "url": url or None, "found": True,
-             "cited": bool(url) and normalize_url(url) in cited,
-             "passages": [{"id": f"{n}{ascii_lowercase[i]}", "chunk_id": c}
-                          for i, c in enumerate(cids)]}
-            for n, (url, cids) in enumerate(by_url.items(), start)]
+    pa.extra = [{"n": n, "url": url or None, "found": True,
+                 "cited": bool(url) and normalize_url(url) in cited,
+                 "passages": [{"id": f"{n}{ascii_lowercase[i]}", "chunk_id": c}
+                              for i, c in enumerate(cids)]}
+                for n, (url, cids) in enumerate(by_url.items(), 1)]
 
 
 def prepare(archive: "RunArchive", paragraph: dict, idf: dict,
-            scope: str = "preceding", independent: int = INDEPENDENT_PASSAGES) -> ParagraphAudit:
+            scope: str = "preceding") -> ParagraphAudit:
     sents = citation_units(paragraph, scope)
     urls = list(dict.fromkeys(u for s in sents for u in s["urls"]))
     sources: list[dict] = []
@@ -326,10 +373,8 @@ def prepare(archive: "RunArchive", paragraph: dict, idf: dict,
         top = _rank(paragraph["text"], archive.retrieved_chunk_ids, archive, idf)[:UNCITED_PASSAGES]
         sources = [{"n": n, "url": archive.chunks[c].get("url"), "found": True, "cited": False,
                     "passages": [{"id": f"{n}a", "chunk_id": c}]} for n, c in enumerate(top, 1)]
-    shown = {p["chunk_id"] for s in sources for p in s["passages"]}
-    extra = _independent(archive, paragraph, urls, shown, idf, independent, 1)
     return ParagraphAudit(paragraph["para_id"], [], mode, sents, sources,
-                          table=paragraph.get("type") == "table", extra=extra)
+                          table=paragraph.get("type") == "table")
 
 
 def render(archive: "RunArchive", pa: ParagraphAudit) -> str:
@@ -483,11 +528,17 @@ def claim_level(pa: ParagraphAudit) -> None:
                 "precise": any(cc["supported"] and u in cc["backing_urls"] for cc in mine)})
 
 
-def recheck_todo(pa: ParagraphAudit) -> list[dict]:
+def recheck_claims(pa: ParagraphAudit) -> list[dict]:
     """Fact claims that the first call's passages did not support."""
     if pa.error:
         return []
-    todo = [c for c in pa.claims if c.get("type", "fact") == "fact" and c["verdict"] != "supported"]
+    return [c for c in pa.claims if c.get("type", "fact") == "fact" and c["verdict"] != "supported"]
+
+
+def recheck_todo(pa: ParagraphAudit) -> list[dict]:
+    """The claims to recheck, once `pa.extra` is attached; [] when there is
+    no material to recheck them on."""
+    todo = recheck_claims(pa)
     pa.confirm = _confirm_sources(pa, todo)
     return todo if pa.extra or pa.confirm else []
 
@@ -510,7 +561,12 @@ def _confirm_sources(pa: ParagraphAudit, todo: list[dict]) -> list[dict]:
 
 
 def render_recheck(archive: "RunArchive", pa: ParagraphAudit, todo: list[dict]) -> str:
-    claims = "\n".join(f"{i}. {c['claim']}" for i, c in enumerate(todo, 1))
+    pid = {p["chunk_id"]: p["id"] for s in pa.extra for p in s["passages"]}
+    lines = []
+    for i, c in enumerate(todo, 1):
+        ids = [pid[x] for x in c.get("recheck_chunk_ids") or [] if x in pid]
+        lines.append(f"{i}. {c['claim']}" + (f"  (passages picked for it: {', '.join(ids)})" if ids else ""))
+    claims = "\n".join(lines)
     blocks = [f"Source [{s['n']}] {s['url'] or 'unknown source'} passage {p['id']}:\n"
               f"{archive.chunks[p['chunk_id']]['content'][:PASSAGE_CHARS]}"
               for s in pa.extra + pa.confirm for p in s["passages"]]
@@ -538,9 +594,10 @@ def apply_recheck(pa: ParagraphAudit, todo: list[dict]) -> None:
                  elsewhere_chunk_ids=[passage_chunk[str(x)] for x in got.get("passages") or []
                                       if str(x) in passage_chunk],
                  elsewhere_evidence=got.get("evidence", ""))
-        # Plain support found elsewhere lifts a verdict. A contradiction found
-        # only elsewhere is recorded, not scored: sources may simply disagree.
-        if verdict == "supported" and (c["faith_score"] is None or score > c["faith_score"]):
+        # Support (or a reasonable step from it) found elsewhere lifts a
+        # verdict. A contradiction found only elsewhere is recorded, not
+        # scored: sources may simply disagree.
+        if verdict in ("supported", "inferred") and (c["faith_score"] is None or score > c["faith_score"]):
             c["faith_verdict"], c["faith_score"] = verdict, score
         elif c["verdict"] == "contradicted" and score is not None and verdict != "contradicted":
             c["faith_verdict"], c["faith_score"] = "unsupported", VERDICT_SCORES["unsupported"]
@@ -575,8 +632,7 @@ async def _run(archive: "RunArchive", ctx: "ScoringContext") -> CitationAudit:
                for p in s["paragraphs"]}
     audits = []
     for p in paragraphs:
-        pa = prepare(archive, p, idf, ctx.option("citation_scope", "preceding"),
-                     int(ctx.option("independent_passages", INDEPENDENT_PASSAGES)))
+        pa = prepare(archive, p, idf, ctx.option("citation_scope", "preceding"))
         pa.heading_path = heading.get(p["para_id"], [])
         audits.append(pa)
 
@@ -584,7 +640,12 @@ async def _run(archive: "RunArchive", ctx: "ScoringContext") -> CitationAudit:
         pa.response = await ctx.judge.ask(PARAGRAPH_AUDIT.id, PARAGRAPH_AUDIT.version,
                                           render(archive, pa))
         interpret(pa)
-        todo = recheck_todo(pa)
+        claims = recheck_claims(pa)
+        if claims:
+            await attach_independent(archive, ctx, pa, claims, idf,
+                                     int(ctx.option("claim_passages", CLAIM_PASSAGES)),
+                                     int(ctx.option("recheck_passages", RECHECK_PASSAGES)))
+        todo = recheck_todo(pa) if claims else []
         if todo:
             pa.recheck = await ctx.judge.ask(CLAIM_RECHECK.id, CLAIM_RECHECK.version,
                                              render_recheck(archive, pa, todo))

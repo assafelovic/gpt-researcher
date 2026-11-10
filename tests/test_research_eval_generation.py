@@ -119,7 +119,8 @@ class ScriptedJudge:
             # Recheck: unsupported unless a test sets a verdict for a claim.
             claims = re.findall(r"^(\d+)\. (.+)$", prompt.split("Claims:")[1].split("Material:")[0], re.M)
             return json.dumps({"claims": [
-                {"claim": int(n), **self.recheck.get(text, {"verdict": "unsupported", "passages": []})}
+                {"claim": int(n), **self.recheck.get(text.split("  (passages picked for it:")[0],
+                                                     {"verdict": "unsupported", "passages": []})}
                 for n, text in claims]})
         if "a finished report covers" in prompt:
             return json.dumps({"points": [{"point": 1, "coverage": "full"},
@@ -609,7 +610,10 @@ async def test_recheck_judges_unsupported_facts_on_checker_picked_passages(ctx):
     # unsupported facts. Uncited paragraphs get no recheck.
     assert len(rechecks) == 2
     second = next(p for p in rechecks if "Glencore" in p)
-    assert "1. Glencore dominates\n2. prices triple" in second.split("Material:")[0]
+    claims = second.split("Claims:")[1].split("Material:")[0]
+    # Each claim lists the passages picked for it (per claim, not per paragraph).
+    assert re.search(r"^1\. Glencore dominates  \(passages picked for it: [0-9a-z, ]+\)$", claims, re.M)
+    assert re.search(r"^2\. prices triple  \(passages picked for it: [0-9a-z, ]+\)$", claims, re.M)
     material = second.split("Material:")[1]
     assert "never-retrieved" not in material
     # The cited page is shown again only for the passage first read as contradicting.
@@ -714,3 +718,40 @@ async def test_contradicted_paragraphs_counts_paragraphs_not_claims(ctx):
     assert (r.details["paragraphs"], r.details["contradicted"]) == (3, 1)
     assert r.value == pytest.approx(1 / 3, abs=1e-3) and r.higher_is_better is False
     assert [c["claim"] for c in r.details["flagged"][0]["claims"]] == ["Glencore dominates"]
+
+
+async def test_recheck_passages_are_picked_per_claim_by_embedding():
+    from evals.research_eval.citation_audit import ParagraphAudit, attach_independent
+    from evals.research_eval.judge import Embedder
+    archive = make_archive()
+    words = ("glencore", "lithium", "recycl")
+
+    async def embed(texts):
+        return [[float(w in t.lower()) for w in words] + [0.01] for t in texts]
+
+    cache = EvalCache(":memory:")
+    c = ScoringContext(cache=cache, embedder=Embedder(cache, model="fake", embed=embed))
+    recycling = next(cid for cid, ch in archive.chunks.items() if ch["url"] == URL["recycling"])
+    pa = ParagraphAudit("p", [], "cited", [{"text": "x", "urls": [URL["recycling"]]}],
+                        [{"n": 1, "url": URL["recycling"], "found": True, "cited": True,
+                          "passages": [{"id": "1a", "chunk_id": recycling}]}])
+    claims = [{"claim": "Glencore is the largest producer"}, {"claim": "Lithium recycling is mandated"}]
+    await attach_independent(archive, c, pa, claims, {}, per_claim=1)
+    by_url = {archive.chunks[cid]["url"]: cid for cid in archive.chunks}
+    # Each claim gets its own closest passage; the first call's passage is not shown again.
+    assert claims[0]["recheck_chunk_ids"] == [by_url[URL["cobalt"]]]
+    assert claims[1]["recheck_chunk_ids"] == [by_url[URL["lithium"]]]
+    shown = [p["chunk_id"] for s in pa.extra for p in s["passages"]]
+    assert recycling not in shown and len(shown) == 2
+    # The paragraph's limit is shared by its claims, best passage of each first.
+    await attach_independent(archive, c, pa, claims, {}, per_claim=2, limit=2)
+    assert sorted(p["chunk_id"] for s in pa.extra for p in s["passages"]) == \
+        sorted([by_url[URL["cobalt"]], by_url[URL["lithium"]]])
+
+
+def test_recheck_may_infer_which_lifts_faithfulness_but_not_the_citation():
+    pa = _pa_with_extra("cited", "https://www.reuters.com/cobalt/", True)
+    _recheck(pa, "inferred")
+    assert pa.claims[0]["faith_verdict"] == "inferred" and pa.claims[0]["faith_score"] == 0.5
+    cc = pa.claim_checks[0]
+    assert not cc["supported"] and not cc["supported_on_recheck"]

@@ -21,6 +21,9 @@ class _AuditMetric(Metric):
     category = "generation.writing_authority"
     version = f"1.audit{AUDIT_VERSION}"
     uses_llm = True
+    # The recheck picks passages per claim by embedding similarity, by BM25
+    # when no embedder is configured: not required, so not `uses_embeddings`.
+    prefers_embeddings = True
     prompts = (PARAGRAPH_AUDIT,)
 
     async def score(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:

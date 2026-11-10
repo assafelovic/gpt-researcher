@@ -63,7 +63,7 @@ async def main(argv: list[str] | None = None) -> int:
 
     cache = EvalCache(args.cache)
     needs_llm = any(m.uses_llm for m in metrics)
-    needs_emb = any(m.uses_embeddings for m in metrics)
+    needs_emb = any(m.uses_embeddings or getattr(m, "prefers_embeddings", False) for m in metrics)
     ctx = ScoringContext(cache=cache,
                          judge=Judge(cache, salt=args.judge_salt, max_calls=args.max_calls,
                                      dry_run=args.dry_run) if needs_llm else None,
