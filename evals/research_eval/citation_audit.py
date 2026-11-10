@@ -57,11 +57,12 @@ if TYPE_CHECKING:
 # Bump when the audit's material or unit logic changes (prompt changes bump the
 # prompt version instead); every metric that reads the audit carries it in its
 # version, so the scorer version changes and old results are not overwritten.
-AUDIT_VERSION = "16"    # 7: recall / precision per claim; 8: fact / analysis claims; 9: entity roles are facts; 10: independent recheck; 11: recheck uncited paragraphs and unshown passages of cited pages; 12: one inferred level;
+AUDIT_VERSION = "17"    # 7: recall / precision per claim; 8: fact / analysis claims; 9: entity roles are facts; 10: independent recheck; 11: recheck uncited paragraphs and unshown passages of cited pages; 12: one inferred level;
                         # 13: contradicted only about exactly the same thing (scope, definition, period);
                         # 14: the recheck sees the contradicting passages; a contradiction it does not confirm is unsupported
                         # 15: recheck passages picked per claim by embedding over all retrieved material; recheck may say inferred
                         # 16: per-claim pick merges the embedding and BM25 rankings (reciprocal rank fusion)
+                        # 17: each claim also searched without the words 3+ claims of the paragraph share
 
 # Faithfulness points per verdict (eval-design/generation-metrics.md §3.2 B).
 # One "inferred" level since paragraph_audit v6: the judge could not keep the
@@ -79,6 +80,7 @@ CLAIM_PASSAGES = 5          # recheck: passages picked for each claim (outside t
 RECHECK_PASSAGES = 20       # recheck: at most this many passages per paragraph, shared by its claims
 EMBED_CHARS = 4000          # chunk text sent to the embedder
 RRF_K = 60                  # reciprocal rank fusion of the embedding and BM25 rankings
+SHARED_CLAIMS = 3           # search query: drop words that this many of the paragraph's claims share
 UNAVAILABLE = "(not available: the agent never retrieved this URL)"
 
 
@@ -308,6 +310,30 @@ def _by_similarity(qvec: list[float], cids: list[str], vecs: dict[str, list[floa
     return [cids[i] for i in order]
 
 
+def search_queries(claims: list[str], shared: int = SHARED_CLAIMS) -> list[str]:
+    """The text each claim is searched with: the claim without the words
+    that at least `shared` claims of its paragraph have in common. A sentence
+    split into claims repeats its frame in every one ("Changes ... extend
+    beyond MiCA into the Travel Rule / into tax reporting"); the frame then
+    decides both rankings and every claim gets the same passages. The search
+    uses this next to the claim as written (a shared word may be the subject
+    the claim is about); the judge sees the claim as written. A claim left
+    with no word of its own is searched as written only."""
+    words = [[w for w in c.split()] for c in claims]
+    keys = [[tokenize(w) for w in ws] for ws in words]
+    count: dict[str, int] = {}
+    for ks in keys:
+        for t in {t for k in ks for t in k}:
+            count[t] = count.get(t, 0) + 1
+    out = []
+    for c, ws, ks in zip(claims, words, keys):
+        # stop words go too: nothing to rank by, and they glue the frame back
+        kept = [w for w, k in zip(ws, ks) if k and not all(count[t] >= shared for t in k)]
+        dropped = any(k and all(count[t] >= shared for t in k) for k in ks)
+        out.append(" ".join(kept) if kept and dropped else c)
+    return out
+
+
 def fuse(*rankings: list[str], k: int = RRF_K) -> list[str]:
     """Reciprocal rank fusion: each ranking gives a chunk 1 / (k + rank); a
     chunk near the top of both comes first, one near the top of either still
@@ -330,7 +356,8 @@ async def attach_independent(archive: "RunArchive", ctx: "ScoringContext", pa: P
     the cited pages left out by the material budget). Two rankings, merged by
     reciprocal rank fusion: embedding similarity (the meaning, in other words)
     and BM25 (the exact words: names, acronyms, figures). BM25 alone when no
-    embedder is configured. The claims take turns, best first,
+    embedder is configured. Each claim is searched as written and also
+    without the words 3+ claims of its paragraph share (`search_queries`). The claims take turns, best first,
     up to `limit` passages for the paragraph. Each claim keeps the chunk ids
     picked for it (`recheck_chunk_ids`). Grouped by URL into `pa.extra`;
     "cited" marks a page the paragraph cites."""
@@ -339,13 +366,25 @@ async def attach_independent(archive: "RunArchive", ctx: "ScoringContext", pa: P
     if not pool or not claims or per_claim <= 0:
         pa.extra = []
         return
-    lexical = [_rank(c["claim"], pool, archive, idf) for c in claims]
+    queries = search_queries([c["claim"] for c in pa.claims])
+    query = {id(c): q for c, q in zip(pa.claims, queries)}
+    # Each claim is searched as written and, when its paragraph's claims share
+    # a frame, without it: up to four rankings (meaning and exact words, each
+    # for both texts), merged.
+    texts = [[c["claim"]] + ([query[id(c)]] if query.get(id(c), c["claim"]) != c["claim"] else [])
+             for c in claims]
+    for c, ts in zip(claims, texts):
+        c["recheck_query"] = ts[-1]
+    lexical = [[_rank(t, pool, archive, idf) for t in ts] for ts in texts]
     if ctx.embedder is not None:
         vecs = await chunk_vectors(archive, ctx)
-        qvecs = await ctx.embedder.embed([c["claim"] for c in claims])
-        ranked = [fuse(_by_similarity(q, pool, vecs), lex)[:per_claim] for q, lex in zip(qvecs, lexical)]
+        flat = [t for ts in texts for t in ts]
+        qv = iter(await ctx.embedder.embed(flat))
+        semantic = [[_by_similarity(next(qv), pool, vecs) for _ in ts] for ts in texts]
+        ranked = [fuse(*[r for pair in zip(sem, lex) for r in pair])[:per_claim]
+                  for sem, lex in zip(semantic, lexical)]
     else:
-        ranked = [lex[:per_claim] for lex in lexical]
+        ranked = [fuse(*lex)[:per_claim] for lex in lexical]
     picked: list[str] = []
     for i in range(per_claim):
         for r in ranked:

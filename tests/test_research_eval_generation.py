@@ -763,3 +763,13 @@ def test_fuse_merges_meaning_and_exact_word_rankings():
     assert fuse(["a", "b", "c"], ["b", "d", "e"])[0] == "b"
     merged = fuse(["x", "shared", "y"], ["shared", "z", "x"])
     assert merged[0] == "shared" and set(merged) == {"x", "shared", "y", "z"}
+
+
+def test_search_drops_the_frame_claims_of_a_paragraph_share():
+    from evals.research_eval.citation_audit import search_queries
+    frame = "Changes affecting the European crypto industry extend beyond MiCA into "
+    q = search_queries([frame + "the Travel Rule.", frame + "tax reporting.", frame + "AML/KYC rules."])
+    assert [x.lower() for x in q] == ["travel rule.", "tax reporting.", "aml/kyc rules."]
+    # Fewer claims than the threshold share nothing: searched as written.
+    assert search_queries(["Glencore raised $2bn.", "Glencore opened a plant."]) == \
+        ["Glencore raised $2bn.", "Glencore opened a plant."]
