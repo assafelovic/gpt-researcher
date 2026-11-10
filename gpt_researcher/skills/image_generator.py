@@ -566,7 +566,7 @@ Return ONLY the JSON, no additional text."""
         
         # Embed images in the report
         if generated_images:
-            report = self._embed_images_in_report(report, generated_images, suggestions)
+            report = self._embed_images_in_report(report, generated_images)
             self.generated_images = generated_images
             
             if self.researcher.verbose:
@@ -593,24 +593,28 @@ Return ONLY the JSON, no additional text."""
         self,
         report: str,
         images: List[Dict[str, Any]],
-        suggestions: List[Dict[str, Any]],
     ) -> str:
         """Embed generated images into the report markdown.
         
         Args:
             report: The original report markdown.
-            images: List of generated image info.
-            suggestions: Original suggestions with section info.
+            images: List of generated image info, each carrying the
+                ``section_header`` it was generated for.
             
         Returns:
             Modified report with embedded images.
         """
         lines = report.split('\n')
         
-        # Create a mapping of section headers to images
+        # Map each generated image to the section it was generated for. Pairing
+        # images with the suggestion list by position put an image under the
+        # wrong header as soon as one generation failed, because failed
+        # generations are dropped from ``images`` and shift every later entry.
         section_to_image = {}
-        for img, sug in zip(images, suggestions):
-            section_to_image[sug["section_header"]] = img
+        for img in images:
+            section_header = img.get("section_header")
+            if section_header:
+                section_to_image[section_header] = img
         
         # Find section headers and insert images after them
         modified_lines = []
