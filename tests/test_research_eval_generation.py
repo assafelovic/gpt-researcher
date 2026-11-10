@@ -769,7 +769,11 @@ def test_search_drops_the_frame_claims_of_a_paragraph_share():
     from evals.research_eval.citation_audit import search_queries
     frame = "Changes affecting the European crypto industry extend beyond MiCA into "
     q = search_queries([frame + "the Travel Rule.", frame + "tax reporting.", frame + "AML/KYC rules."])
-    assert [x.lower() for x in q] == ["travel rule.", "tax reporting.", "aml/kyc rules."]
-    # Fewer claims than the threshold share nothing: searched as written.
-    assert search_queries(["Glencore raised $2bn.", "Glencore opened a plant."]) == \
-        ["Glencore raised $2bn.", "Glencore opened a plant."]
+    assert q[0] == ["Travel Rule.", "Changes European MiCA Travel Rule."]
+    assert q[1] == ["tax reporting.", "Changes European MiCA tax reporting."]
+    # A shared subject comes back in the second text.
+    q = search_queries(["Zipline runs a medical network.", "Zipline is a pure-play vendor.",
+                        "Zipline has a repeatable model."])
+    assert q[1] == ["pure-play vendor.", "Zipline pure-play vendor."]
+    # Fewer claims than the threshold share nothing: no extra text.
+    assert search_queries(["Glencore raised $2bn.", "Glencore opened a plant."]) == [[], []]

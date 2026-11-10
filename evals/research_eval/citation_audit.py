@@ -57,12 +57,13 @@ if TYPE_CHECKING:
 # Bump when the audit's material or unit logic changes (prompt changes bump the
 # prompt version instead); every metric that reads the audit carries it in its
 # version, so the scorer version changes and old results are not overwritten.
-AUDIT_VERSION = "17"    # 7: recall / precision per claim; 8: fact / analysis claims; 9: entity roles are facts; 10: independent recheck; 11: recheck uncited paragraphs and unshown passages of cited pages; 12: one inferred level;
+AUDIT_VERSION = "18"    # 7: recall / precision per claim; 8: fact / analysis claims; 9: entity roles are facts; 10: independent recheck; 11: recheck uncited paragraphs and unshown passages of cited pages; 12: one inferred level;
                         # 13: contradicted only about exactly the same thing (scope, definition, period);
                         # 14: the recheck sees the contradicting passages; a contradiction it does not confirm is unsupported
                         # 15: recheck passages picked per claim by embedding over all retrieved material; recheck may say inferred
                         # 16: per-claim pick merges the embedding and BM25 rankings (reciprocal rank fusion)
                         # 17: each claim also searched without the words 3+ claims of the paragraph share
+                        # 18: ... and without them but with the claim's names and figures
 
 # Faithfulness points per verdict (eval-design/generation-metrics.md §3.2 B).
 # One "inferred" level since paragraph_audit v6: the judge could not keep the
@@ -310,16 +311,19 @@ def _by_similarity(qvec: list[float], cids: list[str], vecs: dict[str, list[floa
     return [cids[i] for i in order]
 
 
-def search_queries(claims: list[str], shared: int = SHARED_CLAIMS) -> list[str]:
-    """The text each claim is searched with: the claim without the words
-    that at least `shared` claims of its paragraph have in common. A sentence
-    split into claims repeats its frame in every one ("Changes ... extend
-    beyond MiCA into the Travel Rule / into tax reporting"); the frame then
-    decides both rankings and every claim gets the same passages. The search
-    uses this next to the claim as written (a shared word may be the subject
-    the claim is about); the judge sees the claim as written. A claim left
-    with no word of its own is searched as written only."""
-    words = [[w for w in c.split()] for c in claims]
+def search_queries(claims: list[str], shared: int = SHARED_CLAIMS) -> list[list[str]]:
+    """The extra texts each claim is searched with, next to the claim as
+    written. A sentence split into claims repeats its frame in every one
+    ("Changes ... extend beyond MiCA into the Travel Rule / into tax
+    reporting"); the frame then decides the rankings and every claim gets the
+    same passages. So, when some words are shared by at least `shared` claims
+    of the paragraph:
+      without the frame  the claim without those words ("Travel Rule");
+      with its names     the same, plus the dropped names and figures (words
+                         with a capital or a digit), since a shared word may
+                         be the subject the claim is about ("Zipline").
+    Stop words go too. The judge sees the claim as written."""
+    words = [c.split() for c in claims]
     keys = [[tokenize(w) for w in ws] for ws in words]
     count: dict[str, int] = {}
     for ks in keys:
@@ -327,10 +331,17 @@ def search_queries(claims: list[str], shared: int = SHARED_CLAIMS) -> list[str]:
             count[t] = count.get(t, 0) + 1
     out = []
     for c, ws, ks in zip(claims, words, keys):
-        # stop words go too: nothing to rank by, and they glue the frame back
-        kept = [w for w, k in zip(ws, ks) if k and not all(count[t] >= shared for t in k)]
-        dropped = any(k and all(count[t] >= shared for t in k) for k in ks)
-        out.append(" ".join(kept) if kept and dropped else c)
+        frame = [bool(k) and all(count[t] >= shared for t in k) for k in ks]
+        kept = [w for w, k, f in zip(ws, ks, frame) if k and not f]
+        if not any(frame) or not kept:
+            out.append([])
+            continue
+        named = [w for w, k, f in zip(ws, ks, frame)
+                 if k and (not f or any(ch.isupper() or ch.isdigit() for ch in w))]
+        extra = [" ".join(kept)]
+        if named != kept:
+            extra.append(" ".join(named))
+        out.append(extra)
     return out
 
 
@@ -357,7 +368,8 @@ async def attach_independent(archive: "RunArchive", ctx: "ScoringContext", pa: P
     reciprocal rank fusion: embedding similarity (the meaning, in other words)
     and BM25 (the exact words: names, acronyms, figures). BM25 alone when no
     embedder is configured. Each claim is searched as written and also
-    without the words 3+ claims of its paragraph share (`search_queries`). The claims take turns, best first,
+    without the words 3+ claims of its paragraph share, with and without its
+    names (`search_queries`). The claims take turns, best first,
     up to `limit` passages for the paragraph. Each claim keeps the chunk ids
     picked for it (`recheck_chunk_ids`). Grouped by URL into `pa.extra`;
     "cited" marks a page the paragraph cites."""
@@ -366,15 +378,13 @@ async def attach_independent(archive: "RunArchive", ctx: "ScoringContext", pa: P
     if not pool or not claims or per_claim <= 0:
         pa.extra = []
         return
-    queries = search_queries([c["claim"] for c in pa.claims])
-    query = {id(c): q for c, q in zip(pa.claims, queries)}
+    extra = {id(c): q for c, q in zip(pa.claims, search_queries([c["claim"] for c in pa.claims]))}
     # Each claim is searched as written and, when its paragraph's claims share
-    # a frame, without it: up to four rankings (meaning and exact words, each
-    # for both texts), merged.
-    texts = [[c["claim"]] + ([query[id(c)]] if query.get(id(c), c["claim"]) != c["claim"] else [])
-             for c in claims]
+    # a frame, without it and without it but with its names: up to six
+    # rankings (meaning and exact words for each text), merged.
+    texts = [[c["claim"]] + extra.get(id(c), []) for c in claims]
     for c, ts in zip(claims, texts):
-        c["recheck_query"] = ts[-1]
+        c["recheck_queries"] = ts[1:]
     lexical = [[_rank(t, pool, archive, idf) for t in ts] for ts in texts]
     if ctx.embedder is not None:
         vecs = await chunk_vectors(archive, ctx)
