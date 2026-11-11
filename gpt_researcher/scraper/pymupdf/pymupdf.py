@@ -1,8 +1,22 @@
 import os
-import requests
 import tempfile
-from urllib.parse import urlparse
+from urllib.parse import unquote, urlparse
+
+import requests
 from langchain_community.document_loaders import PyMuPDFLoader
+
+
+def _fallback_title(link: str) -> str:
+    """Derive a readable title fallback from a URL or file path when PDF metadata lacks a title."""
+    try:
+        parsed = urlparse(link)
+        raw_name = os.path.basename(parsed.path or link)
+        name = unquote(raw_name)
+        stem = os.path.splitext(name)[0].replace("_", " ").replace("-", " ")
+        cleaned = " ".join(stem.split())
+        return cleaned or parsed.netloc or link
+    except (ValueError, TypeError, AttributeError):
+        return link
 
 
 class PyMuPDFScraper:
@@ -76,7 +90,9 @@ class PyMuPDFScraper:
             image = []
             # Retrieve content from ALL pages to ensure PDFs with cover pages pass validation.
             content = "\n".join(page.page_content for page in doc)
-            title = doc[0].metadata.get("title", "") if doc else ""
+            title = (doc[0].metadata.get("title") or "").strip() if doc else ""
+            if doc and not title:
+                title = _fallback_title(self.link)
             return content, image, title
 
         except requests.exceptions.Timeout:
