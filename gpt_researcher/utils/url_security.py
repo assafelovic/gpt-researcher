@@ -30,7 +30,7 @@ from __future__ import annotations
 import ipaddress
 import os
 import socket
-from urllib.parse import urlparse
+from urllib.parse import urljoin, urlparse
 
 ALLOWED_SCHEMES = ("http", "https")
 
@@ -123,3 +123,13 @@ def is_safe_url(url: str, *, allow_private: bool | None = None) -> bool:
         return True
     except UnsafeURLError:
         return False
+
+
+def validate_redirect_hook(response, *args, **kwargs):
+    """Reject unsafe requests redirect targets before the next hop is sent."""
+    if response.is_redirect:
+        try:
+            validate_url(urljoin(response.url, response.headers["Location"]))
+        except UnsafeURLError:
+            response.close()
+            raise
