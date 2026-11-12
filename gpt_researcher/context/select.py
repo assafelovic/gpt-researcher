@@ -47,7 +47,8 @@ def resolve_context_filter(setting: str | None) -> str:
 
 
 def _as_documents(pages: list[dict]) -> list[Document]:
-    return SearchAPIRetriever(pages=pages).invoke("")
+    clean_pages = [p for p in pages if isinstance(p, dict)] if pages else []
+    return SearchAPIRetriever(pages=clean_pages).invoke("")
 
 
 async def select_context(
@@ -65,6 +66,8 @@ async def select_context(
     ``embeddings`` is a zero-argument factory, called only in embeddings mode,
     so nothing builds an embedding model unless that mode is chosen.
     """
+    if not pages:
+        return ""
     mode = resolve_context_filter(getattr(cfg, "context_filter", None))
     prompt_family = prompt_family or PromptFamily
 
@@ -72,7 +75,7 @@ async def select_context(
         return prompt_family.pretty_print_docs(_as_documents(pages))
 
     # Little content needs no filtering, whatever the mode.
-    total_chars = sum(len(str(p.get("raw_content") or "")) for p in pages)
+    total_chars = sum(len(str(p.get("raw_content") or "")) for p in pages if isinstance(p, dict))
     if total_chars < int(os.environ.get("COMPRESSION_THRESHOLD", "8000")) and len(pages) <= max_results:
         return prompt_family.pretty_print_docs(_as_documents(pages)[:max_results], max_results)
 
