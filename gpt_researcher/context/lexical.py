@@ -115,13 +115,18 @@ def rank_written_sections(query: str, sections: list[dict], max_results: int = 1
     embedding model is available. ``sections`` are
     ``{"section_title": ..., "written_content": ...}`` dicts.
     """
+    if not sections:
+        return []
     splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
     chunks = [
-        (section.get("section_title", ""), chunk)
+        ((section.get("section_title") or "") if isinstance(section, dict) else "", chunk)
         for section in sections
+        if isinstance(section, dict)
         for chunk in splitter.split_text(section.get("written_content") or "")
         if chunk.strip()
     ]
+    if not chunks:
+        return []
     scores = bm25_scores(query, [f"{title}\n{text}" for title, text in chunks])
     best = max(scores, default=0.0)
     if best <= 0:
