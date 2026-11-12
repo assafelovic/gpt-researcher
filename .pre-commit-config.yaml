@@ -1,0 +1,9 @@
+# Runs only on files staged in each commit, so old code is left alone
+# until someone touches it. Config lives in pyproject.toml [tool.ruff].
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.2
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+      - id: ruff-format
