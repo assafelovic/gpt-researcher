@@ -26,16 +26,18 @@ class SearchAPIRetriever(BaseRetriever):
                 # ``raw_content`` may be explicitly None (the scraper sets it to
                 # None for pages that failed to scrape), and slicing None raises
                 # TypeError. Coerce to a string before truncating.
-                page_content=(page.get("raw_content") or "")[:_MAX_CONTENT_CHARS],
+                page_content=((page.get("raw_content") or "") if isinstance(page, dict) else "")[:_MAX_CONTENT_CHARS],
                 metadata={
-                    "title": page.get("title", ""),
-                    "source": page.get("url", ""),
+                    "title": (page.get("title") or "") if isinstance(page, dict) else "",
+                    "source": (page.get("url") or "") if isinstance(page, dict) else "",
                 },
             )
-            for page in self.pages
+            for page in (self.pages or [])
+            if isinstance(page, dict)
         ]
 
         return docs
+
 
 class SectionRetriever(BaseRetriever):
     """
@@ -60,12 +62,15 @@ class SectionRetriever(BaseRetriever):
 
         docs = [
             Document(
-                page_content=page.get("written_content", ""),
+                # Coerce missing or explicit None values to empty strings to avoid
+                # Pydantic validation errors when constructing Document.
+                page_content=(page.get("written_content") or "") if isinstance(page, dict) else "",
                 metadata={
-                    "section_title": page.get("section_title", ""),
+                    "section_title": (page.get("section_title") or "") if isinstance(page, dict) else "",
                 },
             )
-            for page in self.sections  # Changed 'self.pages' to 'self.sections'
+            for page in (self.sections or [])
+            if isinstance(page, dict)
         ]
 
         return docs
