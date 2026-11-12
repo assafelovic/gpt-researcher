@@ -46,7 +46,7 @@ class MCPToolSelector:
         Returns:
             List: Selected tools most relevant for the query
         """
-        if not all_tools:
+        if not all_tools or max_tools <= 0:
             return []
 
         if len(all_tools) < max_tools:
@@ -59,8 +59,8 @@ class MCPToolSelector:
         for i, tool in enumerate(all_tools):
             tool_info = {
                 "index": i,
-                "name": tool.name,
-                "description": tool.description or "No description available"
+                "name": getattr(tool, "name", "") or f"tool_{i}",
+                "description": getattr(tool, "description", None) or "No description available"
             }
             tools_info.append(tool_info)
         
@@ -169,6 +169,9 @@ class MCPToolSelector:
         Returns:
             List: Selected tools
         """
+        if not all_tools or max_tools <= 0:
+            return []
+
         # Define patterns for research-relevant tools
         research_patterns = [
             'search', 'get', 'read', 'fetch', 'find', 'list', 'query', 
@@ -178,8 +181,8 @@ class MCPToolSelector:
         scored_tools = []
         
         for tool in all_tools:
-            tool_name = tool.name.lower()
-            tool_description = (tool.description or "").lower()
+            tool_name = (getattr(tool, "name", "") or "").lower()
+            tool_description = (getattr(tool, "description", "") or "").lower()
             
             # Calculate relevance score based on pattern matching
             score = 0
@@ -197,6 +200,14 @@ class MCPToolSelector:
         selected_tools = [tool for tool, score in scored_tools[:max_tools]]
         
         for i, (tool, score) in enumerate(scored_tools[:max_tools]):
-            logger.info(f"Fallback selected tool {i+1}: {tool.name} (score: {score})")
+            tool_display_name = getattr(tool, "name", "") or f"tool_{i+1}"
+            logger.info(f"Fallback selected tool {i+1}: {tool_display_name} (score: {score})")
+        
+        # If no tools matched specific research patterns, fall back to first max_tools
+        if not selected_tools and all_tools:
+            logger.info(
+                f"No tools matched research patterns, selecting first {min(max_tools, len(all_tools))} available tool(s)"
+            )
+            selected_tools = all_tools[:max_tools]
         
         return selected_tools 
