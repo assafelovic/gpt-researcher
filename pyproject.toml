@@ -210,3 +210,16 @@ dev = [
     "types-markdown>=3.8.0.20250415",
     "types-requests>=2.32.0.20250515",
 ]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["frontend", "docs", "terraform"]
+
+[tool.ruff.lint]
+# E/W = pycodestyle (PEP 8), F = pyflakes, I = isort (import order), N = pep8-naming
+select = ["E", "W", "F", "I", "N"]
+ignore = ["E501"]  # line length is left to the formatter
+
+[tool.ruff.format]
+quote-style = "double"
