@@ -159,8 +159,11 @@ class ContextCompressor:
         Returns:
             Formatted string of relevant document content.
         """
+        if not self.documents:
+            return ""
+
         # Optimization: Calculate total content size
-        total_chars = sum(len(str(doc.get('raw_content', ''))) for doc in self.documents)
+        total_chars = sum(len(str(doc.get('raw_content', ''))) for doc in self.documents if isinstance(doc, dict))
         chunk_threshold = int(os.environ.get("COMPRESSION_THRESHOLD", "8000"))
 
         # If total content is small, skip expensive compression and return directly
@@ -177,6 +180,7 @@ class ContextCompressor:
                     },
                 )
                 for doc in self.documents[:max_results]
+                if isinstance(doc, dict)
             ]
             return self.prompt_family.pretty_print_docs(direct_docs, max_results)
 
