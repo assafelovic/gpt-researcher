@@ -34,7 +34,7 @@ class CustomRetriever:
         """
         Performs the search using the custom retriever endpoint.
 
-        :param max_results: Maximum number of results to return (not currently used)
+        :param max_results: Maximum number of results to return
         :return: JSON response in the format:
             [
               {
@@ -89,4 +89,6 @@ class CustomRetriever:
                     "raw_content": item.get("raw_content") or item.get("body") or "",
                 }
             )
+            if len(cleaned) >= max_results:
+                break
         return cleaned
