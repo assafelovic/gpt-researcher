@@ -52,9 +52,22 @@ class BraveSearch:
             "Accept": "application/json",
             "Accept-Encoding": "gzip",
         }
-        # TODO: Add support for query domains
+        if max_results <= 0:
+            return []
+
+        search_query = self.query
+        if self.query_domains and len(self.query_domains) > 0:
+            clean_domains = [
+                d.strip()
+                for d in self.query_domains
+                if isinstance(d, str) and d.strip()
+            ]
+            if clean_domains:
+                domain_query = " OR ".join([f"site:{domain}" for domain in clean_domains])
+                search_query = f"({domain_query}) {self.query}"
+
         params = {
-            "q": self.query,
+            "q": search_query,
             "count": min(max_results, 20),
         }
 
