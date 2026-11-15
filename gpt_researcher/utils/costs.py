@@ -270,6 +270,50 @@ def _get_openai_pricing(model: str | None) -> tuple[float, float] | None:
     return None
 
 
+def _calculate_provider_cost(
+    llm_provider: str | None,
+    model: str | None,
+    input_tokens: int,
+    output_tokens: int,
+    cache_read_tokens: int = 0,
+) -> float | None:
+    """Price API-reported usage for providers the tables above do not cover.
+
+    Uses the llm-prices table (USD per 1M tokens, one row per provider and
+    model, each with its source URL), which understands the LangChain provider
+    names used in this repo: google_genai, google_vertexai, bedrock,
+    azure_openai, deepseek, mistralai, groq, xai, together, fireworks and
+    cohere. Bedrock, Vertex AI and Azure fall back to the list price of the
+    model maker they resell. Returns None when the package is missing or the
+    provider/model is not listed, so the caller keeps its own fallback.
+    """
+    if not llm_provider or not model:
+        return None
+    try:
+        from llm_prices import Usage, lookup_provider
+    except ImportError:
+        return None
+
+    price = lookup_provider(llm_provider, model)
+    if price is None:
+        return None
+
+    # cache_read_tokens is a subset of input_tokens (LangChain's
+    # input_token_details.cache_read); llm-prices bills them at the
+    # provider's own cache-read price, or as input when none is listed.
+    cache_read_tokens = min(max(cache_read_tokens, 0), max(input_tokens, 0))
+    breakdown = price.cost_usage(
+        Usage(
+            input=max(input_tokens, 0) - cache_read_tokens,
+            output=max(output_tokens, 0),
+            cache_read=cache_read_tokens,
+        )
+    )
+    if breakdown is None:
+        return None
+    return breakdown.total
+
+
 def calculate_llm_cost(
     llm_provider: str | None,
     model: str | None,
@@ -300,6 +344,16 @@ def calculate_llm_cost(
         # portions so the cached share is priced at the discount rate
         # instead of the full input rate.
         non_cached_input_tokens = input_tokens - cache_read_tokens
+        if (llm_provider or "openai").lower() != "openai":
+            provider_cost = _calculate_provider_cost(
+                llm_provider,
+                model,
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
+                cache_read_tokens=cache_read_tokens,
+            )
+            if provider_cost is not None:
+                return provider_cost
         pricing = _get_openai_pricing(model)
         if pricing is not None:
             input_price_per_mtok, output_price_per_mtok = pricing

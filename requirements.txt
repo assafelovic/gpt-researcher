@@ -21,6 +21,7 @@ langgraph>=0.2.76
 openai>=1.3.3
 ollama>=0.4.8
 litellm>=1.71.0
+llm-prices>=1.3.0  # Per-provider token prices for cost tracking
 google-genai>=1.0.0  # For image generation with Imagen
 
 # Search & Research

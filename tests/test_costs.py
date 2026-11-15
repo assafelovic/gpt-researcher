@@ -1,4 +1,8 @@
+import sys
 import unittest
+from unittest import mock
+
+from llm_prices import lookup_provider
 
 from gpt_researcher.utils.costs import (
     EMBEDDING_COST,
@@ -179,6 +183,111 @@ class TestOpenAICachedInputPricing(unittest.TestCase):
             + 100 * OUTPUT_COST_PER_TOKEN
         )
         self.assertAlmostEqual(cost, expected, places=12)
+
+
+class TestProviderPricing(unittest.TestCase):
+    """Non-OpenAI providers were billed at the flat $5/$15 per 1M fallback
+    whenever the model was not in the OpenAI table (Gemini, DeepSeek,
+    Mistral, Groq, xAI, Bedrock, ...). They are now priced per provider."""
+
+    def _expected(self, provider, model, input_tokens, output_tokens, cache_read=0):
+        price = lookup_provider(provider, model)
+        self.assertIsNotNone(price, f"{provider}/{model} missing from llm-prices")
+        cache_read_price = price.cache_read if price.cache_read is not None else price.input
+        return (
+            (input_tokens - cache_read) * price.input
+            + cache_read * cache_read_price
+            + output_tokens * price.output
+        ) / 1_000_000
+
+    def _flat(self, input_tokens, output_tokens):
+        return input_tokens * INPUT_COST_PER_TOKEN + output_tokens * OUTPUT_COST_PER_TOKEN
+
+    def test_provider_models_use_their_own_prices(self):
+        cases = (
+            ("google_genai", "gemini-2.5-flash"),
+            ("google_vertexai", "gemini-2.5-pro"),
+            ("deepseek", "deepseek-chat"),
+            ("mistralai", "mistral-large-latest"),
+            ("bedrock", "us.anthropic.claude-sonnet-4-5-20250929-v1:0"),
+            ("azure_openai", "gpt-4.1"),
+        )
+        for provider, model in cases:
+            with self.subTest(provider=provider, model=model):
+                cost = calculate_llm_cost(
+                    llm_provider=provider,
+                    model=model,
+                    input_content="",
+                    output_content="",
+                    usage_metadata={"input_tokens": 10_000, "output_tokens": 2_000},
+                )
+                self.assertAlmostEqual(
+                    cost, self._expected(provider, model, 10_000, 2_000), places=12
+                )
+                self.assertNotAlmostEqual(cost, self._flat(10_000, 2_000), places=12)
+
+    def test_cached_input_uses_provider_cache_read_price(self):
+        cost = calculate_llm_cost(
+            llm_provider="google_genai",
+            model="gemini-2.5-flash",
+            input_content="",
+            output_content="",
+            usage_metadata={
+                "input_tokens": 5000,
+                "output_tokens": 200,
+                "input_token_details": {"cache_read": 4500},
+            },
+        )
+        self.assertAlmostEqual(
+            cost,
+            self._expected("google_genai", "gemini-2.5-flash", 5000, 200, cache_read=4500),
+            places=12,
+        )
+
+    def test_anthropic_model_without_rule_is_priced(self):
+        # A Claude model missing from ANTHROPIC_MODEL_PRICING used to drop to
+        # the flat OpenAI-based rate.
+        cost = calculate_llm_cost(
+            llm_provider="anthropic",
+            model="claude-opus-5",
+            input_content="",
+            output_content="",
+            usage_metadata={"input_tokens": 1000, "output_tokens": 500},
+        )
+        self.assertAlmostEqual(
+            cost, self._expected("anthropic", "claude-opus-5", 1000, 500), places=12
+        )
+
+    def test_unlisted_provider_keeps_flat_fallback(self):
+        cost = calculate_llm_cost(
+            llm_provider="ollama",
+            model="llama3",
+            input_content="",
+            output_content="",
+            usage_metadata={"input_tokens": 1000, "output_tokens": 100},
+        )
+        self.assertAlmostEqual(cost, self._flat(1000, 100), places=12)
+
+    def test_missing_llm_prices_package_keeps_flat_fallback(self):
+        with mock.patch.dict(sys.modules, {"llm_prices": None}):
+            cost = calculate_llm_cost(
+                llm_provider="google_genai",
+                model="gemini-2.5-flash",
+                input_content="",
+                output_content="",
+                usage_metadata={"input_tokens": 1000, "output_tokens": 100},
+            )
+        self.assertAlmostEqual(cost, self._flat(1000, 100), places=12)
+
+    def test_openai_provider_keeps_openai_table(self):
+        cost = calculate_llm_cost(
+            llm_provider="openai",
+            model="gpt-4o",
+            input_content="",
+            output_content="",
+            usage_metadata={"input_tokens": 5000, "output_tokens": 200},
+        )
+        self.assertAlmostEqual(cost, 0.0145)
 
 
 if __name__ == "__main__":
