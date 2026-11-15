@@ -38,6 +38,8 @@ services:
       LOGGING_LEVEL: INFO
       NEXT_PUBLIC_GA_MEASUREMENT_ID: ${NEXT_PUBLIC_GA_MEASUREMENT_ID}
       NEXT_PUBLIC_GPTR_API_URL: ${NEXT_PUBLIC_GPTR_API_URL}
+      # Server-side URL the Next.js API routes use to reach the backend container
+      GPTR_API_URL: ${GPTR_API_URL:-http://gpt-researcher:8000}
     build:
       dockerfile: Dockerfile.dev
       context: frontend/nextjs
