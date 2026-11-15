@@ -5,7 +5,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   const { id } = params;
-  const backendUrl = process.env.NEXT_PUBLIC_GPTR_API_URL || 'http://localhost:8000';
+  const backendUrl = process.env.GPTR_API_URL || process.env.NEXT_PUBLIC_GPTR_API_URL || 'http://localhost:8000';
   
   try {
     if (!id) {
@@ -35,7 +35,7 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   const { id } = params;
-  const backendUrl = process.env.NEXT_PUBLIC_GPTR_API_URL || 'http://localhost:8000';
+  const backendUrl = process.env.GPTR_API_URL || process.env.NEXT_PUBLIC_GPTR_API_URL || 'http://localhost:8000';
   
   try {
     if (!id) {
