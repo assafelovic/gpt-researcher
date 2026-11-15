@@ -12,6 +12,7 @@ from typing import Any, Dict, List, Tuple, Callable, Optional
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 from langchain_core.tools import tool
 
+from ..llm_provider.generic.base import supports_temperature
 from .costs import calculate_llm_cost
 from .llm import create_chat_completion
 
@@ -85,6 +86,8 @@ async def create_chat_completion_with_tools(
         # Create LLM provider using the config
         provider_kwargs = {
             'model': model,
+            'temperature': temperature if supports_temperature(model or '') else None,
+            'max_tokens': max_tokens,
             **(llm_kwargs or {})
         }
         
