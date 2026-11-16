@@ -56,4 +56,17 @@ DEFAULT_CONFIG: BaseConfig = {
     "IMAGE_GENERATION_ENABLED": False,  # Master switch for inline image generation
     "IMAGE_GENERATION_STYLE": "dark",  # Image style: "dark" (matches app theme), "light", or "auto"
     "IMAGE_GENERATION_PROVIDER": "google",  # Image provider: "google" or "modelslab"
+
+    # Vision / image understanding (optional - requires a VLM exposed through an
+    # OpenAI-compatible chat-completions API, e.g. gpt-4o-mini, Qwen-VL,
+    # DeepSeek-VL via a local server, etc.)
+    "VISION_ENABLED": False,  # Master switch for VLM understanding of scraped images
+    "VISION_MODEL": "gpt-4o-mini",  # VLM model name understood by the endpoint
+    "VISION_BASE_URL": None,  # e.g. "https://dashscope.aliyuncs.com/compatible-mode/v1"; None -> https://api.openai.com/v1
+    "VISION_API_KEY": None,  # falls back to VISION_API_KEY then OPENAI_API_KEY env vars
+    "VISION_MAX_IMAGES": 3,  # Maximum number of images analyzed per sub-query
+    "VISION_MAX_IMAGES_PER_SOURCE": 2,  # Maximum number of images analyzed per scraped source
+    "VISION_MAX_IMAGE_BYTES": 8000000,  # Skip images larger than this (bytes)
+    "VISION_TIMEOUT": 60.0,  # Per-request timeout in seconds
+    "VISION_EMBED_IN_CONTEXT": True,  # Append the captions to the source content fed to the report writer
 }
