@@ -1050,6 +1050,12 @@ class ResearchConductor:
         # Merge pre-fetched content from retrievers that already provide full text
         scraped_content.extend(prefetched_content)
 
+        # Optionally enrich sources with VLM descriptions of their images, so
+        # visual evidence reaches the same context pipeline as the page text.
+        vision_analyzer = getattr(self.researcher, "vision_analyzer", None)
+        if vision_analyzer is not None and vision_analyzer.is_enabled():
+            scraped_content = await vision_analyzer.analyze(scraped_content, sub_query)
+
         if self.researcher.vector_store:
             self.researcher.vector_store.load(scraped_content)
 
