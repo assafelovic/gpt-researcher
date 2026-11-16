@@ -110,7 +110,20 @@ class ContextManager:
         all_queries = [current_subtopic] + draft_section_titles
 
         async def process_query(query: str) -> Set[str]:
-            return set(await self.__get_similar_written_contents_by_query(query, written_contents, **self.researcher.kwargs))
+            try:
+                return set(await self.__get_similar_written_contents_by_query(query, written_contents, **self.researcher.kwargs))
+            except Exception as e:
+                # One query failing (e.g. a transient embeddings error raised
+                # inside the compression pipeline) must not abort the sibling
+                # queries or the whole report write. Degrade to the same
+                # lexical ranking already used when embeddings are
+                # unavailable, so overlap filtering survives instead of
+                # silently disappearing with the exception.
+                logger.warning(
+                    f"Written-content search failed for query '{query}' ({e}); "
+                    f"falling back to lexical ranking"
+                )
+                return set(rank_written_sections(query, written_contents, max_results=max_results))
 
         results = await asyncio.gather(*[process_query(query) for query in all_queries])
         relevant_contents = set().union(*results)
