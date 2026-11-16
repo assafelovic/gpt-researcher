@@ -29,7 +29,7 @@ class SearchAPIRetriever(BaseRetriever):
                 page_content=(page.get("raw_content") or "")[:_MAX_CONTENT_CHARS],
                 metadata={
                     "title": page.get("title", ""),
-                    "source": page.get("url", ""),
+                    "source": page.get("source") or page.get("url") or "",
                 },
             )
             for page in self.pages
