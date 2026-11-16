@@ -16,7 +16,7 @@ def extract_headers(markdown_text: str) -> List[Dict]:
     if not isinstance(markdown_text, str) or not markdown_text:
         return []
     headers = []
-    parsed_md = markdown.markdown(markdown_text)
+    parsed_md = markdown.markdown(markdown_text, extensions=["fenced_code"])
     lines = parsed_md.split("\n")
 
     stack = []
@@ -55,7 +55,7 @@ def extract_sections(markdown_text: str) -> List[Dict[str, str]]:
     if not isinstance(markdown_text, str) or not markdown_text:
         return []
     sections = []
-    parsed_md = markdown.markdown(markdown_text)
+    parsed_md = markdown.markdown(markdown_text, extensions=["fenced_code"])
     
     pattern = r'<h\d>(.*?)</h\d>(.*?)(?=<h\d>|$)'
     matches = re.findall(pattern, parsed_md, re.DOTALL)

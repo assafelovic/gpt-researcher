@@ -35,3 +35,23 @@ def test_extract_headers_real_markdown():
     headers = extract_headers(md)
     assert headers
     assert headers[0]["level"] == 1
+
+
+def test_report_headings_ignore_shell_comments_in_fenced_code():
+    report = """## Setup
+
+```sh
+# Example comment
+echo hello
+```
+
+## Results
+
+Done.
+"""
+
+    assert table_of_contents(report) == "## Table of Contents\n\n- Setup\n- Results\n"
+    assert extract_sections(report) == [
+        {"section_title": "Setup", "written_content": "# Example comment\necho hello"},
+        {"section_title": "Results", "written_content": "Done."},
+    ]
