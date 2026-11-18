@@ -146,11 +146,15 @@ class Memory:
             case "ollama":
                 from langchain_ollama import OllamaEmbeddings
 
-                _embeddings = OllamaEmbeddings(
-                    model=model,
-                    base_url=os.environ["OLLAMA_BASE_URL"],
-                    **embedding_kwargs,
-                )
+                # Use OLLAMA_BASE_URL from env if not already supplied in kwargs;
+                # fall back to the Ollama default so OLLAMA_BASE_URL is optional,
+                # the same way the LLM provider does.
+                if "base_url" not in embedding_kwargs:
+                    embedding_kwargs["base_url"] = os.environ.get(
+                        "OLLAMA_BASE_URL", "http://localhost:11434"
+                    )
+
+                _embeddings = OllamaEmbeddings(model=model, **embedding_kwargs)
             case "together":
                 from langchain_together import TogetherEmbeddings
 
