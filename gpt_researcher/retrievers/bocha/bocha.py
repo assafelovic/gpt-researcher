@@ -3,6 +3,7 @@
 # libraries
 import logging
 import os
+
 import requests
 
 
@@ -42,16 +43,32 @@ class BoChaSearch:
         Returns:
 
         """
-        url = 'https://api.bochaai.com/v1/web-search'
+        if max_results <= 0:
+            return []
+
+        search_query = self.query
+        if self.query_domains and len(self.query_domains) > 0:
+            clean_domains = [
+                d.strip()
+                for d in self.query_domains
+                if isinstance(d, str) and d.strip()
+            ]
+            if clean_domains:
+                domain_query = " OR ".join(
+                    [f"site:{domain}" for domain in clean_domains]
+                )
+                search_query = f"({domain_query}) {self.query}"
+
+        url = "https://api.bochaai.com/v1/web-search"
         headers = {
-            'Authorization': f'Bearer {self.api_key}',  # 请替换为你的API密钥
-            'Content-Type': 'application/json'
+            "Authorization": f"Bearer {self.api_key}",  # 请替换为你的API密钥
+            "Content-Type": "application/json",
         }
         data = {
-            "query": self.query,
+            "query": search_query,
             "freshness": "noLimit",  # 搜索的时间范围，
             "summary": True,  # 是否返回长文本摘要
-            "count": max_results
+            "count": max_results,
         }
 
         try:
@@ -67,9 +84,9 @@ class BoChaSearch:
         # The BoCha response shape is data.webPages.value; any of these may be
         # missing on an error/empty payload, so walk it defensively rather than
         # KeyError-ing the whole research run.
-        results = (
-            ((json_response or {}).get("data") or {}).get("webPages") or {}
-        ).get("value") or []
+        results = (((json_response or {}).get("data") or {}).get("webPages") or {}).get(
+            "value"
+        ) or []
         if not isinstance(results, list):
             return []
 
@@ -90,5 +107,7 @@ class BoChaSearch:
                     "body": result.get("snippet") or "",
                 }
             )
+            if len(search_results) >= max_results:
+                break
 
         return search_results
