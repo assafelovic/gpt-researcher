@@ -1,18 +1,53 @@
 """Regression test for OnlineDocumentLoader._get_extension case handling."""
 
 import asyncio
-from unittest.mock import patch
+from contextlib import asynccontextmanager
+from functools import partial
+from types import SimpleNamespace
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from langchain_core.documents import Document
 
 from gpt_researcher.document.online_document import OnlineDocumentLoader
+from gpt_researcher.document import online_document
 
 
 class _PageWithoutMetadata:
     """Page object whose loader attached no ``metadata`` attribute at all."""
 
     page_content = "body"
+
+
+def test_downloaded_document_cites_original_url(tmp_path, monkeypatch):
+    url = "https://example.com/research-notes.txt"
+    response = SimpleNamespace(
+        status=200, read=AsyncMock(return_value=b"Research evidence")
+    )
+
+    @asynccontextmanager
+    async def response_context():
+        yield response
+
+    session = MagicMock()
+    session.get.return_value = response_context()
+
+    @asynccontextmanager
+    async def session_context():
+        yield session
+
+    monkeypatch.setattr(online_document.aiohttp, "ClientSession", session_context)
+    monkeypatch.setattr(online_document, "validate_url", lambda value: None)
+    monkeypatch.setattr(
+        online_document.tempfile,
+        "NamedTemporaryFile",
+        partial(online_document.tempfile.NamedTemporaryFile, dir=tmp_path),
+    )
+
+    docs = asyncio.run(OnlineDocumentLoader([url]).load())
+
+    assert docs == [{"raw_content": "Research evidence", "url": url}]
+    assert not list(tmp_path.iterdir())
 
 
 def _load(pages):

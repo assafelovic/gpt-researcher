@@ -65,7 +65,10 @@ class OnlineDocumentLoader:
                         tmp_file.write(content)
                         tmp_file_path = tmp_file.name
 
-                    return await self._load_document(tmp_file_path, self._get_extension(url).strip('.'))
+                    pages = await self._load_document(tmp_file_path, self._get_extension(url).strip('.'))
+                    for page in pages:
+                        page.metadata["source"] = url
+                    return pages
         except aiohttp.ClientError as e:
             print(f"Failed to process {url}")
             print(e)
