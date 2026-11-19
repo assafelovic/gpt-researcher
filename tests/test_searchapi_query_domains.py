@@ -90,7 +90,11 @@ def test_search_bounds_results_to_max_results():
     with patch.object(_mod.requests, "get") as mock_get:
         payload = {
             "organic_results": [
-                {"title": f"Title {i}", "link": f"https://example.com/{i}", "snippet": f"Body {i}"}
+                {
+                    "title": f"Title {i}",
+                    "link": f"https://example.com/{i}",
+                    "snippet": f"Body {i}",
+                }
                 for i in range(10)
             ]
         }
