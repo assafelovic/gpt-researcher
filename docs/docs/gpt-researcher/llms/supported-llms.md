@@ -27,6 +27,8 @@ The following LLMs are supported by GPTR (though you'll need to install the rele
 - nebius
 - vllm
 
+OpenAI-compatible local servers such as [Rapid-MLX](./llms.md#rapid-mlx) use the existing `openai` LLM provider and `custom` embedding provider. See the linked configuration example for local chat and embeddings on Apple Silicon.
+
 If you'd like to know the name of the langchain package for each LLM, you can check the [Langchain documentation](https://python.langchain.com/v0.2/docs/integrations/platforms/), or run GPTR as is and inspect the error message.
 
 The GPTR LLM Module is built on top of the [Langchain LLM Module](https://python.langchain.com/v0.2/docs/integrations/llms/).
