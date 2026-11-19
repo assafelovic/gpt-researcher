@@ -96,6 +96,10 @@ def get_retriever(retriever: str):
             from gpt_researcher.retrievers import GroundRouteSearch
 
             return GroundRouteSearch
+        case "helve":
+            from gpt_researcher.retrievers import HelveSearch
+
+            return HelveSearch
         case "exa":
             from gpt_researcher.retrievers import ExaSearch
 
