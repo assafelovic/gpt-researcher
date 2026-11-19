@@ -348,10 +348,19 @@ async def write_report(research_request: ResearchRequest, research_id: str = Non
         return_researcher=True
     )
 
-    docx_path = await write_md_to_word(report_information[0], research_id)
-    pdf_path = await write_md_to_pdf(report_information[0], research_id)
-    if research_request.report_type != "multi_agents":
+    # ``run_agent(return_researcher=True)`` hands back ``(report, researcher)``
+    # for the single-agent report types, but a bare report string for
+    # ``multi_agents`` (that path builds no GPTResearcher). Indexing the string
+    # with ``[0]`` wrote just its first character into the DOCX/PDF and returned
+    # an empty report body.
+    if isinstance(report_information, tuple):
         report, researcher = report_information
+    else:
+        report, researcher = report_information, None
+
+    docx_path = await write_md_to_word(report, research_id)
+    pdf_path = await write_md_to_pdf(report, research_id)
+    if researcher is not None:
         response = {
             "research_id": research_id,
             "research_information": {
@@ -366,7 +375,7 @@ async def write_report(research_request: ResearchRequest, research_id: str = Non
             "pdf_path": pdf_path
         }
     else:
-        response = { "research_id": research_id, "report": "", "docx_path": docx_path, "pdf_path": pdf_path }
+        response = { "research_id": research_id, "report": report, "docx_path": docx_path, "pdf_path": pdf_path }
 
     return response
 
