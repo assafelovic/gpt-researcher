@@ -11,7 +11,9 @@ from typing import Any
 
 
 _ID_RE = re.compile(
-    r"(?:arxiv\.org/(?:abs|pdf|html)/)?(?P<id>\d{4}\.\d{4,5}(?:v\d+)?|[a-z\-]+/\d{7})(?:\.pdf)?",
+    r"(?:arxiv\.org/(?:abs|pdf|html)/)?"
+    r"(?P<id>\d{4}\.\d{4,5}(?:v\d+)?|[a-z\-]+(?:\.[a-z\-]+)?/\d{7}(?:v\d+)?)"
+    r"(?:\.pdf)?",
     re.IGNORECASE,
 )
 
