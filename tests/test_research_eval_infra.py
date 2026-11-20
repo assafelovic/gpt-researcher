@@ -1,7 +1,6 @@
 """Unit tests for evals/research_eval: tracing, chunks, archive, report parser, cache, judge."""
 
 import asyncio
-import json
 
 import pytest
 

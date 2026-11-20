@@ -232,8 +232,6 @@ def alter_numbers(data: dict, rng: random.Random) -> dict | None:
     changed = 0
 
     def change(seg: str) -> str:
-        nonlocal changed
-
         def one(m: re.Match) -> str:
             nonlocal changed
             whole, frac = m.group(1), m.group(2) or ""

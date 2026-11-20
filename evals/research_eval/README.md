@@ -42,8 +42,8 @@ dataset/questions_*.jsonl -> runner.py -> capture.py (hooks) -> runs/<dataset>/<
 | `rubrics.py` | `--write DIR` writes the insight/readability rubrics to freeze (one quality_rubric call per question). |
 | `key_points_methods.py` | Compares six ways of writing key points (incl. layered drafts merged by `key_points_synthesize`) by coverage of a shared pool (all lists + two independent answer outlines). Prints and saves JSON, no scores. |
 | `citation_audit.py` | Shared paragraph-level judge audit: claims, ALCE sentence checks, which chunks were used. |
-| `metrics/` | `Metric` interface and registry; `retrieval/` holds the nine retrieval metrics, `generation/` the thirteen generation ones. |
-| `scoring.py` | Runs metrics on an archive; results keyed by run_id + scorer version. |
+| `metrics/` | `Metric` interface and registry; `retrieval/` holds the eleven retrieval metrics, `generation/` the fourteen generation ones. |
+| `scoring.py` | Runs metrics on an archive; results keyed by run_id + scorer version (metric and prompt versions, judge and embedding models, judge salt, frozen key points and rubrics). |
 | `runner.py`, `score.py` | CLIs. |
 
 ## Usage
@@ -101,7 +101,12 @@ The judge model is `EVAL_JUDGE_MODEL` (default in `evals/judge.py`); set
 archive with unchanged metrics replays every judge and embedding call from the cache.
 At the end, `score` prints the judge's call count, cache hits and the input / output
 tokens of uncached calls (from the provider's usage metadata), so scoring cost is
-measured rather than guessed.
+measured rather than guessed; each record keeps its own share under `judge_usage`.
+
+A metric that makes one judge call per item (paragraph, sub-query, batch) scores the
+items that got an answer when some calls fail (rate limit, `--max-calls`). Such a value
+carries `details.partial`, is listed in the record's `partial_metrics` and is printed as
+PARTIAL; the citation audit also lists paragraphs whose first call or recheck failed.
 
 Failed runs are not scored: when the agent raised (`meta.status != "ok"`) or finished
 without a real report (no citations and under 1,000 characters, e.g. deep research's
@@ -193,7 +198,7 @@ alone).
   chunks that reached the context, i.e. what the writer could read, not every URL
   the search proposed.
 - **URL matching** ignores scheme, `www.`, trailing slash and fragment.
-- **Citation utilization** is URL-level and rule-based. Which chunk a claim actually
+- **Source utilization** is URL-level and rule-based. Which chunk a claim actually
   rests on comes from the generation side's citation audit: with a judge, `details`
   adds `chunk_level_judged` / `chunks_used_judged`. The rule-based chunk
   diagnostic (kept for `--rules-only`) only counts a chunk as used when a paragraph citing its URL
@@ -201,9 +206,8 @@ alone).
   whose content the report echoes are listed as `echoed_uncited`, since many sources
   repeat the same facts. A first LLM-judged version marked every borderline chunk as used,
   uncited sources and page navigation text included.
-- **Source diversity** is still a domain count (distinct domains / sources, entropy).
-  On this pipeline it saturates near 1.0 (5 results per query, URLs de-duplicated), so it
-  separates runs poorly; a better formulation is open.
+- **Source diversity** is the corrected Gini-Simpson index of cited domains (see the
+  table above); it still rises with report length, since longer reports cite more domains.
 - **Plan adherence** counts plan sub-queries, deep-research SERP queries and detailed
   subtopics. Deep-research clarifying questions are folded into one combined query by
   the library, so they are not counted.
@@ -217,26 +221,25 @@ alone).
 - **Cost.** `cost_usd` sums every `add_costs` call across nested researchers. The
   library's deep-research planning calls do not report cost, so deep runs under-count.
 
-## Validation so far
+## Validation
 
-One real run: q001, default mode (about 135 s, $0.17 worker cost, 25 Tavily results).
-Each metric's score was checked by hand against the report, spans and chunks.
+Scores were checked by hand against the reports, spans and chunks, first on q001 and
+then on all five questions in three modes (15 reports). Stability is measured by
+scoring every report twice with a different `--judge-salt`: per metric, the spread
+between reports divided by the spread between the two scorings (signal to noise), and
+the smallest difference in a 15-report mean that exceeds the noise.
 
-| Metric | Score | Verdict |
-|---|---|---|
-| `retrieval_overlap` | 0.400 | Correct; flags a real waste: the core query is searched twice (initial search + appended core sub-query), 5 duplicate results |
-| `decomposition_tree_quality` | 0.875 | Rubric evidence holds; the one deduction (non-EU Europe missing) is the report's real gap |
-| `source_authority` | 0.554 | Domain scores plausible; the low score reflects zero official sources |
-| `plan_adherence` | 1.000 | Correct; little room to vary in default mode |
-| `subquery_redundancy` | 0.000 | Correct for 3 sub-queries; sample too small to judge |
-| `decomposition_coverage` | 0.625 | Correct after v2 (v1 embedding matching had 3 of 8 points wrong) |
-| `query_relevance` | 0.800 | v2 shows the judge every source URL (v1 saw 5-7 of 11-23 chunks) and scores the initial search |
-| `source_utilization` | 0.692 | 9 of 13 retrieved URLs cited; v1's LLM chunk level marked uncited sources as used |
-| `source_diversity` | 1.000 | Computed correctly but saturates; formulation open |
-
-Re-scoring the same archive replays every judge call from the cache and gives identical
-numbers. `query_relevance` and `decomposition_coverage` answer different questions and
-can legitimately differ: material on a key point can arrive from a search not aimed at it.
+- Rule-based metrics (source_diversity, source_recency, plan_adherence,
+  retrieval_overlap, instruction_following, citation_coverage, fact_grounding) have no
+  judge noise; re-scoring replays the cache and gives identical numbers.
+- Signal to noise is high for decomposition_tree_quality (16), decomposition_coverage
+  (7.9) and source_authority (6.4), and low for material_coverage (1.0) and
+  comprehensiveness (2.5), whose full / partial line moves between scorings.
+- Faithfulness noise comes mostly from how the audit splits a paragraph into claims and
+  which claims it types as facts, not from the verdicts on matching claims.
+- A hand-cleaned copy of the q001 default report (`dataset/clean_bases/`) scores higher
+  on faithfulness and citation recall, but by less than the noise; at paragraph level
+  the judge found 10.5 of the 12 problems fixed by hand.
 
 ## Generation metrics
 
@@ -304,45 +307,17 @@ Notes:
 - `fact_grounding` is uncalibrated: a paraphrased or unit-converted figure counts as
   missing; per-paragraph `missing` lists are in `details` for review.
 
-## Generation validation so far
-
-q001 default run (27 audited paragraphs, about 35 judge calls, about $0.02 per scoring).
-Findings were checked by hand against the report and chunks.
-
-| Metric | Score | Verdict |
-|---|---|---|
-| `comprehensiveness` | 0.750 | Plausible; the one partial point (stablecoin reserve / redemption rules) is thin in the report |
-| `insight` | 0.625 | Criterion evidence holds; the low criterion (no national or UK comparison) is a real gap |
-| `readability` | 0.700 | Holds; it spotted the malformed milestone table and unexplained acronyms |
-| `instruction_following` | 0.857 | Correct; the writer mangled one CoinShares URL (repeated path segment), so a cited URL was never retrieved |
-| `topic_relevance` | 1.000 | Plausible for this report; untested on a report with padding |
-| `citation_coverage` | 1.000 | Correct: all 9 references are cited in the body |
-| `fact_grounding` | 0.976 | 165 tokens; the 4 misses are acronyms (KYC, TFR, AML, CFT) absent from the cited pages |
-| `faithfulness` | 0.726 | Flagged claims are real embellishments (e.g. "DAC8 is less visible than MiCA", onboarding effects) after the fixes below |
-| `citation_recall` | 0.300 | Low because the writer ends most paragraphs with its own analysis under the same citation; strict ALCE fails the whole unit. Kept strict on purpose: whether an inference is reasonable is hard to judge, and an unreasonable one should not sit under a citation (faithfulness gives inferences partial credit) |
-| `citation_precision` | 0.255 | Tracks recall (ALCE counts citations of unsupported units as imprecise); only 1 over-citation |
-| `effective_citations` | 6 | Count of unit-URL citations a source fully supports |
-| `toxicity` / `bias` | 0 / 0 | No flagged opinions |
-
-Fixed along the way: APA citations after the full stop ("(Didit, 2026; Norton, n.d.)")
-became their own "sentences"; scoring a paragraph-end citation against only the last
-sentence (recall 0.37 for the wrong reason); and showing 3 chunks per cited URL, which
-made the judge call passporting unsupported although the cited page states it.
-
 ## Not yet done
 
-- Citation recall / precision moved from citing units (often a whole paragraph with 3–6
-  claims, failed by one inferred claim) to claims (audit 7, 2026-11-01); re-score and review.
-- Insight / readability judge prompt: scores barely separate the modes (0.68 / 0.69 / 0.68
-  over five questions); polish the prompt later.
-
-- Source diversity formulation (domain ratio saturates; under research).
-- Generation metrics: validated on one archive only (q001, below).
-- Per-paragraph sampling twice for a more stable faithfulness verdict (design §5).
-- Perturbation tests on a frozen archive (does each metric move the expected way when a
-  known problem is injected), then judge calibration with a small human-labelled set.
-- More real runs: one each of default, detailed and deep (q001) are saved as seed samples in
-  `seeds/v0/` (archive, report, scores, logs), not yet reviewed by hand. q002–q005 were run
-  once per mode on 2026-10-31; their archives are not in the repo.
-- Question set size and composition (`dataset/questions_v0.jsonl` has five questions).
-- Old-vs-new comparison against `quality_eval`; evaluator stability benchmarks.
+- material_coverage and comprehensiveness: the full / partial line is not stable
+  enough to compare single reports.
+- Faithfulness: make the audit's fact / analysis typing of claims more stable.
+- A full scoring of all 15 reports, main and noise rounds, on the current versions.
+- Confidence intervals (bootstrap over reports) for means and for differences between
+  versions or modes.
+- Perturbation tests with graded defects (10 / 30 / 60 %), checks that changes which
+  keep quality do not move the scores, and defects taken from outside these metrics.
+- A second judge from another provider on borderline items; a held-out question set
+  that prompts were not tuned on.
+- Sources that are out of date are not caught (source_recency reads the page date).
+- `source_utilization` counts cited pages; pages used but not cited are not counted.

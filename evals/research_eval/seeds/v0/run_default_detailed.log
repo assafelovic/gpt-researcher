@@ -7,7 +7,7 @@ Content too short or empty for https://financialcrimeacademy.org/cryptocurrency-
 Got HTTP 400 for https://www.facebook.com/KPMGCyprus/posts/from-1-july-2026-firms-providing-crypto-asset-services-to-eu-clients-will-need-a/2154923725362082, skipping
 Content too short or empty for https://www.facebook.com/KPMGCyprus/posts/from-1-july-2026-firms-providing-crypto-asset-services-to-eu-clients-will-need-a/2154923725362082, treating as fetch failure
 >> q001 [default] What regulatory changes are affecting the crypto industry in Europe?
-   ok: /Users/sean/Develop/gpt-researcher-eval/gpt-researcher/evals/research_eval/runs/questions_v0/20261029T234054_q001_default_3fc58f.json
+   ok: evals/research_eval/runs/questions_v0/20261029T234054_q001_default_3fc58f.json
 >> q001 [detailed] What regulatory changes are affecting the crypto industry in Europe?
 # Regulatory Changes Shaping the Crypto Industry in Europe
 
@@ -906,4 +906,4 @@ The most important findings are that compliance is now a market-access condition
 
 
 Looking ahead, firms operating in Europe must treat MiCA as only one part of a broader compliance stack. The EU Travel Rule, DORA, DAC8, and possible PSD2/e-money overlap for payment-like crypto activities mean businesses need integrated licensing, AML/data-sharing, cyber-resilience, tax-reporting, and operational governance frameworks. The next practical steps for firms are to verify entity-specific authorization, reassess stablecoin and payments-related business lines, strengthen transfer-data and ICT controls, and prepare for tighter scrutiny around DeFi interfaces, self-hosted wallet flows, and tax transparency. In short, Europe is not banning crypto, but it is forcing the industry into a more regulated, institutionally integrated, and function-based model. ([VoltLegal, 2026](https://voltlegal.com/aml-dora-compliance); [CoinTracking, 2026](https://cointracking.info/es/aprender/dac8-crypto-regulation); [ESMA, 2023](https://www.esma.europa.eu/sites/default/files/2023-10/ESMA74-449133380-441_Statement_on_MiCA_Supervisory_Convergence.pdf))
-   ok: /Users/sean/Develop/gpt-researcher-eval/gpt-researcher/evals/research_eval/runs/questions_v0/20261029T234235_q001_detailed_2cfdba.json
+   ok: evals/research_eval/runs/questions_v0/20261029T234235_q001_detailed_2cfdba.json

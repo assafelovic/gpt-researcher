@@ -585,7 +585,7 @@ def test_precision_flags_redundant_citations():
 
 
 def test_analysis_claims_stay_out_of_citation_metrics():
-    from evals.research_eval.citation_audit import CitationAudit, ParagraphAudit, claim_level, interpret
+    from evals.research_eval.citation_audit import CitationAudit, ParagraphAudit, interpret
     from evals.research_eval.judge import JudgeResponse
     pa = ParagraphAudit("p", [], "cited", [{"text": "A", "urls": ["https://a"]}],
                         [{"n": 1, "url": "https://a", "found": True, "passages": [{"id": "1a", "chunk_id": "ca"}]}])

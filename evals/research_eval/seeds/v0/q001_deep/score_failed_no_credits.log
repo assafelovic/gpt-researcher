@@ -22,4 +22,4 @@
    fact_grounding                 0.933  
    toxicity                           —  every judge call failed
    bias                               —  every judge call failed
-   -> /Users/sean/Develop/gpt-researcher-eval/gpt-researcher/evals/research_eval/results/20261029T234921_q001_deep_ff96d2/0.1+d5e17daa.json
+   -> evals/research_eval/results/20261029T234921_q001_deep_ff96d2/0.1+d5e17daa.json

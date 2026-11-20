@@ -22,7 +22,7 @@
    fact_grounding                 0.924  
    toxicity                       0.000  lower is better
    bias                           0.000  lower is better
-   -> /Users/sean/Develop/gpt-researcher-eval/gpt-researcher/evals/research_eval/results/20261029T234054_q001_default_3fc58f/0.1+de8e14ec.json
+   -> evals/research_eval/results/20261029T234054_q001_default_3fc58f/0.1+de8e14ec.json
 
 == 20261029T234235_q001_detailed_2cfdba  (scorer 0.1+de8e14ec)
    decomposition_coverage         0.875  
@@ -47,7 +47,7 @@
    fact_grounding                 0.961  
    toxicity                       0.000  lower is better
    bias                           0.000  lower is better
-   -> /Users/sean/Develop/gpt-researcher-eval/gpt-researcher/evals/research_eval/results/20261029T234235_q001_detailed_2cfdba/0.1+de8e14ec.json
+   -> evals/research_eval/results/20261029T234235_q001_detailed_2cfdba/0.1+de8e14ec.json
 
 == 20261029T234921_q001_deep_ff96d2  (scorer 0.1+de8e14ec)
    decomposition_coverage         0.625  
@@ -72,4 +72,4 @@
    fact_grounding                 0.933  
    toxicity                       0.000  lower is better
    bias                           0.000  lower is better
-   -> /Users/sean/Develop/gpt-researcher-eval/gpt-researcher/evals/research_eval/results/20261029T234921_q001_deep_ff96d2/0.1+de8e14ec.json
+   -> evals/research_eval/results/20261029T234921_q001_deep_ff96d2/0.1+de8e14ec.json
