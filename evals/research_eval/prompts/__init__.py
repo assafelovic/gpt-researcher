@@ -1,8 +1,8 @@
 """
-Versioned judge prompts: one skill per metric group, one file per prompt.
+Versioned judge prompts: one folder per metric group, one file per prompt.
 --------------------------------------------------------------------------
 Each metric group is a folder (`query-quality/`, `source-quality/`, ...)
-holding a `SKILL.md` and that group's prompts, one `<id>.md` each: a short
+holding a `GROUP.md` and that group's prompts, one `<id>.md` each: a short
 header (id, version, the metrics that use it) and the prompt text below it.
 A line `@user` splits the text into two messages: above it the system
 message (the task, the definitions and the answer format, the same on every
@@ -10,21 +10,21 @@ call), below it the user message (the data of this call). `{name}` marks a
 value filled in when the prompt is sent, and only the user message may hold
 one; any other brace is literal text (the JSON the judge must return). A line
 `@include <group>#<section>` is replaced by that `## <section>` of
-`<group>/SKILL.md`, so prompts that share a definition share one text.
+`<group>/GROUP.md`, so prompts that share a definition share one text.
 
-A group whose SKILL.md header says `system_prompt: true` works the other
-way: its whole skill is the group's system prompt. Its text (without the
+A group whose GROUP.md header says `system_prompt: true` works the other
+way: its whole group text is the group's system prompt. Its text (without the
 header and without `<!-- ... -->` comments, which hold the maintainers'
 notes) goes in front of the system part of every prompt in the folder, so
 the judge reads the shared background, definitions and principles first and
 then the task of this one metric. A prompt that must not get it says
-`skill: none` in its header. Such a group's prompts use no @include.
+`shared: none` in its header. Such a group's prompts use no @include.
 
 `<id>.schema.json` beside the prompt is the JSON schema of its answer. The
 judge is called in strict structured-output mode with it, so a reply is
 always valid JSON of that shape.
 
-Change the text (or a skill section a prompt includes) -> bump the prompt's
+Change the text (or a shared section a prompt includes) -> bump the prompt's
 version. The version is part of every cache key and is recorded with each
 score, so old verdicts are never mixed with new ones. `versions.json` holds
 each prompt's version and the hash of its text and schema; a test fails when
@@ -45,7 +45,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 HERE = Path(__file__).parent
-SKILL = "SKILL.md"
+GROUP_FILE = "GROUP.md"
 LOCK = HERE / "versions.json"
 PLACEHOLDER = re.compile(r"\{([a-z_][a-z0-9_]*)\}")
 USER = re.compile(r"^@user[ \t]*$", re.M)
@@ -88,7 +88,7 @@ class Prompt:
     schema_json: str = ""
     used_by: tuple[str, ...] = field(default=(), compare=False)
     group: str = field(default="", compare=False)
-    includes: tuple[str, ...] = field(default=(), compare=False)    # skill sections pulled in, or the whole skill
+    includes: tuple[str, ...] = field(default=(), compare=False)    # shared sections pulled in, or the whole group text
     path: str = field(default="", compare=False)                     # relative to this folder
 
     @property
@@ -118,8 +118,8 @@ class Prompt:
 
 
 def groups() -> list[Path]:
-    """The group folders: every folder here with a SKILL.md."""
-    return sorted((d for d in HERE.iterdir() if (d / SKILL).is_file()),
+    """The group folders: every folder here with a GROUP.md."""
+    return sorted((d for d in HERE.iterdir() if (d / GROUP_FILE).is_file()),
                   key=lambda d: (GROUPS.index(d.name) if d.name in GROUPS else len(GROUPS), d.name))
 
 
@@ -131,13 +131,13 @@ def _front(path: Path) -> tuple[dict[str, str], str]:
     return {k.strip(): v.strip() for k, v in head.items()}, m.group(2)
 
 
-def skill_sections(group: str) -> dict[str, str]:
-    """The `## <section>` parts of <group>/SKILL.md, each with its text.
+def group_sections(group: str) -> dict[str, str]:
+    """The `## <section>` parts of <group>/GROUP.md, each with its text.
 
     A section runs to the next heading of any level, so a maintainers' note
     under a heading such as `## How to edit` is never sent to the judge.
     """
-    _, body = _front(HERE / group / SKILL)
+    _, body = _front(HERE / group / GROUP_FILE)
     out, current, lines = {}, None, []
     for line in body.splitlines() + ["#"]:
         if line.startswith("#"):
@@ -150,10 +150,10 @@ def skill_sections(group: str) -> dict[str, str]:
     return out
 
 
-def skill_prompt(group: str) -> str | None:
-    """The system prompt of a `system_prompt: true` group: its SKILL.md
+def group_prompt(group: str) -> str | None:
+    """The system prompt of a `system_prompt: true` group: its GROUP.md
     without the header and the `<!-- -->` comments; None for other groups."""
-    head, body = _front(HERE / group / SKILL)
+    head, body = _front(HERE / group / GROUP_FILE)
     if head.get("system_prompt", "").lower() != "true":
         return None
     return re.sub(r"\n{3,}", "\n\n", COMMENT.sub("", body)).strip()
@@ -161,9 +161,9 @@ def skill_prompt(group: str) -> str | None:
 
 def _expand(body: str, source: Path) -> str:
     def include(m):
-        sections = skill_sections(m.group(1))
+        sections = group_sections(m.group(1))
         if m.group(2) not in sections:
-            raise KeyError(f"{source.name}: skill {m.group(1)} has no section {m.group(2)!r}")
+            raise KeyError(f"{source.name}: group {m.group(1)} has no section {m.group(2)!r}")
         return sections[m.group(2)]
     return INCLUDE.sub(include, body)
 
@@ -172,7 +172,7 @@ def _files() -> dict[str, Path]:
     out = {}
     for g in groups():
         for f in sorted(g.glob("*.md")):
-            if f.name != SKILL:
+            if f.name != GROUP_FILE:
                 if f.stem in out:
                     raise ValueError(f"prompt id {f.stem} is in both {out[f.stem].parent.name} and {g.name}")
                 out[f.stem] = f
@@ -191,20 +191,20 @@ def load(prompt_id: str, path: Path | None = None) -> Prompt:
     if len(parts) > 2:
         raise ValueError(f"{path.name}: more than one @user line")
     system, user = ("", parts[0]) if len(parts) == 1 else parts
-    skill = skill_prompt(path.parent.name) if (path.parent / SKILL).is_file() else None
-    if skill is not None and INCLUDE.search(body):
-        raise ValueError(f"{path.name}: {path.parent.name} sends its whole skill; drop the @include lines")
+    shared = group_prompt(path.parent.name) if (path.parent / GROUP_FILE).is_file() else None
+    if shared is not None and INCLUDE.search(body):
+        raise ValueError(f"{path.name}: {path.parent.name} sends its whole group text; drop the @include lines")
     system, user = _expand(system, path).strip(), _expand(user, path).strip()
-    prefixed = skill is not None and head.get("skill", "").lower() != "none"
+    prefixed = shared is not None and head.get("shared", "").lower() != "none"
     if prefixed:
-        system = f"{skill}\n\n{system}".strip()
+        system = f"{shared}\n\n{system}".strip()
     if PLACEHOLDER.search(system):
         raise ValueError(f"{path.name}: the system part must be the same on every call, "
                          f"but holds {PLACEHOLDER.search(system).group(0)}; move it below @user")
     schema = path.with_suffix(".schema.json")
     schema_json = json.dumps(json.loads(schema.read_text(encoding="utf-8")), separators=(",", ":")) \
         if schema.exists() else ""
-    includes = (f"{path.parent.name} (whole skill)",) if prefixed else \
+    includes = (f"{path.parent.name} (whole group text)",) if prefixed else \
         tuple(f"{s}#{n}" for s, n in INCLUDE.findall(body))
     return Prompt(prompt_id, head["version"], system, user, schema_json, used_by, path.parent.name,
                   includes, str(path.relative_to(HERE)))
@@ -283,11 +283,11 @@ def write_lock() -> None:
     LOCK.write_text(json.dumps({pid: {"version": p.version, "hash": p.hash}
                                 for pid, p in prompts.items()}, indent=2) + "\n", encoding="utf-8")
     rank = lambda p: (GROUPS.index(p.group) if p.group in GROUPS else len(GROUPS), p.id)
-    rows = ["| Group | File | Version | Used by | Skill sections | Filled in | Schema |",
+    rows = ["| Group | File | Version | Used by | Shared sections | Filled in | Schema |",
             "|---|---|---|---|---|---|---|"]
     for p in sorted(prompts.values(), key=rank):
         schema = Path(p.path).with_suffix(".schema.json").as_posix()
-        rows.append(f"| [{p.group}]({p.group}/{SKILL}) | [`{p.id}.md`]({p.path}) | {p.version} | {', '.join(p.used_by)} | "
+        rows.append(f"| [{p.group}]({p.group}/{GROUP_FILE}) | [`{p.id}.md`]({p.path}) | {p.version} | {', '.join(p.used_by)} | "
                     f"{', '.join(p.includes) or '-'} | {', '.join('`' + x + '`' for x in p.placeholders)} | "
                     + (f"[json]({schema}) |" if p.schema_json else "- |"))
     readme = HERE / "README.md"

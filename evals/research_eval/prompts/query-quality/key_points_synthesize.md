@@ -1,7 +1,7 @@
 ---
 id: key_points_synthesize
 version: 2
-skill: none
+shared: none
 used_by: key points for the question when drafts > 1 (key_points.py); key point method comparison (key_points_methods.py, "layered-merged")
 ---
 

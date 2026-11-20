@@ -50,7 +50,7 @@ def test_every_prompt_is_a_fixed_system_message_and_a_user_message_with_the_data
 
 def test_a_placeholder_above_the_user_line_is_refused(tmp_path, monkeypatch):
     (tmp_path / "g").mkdir()
-    (tmp_path / "g" / "SKILL.md").write_text("---\nname: g\ndescription: d\n---\n")
+    (tmp_path / "g" / "GROUP.md").write_text("---\nname: g\ndescription: d\n---\n")
     (tmp_path / "g" / "x.md").write_text("---\nid: x\nversion: 1\n---\nAsk {question}\n@user\nData\n")
     monkeypatch.setattr(P, "HERE", tmp_path)
     with pytest.raises(ValueError, match="system part"):
@@ -72,53 +72,53 @@ def test_every_answer_schema_is_strict_and_fits_the_prompt_example():
                     "$.children[0].directions[0]: 'deep' not in ['deeper', 'wider', 'specific']"], errs
 
 
-def test_include_pulls_one_skill_section(tmp_path, monkeypatch):
+def test_include_pulls_one_shared_section(tmp_path, monkeypatch):
     (tmp_path / "g").mkdir()
-    (tmp_path / "g" / "SKILL.md").write_text(
+    (tmp_path / "g" / "GROUP.md").write_text(
         "---\nname: g\ndescription: d\n---\n\n# G\n\nintro\n\n## alpha\n\nA text.\n\n"
         "## beta\n\nB text.\n\n## How to edit\n\nnot for the judge\n")
     monkeypatch.setattr(P, "HERE", tmp_path)
-    assert P.skill_sections("g") == {"alpha": "A text.", "beta": "B text."}
+    assert P.group_sections("g") == {"alpha": "A text.", "beta": "B text."}
     assert P._expand("x\n@include g#beta\ny", tmp_path / "p.md") == "x\nB text.\ny"
     with pytest.raises(KeyError):
         P._expand("@include g#gamma", tmp_path / "p.md")
 
 
-def test_one_skill_per_group_and_every_section_is_used():
+def test_one_group_file_per_group_and_every_section_is_used():
     ps = P.all_prompts()
     assert [g.name for g in P.groups()] == list(P.GROUPS)
     used = {inc for p in ps.values() for inc in p.includes}
     for g in P.groups():
-        head, _ = P._front(g / P.SKILL)
+        head, _ = P._front(g / P.GROUP_FILE)
         assert head["name"] == g.name and head["description"]
         assert any(p.group == g.name for p in ps.values()), g.name
-        if P.skill_prompt(g.name) is not None:
-            continue        # the whole skill is the group's system prompt
+        if P.group_prompt(g.name) is not None:
+            continue        # the whole group text is the group's system prompt
         # A section no prompt includes is text nobody reads.
-        assert {f"{g.name}#{s}" for s in P.skill_sections(g.name)} <= used, g.name
+        assert {f"{g.name}#{s}" for s in P.group_sections(g.name)} <= used, g.name
 
 
-def test_query_quality_skill_is_the_system_prompt_of_its_metrics():
-    skill = P.skill_prompt("query-quality")
+def test_query_quality_group_text_is_the_system_prompt_of_its_metrics():
+    shared = P.group_prompt("query-quality")
     # Maintainers' notes are comments and never reach the judge.
-    assert skill and "<!--" not in skill and "Maintainers" not in skill
-    assert skill.startswith("# Query quality judgement")
+    assert shared and "<!--" not in shared and "Maintainers" not in shared
+    assert shared.startswith("# Query quality judgement")
     for pid in ("tree_quality", "subquery_redundancy", "decomposition_coverage"):
         p = P.load(pid)
-        assert p.system.startswith(skill + "\n\n# Task: "), pid
-        assert "@include" not in p.template and p.includes == ("query-quality (whole skill)",)
-    # The key points are frozen in the dataset: their prompt gets no skill.
-    assert skill not in P.load("key_points").system and P.load("key_points").includes == ()
+        assert p.system.startswith(shared + "\n\n# Task: "), pid
+        assert "@include" not in p.template and p.includes == ("query-quality (whole group text)",)
+    # The key points are frozen in the dataset: their prompt gets no shared.
+    assert shared not in P.load("key_points").system and P.load("key_points").includes == ()
 
 
-def test_whole_skill_mode_strips_comments_and_refuses_includes(tmp_path, monkeypatch):
+def test_whole_group_mode_strips_comments_and_refuses_includes(tmp_path, monkeypatch):
     (tmp_path / "g").mkdir()
-    (tmp_path / "g" / "SKILL.md").write_text(
+    (tmp_path / "g" / "GROUP.md").write_text(
         "---\nname: g\ndescription: d\nsystem_prompt: true\n---\n\n<!-- note -->\n# G\n\nShared.\n")
     (tmp_path / "g" / "a.md").write_text("---\nid: a\nversion: 1\n---\n\nTask A.\n\n@user\n\n{x}\n")
     (tmp_path / "g" / "b.md").write_text("---\nid: b\nversion: 1\n---\n\n@include g#x\n")
     monkeypatch.setattr(P, "HERE", tmp_path)
-    assert P.skill_prompt("g") == "# G\n\nShared."
+    assert P.group_prompt("g") == "# G\n\nShared."
     assert P.load("a", tmp_path / "g" / "a.md").render(x="1").system == "# G\n\nShared.\n\nTask A."
     with pytest.raises(ValueError):
         P.load("b", tmp_path / "g" / "b.md")

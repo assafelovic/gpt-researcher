@@ -1,7 +1,7 @@
 ---
 id: key_points
 version: 2
-skill: none
+shared: none
 used_by: key point method comparison (key_points_methods.py, "current"); the key points until key_points_layered replaced it
 ---
 

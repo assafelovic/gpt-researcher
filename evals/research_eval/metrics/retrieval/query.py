@@ -43,8 +43,8 @@ class DecompositionCoverage(Metric):
     """
 
     name, category = "decomposition_coverage", "retrieval.query_quality"
-    version = "6"           # 3: deep clarifying questions are not sub-queries; 4: "aimed at" from the query-quality skill;
-                            # 5: the skill rewritten short, with shared principles;
+    version = "6"           # 3: deep clarifying questions are not sub-queries; 4: "aimed at" from the query-quality group text;
+                            # 5: the group text rewritten short, with shared principles;
                             # 6: layered key points, the judge sees each point's sub-points
     uses_llm = True
     prompts = (KEY_POINTS_LAYERED, DECOMPOSITION_COVERAGE)
@@ -153,8 +153,8 @@ class SubqueryRedundancy(Metric):
     version = "13"          # 4: only a reworded request for the same facts; 5: sub-queries only;
                             # 6: own call per layer over every node; 7: whole tree but ancestors, one call;
                             # 8: overlaps beside repeats (too broad, dropped); 9: majority of VOTES calls;
-                            # 10: "repeat" from the query-quality skill, with examples;
-                            # 11: the skill rewritten short, with shared principles;
+                            # 10: "repeat" from the query-quality group text, with examples;
+                            # 11: the group text rewritten short, with shared principles;
                             # 12: code-picked candidate pairs, one pair per call; 13: no overlap floor
     higher_is_better = False
     uses_llm = True         # the lexical fallback only runs when no judge is configured at all
@@ -321,14 +321,14 @@ class DecompositionTreeQuality(Metric):
     findings each child follows up (`details.builds_on_findings`, a
     diagnostic). `details.directions` and `details.problems` count the
     judge's labels, for reading the scores, not as scores of their own. The
-    definitions come from the query-quality skill (prompts/query-quality/SKILL.md).
+    definitions come from the query-quality group text (prompts/query-quality/GROUP.md).
     """
 
     name, category = "decomposition_tree_quality", "retrieval.query_quality"
     version = "9"           # 3: the judge sees the root-to-parent path; 4: per-child checks + aspect coverage;
-                            # 5: check and aspect definitions from the query-quality skill, with examples;
+                            # 5: check and aspect definitions from the query-quality group text, with examples;
                             # 6: the parent's aspects are fixed before the children are shown;
-                            # 7: the skill rewritten short, with shared principles;
+                            # 7: the group text rewritten short, with shared principles;
                             # 8: depth only: one relation per child, findings in deep research, no coverage;
                             # 9: one overall score per child (a step or not); deeper, wider, specific are hints
     uses_llm = True

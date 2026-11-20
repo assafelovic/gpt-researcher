@@ -1,7 +1,7 @@
 ---
 id: key_points_outline
 version: 1
-skill: none
+shared: none
 used_by: key point method comparison (key_points_methods.py)
 ---
 

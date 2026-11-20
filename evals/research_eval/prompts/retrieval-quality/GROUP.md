@@ -1,17 +1,17 @@
 ---
 name: retrieval-quality
-description: System prompt of the judge that rates the material a research agent retrieved before writing. Sent in front of the prompt of query_relevance; material_coverage keeps its own original prompt (skill none).
+description: System prompt of the judge that rates the material a research agent retrieved before writing. Sent in front of the prompt of query_relevance; material_coverage keeps its own original prompt (shared: none).
 system_prompt: true
 ---
 
 <!--
 Maintainers' notes (comments are never sent to the judge).
 - Everything else below the header is the system prompt of query_relevance.
-  material_coverage.md has `skill: none` and keeps its original text (v2):
-  four rewrites inside this skill (v41-v47) flipped 13/102 key points
+  material_coverage.md has `shared: none` and keeps its original text (v2):
+  four rewrites inside this group text (v41-v47) flipped 13/102 key points
   between two passes on the 15 archives, against 3/102 for the original,
   mostly on key points that list several parts.
-- Folder: SKILL.md (this file), <id>.md (one prompt per metric),
+- Folder: GROUP.md (this file), <id>.md (one prompt per metric),
   <id>.schema.json (the JSON answer the judge must return).
 - Editing this file changes every prompt in the folder: bump their versions,
   then run `python -m evals.research_eval.prompts --lock`.

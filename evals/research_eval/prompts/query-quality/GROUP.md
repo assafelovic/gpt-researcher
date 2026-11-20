@@ -7,9 +7,9 @@ system_prompt: true
 <!--
 Maintainers' notes (comments are never sent to the judge).
 - Everything else below the header is the system prompt of every prompt in
-  this folder except key_points.md (`skill: none`: the key points are frozen
+  this folder except key_points.md (`shared: none`: the key points are frozen
   in the dataset). Each prompt adds the task of one metric after it.
-- Folder: SKILL.md (this file), <id>.md (one prompt per metric),
+- Folder: GROUP.md (this file), <id>.md (one prompt per metric),
   <id>.schema.json (the JSON answer the judge must return).
 - Editing this file changes every prompt in the folder: bump their versions,
   then run `python -m evals.research_eval.prompts --lock`.

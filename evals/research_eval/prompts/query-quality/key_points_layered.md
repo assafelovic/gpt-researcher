@@ -1,7 +1,7 @@
 ---
 id: key_points_layered
 version: 4
-skill: none
+shared: none
 used_by: key points for the question (key_points.py), decomposition_coverage, material_coverage, comprehensiveness; key point method comparison (key_points_methods.py)
 ---
 

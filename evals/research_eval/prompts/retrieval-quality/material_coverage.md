@@ -2,7 +2,7 @@
 id: material_coverage
 version: 4
 used_by: material_coverage
-skill: none
+shared: none
 ---
 
 You are checking which aspects of a research question the material a research

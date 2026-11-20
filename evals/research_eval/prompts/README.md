@@ -3,12 +3,12 @@
 Every prompt the evaluator sends to the judge model lives here, so they can be
 read and edited in one place. The code only loads them (`__init__.py`).
 
-## Layout: one skill per metric group
+## Layout: one folder per metric group
 
 ```
 prompts/
 ├── query-quality/
-│   ├── SKILL.md                  the group's system prompt (or its shared sections)
+│   ├── GROUP.md                  the group's system prompt (or its shared sections)
 │   ├── tree_quality.md           one file per prompt
 │   ├── tree_quality.schema.json  the JSON its answer must be
 │   └── ...
@@ -19,16 +19,16 @@ prompts/
 └── versions.json                 each prompt's version and text hash
 ```
 
-Each group's `SKILL.md` has a header with `name` and `description`. There
+Each group's `GROUP.md` has a header with `name` and `description`. There
 are two ways a group uses it:
 
-- **Whole skill as system prompt** (`system_prompt: true` in the header; so
-  far query-quality and source-quality). The skill is the group's system prompt: background,
+- **whole group text as system prompt** (`system_prompt: true` in the header; so
+  far query-quality and source-quality). The group text is the system prompt: background,
   definitions, principles, instructions and suggested steps, written for the
-  judge. Every prompt in the folder is sent as that skill followed by its own
+  judge. Every prompt in the folder is sent as that text followed by its own
   task, its own definitions and its answer format. Maintainers' notes go in
   `<!-- ... -->` comments, which are never sent. A prompt that must not get
-  the skill says `skill: none` (key_points: its answers are frozen in the
+  the group says `shared: none` (key_points: its answers are frozen in the
   dataset).
 - **Sections** (the other groups, until they are reviewed). A short
   introduction for maintainers, then one `## <section>` per shared
@@ -41,7 +41,7 @@ version: 20                   # bump on every change of the text or the schema
 used_by: decomposition_tree_quality
 ---
 
-                              <- the whole query-quality/SKILL.md comes first
+                              <- the whole query-quality/GROUP.md comes first
 # Task: decomposition tree quality
 The task of this metric, its own definitions and the answer format: the
 rest of the system message, the same on every call. Braces here, like the
@@ -62,13 +62,13 @@ that the JSON example in the prompt fits its schema. Set
 `EVAL_JUDGE_STRUCTURED=0` for a judge model without structured output.
 
 A group gets its shared sections when it is reviewed in stage 2; until then
-its `SKILL.md` names the candidates and its prompts state their definitions
+its `GROUP.md` names the candidates and its prompts state their definitions
 inline.
 
-## Editing a prompt or a skill section
+## Editing a prompt or a shared section
 
-1. Edit the text or the schema. A whole-skill SKILL.md changes every prompt
-   in its folder (except `skill: none`); a skill section changes every prompt
+1. Edit the text or the schema. A whole-group GROUP.md changes every prompt
+   in its folder (except `shared: none`); a shared section changes every prompt
    that includes it (the table below lists them). A new answer field goes in both
    the JSON example and the schema.
 2. Bump `version` in every prompt whose text or schema changed. The version
@@ -85,26 +85,26 @@ inline.
 ## Prompts
 
 <!-- prompts:start (written by --lock) -->
-| Group | File | Version | Used by | Skill sections | Filled in | Schema |
+| Group | File | Version | Used by | Shared sections | Filled in | Schema |
 |---|---|---|---|---|---|---|
-| [query-quality](query-quality/SKILL.md) | [`decomposition_coverage.md`](query-quality/decomposition_coverage.md) | 11 | decomposition_coverage | query-quality (whole skill) | `question`, `key_points`, `subqueries` | [json](query-quality/decomposition_coverage.schema.json) |
-| [query-quality](query-quality/SKILL.md) | [`key_points.md`](query-quality/key_points.md) | 2 | key point method comparison (key_points_methods.py, "current"); the key points until key_points_layered replaced it | - | `question` | [json](query-quality/key_points.schema.json) |
-| [query-quality](query-quality/SKILL.md) | [`key_points_describe.md`](query-quality/key_points_describe.md) | 1 | key point method comparison (key_points_methods.py) | - | `question`, `key_points` | [json](query-quality/key_points_describe.schema.json) |
-| [query-quality](query-quality/SKILL.md) | [`key_points_layered.md`](query-quality/key_points_layered.md) | 4 | key points for the question (key_points.py), decomposition_coverage, material_coverage, comprehensiveness; key point method comparison (key_points_methods.py) | - | `question` | [json](query-quality/key_points_layered.schema.json) |
-| [query-quality](query-quality/SKILL.md) | [`key_points_merge.md`](query-quality/key_points_merge.md) | 2 | key point method comparison (key_points_methods.py) | - | `question`, `lists` | [json](query-quality/key_points_merge.schema.json) |
-| [query-quality](query-quality/SKILL.md) | [`key_points_outline.md`](query-quality/key_points_outline.md) | 1 | key point method comparison (key_points_methods.py) | - | `question` | [json](query-quality/key_points_outline.schema.json) |
-| [query-quality](query-quality/SKILL.md) | [`key_points_structured.md`](query-quality/key_points_structured.md) | 1 | key point method comparison (key_points_methods.py) | - | `question` | [json](query-quality/key_points_structured.schema.json) |
-| [query-quality](query-quality/SKILL.md) | [`key_points_synthesize.md`](query-quality/key_points_synthesize.md) | 2 | key points for the question when drafts > 1 (key_points.py); key point method comparison (key_points_methods.py, "layered-merged") | - | `question`, `drafts` | [json](query-quality/key_points_synthesize.schema.json) |
-| [query-quality](query-quality/SKILL.md) | [`subquery_redundancy.md`](query-quality/subquery_redundancy.md) | 15 | subquery_redundancy | query-quality (whole skill) | `question`, `query_a`, `query_b` | [json](query-quality/subquery_redundancy.schema.json) |
-| [query-quality](query-quality/SKILL.md) | [`tree_quality.md`](query-quality/tree_quality.md) | 21 | decomposition_tree_quality | query-quality (whole skill) | `question`, `path`, `parent`, `findings`, `children` | [json](query-quality/tree_quality.schema.json) |
-| [source-quality](source-quality/SKILL.md) | [`domain_authority.md`](source-quality/domain_authority.md) | 8 | source_authority | source-quality (whole skill) | `question`, `domains` | [json](source-quality/domain_authority.schema.json) |
-| [retrieval-quality](retrieval-quality/SKILL.md) | [`material_coverage.md`](retrieval-quality/material_coverage.md) | 4 | material_coverage | - | `question`, `points` | [json](retrieval-quality/material_coverage.schema.json) |
-| [retrieval-quality](retrieval-quality/SKILL.md) | [`query_relevance.md`](retrieval-quality/query_relevance.md) | 14 | query_relevance | retrieval-quality (whole skill) | `question`, `query`, `material` | [json](retrieval-quality/query_relevance.schema.json) |
-| [writing-quality](writing-quality/SKILL.md) | [`comprehensiveness.md`](writing-quality/comprehensiveness.md) | 7 | comprehensiveness | writing-quality (whole skill) | `question`, `key_points`, `report` | [json](writing-quality/comprehensiveness.schema.json) |
-| [writing-quality](writing-quality/SKILL.md) | [`quality_rubric.md`](writing-quality/quality_rubric.md) | 6 | insight, readability | writing-quality (whole skill) | `question` | [json](writing-quality/quality_rubric.schema.json) |
-| [writing-quality](writing-quality/SKILL.md) | [`quality_score.md`](writing-quality/quality_score.md) | 7 | insight, readability | writing-quality (whole skill) | `question`, `criteria`, `report` | [json](writing-quality/quality_score.schema.json) |
-| [writing-quality](writing-quality/SKILL.md) | [`topic_relevance.md`](writing-quality/topic_relevance.md) | 8 | topic_relevance | writing-quality (whole skill) | `question`, `paragraphs` | [json](writing-quality/topic_relevance.schema.json) |
-| [writing-quality](writing-quality/SKILL.md) | [`toxicity_bias.md`](writing-quality/toxicity_bias.md) | 5 | toxicity, bias | writing-quality (whole skill) | `text` | [json](writing-quality/toxicity_bias.schema.json) |
-| [writing-authority](writing-authority/SKILL.md) | [`claim_recheck.md`](writing-authority/claim_recheck.md) | 13 | citation audit recheck (citation_audit.py) | writing-authority (whole skill) | `question`, `claims`, `material` | [json](writing-authority/claim_recheck.schema.json) |
-| [writing-authority](writing-authority/SKILL.md) | [`paragraph_audit.md`](writing-authority/paragraph_audit.md) | 12 | citation audit (citation_audit.py), source_utilization, citation_recall, citation_precision, effective_citations, faithfulness | writing-authority (whole skill) | `question`, `sentences`, `material` | [json](writing-authority/paragraph_audit.schema.json) |
+| [query-quality](query-quality/GROUP.md) | [`decomposition_coverage.md`](query-quality/decomposition_coverage.md) | 11 | decomposition_coverage | query-quality (whole group text) | `question`, `key_points`, `subqueries` | [json](query-quality/decomposition_coverage.schema.json) |
+| [query-quality](query-quality/GROUP.md) | [`key_points.md`](query-quality/key_points.md) | 2 | key point method comparison (key_points_methods.py, "current"); the key points until key_points_layered replaced it | - | `question` | [json](query-quality/key_points.schema.json) |
+| [query-quality](query-quality/GROUP.md) | [`key_points_describe.md`](query-quality/key_points_describe.md) | 1 | key point method comparison (key_points_methods.py) | - | `question`, `key_points` | [json](query-quality/key_points_describe.schema.json) |
+| [query-quality](query-quality/GROUP.md) | [`key_points_layered.md`](query-quality/key_points_layered.md) | 4 | key points for the question (key_points.py), decomposition_coverage, material_coverage, comprehensiveness; key point method comparison (key_points_methods.py) | - | `question` | [json](query-quality/key_points_layered.schema.json) |
+| [query-quality](query-quality/GROUP.md) | [`key_points_merge.md`](query-quality/key_points_merge.md) | 2 | key point method comparison (key_points_methods.py) | - | `question`, `lists` | [json](query-quality/key_points_merge.schema.json) |
+| [query-quality](query-quality/GROUP.md) | [`key_points_outline.md`](query-quality/key_points_outline.md) | 1 | key point method comparison (key_points_methods.py) | - | `question` | [json](query-quality/key_points_outline.schema.json) |
+| [query-quality](query-quality/GROUP.md) | [`key_points_structured.md`](query-quality/key_points_structured.md) | 1 | key point method comparison (key_points_methods.py) | - | `question` | [json](query-quality/key_points_structured.schema.json) |
+| [query-quality](query-quality/GROUP.md) | [`key_points_synthesize.md`](query-quality/key_points_synthesize.md) | 2 | key points for the question when drafts > 1 (key_points.py); key point method comparison (key_points_methods.py, "layered-merged") | - | `question`, `drafts` | [json](query-quality/key_points_synthesize.schema.json) |
+| [query-quality](query-quality/GROUP.md) | [`subquery_redundancy.md`](query-quality/subquery_redundancy.md) | 15 | subquery_redundancy | query-quality (whole group text) | `question`, `query_a`, `query_b` | [json](query-quality/subquery_redundancy.schema.json) |
+| [query-quality](query-quality/GROUP.md) | [`tree_quality.md`](query-quality/tree_quality.md) | 21 | decomposition_tree_quality | query-quality (whole group text) | `question`, `path`, `parent`, `findings`, `children` | [json](query-quality/tree_quality.schema.json) |
+| [source-quality](source-quality/GROUP.md) | [`domain_authority.md`](source-quality/domain_authority.md) | 8 | source_authority | source-quality (whole group text) | `question`, `domains` | [json](source-quality/domain_authority.schema.json) |
+| [retrieval-quality](retrieval-quality/GROUP.md) | [`material_coverage.md`](retrieval-quality/material_coverage.md) | 4 | material_coverage | - | `question`, `points` | [json](retrieval-quality/material_coverage.schema.json) |
+| [retrieval-quality](retrieval-quality/GROUP.md) | [`query_relevance.md`](retrieval-quality/query_relevance.md) | 14 | query_relevance | retrieval-quality (whole group text) | `question`, `query`, `material` | [json](retrieval-quality/query_relevance.schema.json) |
+| [writing-quality](writing-quality/GROUP.md) | [`comprehensiveness.md`](writing-quality/comprehensiveness.md) | 7 | comprehensiveness | writing-quality (whole group text) | `question`, `key_points`, `report` | [json](writing-quality/comprehensiveness.schema.json) |
+| [writing-quality](writing-quality/GROUP.md) | [`quality_rubric.md`](writing-quality/quality_rubric.md) | 6 | insight, readability | writing-quality (whole group text) | `question` | [json](writing-quality/quality_rubric.schema.json) |
+| [writing-quality](writing-quality/GROUP.md) | [`quality_score.md`](writing-quality/quality_score.md) | 7 | insight, readability | writing-quality (whole group text) | `question`, `criteria`, `report` | [json](writing-quality/quality_score.schema.json) |
+| [writing-quality](writing-quality/GROUP.md) | [`topic_relevance.md`](writing-quality/topic_relevance.md) | 8 | topic_relevance | writing-quality (whole group text) | `question`, `paragraphs` | [json](writing-quality/topic_relevance.schema.json) |
+| [writing-quality](writing-quality/GROUP.md) | [`toxicity_bias.md`](writing-quality/toxicity_bias.md) | 5 | toxicity, bias | writing-quality (whole group text) | `text` | [json](writing-quality/toxicity_bias.schema.json) |
+| [writing-authority](writing-authority/GROUP.md) | [`claim_recheck.md`](writing-authority/claim_recheck.md) | 13 | citation audit recheck (citation_audit.py) | writing-authority (whole group text) | `question`, `claims`, `material` | [json](writing-authority/claim_recheck.schema.json) |
+| [writing-authority](writing-authority/GROUP.md) | [`paragraph_audit.md`](writing-authority/paragraph_audit.md) | 12 | citation audit (citation_audit.py), source_utilization, citation_recall, citation_precision, effective_citations, faithfulness | writing-authority (whole group text) | `question`, `sentences`, `material` | [json](writing-authority/paragraph_audit.schema.json) |
 <!-- prompts:end -->

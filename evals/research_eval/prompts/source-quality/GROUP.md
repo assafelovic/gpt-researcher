@@ -9,7 +9,7 @@ Maintainers' notes (comments are never sent to the judge).
 - Everything else below the header is the system prompt of every prompt in
   this folder. So far only domain_authority.md uses it: source_diversity and
   source_recency are rules in metrics/retrieval/source.py and call no judge.
-- Folder: SKILL.md (this file), <id>.md (one prompt per metric),
+- Folder: GROUP.md (this file), <id>.md (one prompt per metric),
   <id>.schema.json (the JSON answer the judge must return).
 - Editing this file changes every prompt in the folder: bump their versions,
   then run `python -m evals.research_eval.prompts --lock`.
