@@ -1,0 +1,828 @@
+{
+ "task": "Why is Nvidia stock going up in 2026?",
+ "report_type": "research_report",
+ "events": [
+  {
+   "query": "Why is Nvidia stock going up in 2026?",
+   "sources": [],
+   "context": [],
+   "report": "",
+   "t": 0.03
+  },
+  {
+   "type": "logs",
+   "content": "starting_research",
+   "output": "\ud83d\udd0d Starting the research task for 'Why is Nvidia stock going up in 2026?'...",
+   "metadata": null,
+   "t": 5.02
+  },
+  {
+   "type": "logs",
+   "content": "agent_generated",
+   "output": "\ud83d\udcb0 Finance Agent",
+   "metadata": null,
+   "t": 5.02
+  },
+  {
+   "type": "logs",
+   "content": "planning_research",
+   "output": "\ud83c\udf10 Browsing the web to learn more about the task: Why is Nvidia stock going up in 2026?...",
+   "metadata": null,
+   "t": 5.02
+  },
+  {
+   "type": "logs",
+   "content": "planning_research",
+   "output": "\ud83e\udd14 Planning the research strategy and subtasks...",
+   "metadata": null,
+   "t": 6.62
+  },
+  {
+   "type": "logs",
+   "content": "subqueries",
+   "output": "\ud83d\uddc2\ufe0f I will conduct my research based on the following queries: ['Why is Nvidia stock rising in 2026 after strong earnings and revenue guidance', 'What is driving Nvidia stock up in 2026 AI chip demand data center GPU sales and analyst price targets', 'Nvidia stock 2026 reasons for gains including margins valuation and Blackwell AI server demand', 'Why is Nvidia stock going up in 2026?']...",
+   "metadata": [
+    "Why is Nvidia stock rising in 2026 after strong earnings and revenue guidance",
+    "What is driving Nvidia stock up in 2026 AI chip demand data center GPU sales and analyst price targets",
+    "Nvidia stock 2026 reasons for gains including margins valuation and Blackwell AI server demand",
+    "Why is Nvidia stock going up in 2026?"
+   ],
+   "t": 8.91
+  },
+  {
+   "type": "logs",
+   "content": "added_source_url",
+   "output": "\u2705 Added source url to research: https://www.fool.com/investing/how-to-invest/stocks/nvidia-stock-forecast\n",
+   "metadata": "https://www.fool.com/investing/how-to-invest/stocks/nvidia-stock-forecast",
+   "t": 8.91
+  },
+  {
+   "type": "logs",
+   "content": "added_source_url",
+   "output": "\u2705 Added source url to research: https://www.tikr.com/blog/nvidia-stock-is-up-19-in-2026-time-to-sell-or-load-up\n",
+   "metadata": "https://www.tikr.com/blog/nvidia-stock-is-up-19-in-2026-time-to-sell-or-load-up",
+   "t": 8.91
+  },
+  {
+   "type": "logs",
+   "content": "added_source_url",
+   "output": "\u2705 Added source url to research: https://www.cnbc.com/investingclub/2026/05/20/were-raising-our-price-target-on-nvidia-after-another-knockout-quarter-and-guide-.html\n",
+   "metadata": "https://www.cnbc.com/investingclub/2026/05/20/were-raising-our-price-target-on-nvidia-after-another-knockout-quarter-and-guide-.html",
+   "t": 8.91
+  },
+  {
+   "type": "logs",
+   "content": "added_source_url",
+   "output": "\u2705 Added source url to research: https://www.youtube.com/watch?v=zo_ibTL38-A\n",
+   "metadata": "https://www.youtube.com/watch?v=zo_ibTL38-A",
+   "t": 8.91
+  },
+  {
+   "type": "logs",
+   "content": "added_source_url",
+   "output": "\u2705 Added source url to research: https://www.youtube.com/watch?v=tIhShyS6a3c\n",
+   "metadata": "https://www.youtube.com/watch?v=tIhShyS6a3c",
+   "t": 8.91
+  },
+  {
+   "type": "logs",
+   "content": "researching",
+   "output": "\ud83e\udd14 Researching for relevant information across multiple sources...\n",
+   "metadata": null,
+   "t": 8.91
+  },
+  {
+   "type": "logs",
+   "content": "scraping_urls",
+   "output": "\ud83c\udf10 Scraping content from 5 URLs...",
+   "metadata": null,
+   "t": 8.91
+  },
+  {
+   "type": "logs",
+   "content": "scraping_content",
+   "output": "\ud83d\udcc4 Scraped 5 pages of content",
+   "metadata": null,
+   "t": 10.3
+  },
+  {
+   "type": "logs",
+   "content": "scraping_images",
+   "output": "\ud83d\uddbc\ufe0f Selected 4 new images from 21 total images",
+   "metadata": [
+    "https://res.cloudinary.com/tikr/images/w_4966,h_4046,c_scale/f_webp,q_auto/v1790410811/images/NVDA_valuation_model-8/NVDA_valuation_model-8.png?_i=AA",
+    "https://res.cloudinary.com/tikr/images/w_1122,h_742,c_scale/f_webp,q_auto/v1790410330/images/image-882_133603b7b54/image-882_133603b7b54.png?_i=AA",
+    "https://static-redesign.cnbcfm.com/dist/93743f20be95b721880f.svg",
+    "https://static-redesign.cnbcfm.com/dist/69ae09b80acd376e9c97.svg"
+   ],
+   "t": 10.3
+  },
+  {
+   "type": "logs",
+   "content": "scraping_complete",
+   "output": "\ud83c\udf10 Scraping complete",
+   "metadata": null,
+   "t": 10.3
+  },
+  {
+   "type": "logs",
+   "content": "fetching_query_content",
+   "output": "\ud83d\udcda Getting relevant content based on query: Why is Nvidia stock going up in 2026?...",
+   "metadata": null,
+   "t": 10.3
+  },
+  {
+   "type": "logs",
+   "content": "running_subquery_research",
+   "output": "\n\ud83d\udd0d Running research for 'Why is Nvidia stock rising in 2026 after strong earnings and revenue guidance'...",
+   "metadata": null,
+   "t": 10.3
+  },
+  {
+   "type": "logs",
+   "content": "running_subquery_research",
+   "output": "\n\ud83d\udd0d Running research for 'What is driving Nvidia stock up in 2026 AI chip demand data center GPU sales and analyst price targets'...",
+   "metadata": null,
+   "t": 10.3
+  },
+  {
+   "type": "logs",
+   "content": "running_subquery_research",
+   "output": "\n\ud83d\udd0d Running research for 'Nvidia stock 2026 reasons for gains including margins valuation and Blackwell AI server demand'...",
+   "metadata": null,
+   "t": 10.31
+  },
+  {
+   "type": "logs",
+   "content": "running_subquery_research",
+   "output": "\n\ud83d\udd0d Running research for 'Why is Nvidia stock going up in 2026?'...",
+   "metadata": null,
+   "t": 10.31
+  },
+  {
+   "type": "logs",
+   "content": "researching",
+   "output": "\ud83e\udd14 Researching for relevant information across multiple sources...\n",
+   "metadata": null,
+   "t": 10.76
+  },
+  {
+   "type": "logs",
+   "content": "scraping_urls",
+   "output": "\ud83c\udf10 Scraping content from 0 URLs...",
+   "metadata": null,
+   "t": 10.77
+  },
+  {
+   "type": "logs",
+   "content": "scraping_content",
+   "output": "\ud83d\udcc4 Scraped 0 pages of content",
+   "metadata": null,
+   "t": 10.77
+  },
+  {
+   "type": "logs",
+   "content": "scraping_images",
+   "output": "\ud83d\uddbc\ufe0f Selected 0 new images from 0 total images",
+   "metadata": [],
+   "t": 10.77
+  },
+  {
+   "type": "logs",
+   "content": "scraping_complete",
+   "output": "\ud83c\udf10 Scraping complete",
+   "metadata": null,
+   "t": 10.77
+  },
+  {
+   "type": "logs",
+   "content": "subquery_context_not_found",
+   "output": "\ud83e\udd37 No content found for 'Why is Nvidia stock going up in 2026?'...",
+   "metadata": null,
+   "t": 10.77
+  },
+  {
+   "type": "logs",
+   "content": "added_source_url",
+   "output": "\u2705 Added source url to research: https://heesoontusa.tistory.com/entry/Nvidia-Earnings-2026-Record-Revenue-but-One-Number-Worries-Me\n",
+   "metadata": "https://heesoontusa.tistory.com/entry/Nvidia-Earnings-2026-Record-Revenue-but-One-Number-Worries-Me",
+   "t": 11.97
+  },
+  {
+   "type": "logs",
+   "content": "added_source_url",
+   "output": "\u2705 Added source url to research: https://qz.com/nvidia-stock-record-foxconn-revenue-ai-100626\n",
+   "metadata": "https://qz.com/nvidia-stock-record-foxconn-revenue-ai-100626",
+   "t": 11.97
+  },
+  {
+   "type": "logs",
+   "content": "added_source_url",
+   "output": "\u2705 Added source url to research: https://www.youtube.com/watch?v=IPUP_d626O0\n",
+   "metadata": "https://www.youtube.com/watch?v=IPUP_d626O0",
+   "t": 11.97
+  },
+  {
+   "type": "logs",
+   "content": "added_source_url",
+   "output": "\u2705 Added source url to research: http://nvidianews.nvidia.com/news/nvidia-announces-financial-results-for-fourth-quarter-and-fiscal-2026\n",
+   "metadata": "http://nvidianews.nvidia.com/news/nvidia-announces-financial-results-for-fourth-quarter-and-fiscal-2026",
+   "t": 11.97
+  },
+  {
+   "type": "logs",
+   "content": "added_source_url",
+   "output": "\u2705 Added source url to research: https://www.investing.com/news/earnings/nvidia-delivers-quarterly-top-and-bottomline-beat-shares-slip-after-hours-4877807\n",
+   "metadata": "https://www.investing.com/news/earnings/nvidia-delivers-quarterly-top-and-bottomline-beat-shares-slip-after-hours-4877807",
+   "t": 11.98
+  },
+  {
+   "type": "logs",
+   "content": "researching",
+   "output": "\ud83e\udd14 Researching for relevant information across multiple sources...\n",
+   "metadata": null,
+   "t": 11.98
+  },
+  {
+   "type": "logs",
+   "content": "scraping_urls",
+   "output": "\ud83c\udf10 Scraping content from 5 URLs...",
+   "metadata": null,
+   "t": 11.98
+  },
+  {
+   "type": "logs",
+   "content": "added_source_url",
+   "output": "\u2705 Added source url to research: https://public.com/stocks/nvda/forecast-price-target\n",
+   "metadata": "https://public.com/stocks/nvda/forecast-price-target",
+   "t": 13.98
+  },
+  {
+   "type": "logs",
+   "content": "added_source_url",
+   "output": "\u2705 Added source url to research: https://fxopen.com/blog/en/analytical-nvidia-stock-price-targets\n",
+   "metadata": "https://fxopen.com/blog/en/analytical-nvidia-stock-price-targets",
+   "t": 13.98
+  },
+  {
+   "type": "logs",
+   "content": "added_source_url",
+   "output": "\u2705 Added source url to research: https://www.youtube.com/watch?v=JgknfXGGtyQ\n",
+   "metadata": "https://www.youtube.com/watch?v=JgknfXGGtyQ",
+   "t": 13.98
+  },
+  {
+   "type": "logs",
+   "content": "added_source_url",
+   "output": "\u2705 Added source url to research: https://finance.yahoo.com/sectors/technology/article/why-nvidia-stock-looks-cheap-ahead-of-its-high-stakes-earnings-report-this-month-114822826.html\n",
+   "metadata": "https://finance.yahoo.com/sectors/technology/article/why-nvidia-stock-looks-cheap-ahead-of-its-high-stakes-earnings-report-this-month-114822826.html",
+   "t": 13.98
+  },
+  {
+   "type": "logs",
+   "content": "researching",
+   "output": "\ud83e\udd14 Researching for relevant information across multiple sources...\n",
+   "metadata": null,
+   "t": 13.98
+  },
+  {
+   "type": "logs",
+   "content": "scraping_urls",
+   "output": "\ud83c\udf10 Scraping content from 4 URLs...",
+   "metadata": null,
+   "t": 13.98
+  },
+  {
+   "type": "logs",
+   "content": "added_source_url",
+   "output": "\u2705 Added source url to research: https://finance.yahoo.com/news/case-nvidia-stock-hitting-275-215749485.html\n",
+   "metadata": "https://finance.yahoo.com/news/case-nvidia-stock-hitting-275-215749485.html",
+   "t": 13.98
+  },
+  {
+   "type": "logs",
+   "content": "added_source_url",
+   "output": "\u2705 Added source url to research: https://www.tikr.com/blog/nvidia-stock-forecast-119-upside-as-ai-chip-demand-stays-strong\n",
+   "metadata": "https://www.tikr.com/blog/nvidia-stock-forecast-119-upside-as-ai-chip-demand-stays-strong",
+   "t": 13.98
+  },
+  {
+   "type": "logs",
+   "content": "researching",
+   "output": "\ud83e\udd14 Researching for relevant information across multiple sources...\n",
+   "metadata": null,
+   "t": 13.98
+  },
+  {
+   "type": "logs",
+   "content": "scraping_urls",
+   "output": "\ud83c\udf10 Scraping content from 2 URLs...",
+   "metadata": null,
+   "t": 13.98
+  },
+  {
+   "type": "logs",
+   "content": "scraping_content",
+   "output": "\ud83d\udcc4 Scraped 4 pages of content",
+   "metadata": null,
+   "t": 17.25
+  },
+  {
+   "type": "logs",
+   "content": "scraping_images",
+   "output": "\ud83d\uddbc\ufe0f Selected 4 new images from 14 total images",
+   "metadata": [
+    "https://blog.kakaocdn.net/dna/kSpTw/dJMcaikgKP2/AAAAAAAAAAAAAAAAAAAAAI_Y1UIi6pJjS1_gNF77hlRoSfAHZN1hEnkYmQc70SU-/img.png?credential=yqXZFxpELC7KVnFOS48ylbz2pIh7yKj8&expires=1796050799&allow_ip=&allow_referer=&signature=gJdBF5KN%2BT5m%2FOl1WztffdjqTvQ%3D",
+    "https://qz.com/cdn-cgi/image/width=1920,quality=85,format=auto/https://assets.qz.com/media/IMG_6589-1920x1440.jpg",
+    "https://iprsoftwaremedia.com/219/files/20224/6296531eb3aed3741918b6b5_DH1L4415-HDR-20220527-r5/DH1L4415-HDR-20220527-r5_mid.jpg?v=dba29dde-5a9b-4ac8-bf58-a0b78da89547",
+    "https://ml.globenewswire.com/media/N2FkMmZlZDItZDU2Zi00NThlLTk5YTctMWFiZjZiM2NjYzQ2LTEwMTg0ODUtMjAyNi0wMi0yNS1lbg==/tiny/NVIDIA-CORPORATION.png"
+   ],
+   "t": 17.25
+  },
+  {
+   "type": "logs",
+   "content": "scraping_complete",
+   "output": "\ud83c\udf10 Scraping complete",
+   "metadata": null,
+   "t": 17.25
+  },
+  {
+   "type": "logs",
+   "content": "fetching_query_content",
+   "output": "\ud83d\udcda Getting relevant content based on query: Why is Nvidia stock rising in 2026 after strong earnings and revenue guidance...",
+   "metadata": null,
+   "t": 17.25
+  },
+  {
+   "type": "logs",
+   "content": "context_combined",
+   "output": "\ud83d\udcda Combined research context: 0 MCP sources, web content",
+   "metadata": null,
+   "t": 17.26
+  },
+  {
+   "type": "logs",
+   "content": "scraping_content",
+   "output": "\ud83d\udcc4 Scraped 2 pages of content",
+   "metadata": null,
+   "t": 17.93
+  },
+  {
+   "type": "logs",
+   "content": "scraping_images",
+   "output": "\ud83d\uddbc\ufe0f Selected 4 new images from 10 total images",
+   "metadata": [
+    "https://res.cloudinary.com/tikr/images/w_2560,h_1706,c_scale/f_webp,q_auto/v1777082696/images/NVIDIA-Revenues-and-Operating-Margins_10314264f28/NVIDIA-Revenues-and-Operating-Margins_10314264f28.webp?_i=AA",
+    "https://res.cloudinary.com/tikr/images/w_922,h_1024,c_scale/f_webp,q_auto/v1777082165/images/NVIDIA-Guided-Valuation/NVIDIA-Guided-Valuation.webp?_i=AA",
+    "https://res.cloudinary.com/tikr/images/f_auto,q_auto,w_25,h_25/images/Rexie-Headshot/Rexie-Headshot",
+    "https://res.cloudinary.com/tikr/images/f_auto,q_auto,w_1280,h_720/images/NVIDIA-stock_10314133591/NVIDIA-stock_10314133591"
+   ],
+   "t": 17.93
+  },
+  {
+   "type": "logs",
+   "content": "scraping_complete",
+   "output": "\ud83c\udf10 Scraping complete",
+   "metadata": null,
+   "t": 17.93
+  },
+  {
+   "type": "logs",
+   "content": "fetching_query_content",
+   "output": "\ud83d\udcda Getting relevant content based on query: What is driving Nvidia stock up in 2026 AI chip demand data center GPU sales and analyst price targets...",
+   "metadata": null,
+   "t": 17.93
+  },
+  {
+   "type": "logs",
+   "content": "context_combined",
+   "output": "\ud83d\udcda Combined research context: 0 MCP sources, web content",
+   "metadata": null,
+   "t": 17.94
+  },
+  {
+   "type": "logs",
+   "content": "scraping_content",
+   "output": "\ud83d\udcc4 Scraped 4 pages of content",
+   "metadata": null,
+   "t": 18.08
+  },
+  {
+   "type": "logs",
+   "content": "scraping_images",
+   "output": "\ud83d\uddbc\ufe0f Selected 4 new images from 9 total images",
+   "metadata": [
+    "https://fxopen.com/blog/en/content/images/2026/02/45.png",
+    "https://campaigns.zoho.eu/images/refresh_icon.png",
+    "https://fxop-zcmp.maillist-manage.eu/images/spacer.gif",
+    "https://fxop-zcmp.maillist-manage.eu/images/videoclose.png"
+   ],
+   "t": 18.08
+  },
+  {
+   "type": "logs",
+   "content": "scraping_complete",
+   "output": "\ud83c\udf10 Scraping complete",
+   "metadata": null,
+   "t": 18.08
+  },
+  {
+   "type": "logs",
+   "content": "fetching_query_content",
+   "output": "\ud83d\udcda Getting relevant content based on query: Nvidia stock 2026 reasons for gains including margins valuation and Blackwell AI server demand...",
+   "metadata": null,
+   "t": 18.09
+  },
+  {
+   "type": "logs",
+   "content": "context_combined",
+   "output": "\ud83d\udcda Combined research context: 0 MCP sources, web content",
+   "metadata": null,
+   "t": 18.09
+  },
+  {
+   "type": "logs",
+   "content": "research_step_finalized",
+   "output": "Finalized research step.\n\ud83d\udcb8 Total Research Costs: $0.009004999999999999",
+   "metadata": null,
+   "t": 18.09
+  },
+  {
+   "type": "images",
+   "content": "selected_images",
+   "output": "[\"https://res.cloudinary.com/tikr/images/w_4966,h_4046,c_scale/f_webp,q_auto/v1790410811/images/NVDA_valuation_model-8/NVDA_valuation_model-8.png?_i=AA\", \"https://res.cloudinary.com/tikr/images/w_1122,h_742,c_scale/f_webp,q_auto/v1790410330/images/image-882_133603b7b54/image-882_133603b7b54.png?_i=AA\", \"https://static-redesign.cnbcfm.com/dist/93743f20be95b721880f.svg\", \"https://static-redesign.cnbcfm.com/dist/69ae09b80acd376e9c97.svg\", \"https://blog.kakaocdn.net/dna/kSpTw/dJMcaikgKP2/AAAAAAAAAAAAAAAAAAAAAI_Y1UIi6pJjS1_gNF77hlRoSfAHZN1hEnkYmQc70SU-/img.png?credential=yqXZFxpELC7KVnFOS48ylbz2pIh7yKj8&expires=1796050799&allow_ip=&allow_referer=&signature=gJdBF5KN%2BT5m%2FOl1WztffdjqTvQ%3D\", \"https://qz.com/cdn-cgi/image/width=1920,quality=85,format=auto/https://assets.qz.com/media/IMG_6589-1920x1440.jpg\", \"https://iprsoftwaremedia.com/219/files/20224/6296531eb3aed3741918b6b5_DH1L4415-HDR-20220527-r5/DH1L4415-HDR-20220527-r5_mid.jpg?v=dba29dde-5a9b-4ac8-bf58-a0b78da89547\", \"https://ml.globenewswire.com/media/N2FkMmZlZDItZDU2Zi00NThlLTk5YTctMWFiZjZiM2NjYzQ2LTEwMTg0ODUtMjAyNi0wMi0yNS1lbg==/tiny/NVIDIA-CORPORATION.png\", \"https://res.cloudinary.com/tikr/images/w_2560,h_1706,c_scale/f_webp,q_auto/v1777082696/images/NVIDIA-Revenues-and-Operating-Margins_10314264f28/NVIDIA-Revenues-and-Operating-Margins_10314264f28.webp?_i=AA\", \"https://res.cloudinary.com/tikr/images/w_922,h_1024,c_scale/f_webp,q_auto/v1777082165/images/NVIDIA-Guided-Valuation/NVIDIA-Guided-Valuation.webp?_i=AA\"]",
+   "metadata": [
+    "https://res.cloudinary.com/tikr/images/w_4966,h_4046,c_scale/f_webp,q_auto/v1790410811/images/NVDA_valuation_model-8/NVDA_valuation_model-8.png?_i=AA",
+    "https://res.cloudinary.com/tikr/images/w_1122,h_742,c_scale/f_webp,q_auto/v1790410330/images/image-882_133603b7b54/image-882_133603b7b54.png?_i=AA",
+    "https://static-redesign.cnbcfm.com/dist/93743f20be95b721880f.svg",
+    "https://static-redesign.cnbcfm.com/dist/69ae09b80acd376e9c97.svg",
+    "https://blog.kakaocdn.net/dna/kSpTw/dJMcaikgKP2/AAAAAAAAAAAAAAAAAAAAAI_Y1UIi6pJjS1_gNF77hlRoSfAHZN1hEnkYmQc70SU-/img.png?credential=yqXZFxpELC7KVnFOS48ylbz2pIh7yKj8&expires=1796050799&allow_ip=&allow_referer=&signature=gJdBF5KN%2BT5m%2FOl1WztffdjqTvQ%3D",
+    "https://qz.com/cdn-cgi/image/width=1920,quality=85,format=auto/https://assets.qz.com/media/IMG_6589-1920x1440.jpg",
+    "https://iprsoftwaremedia.com/219/files/20224/6296531eb3aed3741918b6b5_DH1L4415-HDR-20220527-r5/DH1L4415-HDR-20220527-r5_mid.jpg?v=dba29dde-5a9b-4ac8-bf58-a0b78da89547",
+    "https://ml.globenewswire.com/media/N2FkMmZlZDItZDU2Zi00NThlLTk5YTctMWFiZjZiM2NjYzQ2LTEwMTg0ODUtMjAyNi0wMi0yNS1lbg==/tiny/NVIDIA-CORPORATION.png",
+    "https://res.cloudinary.com/tikr/images/w_2560,h_1706,c_scale/f_webp,q_auto/v1777082696/images/NVIDIA-Revenues-and-Operating-Margins_10314264f28/NVIDIA-Revenues-and-Operating-Margins_10314264f28.webp?_i=AA",
+    "https://res.cloudinary.com/tikr/images/w_922,h_1024,c_scale/f_webp,q_auto/v1777082165/images/NVIDIA-Guided-Valuation/NVIDIA-Guided-Valuation.webp?_i=AA"
+   ],
+   "t": 18.09
+  },
+  {
+   "type": "logs",
+   "content": "writing_report",
+   "output": "\u270d\ufe0f Writing report for 'Why is Nvidia stock going up in 2026?'...",
+   "metadata": null,
+   "t": 18.09
+  },
+  {
+   "type": "report",
+   "output": "# Why Nvidia Stock Is Going Up in 2026\n\n",
+   "t": 50.83
+  },
+  {
+   "type": "report",
+   "output": "## Executive Summary\n\n",
+   "t": 50.84
+  },
+  {
+   "type": "report",
+   "output": "Nvidia\u2019s stock is going up in 2026 primarily because the company keeps delivering the one thing the market cares most about: **proof that AI infrastructure demand is still accelerating rather than fading**. The most important evidence is operational, not narrative. Nvidia reported **Q2 fiscal 2027 revenue of $96.2 billion, up 106% year over year**, with **Data Center revenue of $89.0 billion, up 117%**, while also guiding for **Q3 revenue of $108 billion, plus or minus 2%**. Those numbers strongly suggest that hyperscalers, model developers, AI cloud providers, and sovereign customers are still spending aggressively on Nvidia systems despite widespread fears of an AI spending slowdown ([Heesoon, 2026](https://heesoontusa.tistory.com/entry/Nvidia-Earnings-2026-Record-Revenue-but-One-Number-Worries-Me)).\n\n",
+   "t": 52.83
+  },
+  {
+   "type": "report",
+   "output": "My view is clear: **Nvidia\u2019s 2026 rally is fundamentally justified**, even if it is also being amplified by bullish sentiment and valuation re-rating. The stock is not rising merely because investors are excited about AI in the abstract. It is rising because Nvidia continues to convert that theme into **extraordinary revenue growth, sustained margins, and repeated evidence that its competitive position in AI compute remains dominant** ([Heesoon, 2026](https://heesoontusa.tistory.com/entry/Nvidia-Earnings-2026-Record-Revenue-but-One-Number-Worries-Me); [Diaz, 2026](https://www.tikr.com/blog/nvidia-stock-forecast-119-upside-as-ai-chip-demand-stays-strong)).\n\n",
+   "t": 54.37
+  },
+  {
+   "type": "report",
+   "output": "That said, the rally is not risk-free. China restrictions, hyperscaler custom chips, customer concentration, margin pressure, and weaker cash conversion all remain meaningful risks. But as of late 2026, the market is rewarding Nvidia because the **bull case is still being confirmed more often than challenged** ([FXOpen Market Pulse, n.d.](https://fxopen.com/blog/en/analytical-nvidia-stock-price-targets); [Yahoo Finance, 2026](https://finance.yahoo.com/sectors/technology/article/why-nvidia-stock-looks-cheap-ahead-of-its-high-stakes-earnings-report-this-month-114822826.html)).\n\n",
+   "t": 55.59
+  },
+  {
+   "type": "report",
+   "output": "## The Core Reason: Earnings Keep Proving AI Demand Is Real\n\n",
+   "t": 55.8
+  },
+  {
+   "type": "report",
+   "output": "The single biggest reason Nvidia stock is going up in 2026 is that its financial results continue to validate the AI buildout story. Investors were worried that AI spending might be peaking, that cloud customers might pause purchases, or that Nvidia\u2019s growth might decelerate faster than expected. The company\u2019s reported results have repeatedly pushed back against those concerns ([Heesoon, 2026](https://heesoontusa.tistory.com/entry/Nvidia-Earnings-2026-Record-Revenue-but-One-Number-Worries-Me); [Diaz, 2026](https://www.tikr.com/blog/nvidia-stock-forecast-119-upside-as-ai-chip-demand-stays-strong)).\n\n",
+   "t": 57.15
+  },
+  {
+   "type": "report",
+   "output": "### Key Recent Financial Evidence\n\n",
+   "t": 57.17
+  },
+  {
+   "type": "report",
+   "output": "| Metric | Reported Figure | Why It Matters | Source |\n",
+   "t": 57.3
+  },
+  {
+   "type": "report",
+   "output": "|---|---:|---|---|\n",
+   "t": 57.4
+  },
+  {
+   "type": "report",
+   "output": "| Q2 FY2027 revenue | $96.2 billion | Confirms massive top-line expansion rather than a demand slowdown | ([Heesoon, 2026](https://heesoontusa.tistory.com/entry/Nvidia-Earnings-2026-Record-Revenue-but-One-Number-Worries-Me)) |\n",
+   "t": 57.97
+  },
+  {
+   "type": "report",
+   "output": "| Q2 FY2027 revenue growth | +106% YoY | Growth above 100% is rare at Nvidia\u2019s scale and supports the bullish thesis | ([Heesoon, 2026](https://heesoontusa.tistory.com/entry/Nvidia-Earnings-2026-Record-Revenue-but-One-Number-Worries-Me)) |\n",
+   "t": 58.73
+  },
+  {
+   "type": "report",
+   "output": "| Q2 FY2027 Data Center revenue | $89.0 billion | Shows AI/data-center demand remains the main growth engine | ([Heesoon, 2026](https://heesoontusa.tistory.com/entry/Nvidia-Earnings-2026-Record-Revenue-but-One-Number-Worries-Me)) |\n",
+   "t": 59.23
+  },
+  {
+   "type": "report",
+   "output": "| Q2 FY2027 Data Center growth | +117% YoY | Indicates acceleration in the segment that drives valuation | ([Heesoon, 2026](https://heesoontusa.tistory.com/entry/Nvidia-Earnings-2026-Record-Revenue-but-One-Number-Worries-Me)) |\n",
+   "t": 59.72
+  },
+  {
+   "type": "report",
+   "output": "| Adjusted EPS | $2.22 | Confirms that growth is translating into earnings, not just shipments | ([Heesoon, 2026](https://heesoontusa.tistory.com/entry/Nvidia-Earnings-2026-Record-Revenue-but-One-Number-Worries-Me)) |\n",
+   "t": 60.2
+  },
+  {
+   "type": "report",
+   "output": "| Gross margin | 75% | Shows Nvidia still has exceptional pricing power and product mix | ([Heesoon, 2026](https://heesoontusa.tistory.com/entry/Nvidia-Earnings-2026-Record-Revenue-but-One-Number-Worries-Me)) |\n",
+   "t": 60.62
+  },
+  {
+   "type": "report",
+   "output": "| Q3 revenue guidance | $108 billion \u00b12% | Tells investors management sees continued momentum, not an immediate pause | ([Heesoon, 2026](https://heesoontusa.tistory.com/entry/Nvidia-Earnings-2026-Record-Revenue-but-One-Number-Worries-Me)) |\n\n",
+   "t": 61.09
+  },
+  {
+   "type": "report",
+   "output": "Those figures matter because Nvidia\u2019s share price in 2026 is being driven mainly by **whether the company can keep extending the AI capex cycle**, not by traditional semiconductor cyclicality alone. When management delivers another beat and then guides even higher, investors read that as evidence that AI infrastructure demand remains structurally underbuilt ([Heesoon, 2026](https://heesoontusa.tistory.com/entry/Nvidia-Earnings-2026-Record-Revenue-but-One-Number-Worries-Me)).\n\n",
+   "t": 62.33
+  },
+  {
+   "type": "report",
+   "output": "## Data Center Demand Is Still Overwhelming Every Other Narrative\n\n",
+   "t": 62.5
+  },
+  {
+   "type": "report",
+   "output": "The next reason Nvidia stock is rising is that its **Data Center business continues to dominate results**, and the market sees this as the truest measure of AI demand. Nvidia is no longer being valued mainly as a gaming-chip company. It is being valued as the leading supplier of compute, networking, and systems for AI training and inference at global scale ([Jayaswal, 2025](https://finance.yahoo.com/news/case-nvidia-stock-hitting-275-215749485.html); [FXOpen Market Pulse, n.d.](https://fxopen.com/blog/en/analytical-nvidia-stock-price-targets)).\n\n",
+   "t": 63.97
+  },
+  {
+   "type": "report",
+   "output": "Earlier in fiscal 2027, Nvidia\u2019s revenue reached **$81.6 billion in Q1, up 85% year over year**, and guidance for the next quarter pointed to **$91 billion**. Those numbers reinforced the view that hyperscaler spending had not rolled over after a strong fiscal 2026 ([FXOpen Market Pulse, n.d.](https://fxopen.com/blog/en/analytical-nvidia-stock-price-targets)). Before that, Nvidia reported **Q4 FY2026 revenue of $68.1 billion, up 73% year over year**, with **Data Center revenue of $62.3 billion, up 75%**, again showing that the market\u2019s main growth engine remained intact ([Diaz, 2026](https://www.tikr.com/blog/nvidia-stock-forecast-119-upside-as-ai-chip-demand-stays-strong)).\n\n",
+   "t": 65.25
+  },
+  {
+   "type": "report",
+   "output": "The significance is straightforward: the market keeps hearing fears about \u201cAI exhaustion,\u201d but the actual numbers are still showing **large cloud customers and enterprise AI buyers are expanding, not retrenching**. That is the most direct explanation for why the stock has gone higher in 2026 ([Yahoo Finance, 2026](https://finance.yahoo.com/sectors/technology/article/why-nvidia-stock-looks-cheap-ahead-of-its-high-stakes-earnings-report-this-month-114822826.html); [Heesoon, 2026](https://heesoontusa.tistory.com/entry/Nvidia-Earnings-2026-Record-Revenue-but-One-Number-Worries-Me)).\n\n",
+   "t": 66.66
+  },
+  {
+   "type": "report",
+   "output": "## 2026 Is Being Viewed as an AI Infrastructure Inflection Year\n\n",
+   "t": 66.75
+  },
+  {
+   "type": "report",
+   "output": "Another major driver is that investors increasingly see 2026 as an **inflection point for the AI buildout**, not the end of it. Wedbush\u2019s Dan Ives argued that 2026 represents a turning point in the broader AI expansion and sees Nvidia as a primary beneficiary, helped by still-underappreciated demand drivers and possible upside from improved China access. In that framework, Nvidia is not just a good company in a good quarter; it is the central supplier to what some analysts describe as a \u201cfourth industrial revolution\u201d in computing ([Jayaswal, 2025](https://finance.yahoo.com/news/case-nvidia-stock-hitting-275-215749485.html)).\n\n",
+   "t": 68.29
+  },
+  {
+   "type": "report",
+   "output": "This matters because stock prices reflect future expectations as much as current results. If investors believe the AI capex cycle is entering its next leg rather than ending, they are willing to bid Nvidia higher even at a very large market capitalization. The narrative is being reinforced by expectations that **Microsoft, Amazon, Meta, and Alphabet** will continue defending or raising AI infrastructure spending, since these companies are among Nvidia\u2019s largest end-demand drivers ([Diaz, 2026](https://www.tikr.com/blog/nvidia-stock-forecast-119-upside-as-ai-chip-demand-stays-strong)).\n\n",
+   "t": 69.75
+  },
+  {
+   "type": "report",
+   "output": "In short, Nvidia stock is rising not only because it is reporting strong numbers, but because those numbers are being interpreted as evidence that the **AI investment wave still has runway** ([Diaz, 2026](https://www.tikr.com/blog/nvidia-stock-forecast-119-upside-as-ai-chip-demand-stays-strong); [Jayaswal, 2025](https://finance.yahoo.com/news/case-nvidia-stock-hitting-275-215749485.html)).\n\n",
+   "t": 70.44
+  },
+  {
+   "type": "report",
+   "output": "## Nvidia\u2019s Competitive Position Still Looks Strong\n\n",
+   "t": 70.57
+  },
+  {
+   "type": "report",
+   "output": "Investors are also rewarding Nvidia because its competitive position in AI remains unusually strong. Its product leadership is not limited to GPUs. The company is benefiting from demand for **networking systems such as NVLink, InfiniBand, and Spectrum-X Ethernet**, which broadens the revenue base around AI clusters. One analyst summary noted that Nvidia\u2019s networking business had surged as AI infrastructure scaled, strengthening the view that Nvidia captures value beyond the accelerator itself ([Jayaswal, 2025](https://finance.yahoo.com/news/case-nvidia-stock-hitting-275-215749485.html)).\n\n",
+   "t": 72.13
+  },
+  {
+   "type": "report",
+   "output": "In addition, market commentary has emphasized that demand is broadening from training to **inference**, with Nvidia ramping **Blackwell systems** across hyperscalers, model makers, AI cloud providers, and sovereign customers. That matters because inference is potentially larger and more durable over time than the first training wave alone ([FXOpen Market Pulse, n.d.](https://fxopen.com/blog/en/analytical-nvidia-stock-price-targets)).\n\n",
+   "t": 73.19
+  },
+  {
+   "type": "report",
+   "output": "Nvidia\u2019s **75% gross margin** is especially important here. Margins at that level suggest that, despite competition from AMD, Intel, and custom silicon, Nvidia still has meaningful pricing power and a differentiated value proposition. If customers thought Nvidia\u2019s products were becoming commoditized, margins would likely show more pressure than they currently do ([Heesoon, 2026](https://heesoontusa.tistory.com/entry/Nvidia-Earnings-2026-Record-Revenue-but-One-Number-Worries-Me); [Diaz, 2026](https://www.tikr.com/blog/nvidia-stock-forecast-119-upside-as-ai-chip-demand-stays-strong)).\n\n",
+   "t": 74.56
+  },
+  {
+   "type": "report",
+   "output": "## The Stock Also Looks Cheaper Than It Used To\n\n",
+   "t": 74.71
+  },
+  {
+   "type": "report",
+   "output": "A less obvious but important reason for Nvidia\u2019s 2026 rise is that **valuation became easier to defend**. According to Goldman Sachs commentary cited by Yahoo Finance, Nvidia was trading roughly **10 turns below its three-year median price-to-earnings ratio of 32x**, and at a steeper discount to peers than usual. In other words, even though Nvidia remained a premium stock, its multiple had already compressed enough that strong execution could trigger renewed buying ([Yahoo Finance, 2026](https://finance.yahoo.com/sectors/technology/article/why-nvidia-stock-looks-cheap-ahead-of-its-high-stakes-earnings-report-this-month-114822826.html)).\n\n",
+   "t": 76.09
+  },
+  {
+   "type": "report",
+   "output": "This is crucial for understanding why strong earnings produce strong stock reactions. If the company had been trading at an unchanged euphoric multiple, good results might not have been enough. But in 2026, some skepticism had already entered the stock due to AI-bubble fears, customer insourcing concerns, and broader semiconductor volatility. When Nvidia kept beating expectations anyway, investors had room to re-rate the shares higher ([Yahoo Finance, 2026](https://finance.yahoo.com/sectors/technology/article/why-nvidia-stock-looks-cheap-ahead-of-its-high-stakes-earnings-report-this-month-114822826.html); [Heesoon, 2026](https://heesoontusa.tistory.com/entry/Nvidia-Earnings-2026-Record-Revenue-but-One-Number-Worries-Me)).\n\n",
+   "t": 77.79
+  },
+  {
+   "type": "report",
+   "output": "TIKR\u2019s valuation framework made a similar point from another angle: even assuming revenue growth slows to a **38.5% CAGR**, operating margins remain around **63.6%**, and the exit multiple falls to **25x**, the model still estimated a target price of **$456**, or nearly **120% upside** from a $208 starting point. That model is not a fact, but it helps explain why investors still see substantial upside if Nvidia can simply maintain leadership while growing more slowly than before ([Diaz, 2026](https://www.tikr.com/blog/nvidia-stock-forecast-119-upside-as-ai-chip-demand-stays-strong)).\n\n",
+   "t": 79.2
+  },
+  {
+   "type": "report",
+   "output": "## Analyst Sentiment Is Reinforcing the Uptrend\n\n",
+   "t": 79.39
+  },
+  {
+   "type": "report",
+   "output": "Bullish analyst sentiment is not the root cause of Nvidia\u2019s gains, but it is clearly helping. One report noted that **44 of 48 analysts** rated Nvidia a **Strong Buy**, with an average target of **$255.56** and a high target of **$352** at that time. Another source cited **61 analysts** with an average target of **$302.83**, including **58 Buy or Strong Buy ratings**, and target prices ranging from **$180 to $500** ([Jayaswal, 2025](https://finance.yahoo.com/news/case-nvidia-stock-hitting-275-215749485.html); [FXOpen Market Pulse, n.d.](https://fxopen.com/blog/en/analytical-nvidia-stock-price-targets)).\n\n",
+   "t": 80.79
+  },
+  {
+   "type": "report",
+   "output": "These target ranges show that the Street broadly believes Nvidia\u2019s earnings power can keep compounding, even if there is disagreement on how much upside remains. Analyst support can reinforce momentum because it shapes institutional positioning, earnings expectations, and post-results price reactions ([FXOpen Market Pulse, n.d.](https://fxopen.com/blog/en/analytical-nvidia-stock-price-targets)).\n\n",
+   "t": 81.87
+  },
+  {
+   "type": "report",
+   "output": "## Short-Term Market Catalysts Also Helped\n\n",
+   "t": 81.94
+  },
+  {
+   "type": "report",
+   "output": "Some of Nvidia\u2019s 2026 gains were also driven by shorter-term market catalysts. TIKR noted that Nvidia stock rose alongside the broader chip sector after **Intel issued a stronger-than-expected forecast**, which investors interpreted as another sign that AI infrastructure demand remained robust. Sector-wide rallies matter because Nvidia often trades not only on its own fundamentals, but also as the flagship name in AI semiconductors ([Diaz, 2026](https://www.tikr.com/blog/nvidia-stock-forecast-119-upside-as-ai-chip-demand-stays-strong)).\n\n",
+   "t": 83.27
+  },
+  {
+   "type": "report",
+   "output": "Similarly, before one earnings report, a seven-day decline in Nvidia shares was seen by some analysts as more of an **expectations reset** than a collapse in AI demand. The subsequent strong results helped validate that interpretation and supported a post-earnings rebound ([Heesoon, 2026](https://heesoontusa.tistory.com/entry/Nvidia-Earnings-2026-Record-Revenue-but-One-Number-Worries-Me)).\n\n",
+   "t": 84.03
+  },
+  {
+   "type": "report",
+   "output": "## What Could Still Derail the Rally\n\n",
+   "t": 84.09
+  },
+  {
+   "type": "report",
+   "output": "Even though Nvidia stock is going up in 2026 for good reasons, investors should not confuse a justified rally with a risk-free one.\n\n",
+   "t": 84.47
+  },
+  {
+   "type": "report",
+   "output": "### Main Risks\n\n",
+   "t": 84.48
+  },
+  {
+   "type": "report",
+   "output": "| Risk | Why It Matters | Source |\n",
+   "t": 84.56
+  },
+  {
+   "type": "report",
+   "output": "|---|---|---|\n",
+   "t": 84.64
+  },
+  {
+   "type": "report",
+   "output": "| China export restrictions | Nvidia\u2019s own assumptions include no data center compute revenue from China, limiting a large market | ([FXOpen Market Pulse, n.d.](https://fxopen.com/blog/en/analytical-nvidia-stock-price-targets)) |\n",
+   "t": 85.13
+  },
+  {
+   "type": "report",
+   "output": "| China replacement efforts | Reports of AI models tailored for Huawei chips highlight attempts to reduce reliance on Nvidia | ([Diaz, 2026](https://www.tikr.com/blog/nvidia-stock-forecast-119-upside-as-ai-chip-demand-stays-strong)) |\n",
+   "t": 85.63
+  },
+  {
+   "type": "report",
+   "output": "| Custom AI chips | Amazon, Google, and Microsoft are building internal alternatives, potentially eroding future share | ([Yahoo Finance, 2026](https://finance.yahoo.com/sectors/technology/article/why-nvidia-stock-looks-cheap-ahead-of-its-high-stakes-earnings-report-this-month-114822826.html); [FXOpen Market Pulse, n.d.](https://fxopen.com/blog/en/analytical-nvidia-stock-price-targets)) |\n",
+   "t": 86.22
+  },
+  {
+   "type": "report",
+   "output": "| Customer concentration | Three direct customers accounted for 21%, 17%, and 16% of Q1 FY2027 revenue | ([FXOpen Market Pulse, n.d.](https://fxopen.com/blog/en/analytical-nvidia-stock-price-targets)) |\n",
+   "t": 86.58
+  },
+  {
+   "type": "report",
+   "output": "| Cash conversion / receivables | Nvidia is taking longer to collect some revenue, which could weaken the quality of growth | ([Heesoon, 2026](https://heesoontusa.tistory.com/entry/Nvidia-Earnings-2026-Record-Revenue-but-One-Number-Worries-Me)) |\n",
+   "t": 87.01
+  },
+  {
+   "type": "report",
+   "output": "| Margin sensitivity | Rising input costs and competitive dynamics could pressure gross margins over time | ([Yahoo Finance, 2026](https://finance.yahoo.com/sectors/technology/article/why-nvidia-stock-looks-cheap-ahead-of-its-high-stakes-earnings-report-this-month-114822826.html)) |\n\n",
+   "t": 87.46
+  },
+  {
+   "type": "report",
+   "output": "The most important caution, in my judgment, is **cash conversion**. Revenue growth above 100% is impressive, but if receivables keep rising faster than cash collection, the market may begin to treat some of that growth more skeptically. That is the cleanest fundamental challenge to the current rally because it tests not demand, but the quality and durability of the demand ([Heesoon, 2026](https://heesoontusa.tistory.com/entry/Nvidia-Earnings-2026-Record-Revenue-but-One-Number-Worries-Me)).\n\n",
+   "t": 88.88
+  },
+  {
+   "type": "report",
+   "output": "## Final Assessment\n\n",
+   "t": 88.96
+  },
+  {
+   "type": "report",
+   "output": "Nvidia stock is going up in 2026 for a simple but powerful reason: **the company continues to produce extraordinary evidence that the AI infrastructure cycle remains very strong, and investors are repricing the shares accordingly**. The rise is being driven by a combination of:\n\n",
+   "t": 89.63
+  },
+  {
+   "type": "report",
+   "output": "1. **Massive revenue and Data Center growth**;\n",
+   "t": 89.76
+  },
+  {
+   "type": "report",
+   "output": "2. **Strong guidance that argues against a near-term slowdown**;\n",
+   "t": 89.9
+  },
+  {
+   "type": "report",
+   "output": "3. **High margins that signal sustained pricing power**;\n",
+   "t": 90.06
+  },
+  {
+   "type": "report",
+   "output": "4. **A market belief that 2026 is an AI capex inflection year**;\n",
+   "t": 90.21
+  },
+  {
+   "type": "report",
+   "output": "5. **A valuation that had compressed enough to make strong results matter more**; and\n",
+   "t": 90.35
+  },
+  {
+   "type": "report",
+   "output": "6. **Broadly bullish analyst sentiment that reinforces institutional demand** ([Heesoon, 2026](https://heesoontusa.tistory.com/entry/Nvidia-Earnings-2026-Record-Revenue-but-One-Number-Worries-Me); [Diaz, 2026](https://www.tikr.com/blog/nvidia-stock-forecast-119-upside-as-ai-chip-demand-stays-strong); [Yahoo Finance, 2026](https://finance.yahoo.com/sectors/technology/article/why-nvidia-stock-looks-cheap-ahead-of-its-high-stakes-earnings-report-this-month-114822826.html); [FXOpen Market Pulse, n.d.](https://fxopen.com/blog/en/analytical-nvidia-stock-price-targets)).\n\n",
+   "t": 91.38
+  },
+  {
+   "type": "report",
+   "output": "My concrete opinion is that **Nvidia\u2019s 2026 advance is more fundamentally earned than speculative**, but the market is now pricing in continued near-flawless execution. If the company keeps converting AI demand into both revenue and cash, the rally can remain durable. If receivables, China exposure, or hyperscaler insourcing begin to materially weaken the model, then the stock\u2019s sensitivity to disappointment will rise quickly. For now, however, the primary reason the stock is going up is that **Nvidia is still winning the AI buildout in the numbers that matter most** ([Heesoon, 2026](https://heesoontusa.tistory.com/entry/Nvidia-Earnings-2026-Record-Revenue-but-One-Number-Worries-Me); [FXOpen Market Pulse, n.d.](https://fxopen.com/blog/en/analytical-nvidia-stock-price-targets)).\n\n",
+   "t": 93.31
+  },
+  {
+   "type": "report",
+   "output": "## References\n\n",
+   "t": 93.31
+  },
+  {
+   "type": "report",
+   "output": "Diaz, R. (2026, April 25). *NVIDIA stock forecast: 119% upside as AI chip demand stays strong*. TIKR. [https://www.tikr.com/blog/nvidia-stock-forecast-119-upside-as-ai-chip-demand-stays-strong](https://www.tikr.com/blog/nvidia-stock-forecast-119-upside-as-ai-chip-demand-stays-strong)\n\n",
+   "t": 93.88
+  },
+  {
+   "type": "report",
+   "output": "FXOpen Market Pulse. (n.d.). *Nvidia stock price targets for 2026-2030: What analysts think*. Market Pulse. [https://fxopen.com/blog/en/analytical-nvidia-stock-price-targets](https://fxopen.com/blog/en/analytical-nvidia-stock-price-targets)\n\n",
+   "t": 94.18
+  },
+  {
+   "type": "report",
+   "output": "Heesoon. (2026, August 27). *Nvidia earnings 2026: Record revenue, but one number worries me*. Tistory. [https://heesoontusa.tistory.com/entry/Nvidia-Earnings-2026-Record-Revenue-but-One-Number-Worries-Me](https://heesoontusa.tistory.com/entry/Nvidia-Earnings-2026-Record-Revenue-but-One-Number-Worries-Me)\n\n",
+   "t": 94.75
+  },
+  {
+   "type": "report",
+   "output": "Jayaswal, S. S. (2025, December 22). *The case for Nvidia stock hitting $275 in 2026*. Yahoo Finance. [https://finance.yahoo.com/news/case-nvidia-stock-hitting-275-215749485.html](https://finance.yahoo.com/news/case-nvidia-stock-hitting-275-215749485.html)\n\n",
+   "t": 95.18
+  },
+  {
+   "type": "report",
+   "output": "Yahoo Finance. (2026). *Why Nvidia stock looks cheap ahead of its high-stakes earnings report this month*. Yahoo Finance. [https://finance.yahoo.com/sectors/technology/article/why-nvidia-stock-looks-cheap-ahead-of-its-high-stakes-earnings-report-this-month-114822826.html](https://finance.yahoo.com/sectors/technology/article/why-nvidia-stock-looks-cheap-ahead-of-its-high-stakes-earnings-report-this-month-114822826.html)",
+   "t": 95.83
+  },
+  {
+   "type": "logs",
+   "content": "report_written",
+   "output": "\ud83d\udcdd Report written for 'Why is Nvidia stock going up in 2026?'",
+   "metadata": null,
+   "t": 95.83
+  },
+  {
+   "type": "path",
+   "output": {
+    "pdf": "",
+    "docx": "outputs/task_1794156477_0dff1fbb7d.docx",
+    "md": "outputs/task_1794156477_0dff1fbb7d.md",
+    "json": "outputs/task_1794156477_0dff1fbb7d.json"
+   },
+   "t": 98.51
+  }
+ ]
+}

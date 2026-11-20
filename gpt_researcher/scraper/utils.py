@@ -99,25 +99,30 @@ def extract_title(soup: BeautifulSoup) -> str:
     return title_tag.get_text(strip=True)
 
 def get_image_hash(image_url: str) -> str:
-    """Calculate a simple hash based on the image filename and essential query parameters"""
+    """Calculate a simple hash based on the image filename and essential query parameters.
+
+    Always returns a string. On error, returns an empty string rather than
+    None, so callers that use the result as a dict key or in string
+    concatenation do not crash with TypeError.
+    """
     try:
         parsed_url = urlparse(image_url)
-        
+
         # Extract the filename
         filename = parsed_url.path.split('/')[-1]
-        
+
         # Extract essential query parameters (e.g., 'url' for CDN-served images)
         query_params = parse_qs(parsed_url.query)
         essential_params = query_params.get('url', [])
-        
+
         # Combine filename and essential parameters
         image_identifier = filename + ''.join(essential_params)
-        
+
         # Calculate hash
         return hashlib.md5(image_identifier.encode()).hexdigest()
     except Exception as e:
         logging.error(f"Error calculating image hash for {image_url}: {e}")
-        return None
+        return ""
 
 
 def clean_soup(soup: BeautifulSoup) -> BeautifulSoup:

@@ -1,6 +1,6 @@
 <div align="center" id="top">
 
-<img src="https://github.com/assafelovic/gpt-researcher/assets/13554167/20af8286-b386-44a5-9a83-3be1365139c3" alt="Logo" width="80">
+<img src="https://raw.githubusercontent.com/assafelovic/gpt-researcher/main/docs/static/img/gptr-logo-tile.png" alt="GPT Researcher logo" width="80">
 
 ####
 
@@ -37,8 +37,11 @@ The agent produces detailed, factual, and unbiased research reports with citatio
 - Selective web sources can introduce bias into research tasks.
 
 ## Demo
-<a href="https://www.youtube.com/watch?v=f60rlc_QCxE" target="_blank" rel="noopener">
-  <img src="https://github.com/user-attachments/assets/ac2ec55f-b487-4b3f-ae6f-b8743ad296e4" alt="Demo video" width="800" target="_blank" />
+<a href="https://github.com/user-attachments/assets/4d3f26cf-8ccc-413a-b17c-80aa9e1b52d1">
+  <picture>
+    <source media="(prefers-reduced-motion: reduce)" srcset="https://github.com/user-attachments/assets/25d92184-c59e-4115-9961-759ada1ec952">
+    <img src="https://github.com/user-attachments/assets/3a56a008-fcbd-4373-9e40-8d6027120cfb" alt="GPT Researcher turning a question into a cited report" width="800">
+  </picture>
 </a>
 
 ## Install as Claude Skill

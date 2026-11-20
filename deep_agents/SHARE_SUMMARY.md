@@ -1,8 +1,8 @@
 # GPT Researcher x Deep Agents: 2x the verified evidence, same harness
 
 *A shareable summary of the new Deep Agents example and its benchmark results.
-Full details: [example](https://github.com/assafelovic/gpt-researcher/tree/master/deep_agents),
-[BENCHMARK.md](https://github.com/assafelovic/gpt-researcher/blob/master/deep_agents/BENCHMARK.md).*
+Full details: [example](https://github.com/assafelovic/gpt-researcher/tree/main/deep_agents),
+[BENCHMARK.md](https://github.com/assafelovic/gpt-researcher/blob/main/deep_agents/BENCHMARK.md).*
 
 ## What we built
 
@@ -76,5 +76,5 @@ is grounded in sources that were actually read.
 Everything ships in the repo: the agent builders, a generation script that
 emits DeepResearch Bench-format reports for both setups, and a small patch
 adding an OpenAI judge backend to the official scoring harness. See
-[BENCHMARK.md](https://github.com/assafelovic/gpt-researcher/blob/master/deep_agents/BENCHMARK.md)
+[BENCHMARK.md](https://github.com/assafelovic/gpt-researcher/blob/main/deep_agents/BENCHMARK.md)
 for the three commands.

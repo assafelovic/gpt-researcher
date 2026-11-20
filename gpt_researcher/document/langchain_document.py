@@ -13,12 +13,31 @@ class LangChainDocumentLoader:
         self.documents = documents
 
     async def load(self, metadata_source_index="title") -> List[Dict[str, str]]:
-        docs = []
+        # Mirror the sibling ``DocumentLoader.load()`` hardening:
+        # ``self.documents`` is user-supplied (LangChainDocuments report source),
+        # so a single malformed row — None, a dict from a JSON payload, or a
+        # document with ``metadata=None`` — must not abort the entire load and
+        # drop every other document already collected. Skip rows that aren't
+        # Document-shaped, default ``None`` / missing metadata to ``{}``, and
+        # drop rows without usable ``page_content`` so downstream string
+        # operations don't see ``None``.
+        docs: List[Dict[str, str]] = []
         for document in self.documents:
+            if not hasattr(document, "page_content"):
+                continue
+
+            meta = getattr(document, "metadata", None)
+            if not isinstance(meta, dict):
+                meta = {}
+
+            page_content = getattr(document, "page_content", None)
+            if not page_content:
+                continue
+
             docs.append(
                 {
-                    "raw_content": document.page_content,
-                    "url": document.metadata.get(metadata_source_index, ""),
+                    "raw_content": str(page_content),
+                    "url": meta.get(metadata_source_index, "") or "",
                 }
             )
         return docs

@@ -110,6 +110,11 @@ Headers Data: {headers}\n
             )
 
         research_layout_content = await self.write_sections(research_state)
+        if not isinstance(research_layout_content, dict):
+            raise RuntimeError(
+                "The writer model returned no introduction and conclusion. "
+                "Check the model in multi_agents/task.json and SMART_TOKEN_LIMIT."
+            )
 
         if research_state.get("task").get("verbose"):
             if self.websocket and self.stream_output:

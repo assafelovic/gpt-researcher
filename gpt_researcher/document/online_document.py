@@ -1,7 +1,9 @@
 import os
 import aiohttp
 import tempfile
+from urllib.parse import urlsplit
 
+from gpt_researcher.document.document import detect_utf8
 from gpt_researcher.utils.url_security import UnsafeURLError, validate_url
 from langchain_community.document_loaders import (
     PyMuPDFLoader,
@@ -25,9 +27,14 @@ class OnlineDocumentLoader:
             pages = await self._download_and_process(url)
             for page in pages:
                 if page.page_content:
+                    # Loaders occasionally omit metadata["source"] (custom loaders,
+                    # some HTML partitions). Prefer source, then fall back to path,
+                    # so the url stays a string the way DocumentLoader keeps it.
+                    meta = getattr(page, "metadata", None) or {}
+                    source = meta.get("source") or meta.get("file_path") or ""
                     docs.append({
                         "raw_content": page.page_content,
-                        "url": page.metadata.get("source")
+                        "url": source
                     })
 
         if not docs:
@@ -71,9 +78,10 @@ class OnlineDocumentLoader:
     async def _load_document(self, file_path: str, file_extension: str) -> list:
         ret_data = []
         try:
+            encoding = detect_utf8(file_path) if file_extension == "txt" else None
             loader_dict = {
                 "pdf": PyMuPDFLoader(file_path),
-                "txt": TextLoader(file_path),
+                "txt": TextLoader(file_path, encoding=encoding),
                 "doc": UnstructuredWordDocumentLoader(file_path),
                 "docx": UnstructuredWordDocumentLoader(file_path),
                 "pptx": UnstructuredPowerPointLoader(file_path),
@@ -97,8 +105,6 @@ class OnlineDocumentLoader:
 
     @staticmethod
     def _get_extension(url: str) -> str:
-        # Lower-case the extension so loader lookup (whose keys are lower-case,
-        # e.g. "pdf"/"docx") matches URLs that use upper-case extensions like
-        # "report.PDF" or "doc.DOCX". The leading "?" split drops query strings
-        # (signed CDN/S3 URLs) before extracting the suffix.
-        return os.path.splitext(url.split("?")[0])[1].lower()
+        # Only the URL path identifies the document type. Query strings and
+        # fragments (e.g. PDF page anchors) must not become part of the suffix.
+        return os.path.splitext(urlsplit(url).path)[1].lower()

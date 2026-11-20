@@ -29,7 +29,8 @@ from .retriever import SearchAPIRetriever
 
 logger = logging.getLogger(__name__)
 
-JEV_API_URL = "https://api.typesafe.ai/v1/systemone"
+TYPESAFE_BASE_URL = "https://api.typesafe.ai/v1"
+SYSTEMONE_PATH = "/systemone"
 #: USD per million input tokens; output tokens are free.
 JEV_INPUT_PRICE_PER_MTOK = 0.042
 
@@ -68,11 +69,16 @@ class JevClient:
     """Minimal async client for the System One endpoint."""
 
     def __init__(self, api_key: str | None = None, model: str | None = None,
-                 timeout: float = 30.0, max_retries: int = 3):
+                 timeout: float = 30.0, max_retries: int = 3,
+                 base_url: str | None = None):
         self.api_key = api_key or os.environ.get("TYPESAFE_API_KEY")
         if not self.api_key:
             raise JevError("TYPESAFE_API_KEY is not set")
         self.model = model or os.environ.get("JEV_MODEL", "jev-latest")
+        self.base_url = (
+            base_url or os.environ.get("TYPESAFE_BASE_URL") or TYPESAFE_BASE_URL
+        ).strip().rstrip("/")
+        self.api_url = f"{self.base_url}{SYSTEMONE_PATH}"
         self.timeout = timeout
         self.max_retries = max_retries
         self.input_tokens = 0
@@ -98,7 +104,7 @@ class JevClient:
         for attempt in range(self.max_retries + 1):
             async with _concurrency():
                 try:
-                    response = await client.post(JEV_API_URL, json=payload, headers=headers, timeout=self.timeout)
+                    response = await client.post(self.api_url, json=payload, headers=headers, timeout=self.timeout)
                 except httpx.HTTPError as exc:
                     error = exc
                 else:
@@ -110,7 +116,7 @@ class JevClient:
                             raise JevError(f"Unexpected Jev response: {response.text[:200]}") from exc
                         self.input_tokens += body.get("usage", {}).get("input_tokens", 0)
                         return score
-                    error = JevError(f"HTTP {response.status_code}: {response.text[:200]}")
+                    error = JevError(f"HTTP {response.status_code} from {self.api_url}: {response.text[:200]}")
                     # Only overload and rate limiting are worth retrying.
                     if response.status_code not in (429, 529):
                         raise error

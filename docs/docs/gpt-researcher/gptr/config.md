@@ -53,7 +53,7 @@ The config JSON should follow the format/keys in the default config. Below is a 
   "SIMILARITY_THRESHOLD": 0.42,
   "CONTEXT_FILTER": "auto",
   "FAST_LLM": "openai:gpt-5.4-mini",
-  "SMART_LLM": "openai:gpt-5.4",
+  "SMART_LLM": "openai:gpt-6-sol",
   "STRATEGIC_LLM": "openai:gpt-5.4",
   "LANGUAGE": "english",
   "CURATE_SOURCES": false,
@@ -86,7 +86,7 @@ Below is a list of current supported options:
 - **`SIMILARITY_THRESHOLD`**: Threshold value for similarity comparison when processing documents. Defaults to `0.42`.
 - **`CONTEXT_FILTER`**: How scraped content is filtered before it reaches the writer: `auto` (default; Jev when `TYPESAFE_API_KEY` is set, otherwise keyword ranking), `jev`, `keyword`, `embeddings` or `none`. No mode requires an embeddings provider except `embeddings`. See [Context Filter](./context-filter.md).
 - **`FAST_LLM`**: Model name for fast LLM operations such summaries. Defaults to `openai:gpt-5.4-mini`.
-- **`SMART_LLM`**: Model name for smart operations like generating research reports and reasoning. Defaults to `openai:gpt-5.4`.
+- **`SMART_LLM`**: Model name for smart operations like generating research reports and reasoning. Defaults to `openai:gpt-6-sol`.
 - **`STRATEGIC_LLM`**: Model name for strategic operations like generating research plans and strategies. Defaults to `openai:gpt-5.4`.
 - **`LANGUAGE`**: Language to be used for the final research report. Defaults to `english`.
 - **`CURATE_SOURCES`**: Whether to curate sources for research. This step adds an LLM run which may increase costs and total run time but improves quality of source selection. Defaults to `False`.
@@ -134,6 +134,45 @@ The hard upper bound is 200k (sanity guard against typos).
 - **`DEEP_RESEARCH_DEPTH`**: Controls the depth of deep research, defining how many sequential searches to perform. Defaults to `2`.
 - **`DEEP_RESEARCH_CONCURRENCY`**: Controls the concurrency level for deep research operations. Defaults to `4`.
 - **`REASONING_EFFORT`**: Controls the reasoning effort of strategic models. Default to `medium`.
+
+## LLM Timeouts
+
+`LLM_TIMEOUT` sets the maximum time in seconds that the common LLM provider
+wrapper waits for a response. It defaults to `300` and accepts finite,
+non-negative numbers. Set it in your environment or `.env` file:
+
+```bash
+LLM_TIMEOUT=600
+```
+
+For non-streaming calls, this limits the wait for `ainvoke` to return. For
+streaming calls, it limits the wait for the first chunk and each subsequent
+chunk, including metadata-only chunks. The timer restarts for every chunk,
+so a report can take longer than the timeout in total while the model keeps
+responding. Time spent sending output to a WebSocket client is not included.
+
+Increase the timeout for models with a long time to first token. Set
+`LLM_TIMEOUT=0` to disable this wrapper timeout. You can override the environment
+setting for a provider through `LLM_KWARGS` or a JSON configuration file:
+
+```json
+{
+  "LLM_KWARGS": {"llm_timeout": 600}
+}
+```
+
+The `llm_timeout` option is consumed by GPT Researcher, not passed to the model
+SDK. Provider-specific options such as `timeout`, `request_timeout`, or Ollama's
+`client_kwargs` remain independent and may expire earlier. The wrapper applies
+to `GenericLLMProvider.get_chat_response` and `stream_response`, including calls
+through `create_chat_completion`; it does not set a deadline for an entire
+research task or for code that invokes a LangChain chain directly.
+
+A stalled call raises `TimeoutError` with the configured wait duration. The
+existing `create_chat_completion` retry policy logs failed attempts and remains
+unchanged: up to ten attempts for ordinary calls, and one attempt for streaming
+calls with a WebSocket. Higher-level callers may have their own fallback logic,
+so the total research time can exceed a single timeout.
 
 ## Deep Research Configuration
 

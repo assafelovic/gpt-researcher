@@ -7,7 +7,7 @@ import sys
 import types
 import unittest
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -34,6 +34,8 @@ class _Img:
         return default
 
 
+# Drop the stubs below once loaded, so they can't leak into later tests.
+@patch.dict(sys.modules)
 def _load():
     bs4 = types.ModuleType("bs4")
     bs4.BeautifulSoup = object

@@ -15,13 +15,15 @@ _PATH = (
 )
 
 
+# Drop the stubs below once loaded, so they can't leak into later tests.
+@patch.dict(sys.modules)
 def _load_module():
     pkg = types.ModuleType("gpt_researcher")
     pkg.__path__ = [str(_PATH.parent.parent)]
-    sys.modules.setdefault("gpt_researcher", pkg)
+    sys.modules["gpt_researcher"] = pkg
     actions = types.ModuleType("gpt_researcher.actions")
     actions.__path__ = [str(_PATH.parent)]
-    sys.modules.setdefault("gpt_researcher.actions", actions)
+    sys.modules["gpt_researcher.actions"] = actions
 
     for name in [
         "gpt_researcher.config",
@@ -32,8 +34,8 @@ def _load_module():
         "gpt_researcher.prompts",
         "gpt_researcher.utils.enum",
     ]:
-        if name not in sys.modules:
-            sys.modules[name] = types.ModuleType(name)
+        # Always stub: the attributes set below must never land on a real module.
+        sys.modules[name] = types.ModuleType(name)
 
     sys.modules["gpt_researcher.utils.logger"].get_formatted_logger = lambda: __import__(
         "logging"

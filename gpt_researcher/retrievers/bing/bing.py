@@ -52,10 +52,14 @@ class BingSearch():
             'Ocp-Apim-Subscription-Key': self.api_key,
             'Content-Type': 'application/json'
         }
-        # TODO: Add support for query domains
+        search_query = self.query
+        if self.query_domains and len(self.query_domains) > 0:
+            domain_query = " OR ".join([f"site:{domain}" for domain in self.query_domains])
+            search_query = f"({domain_query}) {self.query}"
+
         params = {
             "responseFilter": "Webpages",
-            "q": self.query,
+            "q": search_query,
             "count": max_results,
             "setLang": "en-GB",
             "textDecorations": False,
@@ -75,7 +79,12 @@ class BingSearch():
             return []
         try:
             search_results = json.loads(resp.text)
-            results = search_results.get("webPages", {}).get("value", [])
+            if not isinstance(search_results, dict):
+                return []
+            web_pages = search_results.get("webPages") or {}
+            if not isinstance(web_pages, dict):
+                return []
+            results = web_pages.get("value") or []
         except Exception as e:
             self.logger.error(
                 f"Error parsing Bing search results: {e}. Resulting in empty response.")
@@ -97,7 +106,7 @@ class BingSearch():
             if not url:
                 continue
             # skip youtube results
-            if "youtube.com" in url:
+            if "youtube.com" in url.lower():
                 continue
             search_response.append({
                 "title": result.get("name") or "",

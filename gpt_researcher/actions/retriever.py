@@ -30,6 +30,7 @@ def get_retriever(retriever: str):
         - serper: Serper API
         - duckduckgo: DuckDuckGo search
         - bing: Bing search
+        - bocha: BoCha Search API
         - brave: Brave Search API
         - arxiv: arXiv academic search
         - tavily: Tavily search API

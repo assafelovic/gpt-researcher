@@ -900,4 +900,4 @@ def get_prompt_family(
         f"Using default prompt family: {PromptFamilyEnum.Default.value} prompt.",
         UserWarning,
     )
-    return PromptFamily()
+    return PromptFamily(config)

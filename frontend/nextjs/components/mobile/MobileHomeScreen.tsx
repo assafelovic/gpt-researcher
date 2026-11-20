@@ -55,7 +55,7 @@ export default function MobileHomeScreen({
 
   // Handle history item click
   const handleHistoryItemClick = useCallback((id: string) => {
-    window.location.href = `/research/${id}`;
+    window.location.href = `/classic/research/${id}`;
   }, []);
 
   const handlePromptChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {

@@ -201,7 +201,7 @@ const ResearchSidebar: React.FC<ResearchSidebarProps> = ({
                         >
                           
                           <Link
-                            href={`/research/${item.id}`}
+                            href={`/classic/research/${item.id}`}
                             className="block w-full text-left p-3 sm:p-4 pr-10 min-h-[56px] relative"
                             onClick={(e) => {
                               // Only prevent default if we're just closing the sidebar

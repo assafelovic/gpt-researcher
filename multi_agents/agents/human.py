@@ -26,7 +26,10 @@ class HumanAgent:
                         self.websocket,
                     )
                     # because websocket is wrapped inside a CustomLogsHandler in websocket_manager
-                    response = await self.websocket.websocket.receive_text()
+                    socket = self.websocket.websocket
+                    # The server's receive loop owns the socket and forwards feedback here.
+                    queue = getattr(getattr(socket, "state", None), "human_feedback", None)
+                    response = await (queue.get() if queue is not None else socket.receive_text())
                     print(f"Received response: {response}", flush=True)
                     response_data = json.loads(response)
                     if response_data.get("type") == "human_feedback":
@@ -46,7 +49,7 @@ class HumanAgent:
 
         from .utils.none_sentinels import is_human_plan_approval
 
-        if is_human_plan_approval(user_feedback):
+        if not user_feedback or is_human_plan_approval(user_feedback):
             user_feedback = None
 
         plan_revision_count = research_state.get("plan_revision_count", 0)

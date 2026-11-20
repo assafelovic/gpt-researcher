@@ -107,6 +107,43 @@ def test_request_shape_and_success(monkeypatch):
     assert "what is x?" in question["instructions"] and len(question["criteria"]) == 4
 
 
+def test_api_url_defaults_to_typesafe_systemone(monkeypatch):
+    monkeypatch.delenv("TYPESAFE_BASE_URL", raising=False)
+    client = JevClient(api_key="k")
+    assert client.base_url == "https://api.typesafe.ai/v1"
+    assert client.api_url == "https://api.typesafe.ai/v1/systemone"
+
+
+def test_base_url_from_env_is_used(monkeypatch):
+    urls = []
+
+    def handler(request):
+        urls.append(str(request.url))
+        return httpx.Response(200, json=OK)
+
+    monkeypatch.setenv("TYPESAFE_BASE_URL", "https://jev.internal.example/v1")
+    client = JevClient(api_key="k")
+
+    async def go():
+        async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as http:
+            return await client.score_relevance(http, "q", "p")
+
+    assert _run(go()) == 2.5
+    assert urls == ["https://jev.internal.example/v1/systemone"]
+
+
+def test_explicit_base_url_beats_env(monkeypatch):
+    monkeypatch.setenv("TYPESAFE_BASE_URL", "https://env.example/v1")
+    client = JevClient(api_key="k", base_url="https://arg.example/v1")
+    assert client.api_url == "https://arg.example/v1/systemone"
+
+
+def test_trailing_slash_on_base_url(monkeypatch):
+    monkeypatch.delenv("TYPESAFE_BASE_URL", raising=False)
+    client = JevClient(api_key="k", base_url="https://proxy.example/v1/")
+    assert client.api_url == "https://proxy.example/v1/systemone"
+
+
 def test_retries_rate_limits(monkeypatch):
     transport, seen = _transport([(429, {}), (529, {}), (200, OK)])
     _, score = _score_with(transport, monkeypatch)

@@ -3,7 +3,7 @@
 ### How do I get started?
 It really depends on what you're aiming for. 
 
-If you're looking to connect your AI application to the internet with Tavily tailored API, check out the [Tavily API](https://docs.tavily.com/docs/tavily-api/introductionn) documentation. 
+If you're looking to connect your AI application to the internet with Tavily tailored API, check out the [Tavily API](https://docs.tavily.com/documentation/api-reference/introduction) documentation. 
 If you're looking to build and deploy our open source autonomous research agent GPT Researcher, please see [GPT Researcher](/docs/gpt-researcher/getting-started/introduction) documentation.
 You can also check out demos and examples for inspiration [here](/docs/examples/examples).
 

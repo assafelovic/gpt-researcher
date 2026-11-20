@@ -92,7 +92,7 @@ You can combine the above methods to conduct hybrid research. For example, you c
 Simply provide the sources and set the `report_source` argument as `"hybrid"` and watch the magic happen.
 
 Please note! You should set the proper retrievers for the web sources and doc path for local documents for this to work.
-To learn more about retrievers check out the [Retrievers](https://docs.gptr.dev/docs/gpt-researcher/search-engines/retrievers) documentation.
+To learn more about retrievers check out the [Retrievers](https://docs.gptr.dev/docs/gpt-researcher/search-engines) documentation.
 
 
 ### Research on LangChain Documents 🦜️🔗

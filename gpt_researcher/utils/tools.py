@@ -30,7 +30,7 @@ def _track_response_cost(
     if not cost_callback:
         return
 
-    response_content = getattr(response_message, "content", "") or ""
+    response_content = getattr(response_message, "text", "") or ""
     llm_costs = calculate_llm_cost(
         llm_provider=llm_provider,
         model=model,
@@ -197,11 +197,12 @@ async def create_chat_completion_with_tools(
                 cost_callback=cost_callback,
             )
              
-            return final_response.content, tool_calls_metadata
+            # With tools bound, some models answer through the Responses API, whose content is a list of blocks :-)
+            return final_response.text, tool_calls_metadata
          
         else:
             # No tool calls, return regular response
-            return response.content, []
+            return response.text, []
         
     except Exception as e:
         error_type = type(e).__name__

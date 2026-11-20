@@ -39,6 +39,8 @@ Set with `CONTEXT_FILTER`:
 
 Jev is a *System One* model: instead of generating text, it answers typed questions about an input, and returns calibrated probabilities. GPT Researcher asks it one question per chunk: how useful is this passage for answering the sub-query, on a four-level rubric.
 
+The base URL defaults to `https://api.typesafe.ai/v1`; `/systemone` is appended. Set `TYPESAFE_BASE_URL` to point at a self-hosted or proxied deployment, matching the `OPENAI_BASE_URL` convention (include the path up to `/v1`).
+
 ```http
 POST https://api.typesafe.ai/v1/systemone
 Authorization: Bearer $TYPESAFE_API_KEY
@@ -156,6 +158,7 @@ Per-run metrics and scores from the run above are committed in `evals/context_fi
 
 ```bash
 export TYPESAFE_API_KEY=...              # enables jev under the default `auto`
+export TYPESAFE_BASE_URL=https://api.typesafe.ai/v1  # base URL; /systemone is appended
 export CONTEXT_FILTER=auto               # auto | jev | keyword | embeddings | none
 
 export JEV_MIN_SCORE=1.5                 # 0-3 usefulness a chunk needs to be kept

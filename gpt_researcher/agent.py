@@ -7,6 +7,7 @@ autonomous research and report generation using LLMs and web search.
 import asyncio
 import json
 import os
+from collections.abc import Callable
 from typing import Any, Optional
 
 from .actions import (
@@ -21,6 +22,7 @@ from .actions import (
 from .config import Config
 from .llm_provider import GenericLLMProvider
 from .memory import Memory
+from .observability import ResearchObserver, emit_research_event
 from .prompts import get_prompt_family
 from .skills.browser import BrowserManager
 from .skills.context_manager import ContextManager
@@ -80,6 +82,7 @@ class GPTResearcher:
         mcp_configs: list[dict] | None = None,
         mcp_max_iterations: int | None = None,
         mcp_strategy: str | None = None,
+        research_observer: ResearchObserver | Callable[..., Any] | None = None,
         **kwargs
     ):
         """
@@ -134,6 +137,8 @@ class GPTResearcher:
                 - "fast" (default): Run MCP once with original query for best performance
                 - "deep": Run MCP for all sub-queries for maximum thoroughness  
                 - "disabled": Skip MCP entirely, use only web retrievers
+            research_observer: Optional callable or object with an ``on_event``
+                method. Observer failures never interrupt research.
         """
         self.kwargs = kwargs
         self.query = query
@@ -166,6 +171,7 @@ class GPTResearcher:
         self.step_costs: dict[str, float] = {}
         self._current_step: str = "general"
         self.log_handler = log_handler
+        self.research_observer = research_observer
         self.prompt_family = get_prompt_family(prompt_family or self.cfg.prompt_family, self.cfg)
         
         # Process MCP configurations if provided
@@ -339,6 +345,10 @@ class GPTResearcher:
             except Exception as e:
                 import logging
                 logging.getLogger('research').error(f"Error in _log_event: {e}", exc_info=True)
+
+    async def emit_research_event(self, event: str, **fields: Any) -> None:
+        """Emit an optional structured lifecycle event."""
+        await emit_research_event(self.research_observer, event, **fields)
 
     async def conduct_research(self, on_progress=None):
         """Conduct the research process.

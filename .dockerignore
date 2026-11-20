@@ -1,2 +1,5 @@
 .git
 output/
+
+# Secrets are loaded at runtime through docker-compose env_file or `docker run --env-file`, never baked into images :-)
+.env

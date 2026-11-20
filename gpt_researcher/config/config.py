@@ -48,7 +48,7 @@ class Config:
         self._set_embedding_attributes()
         self._set_llm_attributes()
         self._handle_deprecated_attributes()
-        if config_to_use['REPORT_SOURCE'] != 'web':
+        if (os.getenv('REPORT_SOURCE') or config_to_use['REPORT_SOURCE']) != 'web':
           self._set_doc_path(config_to_use)
 
     def _set_attributes(self, config: Dict[str, Any]) -> None:
@@ -85,7 +85,7 @@ class Config:
         self.fast_llm_provider, self.fast_llm_model = self.parse_llm(self.fast_llm)
         self.smart_llm_provider, self.smart_llm_model = self.parse_llm(self.smart_llm)
         self.strategic_llm_provider, self.strategic_llm_model = self.parse_llm(self.strategic_llm)
-        self.reasoning_effort = self.parse_reasoning_effort(os.getenv("REASONING_EFFORT"))
+        self.reasoning_effort = self.parse_reasoning_effort(self.reasoning_effort)
 
     def _handle_deprecated_attributes(self) -> None:
         """Handle deprecated configuration attributes with warnings."""
@@ -113,7 +113,7 @@ class Config:
             elif embedding_provider == "gigachat":
                 self.embedding_model = "Embeddings"
             elif embedding_provider == "google_genai":
-                self.embedding_model = "text-embedding-004"
+                self.embedding_model = "gemini-embedding-2"
             else:
                 raise Exception("Embedding provider not found.")
 
@@ -137,7 +137,8 @@ class Config:
             self.smart_llm_model = os.environ["SMART_LLM_MODEL"] or self.smart_llm_model
 
     def _set_doc_path(self, config: Dict[str, Any]) -> None:
-        self.doc_path = config['DOC_PATH']
+        if not self.doc_path:
+            self.doc_path = config['DOC_PATH']
         if self.doc_path:
             try:
                 self.validate_doc_path()
@@ -164,7 +165,7 @@ class Config:
                     print(f"Do you mean '{config_path}.json'?")
             return deepcopy(DEFAULT_CONFIG)
 
-        with open(config_path, "r") as f:
+        with open(config_path, "r", encoding="utf-8") as f:
             custom_config = json.load(f)
 
         # Merge with default config to ensure all keys are present

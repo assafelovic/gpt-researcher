@@ -69,7 +69,7 @@ researcher = GPTResearcher(
     query="How does React's useState hook work?",
     mcp_configs=[
         {
-            "name": "github_api"
+            "name": "github_api",
             "command": "npx",
             "args": ["-y", "@modelcontextprotocol/server-github"],
             "env": {"GITHUB_TOKEN": os.getenv("GITHUB_TOKEN")}
@@ -92,6 +92,7 @@ Each MCP configuration dictionary supports these keys:
 | `args` | Arguments for the server command | `["-m", "my_server"]` | Yes* |
 | `env` | Environment variables for the server | `{"API_KEY": "key"}` | No |
 | `connection_url` | URL for remote connections | `"wss://api.example.com"` | Yes** |
+| `connection_headers` | HTTP headers for remote connections | `{"Authorization": "Bearer TOKEN"}` | No |
 | `connection_type` | Connection type (auto-detected) | `"websocket"` | No |
 | `connection_token` | Authentication token | `"bearer_token"` | No |
 
@@ -286,6 +287,8 @@ researcher = GPTResearcher(
 
 ## Remote MCP Server
 
+### WebSocket
+
 ```python
 # Enable MCP with web search fallback
 os.environ["RETRIEVER"] = "tavily,mcp"
@@ -301,6 +304,34 @@ researcher = GPTResearcher(
     ]
 )
 ```
+
+### Authenticated Streamable HTTP
+
+Use `connection_headers` to send authentication headers to a remote HTTP MCP server. Read credentials from the process environment before creating the configuration; `env` configures local stdio servers, not remote request headers.
+
+```python
+import os
+from gpt_researcher import GPTResearcher
+
+token = os.environ["MCP_TOKEN"]
+if not token.strip():
+    raise ValueError("MCP_TOKEN must not be empty")
+
+os.environ["RETRIEVER"] = "mcp"
+
+researcher = GPTResearcher(
+    query="Research using the tools provided by my MCP server",
+    mcp_configs=[
+        {
+            "name": "remote_mcp",
+            "connection_url": "https://mcp.example.com/mcp",
+            "connection_headers": {"Authorization": f"Bearer {token}"},
+        }
+    ],
+)
+```
+
+Set `MCP_TOKEN` in the process environment and replace the placeholder URL with your server's Streamable HTTP endpoint. Header values are passed literally: `$MCP_TOKEN` and `${MCP_TOKEN}` are not expanded automatically. Keep real tokens out of source files and logs.
 
 ## Combining MCP with Web Search
 

@@ -14,9 +14,9 @@ from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.prompts import PromptTemplate
 
 from gpt_researcher.llm_provider.generic.base import (
-    NO_SUPPORT_TEMPERATURE_MODELS,
     SUPPORT_REASONING_EFFORT_MODELS,
     ReasoningEfforts,
+    supports_temperature,
 )
 
 from ..prompts import PromptFamily
@@ -86,7 +86,7 @@ async def create_chat_completion(
     if model in SUPPORT_REASONING_EFFORT_MODELS:
         provider_kwargs['reasoning_effort'] = reasoning_effort
 
-    if model not in NO_SUPPORT_TEMPERATURE_MODELS:
+    if supports_temperature(model):
         provider_kwargs['temperature'] = temperature
     else:
         # These models enforce their default temperature, but output limits
@@ -134,16 +134,8 @@ async def create_chat_completion(
                 continue
             break
 
-        if not response:
-            last_exception = RuntimeError("Empty response from LLM provider")
-            logging.getLogger(__name__).warning(
-                f"LLM returned empty response (attempt {attempt}/{max_attempts})"
-            )
-            if attempt < max_attempts:
-                await asyncio.sleep(min(2 ** (attempt - 1), 8))
-                continue
-            break
-
+        # A provider can bill a completed request that returns empty content
+        # after spending its budget on reasoning, so account for every call.
         if cost_callback:
             llm_costs = calculate_llm_cost(
                 llm_provider=llm_provider,
@@ -155,6 +147,16 @@ async def create_chat_completion(
                 request_options=provider_kwargs,
             )
             cost_callback(llm_costs)
+
+        if not response:
+            last_exception = RuntimeError("Empty response from LLM provider")
+            logging.getLogger(__name__).warning(
+                f"LLM returned empty response (attempt {attempt}/{max_attempts})"
+            )
+            if attempt < max_attempts:
+                await asyncio.sleep(min(2 ** (attempt - 1), 8))
+                continue
+            break
 
         return response
 

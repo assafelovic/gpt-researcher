@@ -111,8 +111,17 @@ class DetailedReport:
         subtopic_reports = []
         subtopics_report_body = ""
 
-        for subtopic in subtopics:
-            result = await self._get_subtopic_report(subtopic)
+        # Research is independent per subtopic, but each write must see the sections written before it :-)
+        tasks = [asyncio.create_task(self._research_subtopic(subtopic)) for subtopic in subtopics]
+        try:
+            researched = await asyncio.gather(*tasks)
+        except BaseException:
+            for task in tasks:
+                task.cancel()
+            raise
+
+        for subtopic, (subtopic_assistant, draft_section_titles) in zip(subtopics, researched):
+            result = await self._write_subtopic_report(subtopic, subtopic_assistant, draft_section_titles)
             if result["report"]:
                 subtopic_reports.append(result)
                 subtopics_report_body += f"\n\n\n{result['report']}"
@@ -135,7 +144,7 @@ class DetailedReport:
         
         return context_items
 
-    async def _get_subtopic_report(self, subtopic: Dict) -> Dict[str, str]:
+    async def _research_subtopic(self, subtopic: Dict) -> tuple:
         current_subtopic_task = subtopic.get("task")
         subtopic_assistant = GPTResearcher(
             query=current_subtopic_task,
@@ -152,6 +161,8 @@ class DetailedReport:
             tone=self.tone,
             complement_source_urls=self.complement_source_urls,
             source_urls=self.source_urls,
+            document_urls=self.document_urls,
+            config_path=self.config_path,
             # Propagate MCP configuration so follow-up researchers can use MCP
             mcp_configs=self.gpt_researcher.mcp_configs,
             mcp_strategy=self.gpt_researcher.mcp_strategy
@@ -173,8 +184,14 @@ class DetailedReport:
         parse_draft_section_titles_text = [header.get(
             "text", "") for header in parse_draft_section_titles]
 
+        return subtopic_assistant, parse_draft_section_titles_text
+
+    async def _write_subtopic_report(
+        self, subtopic: Dict, subtopic_assistant: GPTResearcher, draft_section_titles: List[str]
+    ) -> Dict[str, str]:
+        current_subtopic_task = subtopic.get("task")
         relevant_contents = await subtopic_assistant.get_similar_written_contents_by_draft_section_titles(
-            current_subtopic_task, parse_draft_section_titles_text, self.global_written_sections
+            current_subtopic_task, draft_section_titles, self.global_written_sections
         )
 
         # Write subtopic report (images are pre-generated at the main research level)

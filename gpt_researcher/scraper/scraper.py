@@ -14,6 +14,7 @@ from urllib.parse import urlparse
 import requests
 from colorama import Fore, init
 
+from gpt_researcher.observability import emit_research_event
 from gpt_researcher.utils.workers import WorkerPool
 from gpt_researcher.utils.url_security import UnsafeURLError, validate_url
 
@@ -46,6 +47,12 @@ _BLOCK_PAGE_MARKERS = (
     "please verify you are a human",
     "attention required! | cloudflare",
     "sorry, you have been blocked",
+    # "Client Challenge" interstitial (e.g. wikiHow, Clas Ohlson): served to
+    # plain HTTP clients in place of the page, ~300 chars, so it clears the
+    # 100-char minimum. Its sentences sit on separate lines, so the marker is
+    # one sentence, in both apostrophe styles.
+    "a required part of this site couldn\u2019t load",
+    "a required part of this site couldn't load",
 )
 
 # Block pages are the entire response body -- a "please wait" message, not
@@ -111,7 +118,14 @@ class Scraper:
     Scraper class to extract the content from the links
     """
 
-    def __init__(self, urls, user_agent, scraper, worker_pool: WorkerPool):
+    def __init__(
+        self,
+        urls,
+        user_agent,
+        scraper,
+        worker_pool: WorkerPool,
+        event_handler=None,
+    ):
         """
         Initialize the Scraper class.
         Args:
@@ -131,6 +145,7 @@ class Scraper:
             self._check_pkg(self.scraper)
         self.logger = logging.getLogger(__name__)
         self.worker_pool = worker_pool
+        self.event_handler = event_handler
 
         # Log deduplication results if duplicates were found
         if duplicates_removed > 0:
@@ -146,6 +161,26 @@ class Scraper:
         contents = await asyncio.gather(
             *(self.extract_data_from_url(url, self.session) for url in self.urls)
         )
+
+        for content in contents:
+            if not isinstance(content, dict):
+                continue
+            raw_content = content.get("raw_content")
+            event = "fetch_succeeded" if raw_content is not None else "fetch_failed"
+            fields = {
+                "url": content.get("url") or "",
+                "scraper": self.scraper,
+                "content_length": len(raw_content or ""),
+            }
+            if raw_content is None:
+                fields["reason_code"] = (
+                    content.get("failure_reason") or "CONTENT_UNAVAILABLE"
+                )
+            await emit_research_event(
+                self.event_handler,
+                event,
+                **fields,
+            )
 
         # extract_data_from_url is expected to return a dict, but a buggy backend
         # or cancelled worker can still yield None / non-dict. Indexing those with
@@ -230,7 +265,10 @@ class Scraper:
                     )
 
                 if not content or len(content) < 100:
-                    return self._reject(link, title, "Content too short or empty")
+                    reason = getattr(scraper, "failure_reason", None)
+                    return self._reject(
+                        link, title, reason or "Content too short or empty"
+                    )
 
                 # Log results
                 self.logger.info(f"\nTitle: {title}")
@@ -276,9 +314,19 @@ class Scraper:
     def _reject(self, link, title, reason):
         """Treat a fetched-but-unusable page as a scrape failure, in the same
         shape a raised exception or too-short content already returns --
-        downstream code (Scraper.run) drops any raw_content: None entry."""
+        downstream code (Scraper.run) drops any raw_content: None entry.
+
+        ``failure_reason`` is additive metadata for callers that inspect a
+        failed row before that filtering step.
+        """
         self.logger.warning(f"{reason} for {link}, treating as fetch failure")
-        return {"url": link, "raw_content": None, "image_urls": [], "title": title}
+        return {
+            "url": link,
+            "raw_content": None,
+            "image_urls": [],
+            "title": title,
+            "failure_reason": reason,
+        }
 
 
     async def _retry_as_pdf(self, link, session):
@@ -295,6 +343,16 @@ class Scraper:
             self.worker_pool.executor, scraper.scrape
         )
         if not content or len(content) < 100:
+            return None
+        if (
+            _looks_like_unextracted_pdf(content)
+            or _looks_like_block_page(content)
+            or _looks_like_word_list(content)
+        ):
+            self.logger.warning(
+                f"PyMuPDFScraper retry for {link} recovered content that still "
+                f"fails quality checks -- treating as failed recovery"
+            )
             return None
         self.logger.info(f"PyMuPDFScraper retry recovered {len(content)} characters for {link}")
         return {
@@ -318,7 +376,8 @@ class Scraper:
           The `get_scraper` method returns the scraper class based on the provided link. The method
         checks the link to determine the appropriate scraper class to use based on predefined mappings
         in the `SCRAPER_CLASSES` dictionary. If the link ends with ".pdf", it selects the
-        `PyMuPDFScraper` class. If the link contains "arxiv.org", it selects the `ArxivScraper
+        `PyMuPDFScraper` class. URLs hosted by arxiv.org or its subdomains
+        select `ArxivScraper`.
         """
 
         SCRAPER_CLASSES = {
@@ -337,10 +396,13 @@ class Scraper:
         # Inspect only the path component so query strings / fragments don't
         # hide the extension (e.g. signed CDN/S3 links like "…/doc.pdf?sig=…").
         # Match case-insensitively because ".PDF" is a perfectly valid suffix.
-        path = urlparse(link).path
+        parsed_url = urlparse(link)
+        path = parsed_url.path
+        # A trailing DNS root dot still identifies the same host.
+        hostname = (parsed_url.hostname or "").removesuffix(".")
         if path.lower().endswith(".pdf"):
             scraper_key = "pdf"
-        elif "arxiv.org" in link:
+        elif hostname == "arxiv.org" or hostname.endswith(".arxiv.org"):
             scraper_key = "arxiv"
         else:
             scraper_key = self.scraper

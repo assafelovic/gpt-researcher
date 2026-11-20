@@ -141,6 +141,21 @@ async def test_chat_without_search_does_not_reuse_previous_turn_metadata(agent, 
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("queries", [[], ["first"]])
+async def test_block_content_answers_come_back_as_text(agent, monkeypatch, queries):
+    model = install_model(monkeypatch, queries)
+    model.responses[-1] = AIMessage(content=[
+        {"type": "reasoning", "summary": [], "encrypted_content": "opaque"},
+        {"type": "text", "text": "Answer in ", "annotations": []},
+        {"type": "text", "text": "two blocks.", "annotations": []},
+    ])
+
+    response, _ = await agent.chat([{"role": "user", "content": "What could stop the rally?"}])
+
+    assert response == "Answer in two blocks."
+
+
+@pytest.mark.asyncio
 async def test_plain_completion_fallback_does_not_publish_unused_sources(agent, monkeypatch):
     model = install_model(monkeypatch, ["first"])
     model.responses[1] = RuntimeError("final model call failed")

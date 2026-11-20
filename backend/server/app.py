@@ -216,6 +216,8 @@ async def create_or_update_report(request: Request):
             "chatMessages": data.get("chatMessages") or [],
             "timestamp": timestamp,
         }
+        if isinstance(data.get("brief"), dict):
+            report["brief"] = data["brief"]
 
         await report_store.upsert_report(research_id, report)
         return {"success": True, "id": research_id}

@@ -20,7 +20,7 @@ const Header = ({ loading, isStopped, showResult, onStop, onNewResearch, isCopil
       <div className="container relative h-[60px] px-4 lg:h-[80px] lg:px-0 pt-4 pb-4">
         <div className="flex flex-col items-center">
           {/* Logo/Home link */}
-          <a href="/">
+          <a href="/classic">
             <img
               src="/img/gptr-logo.png"
               alt="logo"

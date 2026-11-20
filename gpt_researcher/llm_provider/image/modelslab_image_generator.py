@@ -234,9 +234,9 @@ class ModelsLabImageGeneratorProvider:
     @classmethod
     def from_config(cls, config) -> Optional["ModelsLabImageGeneratorProvider"]:
         """Create a ModelsLabImageGeneratorProvider from a Config object."""
-        enabled = getattr(config, "IMAGE_GENERATION_ENABLED", False)
-        provider = getattr(config, "IMAGE_GENERATION_PROVIDER", "google")
+        enabled = getattr(config, "image_generation_enabled", False)
+        provider = getattr(config, "image_generation_provider", "google")
         if not enabled or provider != "modelslab":
             return None
-        model = getattr(config, "IMAGE_GENERATION_MODEL", None)
+        model = getattr(config, "image_generation_model", None)
         return cls(model_id=model or cls.DEFAULT_MODEL)

@@ -10,39 +10,11 @@ from __future__ import annotations
 import os
 import sys
 import types
-from unittest.mock import MagicMock
+from unittest.mock import patch
 
-
-# Stub optional import-time deps so this unit test runs without bs4/tavily.
-_bs4 = types.ModuleType("bs4")
-_bs4.BeautifulSoup = MagicMock()
-# These stubs are only needed while the module under test is being loaded.
-# Left in sys.modules they replace the real gpt_researcher package for every
-# test module collected afterwards, which turns the whole suite's collection
-# into "cannot import name ... (unknown location)". Snapshot here, restore
-# below once the load is done.
-_SYS_MODULES_SNAPSHOT = dict(sys.modules)
-sys.modules.setdefault("bs4", _bs4)
-
-_utils = types.ModuleType("gpt_researcher.scraper.utils")
-_utils.get_relevant_images = MagicMock(return_value=[])
-_utils.extract_title = MagicMock(return_value="")
-# Parent packages for relative import resolution when loading the module by path
-for name in (
-    "gpt_researcher",
-    "gpt_researcher.scraper",
-    "gpt_researcher.scraper.utils",
-):
-    sys.modules.setdefault(name, types.ModuleType(name))
-sys.modules["gpt_researcher.scraper.utils"] = _utils
 
 _fake_tavily = types.ModuleType("tavily")
 
-
-# Restore the real package; the symbols imported above are already bound.
-for _name in [k for k in sys.modules if k not in _SYS_MODULES_SNAPSHOT]:
-    del sys.modules[_name]
-sys.modules.update(_SYS_MODULES_SNAPSHOT)
 
 class _FakeClient:
     def __init__(self, api_key):
@@ -54,7 +26,6 @@ class _FakeClient:
 
 
 _fake_tavily.TavilyClient = _FakeClient
-sys.modules["tavily"] = _fake_tavily
 
 import importlib.util
 import pathlib
@@ -77,7 +48,9 @@ TavilyExtract = _mod.TavilyExtract
 
 def _build(response, session=None):
     os.environ["TAVILY_API_KEY"] = "test-key"
-    inst = TavilyExtract("https://example.com/a", session=session)
+    # TavilyExtract imports tavily lazily, in __init__.
+    with patch.dict(sys.modules, {"tavily": _fake_tavily}):
+        inst = TavilyExtract("https://example.com/a", session=session)
     inst.tavily_client._response = response
     return inst
 

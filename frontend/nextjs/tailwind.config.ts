@@ -44,7 +44,16 @@ const config: Config = {
         'glow': '0 0 40px rgba(152, 103, 240, 0.5)',
         'teal-glow': '0 0 40px rgba(13, 148, 136, 0.5)',
       },
+      fontFamily: {
+        display: ['var(--font-display)', 'Georgia', 'serif'],
+        body: ['var(--font-body)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        code: ['var(--font-code)', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+      },
       colors: {
+        paper: { DEFAULT: '#EEE7D8', deep: '#E6DDCA', hi: '#F6F1E7' },
+        ink: { DEFAULT: '#1A1612', 2: '#39332B', 3: '#5F574B' },
+        rubric: '#B8381C',
+        rule: { DEFAULT: 'rgba(29, 25, 21, 0.26)', soft: 'rgba(29, 25, 21, 0.14)' },
         'primary': {
           '50': '#f0fdfa',
           '100': '#ccfbf1',

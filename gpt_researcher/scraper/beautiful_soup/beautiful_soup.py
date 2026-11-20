@@ -10,6 +10,10 @@ logger = logging.getLogger(__name__)
 # Response codes worth one retry: rate limiting and transient server errors.
 RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
 MAX_CONTENT_BYTES = 10 * 1024 * 1024  # Skip pages larger than 10MB
+TRANSPARENT_RESEARCH_USER_AGENT = (
+    "GPT-Researcher/1.0 "
+    "(+https://github.com/assafelovic/gpt-researcher; source retrieval)"
+)
 
 
 class BeautifulSoupScraper:
@@ -17,6 +21,9 @@ class BeautifulSoupScraper:
     def __init__(self, link, session=None):
         self.link = link
         self.session = session
+        # Keep scrape()'s established three-item return value. Callers that
+        # need diagnostics can inspect this optional, bounded reason instead.
+        self.failure_reason = None
 
     def scrape(self):
         """Fetch the page and extract cleaned text, images and title.
@@ -65,9 +72,16 @@ class BeautifulSoupScraper:
             logger.warning(f"No session provided for {self.link}; cannot fetch")
             return None
 
+        self.failure_reason = None
+        retry_with_transparent_identity = False
         for attempt in (1, 2):
+            request_kwargs = {"timeout": 10}
+            if retry_with_transparent_identity:
+                request_kwargs["headers"] = {
+                    "User-Agent": TRANSPARENT_RESEARCH_USER_AGENT,
+                }
             try:
-                response = self.session.get(self.link, timeout=10)
+                response = self.session.get(self.link, **request_kwargs)
             except Exception as e:
                 logger.warning(f"Request failed for {self.link} (attempt {attempt}): {e}")
                 if attempt == 1:
@@ -82,8 +96,17 @@ class BeautifulSoupScraper:
                 time.sleep(1)
                 continue
 
+            if response.status_code == 403 and attempt == 1:
+                logger.warning(
+                    f"Got HTTP 403 for {self.link}, retrying once with a "
+                    "transparent GPT Researcher identity"
+                )
+                retry_with_transparent_identity = True
+                continue
+
             if response.status_code >= 400:
                 # Don't parse error/paywall pages as if they were content
+                self.failure_reason = f"HTTP_{response.status_code}"
                 logger.warning(f"Got HTTP {response.status_code} for {self.link}, skipping")
                 return None
 

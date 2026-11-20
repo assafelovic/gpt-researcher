@@ -27,8 +27,16 @@ logger = logging.getLogger(__name__)
 
 # (patterns, input $/MTok, output $/MTok) - first match wins, so more
 # specific patterns (e.g. "-mini") must come before their base model.
-# Prices as of July 2026: https://openai.com/api/pricing/
+# Prices as of November 2026: https://developers.openai.com/api/docs/pricing
 OPENAI_MODEL_PRICING = (
+    (("gpt-6.1-sol",), 2.0, 10.0),
+    (("gpt-6.1-terra",), 1.0, 5.0),
+    (("gpt-6-astra",), 10.0, 50.0),
+    (("gpt-6-sol",), 2.0, 10.0),
+    (("gpt-6-luna",), 0.1, 0.5),
+    (("gpt-5.6-sol",), 4.0, 20.0),
+    (("gpt-5.6-terra",), 2.0, 12.0),
+    (("gpt-5.6-luna",), 0.2, 1.2),
     (("gpt-5.5-pro",), 30.0, 180.0),
     (("gpt-5.5",), 5.0, 30.0),
     (("gpt-5.4-pro",), 30.0, 180.0),
@@ -326,13 +334,23 @@ def estimate_embedding_cost(model: str, docs: list) -> float:
     Returns:
         The estimated embedding cost in USD.
     """
-    try:
-        encoding = tiktoken.encoding_for_model(model)
-    except KeyError:
-        # tiktoken only knows OpenAI model names. Non-OpenAI embedding
-        # providers (Ollama, Cohere, Nomic, HuggingFace, ...) raise KeyError
-        # here, which would otherwise abort cost tracking mid-research. Fall
-        # back to the default OpenAI encoding for a best-effort token estimate.
+    if not docs:
+        return 0.0
+
+    if not model or not isinstance(model, str):
         encoding = tiktoken.get_encoding(ENCODING_MODEL)
+    else:
+        try:
+            encoding = tiktoken.encoding_for_model(model)
+        except (KeyError, ValueError):
+            # tiktoken only knows OpenAI model names. Non-OpenAI embedding
+            # providers (Ollama, Cohere, Nomic, HuggingFace, ...) raise KeyError
+            # here, which would otherwise abort cost tracking mid-research. Fall
+            # back to the default OpenAI encoding for a best-effort token estimate.
+            encoding = tiktoken.get_encoding(ENCODING_MODEL)
+
+    if isinstance(docs, (str, bytes)) or not hasattr(docs, "__iter__"):
+        docs = [docs]
+
     total_tokens = sum(len(encoding.encode(str(doc))) for doc in docs)
     return total_tokens * EMBEDDING_COST

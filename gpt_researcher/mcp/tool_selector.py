@@ -94,9 +94,16 @@ class MCPToolSelector:
                 return self._fallback_tool_selection(all_tools, max_tools)
 
             selected_tools = []
+            selected_indexes = set()
 
-            # Process selected tools
+            # Process selected tools. The model's answer is a suggestion, not a
+            # constraint: it may list more tools than it was asked for, or the
+            # same index twice. Enforce max_tools here the way the fallback
+            # path does with scored_tools[:max_tools], because the caller binds
+            # whatever comes back to the LLM.
             for tool_selection in selection_result.get("selected_tools", []) or []:
+                if len(selected_tools) >= max_tools:
+                    break
                 if not isinstance(tool_selection, dict):
                     continue
                 tool_index = tool_selection.get("index")
@@ -105,6 +112,9 @@ class MCPToolSelector:
                 relevance_score = tool_selection.get("relevance_score", 0)
 
                 if tool_index is not None and 0 <= tool_index < len(all_tools):
+                    if tool_index in selected_indexes:
+                        continue
+                    selected_indexes.add(tool_index)
                     selected_tools.append(all_tools[tool_index])
                     logger.info(f"Selected tool '{tool_name}' (score: {relevance_score}): {reason}")
             

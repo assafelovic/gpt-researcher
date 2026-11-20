@@ -5,10 +5,10 @@ import { useRouter } from "next/navigation";
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { useResearchHistoryContext } from '@/hooks/ResearchHistoryContext';
 import { useScrollHandler } from '@/hooks/useScrollHandler';
-import { startLanggraphResearch } from '../components/Langgraph/Langgraph';
-import findDifferences from '../helpers/findDifferences';
-import { Data, ChatBoxSettings, QuestionData, ChatMessage, ChatData } from '../types/data';
-import { preprocessOrderedData } from '../utils/dataProcessing';
+import { startLanggraphResearch } from '@/components/Langgraph/Langgraph';
+import findDifferences from '@/helpers/findDifferences';
+import { Data, ChatBoxSettings, QuestionData, ChatMessage, ChatData } from '@/types/data';
+import { preprocessOrderedData } from '@/utils/dataProcessing';
 import { toast } from "react-hot-toast";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -795,7 +795,7 @@ export default function Home() {
       const research = await getResearchById(id);
       if (research) {
         // Navigate to the research page instead of loading it here
-        router.push(`/research/${id}`);
+        router.push(`/classic/research/${id}`);
       }
     } catch (error) {
       console.error('Error selecting research:', error);

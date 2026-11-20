@@ -3,7 +3,7 @@
   <img src="https://github.com/assafelovic/gpt-researcher/assets/13554167/a45bac7c-092c-42e5-8eb6-69acbf20dde5" alt="Logo" width="25">
   GPT Researcher
 </h1>-->
-<img src="https://github.com/assafelovic/gpt-researcher/assets/13554167/20af8286-b386-44a5-9a83-3be1365139c3" alt="Logo" width="80">
+<img src="https://raw.githubusercontent.com/assafelovic/gpt-researcher/main/docs/static/img/gptr-logo-tile.png" alt="GPT Researcher logo" width="80">
 
 
 ####
@@ -42,7 +42,12 @@
 - 웹 소스만을 사용하면 연구 작업에서 올바른 결론을 도출할 때 편향이 발생할 수 있습니다.
 
 ## 데모
-https://github.com/user-attachments/assets/092e9e71-7e27-475d-8c4f-9dddd28934a3
+<a href="https://github.com/user-attachments/assets/4d3f26cf-8ccc-413a-b17c-80aa9e1b52d1">
+  <picture>
+    <source media="(prefers-reduced-motion: reduce)" srcset="https://github.com/user-attachments/assets/25d92184-c59e-4115-9961-759ada1ec952">
+    <img src="https://github.com/user-attachments/assets/3a56a008-fcbd-4373-9e40-8d6027120cfb" alt="GPT Researcher가 질문을 출처가 달린 보고서로 만드는 모습" width="800">
+  </picture>
+</a>
 
 ## 아키텍처
 주요 아이디어는 "플래너"와 "실행" 에이전트를 실행하는 것으로, 플래너는 연구할 질문을 생성하고, 실행 에이전트는 생성된 각 연구 질문에 따라 가장 관련성 높은 정보를 찾습니다. 마지막으로 플래너는 모든 관련 정보를 필터링하고 집계하여 연구 보고서를 작성합니다.
@@ -114,7 +119,7 @@ export TAVILY_API_KEY={Tavily API 키 입력}
 더 영구적인 설정을 원한다면, 현재의 `gpt-researcher` 디렉토리에 `.env` 파일을 생성하고 환경 변수를 입력하세요 (export 없이).
 
 - 기본 LLM은 [GPT](https://platform.openai.com/docs/guides/gpt)이지만, `claude`, `ollama3`, `gemini`, `mistral` 등 다른 LLM도 사용할 수 있습니다. LLM 제공자를 변경하는 방법은 [LLMs 문서](https://docs.gptr.dev/docs/gpt-researcher/llms)를 참조하세요. 이 프로젝트는 OpenAI GPT 모델에 최적화되어 있습니다.
-- 기본 검색기는 [Tavily](https://app.tavily.com)이지만, `duckduckgo`, `google`, `bing`, `searchapi`, `serper`, `searx`, `arxiv`, `exa` 등의 검색기를 사용할 수 있습니다. 검색 제공자를 변경하는 방법은 [검색기 문서](https://docs.gptr.dev/docs/gpt-researcher/retrievers)를 참조하세요.
+- 기본 검색기는 [Tavily](https://app.tavily.com)이지만, `duckduckgo`, `google`, `bing`, `searchapi`, `serper`, `searx`, `arxiv`, `exa` 등의 검색기를 사용할 수 있습니다. 검색 제공자를 변경하는 방법은 [검색기 문서](https://docs.gptr.dev/docs/gpt-researcher/search-engines)를 참조하세요.
 
 ### 빠른 시작
 
@@ -134,7 +139,7 @@ python -m uvicorn main:app --reload
 
 <br />
 
-**[Poetry](https://docs.gptr.dev/docs/gpt-researcher/getting-started#poetry) 또는 [가상 환경](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started#virtual-environment)에 대해 배우고 싶다면, [문서](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started)를 참조하세요.**
+**[Poetry](https://docs.gptr.dev/docs/gpt-researcher/getting-started#poetry) 또는 [가상 환경](https://docs.gptr.dev/docs/gpt-researcher/getting-started#virtual-environment)에 대해 배우고 싶다면, [문서](https://docs.gptr.dev/docs/gpt-researcher/getting-started)를 참조하세요.**
 
 ### PIP 패키지로 실행하기
 ```bash
