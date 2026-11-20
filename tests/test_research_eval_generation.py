@@ -777,3 +777,13 @@ def test_search_drops_the_frame_claims_of_a_paragraph_share():
     assert q[1] == ["pure-play vendor.", "Zipline pure-play vendor."]
     # Fewer claims than the threshold share nothing: no extra text.
     assert search_queries(["Glencore raised $2bn.", "Glencore opened a plant."]) == [[], []]
+
+
+def test_failed_recheck_is_recorded():
+    from evals.research_eval.citation_audit import ParagraphAudit, apply_recheck
+    from evals.research_eval.judge import JudgeResponse
+    pa = ParagraphAudit("sec1-p1", [], "cited", [], [])
+    pa.recheck = JudgeResponse(None, "", False, "claim_recheck", "13", error="RateLimitError: 429")
+    apply_recheck(pa, [])
+    assert pa.recheck_error == "RateLimitError: 429"
+    assert pa.to_dict()["recheck_error"] == "RateLimitError: 429"

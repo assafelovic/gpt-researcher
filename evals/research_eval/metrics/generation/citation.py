@@ -40,6 +40,9 @@ class _AuditMetric(Metric):
             res = self.from_audit(audit, archive)
         if failed:
             res.details["failed_paragraphs"] = failed
+        recheck_failed = [p.para_id for p in audit.judged if p.recheck_error]
+        if recheck_failed:
+            res.details["recheck_failed_paragraphs"] = recheck_failed
         # Every audit metric reports the same shared calls; count them once.
         res.llm = {**self.llm_record(ctx, audit.responses), "shared": "citation_audit"}
         return res

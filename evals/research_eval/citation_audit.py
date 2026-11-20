@@ -102,6 +102,7 @@ class ParagraphAudit:
     claim_checks: list[dict] = field(default_factory=list)      # claim level, see claim_level()
     citation_checks: list[dict] = field(default_factory=list)   # unit-URL pairs, claim level
     error: str | None = None
+    recheck_error: str | None = None            # the recheck call failed: first-call verdicts stand
     table: bool = False                         # rows are units; citations belong to the table
 
     def to_dict(self) -> dict:
@@ -119,6 +120,7 @@ class ParagraphAudit:
                              "chunk_ids": [p["chunk_id"] for p in s["passages"]]}
                             for s in self.confirm],
                 "error": self.error,
+                "recheck_error": self.recheck_error,
                 # the judge's reply when it could not be used, to see why
                 "raw_on_error": (self.response.raw or "")[:4000]
                                 if self.error and self.response else None}
@@ -647,6 +649,7 @@ def apply_recheck(pa: ParagraphAudit, todo: list[dict]) -> None:
     (backed_by_uncited)."""
     r = pa.recheck
     if r is None or not isinstance(r.parsed, dict):
+        pa.recheck_error = (r.error if r else None) or "no usable recheck response"
         return
     passage_chunk = {p["id"]: p["chunk_id"] for s in pa.extra + pa.confirm for p in s["passages"]}
     for got in r.parsed.get("claims") or []:
