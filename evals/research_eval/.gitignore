@@ -1,0 +1,5 @@
+# Scoring cache: rebuildable, and can grow large.
+cache/
+# Run archives and scoring results: kept outside the repo.
+runs/
+results/

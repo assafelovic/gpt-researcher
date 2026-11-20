@@ -1,0 +1,333 @@
+"""
+C. Efficiency metrics: whether what was retrieved was worth retrieving.
+"""
+
+from __future__ import annotations
+
+from ...archive import RunArchive, normalize_url
+from ...citation_audit import AUDIT_VERSION, citation_audit
+from ...prompts import PARAGRAPH_AUDIT, QUERY_RELEVANCE
+from ...report_parser import body_paragraphs, cited_urls, paragraph_sentences, report_sentences
+from ..base import Metric, MetricResult, ScoringContext, rounded
+from ..lexical import idf_table, weighted_overlap
+
+from gpt_researcher.context.lexical import tokenize
+
+
+class SourceUtilization(Metric):
+    """Share of retrieved source URLs that the report cites (rule-based, no LLM).
+
+    "Used" means cited in the report. Whether the writer actually drew on a
+    source it did not cite cannot be told from the finished report, so the
+    value does not try; `details` shows judged and rule-based chunk views.
+    (Named `citation_utilization` before 2026-11-02.)
+
+        value = cited URLs ∩ retrieved URLs / retrieved URLs
+
+    Retrieved = what can reach the writer: URLs retrieved only inside a failed
+    deep-research step (it raised, so its material was dropped) are left out
+    and counted in `details.urls_only_in_failed_steps`.
+
+    Which chunk a claim actually rests on comes from the generation side's
+    citation audit (one judge call per paragraph, shared with citation recall /
+    precision and faithfulness). With a judge configured `details` adds:
+
+      chunk_level_judged  retrieved chunks some judged claim rests on / retrieved
+                          chunks; `chunks_used_judged` lists them.
+
+    Deep research runs also get `details.reasoning` (see `_reasoning_chain`):
+    chunks that reach the report through a learning, and `chunk_level` =
+    chunks used directly or through a learning / chunks.
+
+    Without a judge (--rules-only) `details` keeps the rule-based diagnostic.
+    Neither is part of the value:
+
+      chunk_level      chunks matched by a paragraph that cites their URL /
+                       chunks. A chunk matches when the best sentence of such a
+                       paragraph has >= `match` of its BM25-weighted terms in
+                       the chunk. Chunks of uncited URLs never count as used:
+                       many sources repeat the same facts, so content overlap
+                       alone does not show a source was used.
+      echoed_uncited   chunks of uncited URLs whose content the report still
+                       echoes (best sentence anywhere >= `match`): material the
+                       writer either took without citing or got elsewhere.
+    """
+
+    name, category = "source_utilization", "retrieval.retrieval_quality"
+    version = f"7.audit{AUDIT_VERSION}"     # 4: deep-research reasoning chain; 5: URL-level funnel; 6: step chunks exclude deeper levels; 7: failed deep steps left out
+    prompts = (PARAGRAPH_AUDIT,)
+    MATCH, MIN_TERMS = 0.5, 5
+
+    async def score(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:
+        # Only what can reach the writer: material of a failed deep-research
+        # step is dropped before the report is written.
+        chunk_ids = archive.writer_chunk_ids
+        retrieved = list({normalize_url(archive.chunks[c]["url"]): archive.chunks[c]["url"]
+                          for c in chunk_ids if archive.chunks[c].get("url")}.values())
+        if not retrieved:
+            return self.skip("no retrieved sources")
+        parsed = archive.report
+        cited = {normalize_url(u) for u in cited_urls(parsed)}
+        used_urls = [u for u in retrieved if normalize_url(u) in cited]
+        threshold = ctx.option("utilization_match", self.MATCH)
+
+        def usable(sentences):
+            return [s for s in sentences if len(set(tokenize(s))) >= self.MIN_TERMS]
+
+        by_url: dict[str, list[str]] = {}
+        for p in body_paragraphs(parsed):
+            sents = usable(paragraph_sentences(p))
+            for c in p["citations"]:
+                by_url.setdefault(normalize_url(c["url"]), []).extend(sents)
+        all_sentences = usable(report_sentences(parsed))
+
+        idf = idf_table([archive.chunks[c]["content"] for c in chunk_ids])
+        per_chunk, used, echoed = [], 0, 0
+        for cid in chunk_ids:
+            chunk = archive.chunks[cid]
+            key = normalize_url(chunk["url"]) if chunk.get("url") else None
+            terms = set(tokenize(chunk["content"]))
+            is_cited = key in cited
+            pool = by_url.get(key, []) if is_cited else all_sentences
+            best = max((weighted_overlap(s, terms, idf) for s in pool), default=0.0)
+            entry = {"chunk_id": cid, "url_cited": is_cited, "best_match": round(best, 3)}
+            if is_cited:
+                entry["used"] = best >= threshold
+                used += entry["used"]
+            else:
+                entry["used"] = False
+                entry["echoed_uncited"] = best >= threshold
+                echoed += entry["echoed_uncited"]
+            per_chunk.append(entry)
+
+        lost_urls = len(archive.retrieved_urls) - len(retrieved)
+        res = self.result(rounded(len(used_urls) / len(retrieved)),
+                          retrieved_urls=len(retrieved), cited_retrieved_urls=len(used_urls),
+                          failed_deep_steps=len(archive.failed_deep_steps),
+                          urls_only_in_failed_steps=lost_urls,
+                          uncited_urls=[u for u in retrieved if normalize_url(u) not in cited],
+                          chunk_level=rounded(used / len(per_chunk)) if per_chunk else None,
+                          chunks=len(per_chunk), chunks_used=used, chunks_echoed_uncited=echoed,
+                          match_threshold=threshold, per_chunk=per_chunk)
+        reasoning = self._reasoning_chain(archive, idf, all_sentences, threshold)
+        if reasoning is not None:
+            direct = {e["chunk_id"] for e in per_chunk if e["used"]}
+            via = set(reasoning.pop("chunk_ids"))
+            reasoning["chunk_level"] = rounded(len(direct | via) / len(chunk_ids))
+            res.details["reasoning"] = reasoning
+        if ctx.judge is not None and chunk_ids:
+            audit = await citation_audit(archive, ctx)
+            judged_used = [c for c in chunk_ids if c in audit.used_chunk_ids]
+            res.details.update(chunk_level_judged=rounded(len(judged_used) / len(chunk_ids)),
+                               chunks_used_judged=judged_used)
+            res.llm = {**self.llm_record(ctx, audit.responses), "shared": "citation_audit"}
+        return res
+
+
+    def _reasoning_chain(self, archive: RunArchive, idf: dict, sentences: list[str],
+                         threshold: float) -> dict | None:
+        """Deep research only: chunk -> learning -> report.
+
+        Deep research distils each search step into a few "learnings" and
+        writes the report from them, so a chunk can shape the report without
+        its URL being cited. A learning rests on the chunk of its step (the
+        recorded source URL's chunks when the archive has one) that holds
+        >= `match` of its BM25-weighted terms; it reaches the report when a
+        report sentence does. None for runs without learnings (default and
+        detailed modes write straight from the retrieved material).
+        """
+        steps = [s for s in archive.spans if s["name"] == "research" and s["attributes"].get("learnings")]
+        if not steps:
+            return None
+        retrieved = set(archive.retrieved_chunk_ids)
+        retrieved_urls = {normalize_url(u) for u in archive.retrieved_urls}
+        cited = {normalize_url(u) for u in cited_urls(archive.report)}
+        learning_urls: set[str] = set()
+        n_learnings = in_report = 0
+        distilled, reached = set(), set()
+        for step in steps:
+            a = step["attributes"]
+            # The step's own chunks: deeper levels hang under the step's research
+            # span but run after its learnings were written, so they are left out.
+            later = {c for d in archive.descendants(step["span_id"]) if d["name"] == "deep_level"
+                     for c in archive.subtree_chunk_ids(d["span_id"])}
+            own = [c for c in archive.subtree_chunk_ids(step["span_id"])
+                   if c in retrieved and c not in later]
+            sources = a.get("learning_sources") or {}
+            for learning in a["learnings"]:
+                n_learnings += 1
+                url = sources.get(learning)
+                if url:
+                    learning_urls.add(normalize_url(url))
+                pool = [c for c in own if url and normalize_url(archive.chunks[c].get("url") or "")
+                        == normalize_url(url)] or own
+                rests_on = {c for c in pool
+                            if weighted_overlap(learning, set(tokenize(archive.chunks[c]["content"])),
+                                                idf) >= threshold}
+                used = any(weighted_overlap(learning, set(tokenize(x)), idf) >= threshold
+                           for x in sentences)
+                in_report += used
+                distilled |= rests_on
+                if used:
+                    reached |= rests_on
+        # URL-level funnel: retrieved URLs -> URLs some learning names as its
+        # source -> those the report cites. Empty when the archive predates
+        # learning_sources.
+        learning_urls &= retrieved_urls
+        return {"retrieved_urls": len(retrieved_urls),
+                "learning_urls": len(learning_urls) if sources_seen(steps) else None,
+                "cited_learning_urls": len(learning_urls & cited) if sources_seen(steps) else None,
+                "cited_other_urls": len((cited & retrieved_urls) - learning_urls) if sources_seen(steps) else None,
+                "learnings": n_learnings, "learnings_in_report": in_report,
+                "chunks_distilled": len(distilled), "chunks_via_learnings": len(reached),
+                "chunk_ids": sorted(reached)}
+
+
+def sources_seen(steps: list[dict]) -> bool:
+    return any(s["attributes"].get("learning_sources") for s in steps)
+
+
+class QueryRelevance(Metric):
+    """Judge rubric on each search step packaged with its material.
+
+    One call per search step that returned material. The judge picks levels
+    and the code scores them, so no free 0-10 number drifts between calls:
+    relevance to the core query (0/1/2), substance (0/1/2: concrete facts a
+    writer could cite). No key points are shown (since v6): a list could
+    narrow the judge to what it names.
+
+        unit score = 0 if relevance == 0 else (relevance + substance) / 4
+        value      = mean unit score
+
+    Whether two queries repeat each other is subquery_redundancy's job, so
+    the judge no longer sees the other queries of the plan (v4 asked it).
+
+    Units: every executed sub-query except the run's core query, plus each
+    researcher's initial (planning) search, which is often where the most-cited
+    sources come from. Material: one representative chunk per source URL (the
+    chunk that best matches the query by BM25 weighting), best URLs first,
+    within a character budget, so the judge sees the breadth of what came back
+    rather than the first few chunks of the first site. `details` records how
+    many URLs and chunks each judge call saw.
+
+    Steps that returned nothing are listed but not judged; plan_adherence
+    already counts them.
+    """
+
+    name, category = "query_relevance", "retrieval.retrieval_quality"
+    version = "6"           # 4: Q4 counts only reworded requests for the same facts; 5: levels scored by code, no total, no Q4; 6: no key points in the prompt
+    uses_llm = True
+    prompts = (QUERY_RELEVANCE,)
+    CHUNK_CHARS, MATERIAL_CHARS = 1500, 12000
+
+    async def score(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:
+        # Memoised so a scoring judges each step once.
+        memo = ctx.archive_memo(archive)
+        if "query_relevance" not in memo:
+            memo["query_relevance"] = await self._score(archive, ctx)
+        return memo["query_relevance"]
+
+    async def _score(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:
+        if ctx.judge is None:
+            return self.skip("no judge configured")
+        core = archive.query.strip()
+        units = [u for u in archive.retrieval_units
+                 if u.kind == "initial_results"
+                 or (u.kind == "sub_query" and u.query.strip() != core)]
+        if not units:
+            return self.skip("no executed sub-queries")
+        judged = [u for u in units if u.chunk_ids]
+        empty = [u.query for u in units if not u.chunk_ids]
+        layer = {u.span_id: archive.query_layer(u.span_id) for u in units}
+
+        async def judge_one(u):
+            material, shown = self._material(archive, u)
+            label = (f"{u.query}\n(the initial search on this query, run while planning)"
+                     if u.kind == "initial_results" else u.query)
+            prompt = QUERY_RELEVANCE.render(
+                question=archive.query, query=label, material=material)
+            return u, shown, await ctx.judge.ask(QUERY_RELEVANCE.id, QUERY_RELEVANCE.version, prompt)
+
+        results = await ctx.gather(judge_one(u) for u in judged)
+        per_query, scores = [], []
+        for u, shown, r in results:
+            norm = self.unit_score(r.parsed)
+            if norm is not None:
+                scores.append(norm)
+            per_query.append({"span_id": u.span_id, "kind": u.kind, "query": u.query,
+                              "layer": layer[u.span_id],
+                              "chunks": len(u.chunk_ids), **shown,
+                              "score": rounded(norm), "rubric": r.parsed, "error": r.error})
+        res = self.result(rounded(sum(scores) / len(scores)) if scores else None,
+                          judged=len(scores),
+                          no_material=empty, per_query=per_query)
+        if judged and not scores:
+            res.skipped = "every judge call failed"
+        elif not judged:
+            res.skipped = "no sub-query returned material"
+        res.llm = self.llm_record(ctx, [r for _, _, r in results])
+        return res
+
+    @staticmethod
+    def unit_score(parsed) -> float | None:
+        if not isinstance(parsed, dict):
+            return None
+        rel, sub = parsed.get("relevance"), parsed.get("substance")
+        if rel not in (0, 1, 2) or sub not in (0, 1, 2):
+            return None
+        return 0.0 if rel == 0 else (rel + sub) / 4
+
+    def _material(self, archive: RunArchive, unit) -> tuple[str, dict]:
+        """One best-matching chunk per URL, best URLs first, within the budget."""
+        chunks = [(cid, archive.chunks[cid]) for cid in unit.chunk_ids if cid in archive.chunks]
+        idf = idf_table([c["content"] for _, c in chunks])
+        best: dict[str, tuple[float, dict]] = {}
+        for _, c in chunks:
+            key = normalize_url(c["url"]) if c.get("url") else f"unattributed:{id(c)}"
+            score = weighted_overlap(unit.query, set(tokenize(c["content"])), idf)
+            if key not in best or score > best[key][0]:
+                best[key] = (score, c)
+        parts, used = [], 0
+        for _, c in sorted(best.values(), key=lambda x: -x[0]):
+            block = f"[{c.get('url') or 'unknown source'}]\n{c['content'][:self.CHUNK_CHARS]}"
+            if used + len(block) > self.MATERIAL_CHARS and parts:
+                break
+            parts.append(block)
+            used += len(block)
+        return "\n\n".join(parts), {"urls_total": len(best), "urls_shown": len(parts)}
+
+
+class RetrievalOverlap(Metric):
+    """Share of search results already returned to an earlier query (lower is better).
+
+    Measured at URL de-duplication (`_get_new_urls`): the only point where the
+    overlap is still visible, since everything downstream sees disjoint sets.
+    The repeat search of each researcher's own question (`is_core_query`
+    sub-queries, all duplicate by design) is left out; `details` keeps the
+    rate with it as `with_core_repeats`.
+    Pre-fetched results from retrievers that return content bypass that step
+    and are not counted.
+    """
+
+    name, category = "retrieval_overlap", "retrieval.retrieval_quality"
+    version = "2"           # 2: core-question repeat searches left out
+    higher_is_better = False
+
+    async def score(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:
+        units = [u for u in archive.retrieval_units if u.proposed_urls]
+        # gpt-researcher searches each researcher's own question once more after its
+        # sub-queries; that repeat of the initial search is all duplicate by design.
+        repeat = [u for u in units if u.kind == "sub_query" and u.is_core_query]
+        counted = [u for u in units if u not in repeat]
+        proposed = sum(len(u.proposed_urls) for u in counted)
+        accepted = sum(len(u.new_urls) for u in counted)
+        if not proposed:
+            return self.skip("no search results recorded")
+        per_unit = [{"span_id": u.span_id, "query": u.query, "proposed": len(u.proposed_urls),
+                     "new": len(u.new_urls), "core_repeat": u in repeat} for u in units]
+        all_p = proposed + sum(len(u.proposed_urls) for u in repeat)
+        all_a = accepted + sum(len(u.new_urls) for u in repeat)
+        return self.result(rounded((proposed - accepted) / proposed), proposed=proposed,
+                           new=accepted, duplicate=proposed - accepted,
+                           core_repeats=len(repeat),
+                           with_core_repeats=rounded((all_p - all_a) / all_p), per_unit=per_unit)

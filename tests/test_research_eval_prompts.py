@@ -1,0 +1,124 @@
+"""The prompt folder: every prompt loads from its own file, renders only its
+own placeholders, and cannot change its text without a version bump."""
+
+import json
+
+import pytest
+
+from evals.research_eval import prompts as P
+from evals.research_eval.metrics import all_metrics
+
+
+def test_every_prompt_file_loads_and_is_locked():
+    ps = P.all_prompts()
+    assert len(ps) == 20 and all(p.used_by for p in ps.values())
+    assert P.lock_problems(ps) == [], "run: python -m evals.research_eval.prompts --lock (after bumping versions)"
+
+
+def test_metrics_use_the_prompts_from_the_folder():
+    ps = P.all_prompts()
+    for m in all_metrics():
+        for p in m.prompts:
+            assert ps[p.id] == p, (m.name, p.id)
+
+
+def test_text_or_schema_change_without_a_version_bump_is_caught():
+    ps = P.all_prompts()
+    t = ps["tree_quality"]
+    for edited in (P.Prompt(t.id, t.version, t.system + "\nmore", t.user, t.schema_json),
+                   P.Prompt(t.id, t.version, t.system, t.user, t.schema_json.replace("evidence", "reason"))):
+        assert P.lock_problems({**ps, "tree_quality": edited}) == [
+            f"tree_quality: text changed but version is still {t.version}; bump it"]
+
+
+def test_render_fills_placeholders_once_and_leaves_json_braces():
+    p = P.Prompt("x", "1", 'Return {"a": [{"b": 1}]}', "Q: {question}\nfor {question}")
+    assert p.placeholders == ["question"]
+    r = p.render(question="{question} and {x}")
+    assert (r.system, r.user) == ('Return {"a": [{"b": 1}]}', "Q: {question} and {x}\nfor {question} and {x}")
+    assert r.text == r.system + "\n\n" + r.user and r.name == "x"
+    with pytest.raises(KeyError):
+        p.render()
+
+
+def test_every_prompt_is_a_fixed_system_message_and_a_user_message_with_the_data():
+    for p in P.all_prompts().values():
+        assert p.system and p.user and p.placeholders, p.id
+        assert not P.PLACEHOLDER.search(p.system), p.id
+        assert "Return ONLY" in p.system and "Return ONLY" not in p.user, p.id
+
+
+def test_a_placeholder_above_the_user_line_is_refused(tmp_path, monkeypatch):
+    (tmp_path / "g").mkdir()
+    (tmp_path / "g" / "GROUP.md").write_text("---\nname: g\ndescription: d\n---\n")
+    (tmp_path / "g" / "x.md").write_text("---\nid: x\nversion: 1\n---\nAsk {question}\n@user\nData\n")
+    monkeypatch.setattr(P, "HERE", tmp_path)
+    with pytest.raises(ValueError, match="system part"):
+        P.load("x")
+
+
+def test_every_answer_schema_is_strict_and_fits_the_prompt_example():
+    for p in P.all_prompts().values():
+        assert p.schema is not None, p.id
+        assert P.strict_schema_problems(p.schema) == [], p.id
+        # The JSON example the judge reads must be an answer the schema accepts.
+        tail = p.system[p.system.rindex("Return ONLY"):]
+        assert P.schema_errors(json.loads(tail[tail.index("{"):]), p.schema) == [], p.id
+    tq = P.load("tree_quality").schema
+    errs = P.schema_errors({"children": [{"child": 1, "problem": "none", "directions": ["deep"]}],
+                            "notes": ""}, tq)
+    assert errs == ["$: unexpected notes", "$.children[0]: missing left_out", "$.children[0]: missing evidence",
+                    "$.children[0]: missing builds_on",
+                    "$.children[0].directions[0]: 'deep' not in ['deeper', 'wider', 'specific']"], errs
+
+
+def test_include_pulls_one_shared_section(tmp_path, monkeypatch):
+    (tmp_path / "g").mkdir()
+    (tmp_path / "g" / "GROUP.md").write_text(
+        "---\nname: g\ndescription: d\n---\n\n# G\n\nintro\n\n## alpha\n\nA text.\n\n"
+        "## beta\n\nB text.\n\n## How to edit\n\nnot for the judge\n")
+    monkeypatch.setattr(P, "HERE", tmp_path)
+    assert P.group_sections("g") == {"alpha": "A text.", "beta": "B text."}
+    assert P._expand("x\n@include g#beta\ny", tmp_path / "p.md") == "x\nB text.\ny"
+    with pytest.raises(KeyError):
+        P._expand("@include g#gamma", tmp_path / "p.md")
+
+
+def test_one_group_file_per_group_and_every_section_is_used():
+    ps = P.all_prompts()
+    assert [g.name for g in P.groups()] == list(P.GROUPS)
+    used = {inc for p in ps.values() for inc in p.includes}
+    for g in P.groups():
+        head, _ = P._front(g / P.GROUP_FILE)
+        assert head["name"] == g.name and head["description"]
+        assert any(p.group == g.name for p in ps.values()), g.name
+        if P.group_prompt(g.name) is not None:
+            continue        # the whole group text is the group's system prompt
+        # A section no prompt includes is text nobody reads.
+        assert {f"{g.name}#{s}" for s in P.group_sections(g.name)} <= used, g.name
+
+
+def test_query_quality_group_text_is_the_system_prompt_of_its_metrics():
+    shared = P.group_prompt("query-quality")
+    # Maintainers' notes are comments and never reach the judge.
+    assert shared and "<!--" not in shared and "Maintainers" not in shared
+    assert shared.startswith("# Query quality judgement")
+    for pid in ("tree_quality", "subquery_redundancy", "decomposition_coverage"):
+        p = P.load(pid)
+        assert p.system.startswith(shared + "\n\n# Task: "), pid
+        assert "@include" not in p.template and p.includes == ("query-quality (whole group text)",)
+    # The key points are frozen in the dataset: their prompt gets no shared.
+    assert shared not in P.load("key_points").system and P.load("key_points").includes == ()
+
+
+def test_whole_group_mode_strips_comments_and_refuses_includes(tmp_path, monkeypatch):
+    (tmp_path / "g").mkdir()
+    (tmp_path / "g" / "GROUP.md").write_text(
+        "---\nname: g\ndescription: d\nsystem_prompt: true\n---\n\n<!-- note -->\n# G\n\nShared.\n")
+    (tmp_path / "g" / "a.md").write_text("---\nid: a\nversion: 1\n---\n\nTask A.\n\n@user\n\n{x}\n")
+    (tmp_path / "g" / "b.md").write_text("---\nid: b\nversion: 1\n---\n\n@include g#x\n")
+    monkeypatch.setattr(P, "HERE", tmp_path)
+    assert P.group_prompt("g") == "# G\n\nShared."
+    assert P.load("a", tmp_path / "g" / "a.md").render(x="1").system == "# G\n\nShared.\n\nTask A."
+    with pytest.raises(ValueError):
+        P.load("b", tmp_path / "g" / "b.md")

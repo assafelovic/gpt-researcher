@@ -1,0 +1,46 @@
+{
+ "insight": [
+  {
+   "criterion": "Comparative positioning",
+   "description": "Draws clear, evidence-based contrasts among platforms’ pricing and capabilities instead of presenting isolated product descriptions.",
+   "weight": 0.25
+  },
+  {
+   "criterion": "Price–feature trade-offs",
+   "description": "Explains how differences in pricing models and cost drivers relate to differences in platform capabilities, performance, or operational flexibility.",
+   "weight": 0.3
+  },
+  {
+   "criterion": "Cost under comparable use",
+   "description": "Interprets price differences using comparable usage or deployment assumptions and explains how changes in scale or workload could alter the comparison.",
+   "weight": 0.25
+  },
+  {
+   "criterion": "Platform fit and judgment",
+   "description": "Reaches qualified conclusions about which platforms may suit different needs, making the trade-offs behind those judgments clear rather than declaring a universal winner.",
+   "weight": 0.2
+  }
+ ],
+ "readability": [
+  {
+   "criterion": "Consistent comparison format",
+   "description": "Presents platform comparisons with consistent labels and parallel formatting so readers can readily compare like with like.",
+   "weight": 0.3
+  },
+  {
+   "criterion": "Clear price presentation",
+   "description": "Labels price figures and their units, billing bases, and qualifications unambiguously wherever they are presented.",
+   "weight": 0.25
+  },
+  {
+   "criterion": "Precise feature descriptions",
+   "description": "Uses precise, consistent wording to distinguish platform capabilities without vague shorthand or confusingly similar labels.",
+   "weight": 0.25
+  },
+  {
+   "criterion": "Fluent, navigable prose",
+   "description": "Uses clear transitions, readable sentences, and headings or other signposts that make the discussion easy to follow.",
+   "weight": 0.2
+  }
+ ]
+}

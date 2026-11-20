@@ -1,0 +1,34 @@
+{
+  "type": "object",
+  "properties": {
+    "relevance_evidence": {
+      "type": "string"
+    },
+    "relevance": {
+      "type": "integer",
+      "enum": [
+        0,
+        1,
+        2
+      ]
+    },
+    "substance_evidence": {
+      "type": "string"
+    },
+    "substance": {
+      "type": "integer",
+      "enum": [
+        0,
+        1,
+        2
+      ]
+    }
+  },
+  "required": [
+    "relevance_evidence",
+    "relevance",
+    "substance_evidence",
+    "substance"
+  ],
+  "additionalProperties": false
+}

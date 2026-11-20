@@ -1,0 +1,385 @@
+"""
+Report parsing: Markdown text -> sections, paragraphs, citations, evidence.
+-------------------------------------------------------------------------
+The writer emits plain Markdown. Parsing happens at scoring time (the archive
+keeps only the original text) with Python-Markdown, which the repo already
+depends on, plus its tables extension; malformed input is left to the library
+to tolerate.
+
+Output:
+
+  title           first level-1 heading
+  references      URLs listed under a trailing References/Sources heading; a
+                  claim by the report, not necessarily what the body cites
+  parse_warnings  format problems, input to the instruction-following metric
+  sections[]      heading_path + paragraphs[]
+    paragraphs[]  type text | list | table | quote | code | toc (anything under a
+                  table-of-contents heading), plain text,
+                  citations (links the paragraph makes) and evidence (the
+                  retrieved chunks behind each cited URL; found=false means
+                  the report cites a URL that was never retrieved)
+"""
+
+from __future__ import annotations
+
+import re
+from html.parser import HTMLParser
+
+import markdown
+
+from .archive import normalize_url
+
+REFERENCES_HEADING = re.compile(r"^\s*(references|sources|citations|bibliography|参考(文献|资料)?)\s*:?\s*$", re.I)
+TOC_HEADING = re.compile(r"^\s*(table of contents|contents|目录)\s*$", re.I)
+_CITATION_LABEL = re.compile(r"^\s*(sources?|references?|citations?|来源)\s*[:：]", re.I)
+_BARE_URL = re.compile(r"https?://[^\s\)\]\,\"'<>]+")
+_BLOCK_TYPES = {"p": "text", "ul": "list", "ol": "list", "table": "table",
+                "blockquote": "quote", "pre": "code"}
+_HEADINGS = {f"h{i}": i for i in range(1, 7)}
+_LINK_END = "\ue000"   # private-use marker: where a link's anchor text ends
+
+
+class _Blocks(HTMLParser):
+    """Flattens Python-Markdown's HTML into top-level blocks with their links."""
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.blocks: list[dict] = []
+        self._depth = 0
+        self._cur: dict | None = None
+        self._href: str | None = None
+        self._anchor: list[str] = []
+
+    def handle_starttag(self, tag, attrs):
+        if self._depth == 0:
+            self._cur = {"tag": tag, "text": [], "links": []}
+        self._depth += 1
+        if self._cur is None:
+            return
+        if tag == "a":
+            self._href = dict(attrs).get("href")
+            self._anchor = []
+        elif tag in ("li", "tr", "br") and self._cur["text"]:
+            self._cur["text"].append("\n")
+        elif tag in ("td", "th"):
+            self._cur["text"].append(" | ")
+
+    def handle_startendtag(self, tag, attrs):
+        if self._cur is not None and tag == "br":
+            self._cur["text"].append("\n")
+
+    def handle_endtag(self, tag):
+        if self._cur is not None and tag == "a" and self._href:
+            self._cur["links"].append({"url": self._href, "anchor": "".join(self._anchor).strip()})
+            self._cur["text"].append(_LINK_END)
+            self._href = None
+        self._depth = max(0, self._depth - 1)
+        if self._depth == 0 and self._cur is not None:
+            text = re.sub(r"[ \t]+", " ", "".join(self._cur["text"])).strip()
+            # Record each link's position in the final text, then drop the markers.
+            offsets, out = [], []
+            for part in text.split(_LINK_END):
+                out.append(part)
+                offsets.append(sum(map(len, out)))
+            for link, off in zip(self._cur["links"], offsets):
+                link["offset"] = off
+            self._cur["text"] = "".join(out)
+            self.blocks.append(self._cur)
+            self._cur = None
+
+    def handle_data(self, data):
+        if self._depth == 0:
+            if data.strip():
+                self.blocks.append({"tag": "p", "text": data.strip(), "links": []})
+            return
+        if self._cur is not None:
+            if self._cur["tag"] == "table" and not data.strip():
+                return          # layout whitespace between cells: one row per line
+            self._cur["text"].append(data)
+            if self._href is not None:
+                self._anchor.append(data)
+
+
+def _citations(block: dict) -> list[dict]:
+    """Distinct links of a block; `offsets` = where in the text each occurrence ends."""
+    out: dict[str, dict] = {}
+    for link in block["links"]:
+        url = link["url"]
+        if url.startswith(("http://", "https://")):
+            c = out.setdefault(url, {"url": url, "anchor": link["anchor"], "offsets": []})
+            c["offsets"].append(link.get("offset", len(block["text"])))
+    for m in _BARE_URL.finditer(block["text"]):
+        url = m.group(0).rstrip(".;:")
+        c = out.setdefault(url, {"url": url, "anchor": "", "offsets": []})
+        c["offsets"].append(m.start() + len(url))
+    return list(out.values())
+
+
+def parse_report(markdown_text: str, chunks_by_url: dict[str, list[str]] | None = None) -> dict:
+    """Parse a report. `chunks_by_url` (normalised URL -> chunk ids) fills `evidence`."""
+    chunks_by_url = chunks_by_url or {}
+    html = markdown.markdown(markdown_text or "", extensions=["tables"])
+    parser = _Blocks()
+    parser.feed(html)
+    parser.close()
+
+    warnings: list[str] = []
+    title = None
+    references: list[str] = []
+    listed: list[str] = []          # references as written, duplicates kept
+    sections: list[dict] = []
+    path: list[tuple[int, str]] = []
+    in_refs = False
+    refs_level = 0
+    last_level = 0
+    current: dict | None = None
+    saw_refs = False
+
+    def new_section() -> dict:
+        sec = {"section_id": f"sec{len(sections) + 1}",
+               "heading_path": [t for _, t in path], "paragraphs": []}
+        sections.append(sec)
+        return sec
+
+    for block in parser.blocks:
+        tag = block["tag"]
+        if tag in _HEADINGS:
+            level, text = _HEADINGS[tag], block["text"]
+            if in_refs and level > refs_level:
+                continue        # a sub-heading of References ("Academic", "News"): still references
+            if last_level and level > last_level + 1:
+                _add(warnings, "heading_level_jump")
+            last_level = level
+            if level == 1:
+                if title is None:
+                    title = text
+                else:
+                    _add(warnings, "multiple_titles")
+            in_refs = bool(REFERENCES_HEADING.match(text))
+            if in_refs:
+                refs_level = level
+                saw_refs = True
+                current = None
+                continue
+            while path and path[-1][0] >= level:
+                path.pop()
+            path.append((level, text))
+            current = None
+            continue
+        if tag == "hr":
+            continue
+        cites = _citations(block)
+        if in_refs:
+            # One entry per link (a list renders as one block); a bare URL that is
+            # also a link's text is the same entry, not a duplicate.
+            for c in cites:
+                n = sum(1 for link in block["links"] if link["url"] == c["url"]) or 1
+                listed.extend([c["url"]] * n)
+            references.extend(c["url"] for c in cites if c["url"] not in references)
+            continue
+        if not block["text"]:
+            continue
+        if current is None:
+            if not path:
+                _add(warnings, "content_before_first_heading")
+            current = new_section()
+        if current["paragraphs"] and cites and _citation_only(block["text"], cites):
+            # A citation line under a table, list or paragraph ("(ESMA, 2026; EBA, 2025)")
+            # vouches for that block: attach it there instead of leaving a paragraph
+            # with citations and nothing to cite.
+            _attach(current["paragraphs"][-1], block["text"], cites, chunks_by_url)
+            continue
+        kind = "toc" if path and TOC_HEADING.match(path[-1][1]) else _BLOCK_TYPES.get(tag, "text")
+        para_id = f"{current['section_id']}-p{len(current['paragraphs']) + 1}"
+        current["paragraphs"].append({
+            "para_id": para_id,
+            "type": kind,
+            "text": block["text"],
+            "citations": cites,
+            "evidence": _evidence(cites, chunks_by_url),
+        })
+
+    if title is None:
+        _add(warnings, "no_title")
+    if not saw_refs:
+        _add(warnings, "no_references_section")
+    elif not references:
+        _add(warnings, "references_without_links")
+
+    return {"title": title, "references": references, "references_listed": listed,
+            "parse_warnings": warnings, "sections": sections}
+
+
+def _evidence(cites: list[dict], chunks_by_url: dict[str, list[str]]) -> list[dict]:
+    return [{"url": c["url"],
+             "found": normalize_url(c["url"]) in chunks_by_url,
+             "chunk_ids": list(chunks_by_url.get(normalize_url(c["url"]), []))}
+            for c in cites]
+
+
+def _citation_only(text: str, cites: list[dict]) -> bool:
+    """True when a block holds nothing but citations (anchors, URLs, punctuation),
+    optionally after a "Sources:" label."""
+    text = _CITATION_LABEL.sub("", text)
+    for c in cites:
+        if c["anchor"]:
+            text = text.replace(c["anchor"], " ")
+    rest = _BARE_URL.sub(" ", text)
+    return len(re.sub(r"[\s()\[\];,.|*\-]+", "", rest)) < 5
+
+
+def _attach(paragraph: dict, text: str, cites: list[dict], chunks_by_url) -> None:
+    """Append a citation-only block to the paragraph before it, keeping link offsets."""
+    shift = len(paragraph["text"]) + 1
+    paragraph["text"] = f"{paragraph['text']}\n{text}"
+    merged = {c["url"]: c for c in paragraph["citations"]}
+    for c in cites:
+        offsets = [o + shift for o in c["offsets"]]
+        if c["url"] in merged:
+            merged[c["url"]]["offsets"].extend(offsets)
+        else:
+            merged[c["url"]] = {**c, "offsets": offsets}
+    paragraph["citations"] = list(merged.values())
+    paragraph["evidence"] = _evidence(paragraph["citations"], chunks_by_url)
+
+
+def _add(warnings: list[str], w: str) -> None:
+    if w not in warnings:
+        warnings.append(w)
+
+
+def body_paragraphs(parsed: dict) -> list[dict]:
+    return [p for s in parsed["sections"] for p in s["paragraphs"]]
+
+
+def cited_urls(parsed: dict) -> list[str]:
+    """Distinct URLs cited in the body (not the references list)."""
+    seen, out = set(), []
+    for p in body_paragraphs(parsed):
+        for c in p["citations"]:
+            key = normalize_url(c["url"])
+            if key not in seen:
+                seen.add(key)
+                out.append(c["url"])
+    return out
+
+
+_SENTENCE_END = re.compile(r"(?<=[.!?。！？])\s+|\n+")
+_MD_LINK_TAIL = re.compile(r"\(\s*https?://[^)]*\)")
+
+
+def paragraph_sentences(paragraph: dict) -> list[str]:
+    """A paragraph's sentences, with URLs removed."""
+    text = _BARE_URL.sub("", _MD_LINK_TAIL.sub("", paragraph["text"]))
+    out = []
+    for s in _SENTENCE_END.split(text):
+        s = s.strip(" |-*")
+        if len(s) >= 20:
+            out.append(s)
+    return out
+
+
+def cited_sentences(paragraph: dict, min_chars: int = 20) -> list[dict]:
+    """A paragraph's sentences with the URLs each one cites.
+
+    Returns [{"text", "urls"}] in order, each sentence's URLs in the order they
+    appear. Citations are placed by position: a link belongs to the sentence it
+    ends in. A sentence never ends inside parentheses ("(Norton, n.d.; ...)"),
+    and a fragment that holds little besides citation anchors or is shorter than
+    `min_chars` (a citation written after the full stop, "... rose. (Reuters,
+    2026)") is merged into the sentence before it, so its links go with it.
+    """
+    text = paragraph["text"]
+    links = sorted((off, c["url"], c.get("anchor") or "") for c in paragraph.get("citations", [])
+                   for off in c.get("offsets", []))
+    # Text with anchors and URLs blanked out: what a fragment says on its own.
+    bare = list(text)
+    for off, _, anchor in links:
+        for k in range(max(0, off - len(anchor)), min(off, len(bare))):
+            bare[k] = " "
+    bare = _BARE_URL.sub(lambda m: " " * len(m.group(0)), "".join(bare))
+
+    spans, start = [], 0
+    for m in _SENTENCE_END.finditer(text):
+        if text[:m.start()].count("(") > text[:m.start()].count(")"):
+            continue
+        spans.append((start, m.start()))
+        start = m.end()
+    spans.append((start, len(text)))
+
+    def substance(a: int, b: int) -> int:
+        return len(re.sub(r"[\s()\[\];,.|*\-]+", "", bare[a:b]))
+
+    merged: list[list[int]] = []
+    for a, b in spans:
+        if not text[a:b].strip(" |-*"):
+            continue
+        if merged and substance(a, b) < min_chars:
+            merged[-1][1] = b
+        else:
+            merged.append([a, b])
+    if len(merged) > 1 and substance(*merged[0]) < min_chars:
+        merged[1][0] = merged[0][0]
+        merged.pop(0)
+    out = [{"text": text[a:b].strip(), "urls": []} for a, b in merged]
+    for off, url, _ in links:
+        i = next((k for k, (a, b) in enumerate(merged) if off <= b), len(merged) - 1)
+        if out and url not in out[i]["urls"]:
+            out[i]["urls"].append(url)
+    return out
+
+
+def report_sentences(parsed: dict) -> list[str]:
+    """Body sentences, with URLs removed, for matching chunks against the text."""
+    return [s for p in body_paragraphs(parsed) for s in paragraph_sentences(p)]
+
+
+_FENCE = re.compile(r"^\s{0,3}(```|~~~)")
+_HEADING_LINE = re.compile(r"^\s{0,3}(#{1,6})\s+(.*?)\s*#*\s*$")
+_NOT_PROSE = re.compile(r"^\s*([-*+]\s|\d+[.)]\s|\||>)")
+_SENTENCE_DONE = re.compile(r"[.!?。！？…)\]]$")
+_RULE = re.compile(r"^\s*([-*_])(\s*\1){2,}\s*$")
+
+
+def report_ending(markdown_text: str) -> dict:
+    """Signs that the report stops part-way, e.g. the writer ran out of output
+    tokens: the text is cut, but the run still ends "ok".
+
+    The body's last line (before a References heading) must not be a heading,
+    leave ** emphasis open, or, when it is a plain paragraph, stop without
+    closing punctuation (a citation's ")" counts as closing). The report's very
+    last line must not leave a link or bracket open, and code fences must close.
+    A missing references section alone is not a sign (instruction_following
+    checks it); it is reported as `references`.
+    """
+    lines = (markdown_text or "").rstrip().splitlines()
+    refs_at = next((i for i, l in enumerate(lines) if (m := _HEADING_LINE.match(l))
+                    and REFERENCES_HEADING.match(m.group(2))), None)
+    body = list(lines if refs_at is None else lines[:refs_at])
+    while body and (not body[-1].strip() or _RULE.match(body[-1])):
+        body.pop()
+    signals = []
+    if not body:
+        signals.append("empty_body")
+    else:
+        start = len(body) - 1
+        while start > 0 and body[start - 1].strip():
+            start -= 1
+        block, last = "\n".join(body[start:]), body[-1].strip()
+        if _HEADING_LINE.match(last):
+            signals.append("ends_with_heading")
+        if block.count("**") % 2:
+            signals.append("open_emphasis")
+        tail = re.sub(r"[*_`\"'”’»\s]+$", "", last)
+        if last.startswith("|") and not last.endswith("|"):
+            signals.append("open_table_row")
+        elif not _NOT_PROSE.match(last) and not _HEADING_LINE.match(last) \
+                and not _BARE_URL.search(tail[-200:]) and not _SENTENCE_DONE.search(tail):
+            signals.append("ends_mid_sentence")
+    final = lines[-1] if lines else ""
+    if final.count("[") > final.count("]") or final.count("(") > final.count(")"):
+        signals.append("open_link")
+    if sum(1 for l in lines if _FENCE.match(l)) % 2:
+        signals.append("open_code_block")
+    return {"complete": not signals, "signals": signals, "references": refs_at is not None,
+            "last_line": (body[-1].strip() if body else "")[-160:]}

@@ -11,6 +11,7 @@ Three complementary evaluation systems, each answering a different question:
 | `simple_evals/` | Is the answer factually correct? | Yes (OpenAI SimpleQA dataset) |
 | `quality_eval/` | Is the report well-sourced and complete? | No — works on any query |
 | `hallucination_eval/` | Does the report fabricate content? | No — compares against scraped sources |
+| `research_eval/` | How well does each pipeline stage work? (run/score separated; retrieval metrics so far) | No — see [`research_eval/README.md`](research_eval/README.md) |
 
 **Quick start:**
 
@@ -59,21 +60,16 @@ Each JSON log file contains one record with three sections: `run_metadata`, `agg
 ### Features
 
 - Measures factual accuracy of research responses
-- Uses GPT-4 as a grading model (configurable)
-  ```python
-  # In run_eval.py, you can customize the grader model:
-  grader_model = ChatOpenAI(
-      temperature=0,                           # Lower temperature for more consistent grading
-      model_name="gpt-4-turbo",               # Can be changed to other OpenAI models
-      openai_api_key=os.getenv("OPENAI_API_KEY")
-  )
+- Uses two models. The **worker model** is gpt-researcher itself, the system under test, set with its usual `SMART_LLM` / `FAST_LLM` / `STRATEGIC_LLM`. The **judge model** stands in for a human reviewer: it grades answers and judges sources and claims. It is shared by every eval runner and defined in [`evals/judge.py`](judge.py); the default, `gpt-6-luna`, is a cheap one for testing and debugging, and a stronger one such as `gpt-6-sol` suits runs whose numbers will be reported. Override it per run with the `EVAL_JUDGE_MODEL` environment variable (or a line in `.env`); both models are recorded in each run's log:
+  ```bash
+  EVAL_JUDGE_MODEL=gpt-6-sol python -m evals.simple_evals.run_eval --num_examples 2
   ```
 - Grades responses on a three-point scale:
   - `CORRECT`: Answer fully contains important information without contradictions
   - `INCORRECT`: Answer contains factual contradictions
   - `NOT_ATTEMPTED`: Answer neither confirms nor contradicts the target
 
-**Note on Grader Configuration:** While the default grader uses GPT-4-turbo, you can modify the model and its parameters to use different OpenAI models or adjust the temperature for different grading behaviors. This is independent of the researcher's configuration, allowing you to optimize for cost or performance as needed.
+**Note on Judge Configuration:** The judge runs at temperature 0 where the model allows it; reasoning models (gpt-5, gpt-6 and the o-series) reject that and run at their default. This is independent of the worker's configuration, allowing you to optimize for cost or performance as needed.
 
 ### Metrics Tracked
 
@@ -101,10 +97,10 @@ LANGCHAIN_API_KEY=your_langchain_key_here
 
 3. Run evaluation:
 ```bash
-python run_eval.py --num_examples <number>
+python run_eval.py --num_examples <number> [--seed <int>]
 ```
 
-The `num_examples` parameter determines how many random test queries to evaluate (default: 1).
+The `num_examples` parameter determines how many random test queries to evaluate (default: 1). Pass `--seed` to draw the same questions on every run, so two runs can be compared question for question; each result records its row in the test set as `example_index`.
 
 #### Customizing Researcher Behavior
 
@@ -172,9 +168,9 @@ Structured log saved → evals/simple_evals/logs/eval_2025-02-22_10-32-11_n100.j
 See [`example_output.json`](simple_evals/example_output.json) for the full schema. Key fields:
 
 ```
-run_metadata        → timestamp, git_commit, grader_model, researcher_model
+run_metadata        → timestamp, git_commit, judge_model, worker_model, seed
 aggregate_metrics   → accuracy, f1, cost, avg/p50/p95 latency, success/fail counts
-results             → per-query list with grade, score, latency, cost, sources
+results             → per-query list with grade, score, latency, cost, sources, example_index
 ```
 
 ## Quality Evaluation (`quality_eval/`)
@@ -217,7 +213,7 @@ Two tools complement `run_eval.py` (shared metric logic lives in `metrics.py`):
 # Run all 6 metrics (most expensive, ~$0.06/query)
 python -m evals.quality_eval.run_eval --num_examples 5
 
-# Zero-cost only (citation ratio, diversity, authority)
+# Zero-cost only (citation faithfulness, diversity, authority)
 python -m evals.quality_eval.run_eval --num_examples 10 --no-subtopic --no-hallucination --no-unsupported-claim
 
 # Skip individual LLM metrics selectively
@@ -229,6 +225,8 @@ python -m evals.quality_eval.run_eval --num_examples 10 --no-unsupported-claim
 Logs are saved to `evals/quality_eval/logs/quality_eval_YYYY-MM-DD_HH-MM-SS_n{N}.jsonl`.
 
 ### Example Output
+
+The numbers below are illustrative and predate the evidence-window fix (`CONTEXT_CHARS`), so the claim scores in particular are lower than a current run gives.
 
 ```text
 Quality eval: 5 queries  subtopic=off  hallucination=off  unsupported_claim=on

@@ -41,12 +41,17 @@ class EvalSample:
     `sources` (raw URLs the agent retrieved) is the field RAG frameworks lack and
     the reason source-level metrics can exist here. `reference` is an optional
     ground-truth answer, unused by the ground-truth-free metrics.
+
+    `subqueries` are the searches the agent actually issued. They are optional —
+    most callers cannot see inside the pipeline — but when present they let a
+    missing subtopic be attributed to planning rather than writing.
     """
-    query:     str = ""
-    report:    str = ""
-    sources:   list[str] = field(default_factory=list)
-    context:   str = ""
-    reference: str | None = None
+    query:      str = ""
+    report:     str = ""
+    sources:    list[str] = field(default_factory=list)
+    context:    str = ""
+    reference:  str | None = None
+    subqueries: list[str] | None = None
 
 
 @dataclass
@@ -72,7 +77,7 @@ class BaseMetric:
 
     Subclasses set the four class attributes and implement `measure()`, which
     wraps the underlying metric function (in metrics.py) and returns a
-    MetricResult. Keeping the raw functions separate means the existing 35 unit
+    MetricResult. Keeping the raw functions separate means the existing unit
     tests and perturbation checks stay valid — this layer only standardizes I/O.
     """
     name:         str = ""

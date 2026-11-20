@@ -1,0 +1,945 @@
+"""Tests for the retrieval metrics and the scoring layer of evals/research_eval.
+
+Archives are built by hand so every expected number can be worked out from
+the fixture; the judge and the embedder are offline fakes.
+"""
+
+import json
+import re
+
+import pytest
+
+from evals.research_eval.archive import RunArchive, build_archive
+from evals.research_eval.cache import EvalCache
+from evals.research_eval.chunks import chunk_id
+from evals.research_eval.judge import Embedder, Judge
+from evals.research_eval.metrics import all_metrics
+from evals.research_eval.metrics.base import ScoringContext
+from evals.research_eval.metrics.retrieval import (
+    SourceUtilization, DecompositionCoverage, DecompositionTreeQuality, PlanAdherence,
+    MaterialCoverage, QueryRelevance, RetrievalOverlap, SourceAuthority, SourceDiversity,
+    SourceRecency, SubqueryRedundancy)
+from evals.research_eval.scoring import save_results, score_archive, scorer_version
+
+CORE = "battery supply chain risks"
+
+CHUNK_TEXT = {
+    "cobalt": "Cobalt mining concentrated in Congo creates supply risk for battery makers in 2024.",
+    "lithium": "Lithium refining capacity sits mostly in China, according to agency data.",
+    "unused": "Weather forecasts for the coming weekend show rain across northern regions.",
+}
+URLS = {"cobalt": "https://www.reuters.com/cobalt", "lithium": "https://energy.gov/lithium",
+        "unused": "https://weather-blog.com/rain"}
+
+
+def _chunk(key):
+    return chunk_id(URLS[key], CHUNK_TEXT[key]), {
+        "url": URLS[key], "title": key, "content": CHUNK_TEXT[key], "jev_score": None}
+
+
+def make_archive(report=None):
+    chunks = dict(_chunk(k) for k in CHUNK_TEXT)
+    cid = {k: _chunk(k)[0] for k in CHUNK_TEXT}
+    spans = [
+        {"span_id": "s1", "parent_id": None, "name": "run", "attributes": {"query": CORE}},
+        {"span_id": "s2", "parent_id": "s1", "name": "research", "attributes": {"query": CORE}},
+        {"span_id": "s3", "parent_id": "s2", "name": "plan", "attributes": {
+            "query": CORE, "sub_queries": ["cobalt supply concentration",
+                                           "lithium refining capacity",
+                                           "lithium refining capacity worldwide",
+                                           "sodium battery alternatives"]}},
+        {"span_id": "s4", "parent_id": "s3", "name": "sub_query", "attributes": {
+            "query": "cobalt supply concentration", "chunk_ids": [cid["cobalt"]],
+            "proposed_urls": [URLS["cobalt"], "https://dup.com"], "new_urls": [URLS["cobalt"], "https://dup.com"]}},
+        {"span_id": "s5", "parent_id": "s3", "name": "sub_query", "attributes": {
+            "query": "lithium refining capacity", "chunk_ids": [cid["lithium"], cid["unused"]],
+            "proposed_urls": [URLS["lithium"], URLS["unused"], "https://dup.com"],
+            "new_urls": [URLS["lithium"], URLS["unused"]]}},
+        {"span_id": "s6", "parent_id": "s3", "name": "sub_query", "attributes": {
+            "query": "lithium refining capacity worldwide", "chunk_ids": [],
+            "proposed_urls": ["https://dup.com"], "new_urls": []}},
+        # "sodium battery alternatives" was planned but never executed.
+        {"span_id": "s7", "parent_id": "s3", "name": "sub_query", "attributes": {
+            "query": CORE, "is_core_query": True, "chunk_ids": [cid["cobalt"]],
+            "proposed_urls": [], "new_urls": []}},
+    ]
+    report = report if report is not None else (
+        "# Battery risks\n\n## Supply\n\n"
+        "Cobalt mining is concentrated in Congo, which creates supply risk for battery makers "
+        "([Reuters](https://reuters.com/cobalt)).\n\n"
+        "Lithium prices moved a lot over the past year for many unrelated reasons entirely.\n\n"
+        "## References\n\n- https://reuters.com/cobalt\n")
+    return RunArchive(build_archive(
+        meta={"run_id": "run-1", "question_id": "q1", "query": CORE, "config": {"mode": "default"}},
+        spans=spans, chunks=chunks, report_markdown=report))
+
+
+class FakeJudge:
+    """Backend for Judge: answers each prompt type with a canned verdict."""
+
+    def __init__(self):
+        self.prompts = []
+        self.asked = {}
+
+    async def __call__(self, prompt):
+        self.prompts.append(prompt)
+        # Generation prompts (detailed behaviour is tested in test_research_eval_generation.py).
+        if "checking one paragraph of a research report" in prompt:
+            cited = "(cites: [1])" in prompt
+            return json.dumps({"kind": "factual",
+                               "claims": [{"claim": "c", "verdict": "supported" if cited else "unsupported",
+                                           "passages": ["1a"], "evidence": ""}],
+                               "sentences": [{"sentence": 1, "supported": True,
+                                              "citations": [{"source": 1, "alone": True}]}] if cited else []})
+        if "a finished report covers" in prompt:
+            return json.dumps({"points": [{"point": 1, "coverage": "full"}]})
+        if "preparing a grading rubric" in prompt:
+            return json.dumps({"insight": [{"criterion": "a", "weight": 1}],
+                               "readability": [{"criterion": "b", "weight": 1}]})
+        if "grading a research report on an absolute scale" in prompt:
+            return json.dumps({"scores": [{"id": "I1", "score": 7}, {"id": "R1", "score": 8}]})
+        if "whether each paragraph of a research report" in prompt:
+            n = len(re.findall(r"^\d+\. ", prompt.split("Paragraphs:")[1], re.M))
+            return json.dumps({"verdicts": [{"paragraph": i, "verdict": "yes"} for i in range(1, n + 1)]})
+        if "screening part of a research report" in prompt:
+            return json.dumps({"opinions": []})
+        if "List the distinct aspects" in prompt or "Write the final list from them" in prompt:
+            return json.dumps({"key_points": ["cobalt supply", "lithium refining", "recycling policy"]})
+        if "retrieved covers, before any report" in prompt:
+            # Covered when one of the point's own passages names its first word.
+            blocks = prompt.split("Key point ")[1:]
+            out = []
+            for b in blocks:
+                n, rest = b.split(":", 1)
+                word = rest.split()[0].lower()
+                ids = [i for i, text in re.findall(r"^\[(\w+)\] [^\n]*\n([^\n]*)", rest, re.M)
+                       if word in text.lower()]
+                out.append({"point": int(n), "coverage": "full" if ids else "none", "passages": ids})
+            return json.dumps({"points": out[:-1] if "drop-last" in prompt else out})
+        if "which key points of the core query" in prompt:
+            points = re.findall(r"^(\d+)\. (.+)$", prompt.split("Key points:")[1].split("Sub-queries:")[0], re.M)
+            subs = re.findall(r"^(\d+)\. (.+)$", prompt.split("Sub-queries:")[1].split("Return ONLY")[0], re.M)
+            return json.dumps({"points": [
+                {"point": int(i), "evidence": "",
+                 "subqueries": [int(j) for j, q in subs if p.split()[0] in q]} for i, p in points]})
+        if "how a research agent split a query" in prompt:
+            # "sodium" drifted, "worldwide" restates, the rest are specific and
+            # "why" also digs deeper; a child naming "Kamoto" follows up finding 1.
+            kids = re.findall(r"^(\d+)\. (.+)$", prompt.split("Child queries:\n")[1].split("\n\n")[0], re.M)
+            if any("garbled" in q for _, q in kids):
+                return "not json"
+            problem = lambda q: "drifted" if "sodium" in q else "restated" if "worldwide" in q else "none"
+            dirs = lambda q: [] if problem(q) != "none" else ["deeper", "specific"] if q.startswith("why") else ["specific"]
+            return json.dumps({"children": [
+                {"child": int(n), "left_out": "nothing", "evidence": q, "problem": problem(q), "directions": dirs(q),
+                 "builds_on": [1] if "Kamoto" in q else []}
+                for n, q in kids]})
+        if "searched the same thing twice" in prompt:
+            # B repeats A when it starts with it; "flaky" queries are a repeat on
+            # the first call only, "flaky2" on the first two.
+            a = re.search(r"Query A:\n(.*)\n", prompt).group(1)
+            b = re.search(r"Query B:\n(.*)", prompt).group(1).strip()
+            if "garbled" in a + b or "drop-last" in b:
+                return "not json"
+            self.asked[prompt] = self.asked.get(prompt, 0) + 1
+            rep = b.startswith(a)
+            if ("flaky2" in b and self.asked[prompt] > 2) or ("flaky2" not in b and "flaky" in b
+                                                              and self.asked[prompt] > 1):
+                rep = False
+            return json.dumps({"only_in_a": "", "only_in_b": "", "repeat": rep})
+        if "auditing one retrieval step" in prompt:
+            q = re.search(r"Query under review:\n(.*)\n", prompt).group(1)
+            return json.dumps({"relevance_evidence": "",
+                               "relevance": 2 if "cobalt" in q else 1, "substance_evidence": "",
+                               "substance": 2 if "cobalt" in q else 0})
+        if "used information from a source passage" in prompt:
+            return json.dumps({"used": "Lithium" in prompt.split("Report sentences")[0], "evidence": ""})
+        if "Rate how authoritative each domain is" in prompt:
+            return json.dumps({"domains": [{"domain": "weather-blog.com", "reason": "blog",
+                                            "kind": "low_editorial"}]})
+        raise AssertionError(prompt[:80])
+
+
+VOCAB = ["cobalt", "lithium", "refining", "supply", "recycling", "policy", "sodium", "concentration"]
+
+
+async def fake_embed(texts):
+    return [[1.0 if w in t.lower() else 0.0 for w in VOCAB] + [0.01] for t in texts]
+
+
+@pytest.fixture
+def ctx():
+    cache = EvalCache(":memory:")
+    fake = FakeJudge()
+    c = ScoringContext(cache=cache, judge=Judge(cache, model="judge-x", complete=fake),
+                       embedder=Embedder(cache, model="emb:x", embed=fake_embed))
+    c.fake = fake
+    return c
+
+
+async def test_decomposition_coverage_uses_judge_mapping(ctx):
+    r = await DecompositionCoverage().score(make_archive(), ctx)
+    assert r.details["method"] == "judge"
+    covered = {p["key_point"]: p["subqueries"] for p in r.details["per_point"]}
+    assert covered == {"cobalt supply": ["cobalt supply concentration"],
+                       "lithium refining": ["lithium refining capacity",
+                                            "lithium refining capacity worldwide"],
+                       "recycling policy": []}
+    assert r.value == pytest.approx(2 / 3, abs=1e-3)
+    assert r.details["key_points"]["source"] == "judge"
+    prompt = next(p for p in ctx.fake.prompts if "which key points of the core query" in p)
+    assert "4. sodium battery alternatives" in prompt and CORE not in prompt.split("Sub-queries:")[1]
+
+
+async def test_decomposition_coverage_embedding_fallback_with_frozen_points(ctx, tmp_path):
+    (tmp_path / "q1.json").write_text(json.dumps({"key_points": ["cobalt supply", "recycling policy"]}))
+    ctx.key_points_dir, ctx.judge = tmp_path, None
+    r = await DecompositionCoverage().score(make_archive(), ctx)
+    assert r.details["method"] == "embedding_fallback"
+    assert [p["covered"] for p in r.details["per_point"]] == [True, False]
+
+
+async def test_decomposition_coverage_judge_failure_is_skipped(ctx):
+    async def bad(prompt):
+        if "List the distinct aspects" in prompt or "Write the final list from them" in prompt:
+            return json.dumps({"key_points": ["cobalt supply"]})
+        return "not json"
+    ctx.judge = Judge(ctx.cache, model="judge-y", complete=bad)
+    r = await DecompositionCoverage().score(make_archive(), ctx)
+    assert r.value is None and r.skipped == "judge call failed"
+
+
+async def test_key_points_frozen_file_wins(ctx, tmp_path):
+    (tmp_path / "q1.json").write_text(json.dumps({"key_points": ["cobalt supply"]}))
+    ctx.key_points_dir = tmp_path
+    r = await DecompositionCoverage().score(make_archive(), ctx)
+    assert r.value == 1.0 and r.details["key_points"]["source"] == "frozen"
+    assert not any("List the distinct aspects" in p for p in ctx.fake.prompts)
+
+
+async def test_layered_key_points_show_their_sub_points(ctx, tmp_path):
+    (tmp_path / "q1.json").write_text(json.dumps({"aspects": [
+        {"aspect": "cobalt supply", "sub_points": ["Congo mine output", "refining in China"]},
+        {"aspect": "recycling policy", "sub_points": []}]}))
+    ctx.key_points_dir = tmp_path
+    r = await DecompositionCoverage().score(make_archive(), ctx)
+    assert [p["key_point"] for p in r.details["per_point"]] == ["cobalt supply", "recycling policy"]
+    assert r.details["key_points"]["sub_points"][0] == ["Congo mine output", "refining in China"]
+    prompt = next(p for p in ctx.fake.prompts if "which key points of the core query" in p)
+    points = prompt.split("Key points:")[1].split("Sub-queries:")[0]
+    assert "1. cobalt supply\n   includes: Congo mine output; refining in China\n2. recycling policy\n" in points
+    await MaterialCoverage().score(make_archive(), ctx)
+    prompt = next(p for p in ctx.fake.prompts if "retrieved covers" in p)
+    assert "Key point 1: cobalt supply\nincludes: Congo mine output; refining in China\n" in prompt
+
+
+async def test_generated_key_points_are_cached_with_their_sub_points(ctx):
+    from evals.research_eval.key_points import get_key_points
+
+    async def layered(prompt):
+        if "Write the final list from them" in prompt:
+            # Three drafts, each shown with its sub-points.
+            assert prompt.count("includes: Congo mine output") == 3
+            return json.dumps({"aspects": [{"aspect": "cobalt supply", "sub_points": ["Congo mine output"]}]})
+        if "in two layers" in prompt:
+            return json.dumps({"aspects": [{"aspect": "cobalt supply", "sub_points": ["Congo mine output"]}]})
+        return await ctx.fake(prompt)
+    ctx.judge = Judge(ctx.cache, model="judge-x", complete=layered)
+    points, prov = await get_key_points(make_archive(), ctx)
+    assert points == ["cobalt supply"] and prov["source"] == "judge" and prov["drafts"] == 3
+    ctx._memo.clear()
+    points, prov = await get_key_points(make_archive(), ctx)
+    assert prov["source"] == "cache" and prov["sub_points"] == [["Congo mine output"]]
+
+
+async def test_subquery_redundancy_judges_candidate_pairs_one_per_call(ctx):
+    r = await SubqueryRedundancy().score(make_archive(), ctx)
+    # The core repeat (layer 0) is the run's question, not a node; the step
+    # that brought back no new material is still a node.
+    assert r.details["method"] == "judge_pairs" and r.details["nodes"] == 3
+    [d] = r.details["not_unique"]
+    assert (d["query"], d["repeats"]) == ("lithium refining capacity worldwide", "lithium refining capacity")
+    assert d["same_parent"] is True and d["same_layer"] is True and d["kind"] == "leaf"
+    assert r.value == pytest.approx(1 / 3, abs=1e-3) and r.higher_is_better is False
+    prompts = [p for p in ctx.fake.prompts if "searched the same thing twice" in p]
+    assert len(prompts) == r.details["pairs"] <= r.details["all_pairs"]
+    # The judge sees one pair, never the tree.
+    assert all(p.count("Query A:") == 1 and "Queries:" not in p for p in prompts)
+    assert r.details["votes"] == 1 and r.details["unstable"] == []
+    assert r.llm["prompts"]["subquery_redundancy"]["version"] == "15"
+
+
+async def test_subquery_redundancy_takes_the_majority_when_asked_several_times(ctx):
+    ctx.options["redundancy_votes"] = 3
+    a = nested_archive(" flaky2")
+    next(x for x in a.data["spans"] if x["span_id"] == "s6")["attributes"]["query"] = \
+        "lithium refining capacity worldwide flaky"
+    r = await SubqueryRedundancy().score(RunArchive(a.data), ctx)
+    assert r.details["votes"] == 3
+    assert {u["query"]: (u["marks"], u["counted"]) for u in r.details["unstable"]} == {
+        "lithium refining capacity worldwide flaky": (1, False), "lithium refining capacity in Europe flaky2": (2, True)}
+    assert {u["repeats"] for u in r.details["unstable"]} == {"lithium refining capacity"}
+    dups = {d["query"] for d in r.details["not_unique"]}
+    assert dups == {"Congo cobalt output 2024 figures", "lithium refining capacity in Europe flaky2"}
+
+
+def nested_archive(extra=""):
+    """make_archive plus two subtopic researchers (layer 1 branches) with their
+    own sub-queries (layer 2): one repeats a sub-query of the other branch, one
+    a layer-1 sub-query, one only rewords its own parent."""
+    a = make_archive()
+    cobalt = _chunk("cobalt")[0]
+
+    def step(sid, parent, name, query, **attrs):
+        a.data["spans"].append({"span_id": sid, "parent_id": parent, "name": name, "attributes": {
+            "query": query, "chunk_ids": [cobalt], "proposed_urls": [], "new_urls": [], **attrs}})
+
+    for rid, q, subs in [("t1", "Congo cobalt mining", ["Congo cobalt output 2024", "Congo cobalt mining sites"]),
+                         ("t2", "recycling policy in Europe", ["Congo cobalt output 2024 figures",
+                                                               "lithium refining capacity in Europe" + extra])]:
+        a.data["spans"].append({"span_id": rid, "parent_id": "s1", "name": "research",
+                                "attributes": {"query": q, "parent_query": CORE}})
+        step(rid + "i", rid, "initial_results", q)
+        a.data["spans"].append({"span_id": rid + "p", "parent_id": rid, "name": "plan",
+                                "attributes": {"query": q, "sub_queries": subs}})
+        for k, sq in enumerate(subs):
+            step(f"{rid}s{k}", rid + "p", "sub_query", sq)
+    step("t1r", "t1p", "sub_query", "Congo cobalt mining", is_core_query=True)   # repeat: same node
+    return RunArchive(a.data)
+
+
+async def test_subquery_redundancy_compares_across_branches_and_layers_but_not_ancestors(ctx):
+    a = nested_archive()
+    kinds = {(n.layer, n.kind, n.parent) for n in a.query_nodes}
+    assert kinds == {(1, "leaf", "s2"), (1, "branch", "s2"), (2, "leaf", "t1"), (2, "leaf", "t2")}
+    assert a.query_node_ancestors["t1s1"] == ["t1i"] and a.query_node_ancestors["t1i"] == []
+    pairs, comparable = SubqueryRedundancy.candidate_pairs(a)
+    nodes = [n.query for n in a.query_nodes]
+    named = {(nodes[i - 1], nodes[j - 1]) for i, j in pairs}
+    # A node is never paired with the query it was split from.
+    assert ("Congo cobalt mining", "Congo cobalt mining sites") not in named
+    assert ("Congo cobalt output 2024", "Congo cobalt output 2024 figures") in named
+    assert comparable < 9 * 8 // 2
+    # Every node gets its own most similar nodes (v13 once took the 3 best pairs
+    # of the whole tree for every node).
+    for x in range(1, 10):
+        mine = [p for p in pairs if x in p]
+        assert mine, nodes[x - 1]
+    assert len(pairs) >= 9 * 3 // 2
+    r = await SubqueryRedundancy().score(a, ctx)
+    assert r.details["nodes"] == 9 and r.details["duplicates"] == 3
+    assert r.value == pytest.approx(3 / 9, abs=1e-3)
+    dup = {d["query"]: d for d in r.details["not_unique"]}
+    assert dup["Congo cobalt output 2024 figures"]["same_parent"] is False
+    assert dup["Congo cobalt output 2024 figures"]["same_layer"] is True
+    assert (dup["lithium refining capacity in Europe"]["repeats_layer"], dup["lithium refining capacity in Europe"]["layer"]) == (1, 2)
+    assert r.details["same_layer"] == 2 and r.details["same_parent"] == 1
+    assert r.details["per_layer"] == {1: {"nodes": 5, "duplicates": 1, "share": 0.2},
+                                      2: {"nodes": 4, "duplicates": 2, "share": 0.5}}
+    assert r.details["per_kind"] == {"branch": {"nodes": 2, "duplicates": 0, "share": 0.0},
+                                     "leaf": {"nodes": 7, "duplicates": 3, "share": 0.429}}
+
+
+async def test_subquery_redundancy_reports_skipped_pairs_and_failed_calls(ctx):
+    r = await SubqueryRedundancy().score(nested_archive(" drop-last"), ctx)
+    assert r.details["unanswered"] == ["lithium refining capacity in Europe drop-last"]
+    assert r.details["nodes"] == 9 and r.details["duplicates"] == 2
+
+    async def bad(prompt):
+        return "not json"
+    ctx.judge = Judge(EvalCache(":memory:"), model="judge-y", complete=bad)
+    r = await SubqueryRedundancy().score(nested_archive(), ctx)
+    assert r.value is None and r.skipped == "judge call failed"
+
+
+async def test_subquery_redundancy_lexical_fallback_flags_near_duplicates():
+    ctx = ScoringContext(cache=EvalCache(":memory:"))       # no judge
+    r = await SubqueryRedundancy().score(make_archive(), ctx)
+    assert r.details["method"] == "lexical" and r.details["pairs"] == 6
+    pairs = {(d["a"], d["b"]) for d in r.details["duplicate_pairs"]}
+    assert pairs == {("lithium refining capacity", "lithium refining capacity worldwide")}
+    assert r.value == pytest.approx(1 / 6, abs=1e-3)
+    assert r.higher_is_better is False
+
+
+async def test_tree_quality_scores_the_step_each_child_takes(ctx):
+    r = await DecompositionTreeQuality().score(make_archive(), ctx)
+    # specific, specific, restated ("worldwide"), drifted ("sodium"): 2 of 4 take a step.
+    assert r.value == pytest.approx(0.5, abs=1e-3)
+    assert r.details["directions"] == {"deeper": 0, "wider": 0, "specific": 2}
+    assert r.details["problems"] == {"restated": 1, "drifted": 1}
+    assert r.details["children"] == 4
+    assert [(w["child"], w["problem"]) for w in r.details["weak_children"]] == [
+        ("lithium refining capacity worldwide", "restated"), ("sodium battery alternatives", "drifted")]
+    # No findings outside deep research.
+    assert r.details["builds_on_findings"] is None and r.details["per_parent"][0]["findings"] == []
+    assert r.llm["requests"] == r.llm["api_calls"] == 1 and r.llm["judge_model"] == "judge-x"
+    assert r.llm["prompts"]["tree_quality"]["version"] == "21"
+    prompt = next(p for p in ctx.fake.prompts if "Path from the original question" in p)
+    assert f"0. {CORE}" in prompt and r.details["per_parent"][0]["depth"] == 0
+    assert f"Original research question (the root of the whole search tree):\n{CORE}" in prompt
+    assert "Findings of the search step this split follows:\nnone" in prompt
+    assert "4. sodium battery alternatives" in prompt
+
+
+def deep_archive():
+    """A deep run: level 1 splits the question, the cobalt branch finds something
+    and a level 2 split follows it up."""
+    def span(sid, parent, name, **attrs):
+        return {"span_id": sid, "parent_id": parent, "name": name, "attributes": attrs}
+    spans = [
+        span("r0", None, "research", query=CORE),
+        span("d1", "r0", "deep_level", query=CORE, serp_queries=[
+            {"query": "Congo cobalt mining 2024", "goal": "g1"}, {"query": "lithium refining in China", "goal": "g2"}]),
+        span("r1", "d1", "research", query="Congo cobalt mining 2024", research_goal="g1",
+             learnings=["Kamoto mine output fell 30% in 2024", "Export quotas began in 2025"]),
+        span("r2", "d1", "research", query="lithium refining in China", research_goal="g2", learnings=[]),
+        span("d2", "r1", "deep_level", query="Previous research goal: g1\nFollow-up questions: why output fell",
+             serp_queries=[{"query": "why Kamoto mine output fell in 2024", "goal": "g3"},
+                           {"query": "Congo cobalt export quota rules", "goal": "g4"}]),
+    ]
+    return RunArchive(build_archive(meta={"run_id": "deep-1", "query": CORE, "config": {"mode": "deep"}},
+                                    spans=spans, chunks={}, report_markdown="# R\n\nText.\n"))
+
+
+async def test_tree_quality_shows_deep_findings_and_counts_the_children_that_follow_them_up(ctx):
+    a = deep_archive()
+    r = await DecompositionTreeQuality().score(a, ctx)
+    by = {p["span_id"]: p for p in r.details["per_parent"]}
+    assert by["d1"]["findings"] == [] and by["d2"]["findings"] == a.span_by_id["r1"]["attributes"]["learnings"]
+    prompt = next(p for p in ctx.fake.prompts if "Child queries:\n1. why Kamoto" in p)
+    assert "Findings of the search step this split follows:\n1. Kamoto mine output fell 30% in 2024\n2. Export" in prompt
+    assert [(k["directions"], k["score"]) for k in by["d2"]["children"]] == [
+        (["deeper", "specific"], 1.0), (["specific"], 1.0)]
+    assert [k["builds_on"] for k in by["d2"]["children"]] == [[1], []]
+    assert r.details["builds_on_findings"] == 0.5 and r.details["children_after_findings"] == 2
+    assert r.value == 1.0 and r.details["directions"] == {"deeper": 1, "wider": 0, "specific": 4}
+
+
+async def test_tree_quality_reports_a_failed_call(ctx):
+    a = make_archive()
+    a.data["spans"][2]["attributes"]["sub_queries"] = ["garbled one", "cobalt supply"]
+    r = await DecompositionTreeQuality().score(RunArchive(a.data), ctx)
+    [p] = r.details["per_parent"]
+    assert p["score"] is None and p["error"] and p["unanswered_children"] == 2
+    assert r.value is None and r.skipped == "every judge call failed"
+
+
+async def test_dry_run_counts_follow_up_requests_and_caches_nothing():
+    cache = EvalCache(":memory:")
+    j = Judge(cache, model="m", dry_run=True)
+    r = await DecompositionCoverage().score(nested_archive(), ScoringContext(cache=cache, judge=j))
+    # The key points (3 drafts + 1 merge), then the mapping asked only once they are known.
+    assert j.calls == 5 and r.value is not None
+    j2 = Judge(cache, model="m", dry_run=True)
+    await DecompositionCoverage().score(nested_archive(), ScoringContext(cache=cache, judge=j2))
+    assert j2.calls == 5 and j2.cache_hits == 0
+
+
+async def test_tree_quality_leaves_out_deep_clarifying_questions(ctx):
+    a = make_archive()
+    a.data["spans"].append({"span_id": "q9", "parent_id": "s2", "name": "deep_plan",
+                            "attributes": {"query": CORE, "questions": ["Which regions?", "Which years?"]}})
+    r = await DecompositionTreeQuality().score(RunArchive(a.data), ctx)
+    assert [p["kind"] for p in r.details["per_parent"]] == ["plan"]
+
+
+def test_query_path_runs_from_the_question_down():
+    spans = [
+        {"span_id": "r0", "parent_id": None, "name": "research", "attributes": {"query": CORE}},
+        {"span_id": "d1", "parent_id": "r0", "name": "deep_level", "attributes": {"query": CORE}},
+        {"span_id": "r1", "parent_id": "d1", "name": "research", "attributes": {"query": "a"}},
+        {"span_id": "p1", "parent_id": "r1", "name": "plan", "attributes": {"query": "a"}},
+        {"span_id": "r2", "parent_id": None, "name": "research",
+         "attributes": {"query": "b", "parent_query": CORE}},
+    ]
+    a = RunArchive(build_archive(meta={"run_id": "t", "query": CORE}, spans=spans,
+                                 chunks={}, report_markdown="# t\n"))
+    assert a.query_path("p1") == [CORE, "a"]
+    assert a.query_path("r2") == [CORE, "b"]
+
+
+async def test_plan_adherence_counts_empty_and_unexecuted(ctx):
+    r = await PlanAdherence().score(make_archive(), ctx)
+    assert (r.details["planned"], r.details["delivered"]) == (4, 2)
+    assert {f["query"] for f in r.details["not_delivered"]} == {
+        "lithium refining capacity worldwide", "sodium battery alternatives"}
+
+
+async def test_source_diversity(ctx):
+    r = await SourceDiversity().score(make_archive(), ctx)
+    # One body citation: nothing to spread over.
+    assert r.details["basis"] == "cited" and r.value == 0.0
+    assert r.details["retrieved"]["domains"] == 3 and r.details["diversity_ratio"] == 1.0
+    two_sites = "".join(f"P{i} ([a](https://a.com/{i})).\n\n" if i % 2 else f"P{i} ([b](https://b.org/{i})).\n\n"
+                        for i in range(8))
+    even8 = "".join(f"P{i} ([s](https://site{i}.com/x)).\n\n" for i in range(8))
+    lean = await SourceDiversity().score(make_archive("# R\n\n## S\n\n" + two_sites), ctx)
+    wide = await SourceDiversity().score(make_archive("# R\n\n## S\n\n" + even8), ctx)
+    # Two sites split evenly: two random citations differ 4 times in 7
+    # (8/7 x 0.5); eight different sites: always. Both are perfectly even, so
+    # evenness alone would score them the same.
+    assert lean.value == pytest.approx(0.571, abs=1e-3) and lean.details["equivalent_domains"] == 2
+    assert wide.value == 1.0 and wide.details["equivalent_domains"] == 8
+    assert lean.details["evenness"] == wide.details["evenness"] == 1.0
+    assert (lean.details["entropy"], wide.details["entropy"]) == (1.0, 3.0)
+    # Twice as long with the same two-site split: about the same, not higher.
+    two_sites16 = "".join(f"P{i} ([a](https://a.com/{i})).\n\n" if i % 2 else f"P{i} ([b](https://b.org/{i})).\n\n"
+                          for i in range(16))
+    twice = await SourceDiversity().score(make_archive("# R\n\n## S\n\n" + two_sites16), ctx)
+    assert twice.value == pytest.approx(0.533, abs=1e-3)
+    uncited = await SourceDiversity().score(make_archive("# R\n\n## S\n\nNo links.\n"), ctx)
+    # Nothing cited: 0, not the retrieved sources' spread (which stays in details).
+    assert uncited.details["basis"] == "no body citations" and uncited.value == 0.0
+    assert uncited.details["retrieved"]["domains"] == 3
+    assert r.details["retrieved"]["entropy"] == pytest.approx(1.585, abs=1e-3)
+
+
+async def test_source_authority_rules_judge_and_domain_cache(ctx):
+    r = await SourceAuthority().score(make_archive(), ctx)
+    basis = {b["domain"]: (b["score"], b["basis"]) for b in r.details["breakdown"]}
+    assert basis == {"energy.gov": (1.0, "rule"), "reuters.com": (0.8, "rule"),
+                     "weather-blog.com": (0.3, "judge")}
+    # The report cites only Reuters; the retrieved mean stays in details.
+    assert r.value == 0.8 and r.details["basis"] == "citations"
+    assert r.details["retrieved_mean"] == pytest.approx((1.0 + 0.8 + 0.3) / 3, abs=1e-3)
+    # Second run: the domain verdict comes from the global cache, no new call.
+    before = len(ctx.fake.prompts)
+    r2 = await SourceAuthority().score(make_archive(), ctx)
+    assert len(ctx.fake.prompts) == before
+    assert {b["basis"] for b in r2.details["breakdown"] if b["domain"] == "weather-blog.com"} == {"domain_cache"}
+    assert {b["kind"] for b in r2.details["breakdown"] if b["domain"] == "weather-blog.com"} == {"low_editorial"}
+
+
+async def test_source_authority_weights_by_citation_and_matches_subdomains(ctx):
+    report = ("# T\n\n## S\n\nCobalt mining is concentrated in Congo ([Reuters](https://reuters.com/cobalt)).\n\n"
+              "Lithium refining sits in China ([DOE](https://energy.gov/lithium)).\n\n"
+              "Refining data again ([DOE](https://energy.gov/lithium)).\n\n"
+              "The EU rule applies ([ESMA](https://www.esma.europa.eu/x)).\n")
+    r = await SourceAuthority().score(make_archive(report), ctx)
+    assert {b["domain"]: b["basis"] for b in r.details["breakdown"]}["esma.europa.eu"] == "rule"
+    assert r.value == pytest.approx((0.8 + 1.0 + 1.0 + 0.9) / 4, abs=1e-3)
+    assert r.details["cited_domains"][0] == ("energy.gov", 2)
+
+
+async def test_source_authority_without_judge_falls_back():
+    r = await SourceAuthority().score(make_archive(), ScoringContext(cache=EvalCache(":memory:")))
+    assert r.details["fallback_domains"] == ["weather-blog.com"]
+
+
+async def test_source_authority_skips_a_report_that_cites_nothing(ctx):
+    r = await SourceAuthority().score(make_archive("# R\n\n## S\n\nNo links.\n"), ctx)
+    assert r.value is None and r.skipped == "no body citations"
+    assert r.details["retrieved_mean"] is not None
+
+
+async def test_source_authority_judge_failure_is_skipped(ctx):
+    async def broke(prompt):
+        raise RuntimeError("429 no credits")
+    ctx.judge = Judge(ctx.cache, model="judge-y", complete=broke)
+    r = await SourceAuthority().score(make_archive(), ctx)
+    assert r.value is None and r.skipped == "judge call failed"
+    assert r.llm["errors"] == 1 and r.llm["error_messages"] == ["RuntimeError: 429 no credits"]
+    assert r.details["unscored_domains"] == ["weather-blog.com"]
+
+
+async def test_source_utilization_is_url_level_and_rule_based():
+    ctx = ScoringContext(cache=EvalCache(":memory:"))       # --rules-only: no judge
+    r = await SourceUtilization().score(make_archive(), ctx)
+    assert r.value == pytest.approx(1 / 3, abs=1e-3)
+    assert r.details["uncited_urls"] == [URLS["lithium"], URLS["unused"]]
+    assert r.llm is None and not SourceUtilization.uses_llm
+    used = {c["chunk_id"]: c["used"] for c in r.details["per_chunk"]}
+    cid = {k: _chunk(k)[0] for k in CHUNK_TEXT}
+    assert used == {cid["cobalt"]: True, cid["lithium"]: False, cid["unused"]: False}
+    assert r.details["chunk_level"] == pytest.approx(1 / 3, abs=1e-3)
+
+
+async def test_source_utilization_reads_judged_chunks_from_citation_audit(ctx):
+    r = await SourceUtilization().score(make_archive(), ctx)
+    cid = {k: _chunk(k)[0] for k in CHUNK_TEXT}
+    assert r.value == pytest.approx(1 / 3, abs=1e-3)          # value stays URL-level
+    assert r.details["chunks_used_judged"] == [cid["cobalt"]]
+    assert r.details["chunk_level_judged"] == pytest.approx(1 / 3, abs=1e-3)
+    assert r.llm["shared"] == "citation_audit"
+
+
+async def test_source_utilization_uncited_overlap_is_echo_not_use(ctx):
+    report = ("# R\n\n## S\n\n"
+              "Lithium refining capacity sits mostly in China, according to agency data from 2024.\n\n"
+              "Cobalt mining is concentrated in Congo and creates supply risk for battery makers, "
+              "but this paragraph cites [Weather](https://weather-blog.com/rain).\n")
+    r = await SourceUtilization().score(make_archive(report), ctx)
+    by = {c["chunk_id"]: c for c in r.details["per_chunk"]}
+    cid = {k: _chunk(k)[0] for k in CHUNK_TEXT}
+    # Lithium text is reproduced but its URL is never cited: echoed, not used.
+    assert by[cid["lithium"]]["used"] is False and by[cid["lithium"]]["echoed_uncited"] is True
+    # The weather page is cited, but by a paragraph that does not match its content.
+    assert by[cid["unused"]]["url_cited"] is True and by[cid["unused"]]["used"] is False
+    assert r.details["chunks_echoed_uncited"] >= 1
+
+
+async def test_query_relevance(ctx):
+    r = await QueryRelevance().score(make_archive(), ctx)
+    scores = {q["query"]: q["score"] for q in r.details["per_query"]}
+    assert scores == {"cobalt supply concentration": 1.0, "lithium refining capacity": 0.25}
+    assert r.details["no_material"] == ["lithium refining capacity worldwide"]
+    assert r.value == pytest.approx(0.625)
+    prompt = next(p for p in ctx.fake.prompts if "Query under review:\ncobalt" in p)
+    # No key points (v6), and no other queries of the plan.
+    assert "Key points:" not in prompt and "lithium refining capacity" not in prompt
+
+
+def test_query_relevance_unit_score_comes_from_the_levels():
+    s = QueryRelevance.unit_score
+    assert s({"relevance": 0, "substance": 2}) == 0.0
+    assert s({"relevance": 2, "substance": 1}) == 0.75
+    assert s({"relevance": 2, "substance": 7}) is None and s("x") is None
+
+
+async def test_query_relevance_material_and_initial_search(ctx):
+    a = make_archive()
+    cid = {k: _chunk(k)[0] for k in CHUNK_TEXT}
+    extra = {k + "2": ("https://energy.gov/lithium", "Lithium refining also needs permits.") for k in ["lithium"]}
+    for key, (url, text) in extra.items():
+        a.data["chunks"][chunk_id(url, text)] = {"url": url, "title": key, "content": text, "jev_score": None}
+    a.data["spans"].append({"span_id": "s8", "parent_id": "s2", "name": "initial_results", "attributes": {
+        "query": CORE, "chunk_ids": [cid["lithium"], chunk_id(*extra["lithium2"]), cid["unused"]],
+        "proposed_urls": [], "new_urls": []}})
+    a = RunArchive(a.data)                      # rebuild cached views
+    r = await QueryRelevance().score(a, ctx)
+    initial, = [q for q in r.details["per_query"] if q["kind"] == "initial_results"]
+    # Two chunks from energy.gov + one from the weather blog: one chunk per URL is shown.
+    assert (initial["chunks"], initial["urls_total"], initial["urls_shown"]) == (3, 2, 2)
+    prompt = next(p for p in ctx.fake.prompts if "the initial search on this query" in p)
+    material = prompt.split("Material retrieved for it:")[1]
+    assert material.count("https://energy.gov/lithium") == 1
+
+
+async def test_retrieval_overlap(ctx):
+    r = await RetrievalOverlap().score(make_archive(), ctx)
+    assert (r.details["proposed"], r.details["new"]) == (6, 4)
+    assert r.value == pytest.approx(2 / 6, abs=1e-3)
+
+
+async def test_llm_metrics_skip_without_judge():
+    c = ScoringContext(cache=EvalCache(":memory:"))
+    for m in (DecompositionCoverage(), DecompositionTreeQuality(), QueryRelevance()):
+        r = await m.score(make_archive(), c)
+        assert r.value is None and r.skipped
+
+
+async def test_score_archive_lists_every_metric_and_is_reproducible(ctx, tmp_path):
+    metrics = all_metrics()
+    first = await score_archive(make_archive(), metrics, ctx)
+    calls = len(ctx.fake.prompts)
+    second = await score_archive(make_archive(), metrics, ctx)
+    assert len(ctx.fake.prompts) == calls              # everything replayed from cache
+    for v in second["metrics"].values():
+        if v["llm"]:
+            assert v["llm"]["api_calls"] == 0 and v["llm"]["cache_hits"] == v["llm"]["requests"]
+    assert set(first["metrics"]) == {m.name for m in metrics}
+    assert "overall" not in first and "total" not in first
+    strip = lambda rec: {k: (v["value"], v["skipped"]) for k, v in rec["metrics"].items()}
+    assert strip(first) == strip(second)
+    assert all(v["skipped"] is None for v in first["metrics"].values()), {
+        k: v["skipped"] for k, v in first["metrics"].items() if v["skipped"]}
+    path = save_results(first, tmp_path)
+    assert path == tmp_path / "run-1" / f"{first['scorer_version']}.json"
+
+
+async def test_scorer_version_tracks_metric_changes():
+    a = scorer_version(all_metrics())
+    m = all_metrics()
+    m[0].version = "99"
+    assert scorer_version(m) != a
+
+
+async def test_scorer_version_tracks_scoring_inputs(tmp_path):
+    async def complete(_):
+        return "{}"
+    kp = tmp_path / "kp"
+    kp.mkdir()
+    (kp / "q001.json").write_text('{"aspects": []}')
+
+    def version(salt="", model="m"):
+        cache = EvalCache(":memory:")
+        c = ScoringContext(cache=cache, judge=Judge(cache, model=model, complete=complete, salt=salt),
+                           key_points_dir=kp)
+        return scorer_version(all_metrics(), c)
+
+    a = version()
+    assert version() == a
+    assert version(salt="noise1") != a
+    assert version(model="other") != a
+    (kp / "q001.json").write_text('{"aspects": ["changed"]}')
+    assert version() != a
+
+
+def test_value_after_failed_judge_calls_is_marked_partial():
+    from evals.research_eval.metrics.base import MetricResult
+    from evals.research_eval.scoring import mark_partial, summary_rows
+    ok = MetricResult("m", "c", "1", 0.8, True, {}, llm={"errors": 0, "requests": 4})
+    part = MetricResult("m", "c", "1", 0.8, True, {}, llm={"errors": 1, "requests": 4})
+    gone = MetricResult("m", "c", "1", None, True, {}, skipped="every judge call failed",
+                        llm={"errors": 4, "requests": 4})
+    for r in (ok, part, gone):
+        mark_partial(r)
+    assert "partial" not in ok.details and "partial" not in gone.details
+    assert part.details["partial"].startswith("1 of 4")
+    rows = summary_rows({"metrics": {"m": part.to_dict()}})
+    assert rows[0][2].startswith("PARTIAL")
+
+
+async def test_metric_crash_is_recorded_not_raised(ctx):
+    class Broken(SourceDiversity):
+        name = "broken"
+
+        async def score(self, archive, ctx):
+            raise RuntimeError("nope")
+
+    rec = await score_archive(make_archive(), [Broken()], ctx)
+    assert rec["metrics"]["broken"]["skipped"].startswith("error: RuntimeError")
+
+
+def test_query_layer_counts_researchers_and_plans():
+    spans = [
+        {"span_id": "r0", "parent_id": None, "name": "research", "attributes": {"query": CORE}},
+        {"span_id": "p0", "parent_id": "r0", "name": "plan", "attributes": {"query": CORE}},
+        {"span_id": "q1", "parent_id": "p0", "name": "sub_query", "attributes": {"query": "a"}},
+        {"span_id": "q0", "parent_id": "p0", "name": "sub_query", "attributes": {"query": CORE}},
+        {"span_id": "d1", "parent_id": "r0", "name": "deep_level", "attributes": {"query": CORE}},
+        {"span_id": "r1", "parent_id": "d1", "name": "research", "attributes": {"query": "a"}},
+        {"span_id": "i1", "parent_id": "r1", "name": "initial_results", "attributes": {"query": "a"}},
+        {"span_id": "p1", "parent_id": "r1", "name": "plan", "attributes": {"query": "a"}},
+        {"span_id": "q2", "parent_id": "p1", "name": "sub_query", "attributes": {"query": "a"}},
+        {"span_id": "q3", "parent_id": "p1", "name": "sub_query", "attributes": {"query": "a.1"}},
+        # A detailed report's subtopic researcher: a root span with parent_query.
+        {"span_id": "r2", "parent_id": None, "name": "research",
+         "attributes": {"query": "b", "parent_query": CORE}},
+        {"span_id": "p2", "parent_id": "r2", "name": "plan", "attributes": {"query": "b"}},
+        {"span_id": "q4", "parent_id": "p2", "name": "sub_query", "attributes": {"query": "b.1"}},
+    ]
+    a = RunArchive(build_archive(meta={"run_id": "t", "query": CORE}, spans=spans,
+                                 chunks={}, report_markdown="# t\n"))
+    layers = {s: a.query_layer(s) for s in ("q0", "q1", "i1", "q2", "q3", "q4")}
+    assert layers == {"q0": 0, "q1": 1, "i1": 1, "q2": 1, "q3": 2, "q4": 2}
+
+
+async def test_query_relevance_records_the_layer(ctx):
+    a = make_archive()
+    cid = {k: _chunk(k)[0] for k in CHUNK_TEXT}
+    a.data["spans"] += [
+        {"span_id": "s8", "parent_id": "s2", "name": "research",
+         "attributes": {"query": "cobalt supply concentration"}},
+        {"span_id": "s9", "parent_id": "s8", "name": "plan", "attributes": {"query": "cobalt"}},
+        {"span_id": "s10", "parent_id": "s9", "name": "sub_query", "attributes": {
+            "query": "cobalt mine ownership Congo", "chunk_ids": [cid["cobalt"]]}},
+    ]
+    a = RunArchive(a.data)
+    r = await QueryRelevance().score(a, ctx)
+    layer = {q["query"]: q["layer"] for q in r.details["per_query"]}
+    assert layer == {"cobalt supply concentration": 1, "lithium refining capacity": 1,
+                     "cobalt mine ownership Congo": 2}
+
+
+def test_concentration_measures():
+    from evals.research_eval.metrics.retrieval.source import concentration
+    even = concentration(["a", "b", "c", "d"])
+    assert even["hhi"] == 0.25 and even["effective"] == 4 and even["entropy"] == 2 and even["evenness"] == 1
+    skewed = concentration(["a"] * 8 + ["b", "c"])          # shares .8 .1 .1
+    assert skewed["hhi"] == pytest.approx(0.66) and skewed["effective"] == pytest.approx(1.515, abs=1e-3)
+    assert skewed["gini_simpson"] == pytest.approx(0.34)
+    assert skewed["entropy"] == pytest.approx(0.922, abs=1e-3)
+
+
+async def test_source_diversity_reports_retrieved_and_cited_concentration():
+    r = await SourceDiversity().score(make_archive(), ScoringContext(cache=EvalCache(":memory:")))
+    assert r.details["retrieved"]["domains"] == 3
+    assert r.details["cited"]["n"] == 1 and r.details["cited"]["hhi"] == 1
+
+
+async def test_source_utilization_reasoning_chain_for_deep_research():
+    rules_ctx = ScoringContext(cache=EvalCache(":memory:"))
+    a = make_archive("# R\n\n## S\n\n"
+                     "Lithium refining capacity sits mostly in China, according to agency data from 2024.\n\n"
+                     "Cobalt mining is concentrated in Congo and creates supply risk for battery makers, "
+                     "but this paragraph cites [Weather](https://weather-blog.com/rain).\n")
+    assert "reasoning" not in (await SourceUtilization().score(a, rules_ctx)).details
+    a.data["spans"][1]["attributes"]["learnings"] = [
+        "Lithium refining capacity sits mostly in China.",          # rests on the lithium chunk
+        "Rain is expected across northern regions this weekend."]   # rests on the weather chunk
+    a = RunArchive(a.data)
+    r = await SourceUtilization().score(a, rules_ctx)
+    chain = r.details["reasoning"]
+    assert chain["learnings"] == 2 and chain["chunks_distilled"] == 2
+    # Only the lithium learning reaches the report, so only its chunk counts.
+    assert chain["learnings_in_report"] == 1 and chain["chunks_via_learnings"] == 1
+    assert chain["chunk_level"] == pytest.approx(1 / 3, abs=1e-3)
+    # Without learning_sources there is no URL-level funnel.
+    assert chain["learning_urls"] is None
+
+
+async def test_source_utilization_url_funnel_for_deep_research():
+    rules_ctx = ScoringContext(cache=EvalCache(":memory:"))
+    a = make_archive("# R\n\n## S\n\n"
+                     "Lithium refining capacity sits mostly in China, according to agency data from 2024 "
+                     f"([lithium]({URLS['lithium']})).\n")
+    lithium = "Lithium refining capacity sits mostly in China."
+    cobalt = "Cobalt mining is concentrated in Congo."
+    a.data["spans"][1]["attributes"]["learnings"] = [lithium, cobalt]
+    a.data["spans"][1]["attributes"]["learning_sources"] = {
+        lithium: URLS["lithium"], cobalt: URLS["cobalt"]}
+    chain = (await SourceUtilization().score(RunArchive(a.data), rules_ctx)).details["reasoning"]
+    assert chain["retrieved_urls"] == 3
+    assert chain["learning_urls"] == 2 and chain["cited_learning_urls"] == 1
+    assert chain["cited_other_urls"] == 0
+
+
+async def test_failed_runs_are_skipped_unless_asked(ctx):
+    from evals.research_eval.scoring import run_failure
+    a = make_archive("# R\n\nI could not gather any source material for this question.\n")
+    assert "no real report" in run_failure(a)
+    record = await score_archive(a, all_metrics(), ctx)
+    assert record["run_status"] == "failed"
+    assert all(r["value"] is None and r["skipped"].startswith("failed run") for r in record["metrics"].values())
+    record = await score_archive(a, [m for m in all_metrics() if m.name == "plan_adherence"], ctx, score_failed=True)
+    assert record["metrics"]["plan_adherence"]["value"] is not None
+    a.data["meta"]["status"], a.data["meta"]["error"] = "error", "boom"
+    assert "boom" in run_failure(RunArchive(a.data))
+    assert run_failure(make_archive()) is None
+
+
+async def test_judge_counts_tokens_from_usage_metadata():
+    j = Judge(EvalCache(":memory:"), model="m", complete=lambda p: None)
+    j._add_usage({"input_tokens": 10, "output_tokens": 3})
+    j._add_usage(None)
+    assert j.usage() == {"model": "m", "calls": 0, "cache_hits": 0, "input_tokens": 10, "output_tokens": 3,
+                         "prompt_chars": 0, "refused": 0}
+
+
+async def test_reasoning_chain_leaves_out_chunks_of_deeper_levels():
+    rules_ctx = ScoringContext(cache=EvalCache(":memory:"))
+    a = make_archive("# R\n\n## S\n\n"
+                     "Lithium refining capacity sits mostly in China, according to agency data from 2024.\n")
+    a.data["spans"][1]["attributes"]["learnings"] = ["Lithium refining capacity sits mostly in China."]
+    base = (await SourceUtilization().score(RunArchive(a.data), rules_ctx)).details["reasoning"]
+    assert base["chunks_distilled"] == 1
+    # Move the lithium sub-query under a deeper level of the same step: its chunk
+    # was retrieved after the learning was written, so it cannot back it.
+    a.data["spans"].append({"span_id": "dl", "parent_id": "s2", "name": "deep_level", "attributes": {"query": CORE}})
+    for sp in a.data["spans"]:
+        if sp["span_id"] == "s5":
+            sp["parent_id"] = "dl"
+    chain = (await SourceUtilization().score(RunArchive(a.data), rules_ctx)).details["reasoning"]
+    assert chain["chunks_distilled"] == 0
+
+
+def test_failed_deep_step_material_is_not_counted_as_reaching_the_writer():
+    ca, cb = _chunk("cobalt"), _chunk("lithium")
+    spans = [
+        {"span_id": "r0", "parent_id": None, "name": "research", "attributes": {"query": CORE}},
+        {"span_id": "d1", "parent_id": "r0", "name": "deep_level", "attributes": {"query": CORE}},
+        # ok step: learnings recorded (even empty); failed step: none recorded
+        {"span_id": "r1", "parent_id": "d1", "name": "research", "attributes": {"query": "a", "learnings": []}},
+        {"span_id": "q1", "parent_id": "r1", "name": "sub_query", "attributes": {"query": "a", "chunk_ids": [ca[0]]}},
+        {"span_id": "r2", "parent_id": "d1", "name": "research", "attributes": {"query": "b"}},
+        {"span_id": "q2", "parent_id": "r2", "name": "sub_query", "attributes": {"query": "b", "chunk_ids": [cb[0], ca[0]]}},
+    ]
+    a = RunArchive(build_archive(meta={"run_id": "t", "query": CORE}, spans=spans,
+                                 chunks={ca[0]: ca[1], cb[0]: cb[1]}, report_markdown="# t\n"))
+    assert [s["span_id"] for s in a.failed_deep_steps] == ["r2"]
+    # cobalt also came back in the ok step, so it still reaches the writer
+    assert a.writer_chunk_ids == [ca[0]]
+
+
+async def test_plan_adherence_counts_a_failed_deep_step_as_not_completed():
+    ca, cb = _chunk("cobalt"), _chunk("lithium")
+    spans = [
+        {"span_id": "r0", "parent_id": None, "name": "research", "attributes": {"query": CORE}},
+        {"span_id": "d1", "parent_id": "r0", "name": "deep_level",
+         "attributes": {"query": CORE, "serp_queries": [{"query": "a"}, {"query": "b"}, {"query": "c"}]}},
+        {"span_id": "r1", "parent_id": "d1", "name": "research", "attributes": {"query": "a", "learnings": []}},
+        {"span_id": "q1", "parent_id": "r1", "name": "sub_query", "attributes": {"query": "a", "chunk_ids": [ca[0]]}},
+        # b came back with material, then processing raised: nothing went on
+        {"span_id": "r2", "parent_id": "d1", "name": "research",
+         "attributes": {"query": "b", "process_error": "ValueError: empty"}},
+        {"span_id": "q2", "parent_id": "r2", "name": "sub_query", "attributes": {"query": "b", "chunk_ids": [cb[0]]}},
+        # c returned nothing
+        {"span_id": "r3", "parent_id": "d1", "name": "research", "attributes": {"query": "c", "learnings": []}},
+    ]
+    a = RunArchive(build_archive(meta={"run_id": "t", "query": CORE}, spans=spans,
+                                 chunks={ca[0]: ca[1], cb[0]: cb[1]}, report_markdown="# t\n"))
+    r = await PlanAdherence().score(a, ScoringContext(cache=EvalCache(":memory:")))
+    assert (r.details["planned"], r.details["delivered"], r.details["completed"]) == (3, 2, 1)
+    assert r.value == pytest.approx(1 / 3, abs=1e-3)
+    assert r.details["retrieval_delivery"] == pytest.approx(2 / 3, abs=1e-3)
+    assert [f["query"] for f in r.details["failed_after_retrieval"]] == ["b"]
+    assert r.details["failed_after_retrieval"][0]["error"] == "ValueError: empty"
+    assert [f["query"] for f in r.details["not_delivered"]] == ["c"]
+    assert r.details["deep_steps_failed"] == 1
+
+
+# --- source recency / material coverage -----------------------------------------
+
+def test_source_year_prefers_the_url_date_and_ignores_forecasts():
+    from evals.research_eval.metrics.retrieval.source import source_year
+    assert source_year("https://x.com/news/2025/03/foo", "", "since 2019, as of 2026", 2026) == (2025, "url")
+    assert source_year("https://x.com/files/2023-10/report.pdf", "", "2026", 2026) == (2023, "url")
+    assert source_year("https://x.com/a", "Outlook 2024", "by 2030 the market doubles", 2026) == (2024, "text")
+    assert source_year("https://x.com/a", "", "1,2019 staff, version 3.2020", 2026) == (None, "none")
+
+
+async def test_source_recency_counts_dated_cited_sources_only():
+    a = make_archive(report="# R\n\n## A\n\nCobalt is concentrated ([R](https://reuters.com/cobalt)). "
+                            "Refining sits in China ([D](https://energy.gov/lithium)).\n")
+    a.data["meta"]["started_at"] = "2025-06-01T00:00:00+00:00"
+    r = await SourceRecency().score(a, ScoringContext(cache=EvalCache(":memory:")))
+    # cobalt names 2024 (within a year of 2025); lithium names no year: left out, not old.
+    assert r.value == 1.0 and r.details["dated"] == 1 and r.details["undated"] == 1
+    assert r.details["undated_urls"] == ["https://energy.gov/lithium"]
+    a.data["meta"]["started_at"] = "2026-06-01T00:00:00+00:00"
+    old = await SourceRecency().score(a, ScoringContext(cache=EvalCache(":memory:")))
+    assert old.value == 0.0 and old.details["old"][0]["year"] == 2024
+    none = await SourceRecency().score(make_archive(report="# R\n\n## A\n\nNo links here at all.\n"),
+                                       ScoringContext(cache=EvalCache(":memory:")))
+    assert none.skipped and none.value is None
+
+
+async def test_material_coverage_grades_key_points_on_evaluator_picked_passages(ctx):
+    r = await MaterialCoverage().score(make_archive(), ctx)
+    per = {p["key_point"]: p for p in r.details["per_point"]}
+    # cobalt and lithium passages exist; nothing retrieved is about recycling policy.
+    assert per["cobalt supply"]["coverage"] == "full" and per["lithium refining"]["coverage"] == "full"
+    assert per["recycling policy"]["coverage"] == "none"
+    assert r.value == pytest.approx(2 / 3, abs=1e-3)
+    assert per["cobalt supply"]["urls"] == ["https://www.reuters.com/cobalt"]
+    prompt = next(p for p in ctx.fake.prompts if "retrieved covers" in p)
+    assert "Weather forecasts" not in prompt.split("Key point 1:")[1].split("Key point 2:")[0]
+    assert r.details["unanswered"] == 0 and r.llm["requests"] == 1
+
+
+async def test_material_coverage_counts_points_the_reply_skipped(ctx):
+    a = make_archive()
+    a.data["meta"]["query"] = a.data["meta"]["query"] + " drop-last"
+    r = await MaterialCoverage().score(a, ctx)
+    assert r.details["unanswered"] == 1 and r.details["per_point"][-1]["coverage"] == "none"
+
+
+def test_company_docs_and_investor_subdomains_are_scored_by_rule():
+    from evals.research_eval.metrics.retrieval.source import rule_score
+    assert rule_score("docs.pinecone.io") == (0.6, "company-primary")
+    assert rule_score("investor.uber.com") == (0.6, "company-primary")
+    assert rule_score("ir.com") is None
+    assert rule_score("pinecone.io") is None
+
+
+async def test_source_authority_shows_the_question_and_page_openings(ctx):
+    from evals.research_eval.metrics.retrieval.source import rule_score
+    await SourceAuthority().score(make_archive(), ctx)
+    [prompt] = [p for p in ctx.fake.prompts if "Rate how authoritative each domain is" in p]
+    domains = prompt.split("Domains:\n")[1]
+    assert "Core question:\n" in prompt and CORE in prompt.split("Domains:")[0]
+    assert domains.startswith("- weather-blog.com\n  page: ") and "\n  opening: " in domains
+    # Wikipedia is no longer a rule tier: the judge sees its articles.
+    assert rule_score("en.wikipedia.org") is None

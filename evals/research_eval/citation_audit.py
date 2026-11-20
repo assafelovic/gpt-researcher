@@ -1,0 +1,726 @@
+"""
+Citation audit: which source passages each part of the report rests on.
+-----------------------------------------------------------------------
+Shared by the generation metrics (ALCE citation recall / precision, effective
+citations, faithfulness) and by the retrieval side's `source_utilization`,
+which reads `used_chunk_ids` for its chunk-level view. One judge call per
+paragraph does all of it, so running several of these metrics costs the same
+as running one: the audit is memoised on the ScoringContext and every call is
+in the judge cache.
+
+Per paragraph the judge sees:
+  sentences  numbered, each with the sources it links to (placed by link
+             position, `report_parser.cited_sentences`);
+  material   for a paragraph with citations, the passages of its cited URLs
+             (the retrieved chunks of each URL that best match the paragraph,
+             BM25-weighted, within a budget); a cited URL that was never
+             retrieved is shown as unavailable. For a paragraph without
+             citations, the best-matching passages from everything retrieved.
+Second step: the fact claims the first call's passages did not support are
+judged again, in a separate call, against independent passages picked claim
+by claim: for each claim, the passages closest to it (embedding similarity and BM25,
+merged by reciprocal rank fusion; BM25 alone without an embedder) among everything retrieved that the first call did
+not show (other pages, and passages of a cited page left out by the material
+budget; support found there backs the citation). The recheck uses the same
+four verdicts as the first call, so support that puts several passages
+together counts as inferred.
+So a claim is not judged only on the evidence the agent chose to cite. The
+first call shows only cited material, because more material in one call made
+the judge more lenient on the citations too.
+and returns:
+  kind       factual | non_factual (opinion, transition: no claims judged)
+  claims     the paragraph's factual claims, each with a 4-level verdict and
+             the passage ids it rests on (-> chunk ids)
+  sentences  for each citing sentence, whether its sources together support it,
+             and per source whether it alone supports it and whether the others
+             would without it (ALCE's two conditions for an irrelevant citation)
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from string import ascii_lowercase
+from typing import TYPE_CHECKING
+
+from gpt_researcher.context.lexical import tokenize
+
+from .archive import normalize_url
+from .metrics.lexical import idf_table, weighted_overlap
+from .prompts import CLAIM_RECHECK, PARAGRAPH_AUDIT
+from .report_parser import body_paragraphs, cited_sentences
+
+if TYPE_CHECKING:
+    from .archive import RunArchive
+    from .judge import JudgeResponse
+    from .metrics.base import ScoringContext
+
+# Bump when the audit's material or unit logic changes (prompt changes bump the
+# prompt version instead); every metric that reads the audit carries it in its
+# version, so the scorer version changes and old results are not overwritten.
+AUDIT_VERSION = "18"    # 7: recall / precision per claim; 8: fact / analysis claims; 9: entity roles are facts; 10: independent recheck; 11: recheck uncited paragraphs and unshown passages of cited pages; 12: one inferred level;
+                        # 13: contradicted only about exactly the same thing (scope, definition, period);
+                        # 14: the recheck sees the contradicting passages; a contradiction it does not confirm is unsupported
+                        # 15: recheck passages picked per claim by embedding over all retrieved material; recheck may say inferred
+                        # 16: per-claim pick merges the embedding and BM25 rankings (reciprocal rank fusion)
+                        # 17: each claim also searched without the words 3+ claims of the paragraph share
+                        # 18: ... and without them but with the claim's names and figures
+
+# Faithfulness points per verdict.
+# One "inferred" level since paragraph_audit v6: the judge could not keep the
+# three earlier levels apart (inferred_a/b/c, kept so old answers still score).
+VERDICT_SCORES = {"supported": 1.0, "inferred": 0.5, "unsupported": 0.0, "contradicted": -1.0,
+                  "inferred_a": 0.5, "inferred_b": 0.4, "inferred_c": 0.3}
+
+MIN_UNCITED_CHARS = 80      # shorter uncited paragraphs are headings-in-disguise or transitions
+PASSAGE_CHARS = 1200        # one chunk shown to the judge
+SOURCE_PASSAGES = 12        # chunks shown per cited URL: most pages fit whole
+MATERIAL_CHARS = 24000      # per paragraph, shared by its cited URLs
+UNCITED_PASSAGES = 4        # BM25 top-k for paragraphs without citations
+RECHECK_VERDICTS = ("supported", "inferred", "unsupported", "contradicted")   # CLAIM_RECHECK v13
+CLAIM_PASSAGES = 5          # recheck: passages picked for each claim (outside the first call's material)
+RECHECK_PASSAGES = 20       # recheck: at most this many passages per paragraph, shared by its claims
+EMBED_CHARS = 4000          # chunk text sent to the embedder
+RRF_K = 60                  # reciprocal rank fusion of the embedding and BM25 rankings
+SHARED_CLAIMS = 3           # search query: drop words that this many of the paragraph's claims share
+UNAVAILABLE = "(not available: the agent never retrieved this URL)"
+
+
+@dataclass
+class ParagraphAudit:
+    para_id: str
+    heading_path: list[str]
+    mode: str                                   # cited | uncited
+    sentences: list[dict]                       # [{"text", "urls"}]
+    sources: list[dict]                         # [{"n", "url", "found", "cited", "passages": [{"id", "chunk_id"}]}]
+    response: "JudgeResponse | None" = None
+    extra: list[dict] = field(default_factory=list)            # independent sources (recheck)
+    confirm: list[dict] = field(default_factory=list)          # passages first read as contradicting (recheck)
+    recheck: "JudgeResponse | None" = None
+    kind: str | None = None                     # factual | non_factual
+    claims: list[dict] = field(default_factory=list)
+    sentence_checks: list[dict] = field(default_factory=list)   # unit level (judge step 3)
+    claim_checks: list[dict] = field(default_factory=list)      # claim level, see claim_level()
+    citation_checks: list[dict] = field(default_factory=list)   # unit-URL pairs, claim level
+    error: str | None = None
+    recheck_error: str | None = None            # the recheck call failed: first-call verdicts stand
+    table: bool = False                         # rows are units; citations belong to the table
+
+    def to_dict(self) -> dict:
+        return {"para_id": self.para_id, "heading_path": self.heading_path, "mode": self.mode,
+                "kind": self.kind, "claims": self.claims, "sentences": self.sentence_checks,
+                "claim_checks": self.claim_checks, "citation_checks": self.citation_checks,
+                "sources": [{"n": s["n"], "url": s["url"], "found": s["found"],
+                             "cited": s.get("cited", True),
+                             "chunk_ids": [p["chunk_id"] for p in s["passages"]]}
+                            for s in self.sources],
+                "independent": [{"n": s["n"], "url": s["url"],
+                                 "chunk_ids": [p["chunk_id"] for p in s["passages"]]}
+                                for s in self.extra],
+                "confirm": [{"n": s["n"], "url": s["url"],
+                             "chunk_ids": [p["chunk_id"] for p in s["passages"]]}
+                            for s in self.confirm],
+                "error": self.error,
+                "recheck_error": self.recheck_error,
+                # the judge's reply when it could not be used, to see why
+                "raw_on_error": (self.response.raw or "")[:4000]
+                                if self.error and self.response else None}
+
+
+@dataclass
+class CitationAudit:
+    paragraphs: list[ParagraphAudit]
+
+    @property
+    def responses(self) -> list["JudgeResponse"]:
+        return [r for p in self.paragraphs for r in (p.response, p.recheck) if r is not None]
+
+    @property
+    def judged(self) -> list[ParagraphAudit]:
+        return [p for p in self.paragraphs if p.error is None]
+
+    @property
+    def used_chunk_ids(self) -> set[str]:
+        """Chunks some claim rests on (supported or inferred), either step."""
+        out = set()
+        for p in self.judged:
+            for c in p.claims:
+                if (c["score"] or 0) > 0:
+                    out.update(c["chunk_ids"])
+                if (c.get("elsewhere_score") or 0) > 0:
+                    out.update(c.get("elsewhere_chunk_ids") or [])
+        return out
+
+    @property
+    def sentence_checks(self) -> list[dict]:
+        return [s for p in self.judged for s in p.sentence_checks]
+
+    @property
+    def claim_checks(self) -> list[dict]:
+        return [c for p in self.judged for c in p.claim_checks]
+
+    @property
+    def citations(self) -> list[dict]:
+        """Claim-level citations for precision and effective-citation counts.
+
+        A unit-URL pair each, except in tables: a table's source line cites
+        the whole table, so every row carries every URL. There each URL counts
+        once per table, precise when it backs a claim of any row. Pairs whose
+        unit holds no factual claim (opinion, transition) are left out: there
+        is nothing for the citation to back.
+        """
+        out, tables = [], {}
+        for p in self.judged:
+            for c in p.citation_checks:
+                if c["no_claims"]:
+                    continue
+                if not p.table:
+                    out.append(c)
+                    continue
+                key = (p.para_id, c["url"])
+                if key not in tables:
+                    tables[key] = {**c, "sentence": [], "precise": False}
+                    out.append(tables[key])
+                t = tables[key]
+                t["sentence"].append(c["sentence"])
+                t["precise"] |= c["precise"]
+        for c in out:
+            c["effective"] = c["precise"]
+        return out
+
+    @property
+    def unit_citations(self) -> list[dict]:
+        """The former unit-level (ALCE per citing unit) citations, for details."""
+        out, tables = [], {}
+        for s in self.sentence_checks:
+            if not s["judged"]:
+                continue
+            for c in s["citations"]:
+                if not s.get("table"):
+                    out.append({"para_id": s["para_id"], "sentence": s["sentence"],
+                                "supported": s["supported"], **c})
+                    continue
+                key = (s["para_id"], c["url"])
+                if key not in tables:
+                    tables[key] = {"para_id": s["para_id"], "url": c["url"], "precise": False}
+                    out.append(tables[key])
+                tables[key]["precise"] |= c["precise"]
+        return out
+
+
+async def citation_audit(archive: "RunArchive", ctx: "ScoringContext") -> CitationAudit:
+    memo, key = ctx.archive_memo(archive), "citation_audit"
+    if key not in memo:
+        memo[key] = await _run(archive, ctx)
+    return memo[key]
+
+
+def audited_paragraphs(archive: "RunArchive") -> list[dict]:
+    """Body paragraphs worth auditing: not code or a table of contents; uncited
+    ones only if substantial."""
+    return [p for p in body_paragraphs(archive.report) if p["type"] not in ("code", "toc")
+            and (p["citations"] or len(p["text"]) >= MIN_UNCITED_CHARS)]
+
+
+def material_idf(archive: "RunArchive", ctx: "ScoringContext") -> dict[str, float]:
+    memo, key = ctx.archive_memo(archive), "material_idf"
+    if key not in memo:
+        memo[key] = idf_table([archive.chunks[c]["content"] for c in archive.retrieved_chunk_ids])
+    return memo[key]
+
+
+def _rank(text: str, chunk_ids: list[str], archive: "RunArchive", idf: dict) -> list[str]:
+    scored = [(weighted_overlap(text, set(tokenize(archive.chunks[c]["content"])), idf), i, c)
+              for i, c in enumerate(chunk_ids)]
+    return [c for _, _, c in sorted(scored, key=lambda x: (-x[0], x[1]))]
+
+
+def _candidates(archive: "RunArchive", sents: list[dict], text: str, cids: list[str],
+                idf: dict) -> list[str]:
+    """A source's chunks in the order to show them: first the best chunk for
+    each sentence in turn (a long source is often cited for several facts that
+    sit in different chunks), then the rest by match with the whole paragraph."""
+    if len(cids) <= 1:
+        return list(cids)
+    out: list[str] = []
+    for s in sents:
+        best = _rank(s["text"], cids, archive, idf)[0]
+        if best not in out:
+            out.append(best)
+    out.extend(c for c in _rank(text, cids, archive, idf) if c not in out)
+    return out
+
+
+def citation_units(paragraph: dict, scope: str = "preceding") -> list[dict]:
+    """The paragraph split into the units a citation vouches for.
+
+    scope "sentence" (strict ALCE): each sentence alone.
+    scope "preceding" (default): a citation also covers the uncited sentences
+    right before it, back to the previous citation. gpt-researcher's writer is
+    told to cite "at the end of the sentence or paragraph", and in practice
+    puts one citation group at the end of a paragraph; scoring only the last
+    sentence would judge the citation on its conclusion and ignore the facts it
+    was given for. Uncited sentences after the last citation stay on their own.
+    """
+    sents = cited_sentences(paragraph) or [{"text": paragraph["text"], "urls": []}]
+    if paragraph.get("type") == "table":
+        # A table is cited once, on the line under it, for all its rows. Each row
+        # is a statement of its own, so each data row is a unit carrying the
+        # table's citations; judging the whole table as one unit fails it as soon
+        # as any of its rows is not fully supported. The header row states nothing.
+        urls = list(dict.fromkeys(u for s in sents for u in s["urls"]))
+        rows = [[c.strip() for c in r.strip(" |").split("|")]
+                for r in paragraph["text"].split("\n") if "|" in r]
+        if len(rows) < 2:
+            return [{"text": " | ".join(r), "urls": urls, "sentences": 1} for r in rows]
+        header, body = rows[0], rows[1:]
+        # "Date: 30 June 2024 | Change: ..." so each row reads as a statement.
+        return [{"text": " | ".join(f"{h}: {c}" if h else c for h, c in zip(header + [""] * len(r), r)),
+                 "urls": urls, "sentences": 1} for r in body if any(r)]
+    if scope == "sentence":
+        return sents
+    units, pending = [], []
+    for s in sents:
+        if s["urls"]:
+            units.append({"text": " ".join([p["text"] for p in pending] + [s["text"]]),
+                          "urls": s["urls"], "sentences": len(pending) + 1})
+            pending = []
+        else:
+            pending.append(s)
+    return units + pending
+
+
+async def chunk_vectors(archive: "RunArchive", ctx: "ScoringContext") -> dict[str, list[float]]:
+    """Embeddings of every retrieved chunk, once per archive (cached by text)."""
+    memo, key = ctx.archive_memo(archive), "chunk_vectors"
+    if key not in memo:
+        cids = list(archive.retrieved_chunk_ids)
+        vecs = await ctx.embedder.embed([archive.chunks[c]["content"][:EMBED_CHARS] for c in cids])
+        memo[key] = dict(zip(cids, vecs))
+    return memo[key]
+
+
+def _by_similarity(qvec: list[float], cids: list[str], vecs: dict[str, list[float]]) -> list[str]:
+    try:
+        import numpy as np
+        m = np.array([vecs[c] for c in cids], dtype=float)
+        q = np.array(qvec, dtype=float)
+        sims = (m @ q) / ((np.linalg.norm(m, axis=1) * np.linalg.norm(q)) + 1e-12)
+        order = sorted(range(len(cids)), key=lambda i: (-float(sims[i]), i))
+    except ImportError:
+        from .judge import cosine
+        sims = [cosine(qvec, vecs[c]) for c in cids]
+        order = sorted(range(len(cids)), key=lambda i: (-sims[i], i))
+    return [cids[i] for i in order]
+
+
+def search_queries(claims: list[str], shared: int = SHARED_CLAIMS) -> list[list[str]]:
+    """The extra texts each claim is searched with, next to the claim as
+    written. A sentence split into claims repeats its frame in every one
+    ("Changes ... extend beyond MiCA into the Travel Rule / into tax
+    reporting"); the frame then decides the rankings and every claim gets the
+    same passages. So, when some words are shared by at least `shared` claims
+    of the paragraph:
+      without the frame  the claim without those words ("Travel Rule");
+      with its names     the same, plus the dropped names and figures (words
+                         with a capital or a digit), since a shared word may
+                         be the subject the claim is about ("Zipline").
+    Stop words go too. The judge sees the claim as written."""
+    words = [c.split() for c in claims]
+    keys = [[tokenize(w) for w in ws] for ws in words]
+    count: dict[str, int] = {}
+    for ks in keys:
+        for t in {t for k in ks for t in k}:
+            count[t] = count.get(t, 0) + 1
+    out = []
+    for c, ws, ks in zip(claims, words, keys):
+        frame = [bool(k) and all(count[t] >= shared for t in k) for k in ks]
+        kept = [w for w, k, f in zip(ws, ks, frame) if k and not f]
+        if not any(frame) or not kept:
+            out.append([])
+            continue
+        named = [w for w, k, f in zip(ws, ks, frame)
+                 if k and (not f or any(ch.isupper() or ch.isdigit() for ch in w))]
+        extra = [" ".join(kept)]
+        if named != kept:
+            extra.append(" ".join(named))
+        out.append(extra)
+    return out
+
+
+def fuse(*rankings: list[str], k: int = RRF_K) -> list[str]:
+    """Reciprocal rank fusion: each ranking gives a chunk 1 / (k + rank); a
+    chunk near the top of both comes first, one near the top of either still
+    ranks well. Ties keep the order of the first ranking."""
+    score: dict[str, float] = {}
+    for r in rankings:
+        for i, c in enumerate(r, 1):
+            score[c] = score.get(c, 0.0) + 1.0 / (k + i)
+    first = {c: i for i, c in enumerate(rankings[0])} if rankings else {}
+    return sorted(score, key=lambda c: (-score[c], first.get(c, len(first))))
+
+
+async def attach_independent(archive: "RunArchive", ctx: "ScoringContext", pa: ParagraphAudit,
+                             claims: list[dict], idf: dict, per_claim: int = CLAIM_PASSAGES,
+                             limit: int = RECHECK_PASSAGES) -> None:
+    """The checker's own evidence for the recheck, picked claim by claim.
+
+    For each claim, the `per_claim` passages closest to it among everything
+    retrieved that the first call did not show (other pages, and passages of
+    the cited pages left out by the material budget). Two rankings, merged by
+    reciprocal rank fusion: embedding similarity (the meaning, in other words)
+    and BM25 (the exact words: names, acronyms, figures). BM25 alone when no
+    embedder is configured. Each claim is searched as written and also
+    without the words 3+ claims of its paragraph share, with and without its
+    names (`search_queries`). The claims take turns, best first,
+    up to `limit` passages for the paragraph. Each claim keeps the chunk ids
+    picked for it (`recheck_chunk_ids`). Grouped by URL into `pa.extra`;
+    "cited" marks a page the paragraph cites."""
+    shown = {p["chunk_id"] for s in pa.sources for p in s["passages"]}
+    pool = [c for c in archive.retrieved_chunk_ids if c not in shown]
+    if not pool or not claims or per_claim <= 0:
+        pa.extra = []
+        return
+    extra = {id(c): q for c, q in zip(pa.claims, search_queries([c["claim"] for c in pa.claims]))}
+    # Each claim is searched as written and, when its paragraph's claims share
+    # a frame, without it and without it but with its names: up to six
+    # rankings (meaning and exact words for each text), merged.
+    texts = [[c["claim"]] + extra.get(id(c), []) for c in claims]
+    for c, ts in zip(claims, texts):
+        c["recheck_queries"] = ts[1:]
+    lexical = [[_rank(t, pool, archive, idf) for t in ts] for ts in texts]
+    if ctx.embedder is not None:
+        vecs = await chunk_vectors(archive, ctx)
+        flat = [t for ts in texts for t in ts]
+        qv = iter(await ctx.embedder.embed(flat))
+        semantic = [[_by_similarity(next(qv), pool, vecs) for _ in ts] for ts in texts]
+        ranked = [fuse(*[r for pair in zip(sem, lex) for r in pair])[:per_claim]
+                  for sem, lex in zip(semantic, lexical)]
+    else:
+        ranked = [fuse(*lex)[:per_claim] for lex in lexical]
+    picked: list[str] = []
+    for i in range(per_claim):
+        for r in ranked:
+            if i < len(r) and r[i] not in picked and len(picked) < limit:
+                picked.append(r[i])
+    for c, r in zip(claims, ranked):
+        c["recheck_chunk_ids"] = [x for x in r if x in picked]
+    cited = {normalize_url(u) for s in pa.sentences for u in s["urls"]}
+    by_url: dict[str, list[str]] = {}
+    for c in picked:
+        by_url.setdefault(archive.chunks[c].get("url") or "", []).append(c)
+    pa.extra = [{"n": n, "url": url or None, "found": True,
+                 "cited": bool(url) and normalize_url(url) in cited,
+                 "passages": [{"id": f"{n}{ascii_lowercase[i]}", "chunk_id": c}
+                              for i, c in enumerate(cids)]}
+                for n, (url, cids) in enumerate(by_url.items(), 1)]
+
+
+def prepare(archive: "RunArchive", paragraph: dict, idf: dict,
+            scope: str = "preceding") -> ParagraphAudit:
+    sents = citation_units(paragraph, scope)
+    urls = list(dict.fromkeys(u for s in sents for u in s["urls"]))
+    sources: list[dict] = []
+    if urls:
+        mode = "cited"
+        per_source = max(2 * PASSAGE_CHARS, MATERIAL_CHARS // len(urls))
+        for n, url in enumerate(urls, 1):
+            cids = archive.chunks_by_url.get(normalize_url(url), [])
+            picked, used = [], 0
+            for cid in _candidates(archive, cited_sentences(paragraph), paragraph["text"],
+                                   cids, idf)[:SOURCE_PASSAGES]:
+                size = min(len(archive.chunks[cid]["content"]), PASSAGE_CHARS)
+                if picked and used + size > per_source:
+                    break
+                picked.append(cid)
+                used += size
+            sources.append({"n": n, "url": url, "found": bool(cids), "cited": True,
+                            "passages": [{"id": f"{n}{ascii_lowercase[i]}", "chunk_id": c}
+                                         for i, c in enumerate(picked)]})
+    else:
+        mode = "uncited"
+        top = _rank(paragraph["text"], archive.retrieved_chunk_ids, archive, idf)[:UNCITED_PASSAGES]
+        sources = [{"n": n, "url": archive.chunks[c].get("url"), "found": True, "cited": False,
+                    "passages": [{"id": f"{n}a", "chunk_id": c}]} for n, c in enumerate(top, 1)]
+    return ParagraphAudit(paragraph["para_id"], [], mode, sents, sources,
+                          table=paragraph.get("type") == "table")
+
+
+def render(archive: "RunArchive", pa: ParagraphAudit) -> str:
+    num = {s["url"]: s["n"] for s in pa.sources if s.get("cited", True)}
+    lines = []
+    for i, s in enumerate(pa.sentences, 1):
+        cites = ", ".join(f"[{num[u]}]" for u in s["urls"] if u in num)
+        lines.append(f"{i}. {s['text']}" + (f"  (cites: {cites})" if cites else ""))
+    blocks = []
+    if pa.mode == "uncited":
+        blocks.append("(The paragraph cites nothing. These are the retrieved passages that "
+                      "match it best.)")
+    for s in pa.sources:
+        header = f"Source [{s['n']}] {s['url'] or 'unknown source'}"
+        if not s["found"]:
+            blocks.append(f"{header}\n{UNAVAILABLE}")
+            continue
+        for p in s["passages"]:
+            text = archive.chunks[p["chunk_id"]]["content"][:PASSAGE_CHARS]
+            blocks.append(f"{header} passage {p['id']}:\n{text}")
+    if not pa.sources:
+        blocks.append("(no material)")
+    return PARAGRAPH_AUDIT.render(question=archive.query, sentences="\n".join(lines),
+                                  material="\n\n".join(blocks))
+
+
+def interpret(pa: ParagraphAudit) -> None:
+    """Fill kind / claims / sentence_checks from the judge response."""
+    r = pa.response
+    if r is None or not isinstance(r.parsed, dict):
+        pa.error = (r.error if r else None) or "no usable judge response"
+        return
+    data = r.parsed
+    pa.kind = data.get("kind") if data.get("kind") in ("factual", "non_factual") else "factual"
+    passage_chunk = {p["id"]: p["chunk_id"] for s in pa.sources for p in s["passages"]}
+    for c in data.get("claims") or [] if pa.kind == "factual" else []:
+        if not isinstance(c, dict):
+            continue
+        verdict = str(c.get("verdict", "")).strip().lower()
+        ctype = str(c.get("type", "")).strip().lower()
+        pa.claims.append({
+            "claim": c.get("claim", ""), "verdict": verdict, "score": VERDICT_SCORES.get(verdict),
+            # Older prompts did not type claims: treat those as facts.
+            "type": ctype if ctype in ("fact", "analysis") else "fact",
+            "sentences": c.get("sentences") or [],
+            "chunk_ids": [passage_chunk[str(x)] for x in c.get("passages") or []
+                          if str(x) in passage_chunk],
+            "evidence": c.get("evidence", "")})
+    for c in pa.claims:
+        # The faithfulness verdict: the better of this call and the recheck.
+        c["faith_verdict"], c["faith_score"] = c["verdict"], c["score"]
+
+    by_n = {}
+    for s in data.get("sentences") or []:
+        if isinstance(s, dict):
+            try:
+                by_n[int(s.get("sentence"))] = s
+            except (TypeError, ValueError):
+                continue
+    url_of = {s["n"]: s for s in pa.sources}
+    num = {s["url"]: s["n"] for s in pa.sources if s.get("cited", True)}
+    for i, sent in enumerate(pa.sentences, 1):
+        if not sent["urls"]:
+            continue
+        got = by_n.get(i, {})
+        cites = {}
+        for c in got.get("citations") or []:
+            try:
+                cites[int(c.get("source"))] = c
+            except (TypeError, ValueError, AttributeError):
+                continue
+        found_any = any(url_of[num[u]]["found"] for u in sent["urls"])
+        # A sentence whose sources were never retrieved cannot be supported by them.
+        supported = bool(got.get("supported")) if found_any else False
+        judged = found_any is False or "supported" in got
+        checks = []
+        for u in sent["urls"]:
+            src = url_of[num[u]]
+            c = cites.get(src["n"], {})
+            alone = bool(c.get("alone")) and src["found"]
+            rest = bool(c.get("rest_suffice")) and len(sent["urls"]) > 1
+            checks.append({"url": u, "found": src["found"], "alone": alone, "rest_suffice": rest})
+        _alce(supported, checks)
+        pa.sentence_checks.append({"para_id": pa.para_id, "sentence": i, "text": sent["text"],
+                                   "judged": judged, "supported": supported, "citations": checks,
+                                   "table": pa.table})
+    claim_level(pa)
+
+
+def claim_level(pa: ParagraphAudit) -> None:
+    """Citation recall / precision per claim instead of per citing unit.
+
+    The judge already splits the paragraph into claims (a claim may span
+    several sentences) and names the passages each rests on. A claim is
+    *cited* when one of the items it comes from cites a source; it is
+    *supported by its citations* when its verdict is "supported" (strict:
+    inferences do not count) and at least one passage it rests on belongs to
+    a URL cited by its own items. A citation (item-URL pair) is precise when
+    it backs at least one claim of its item. No extra judge call: this reads
+    the same answer faithfulness uses.
+    """
+    if pa.mode != "cited":
+        return
+    # Only facts: an analysis claim is the writer's own conclusion, which no
+    # citation can state (faithfulness still scores it).
+    unit_urls = {i: s["urls"] for i, s in enumerate(pa.sentences, 1) if s["urls"]}
+    chunk_url = {p["chunk_id"]: s["url"] for s in pa.sources for p in s["passages"]}
+    # recheck passages of a cited page, by the URL spelling the items cite
+    cited_as = {normalize_url(u): u for us in unit_urls.values() for u in us}
+    extra_url = {p["chunk_id"]: cited_as[normalize_url(s["url"])] for s in pa.extra
+                 if s.get("cited") and s["url"] and normalize_url(s["url"]) in cited_as
+                 for p in s["passages"]}
+    for c in pa.claims:
+        if c.get("type", "fact") != "fact":
+            continue
+        units = []
+        for x in c["sentences"]:
+            try:
+                n = int(x)
+            except (TypeError, ValueError):
+                continue
+            if n in unit_urls and n not in units:
+                units.append(n)
+        guessed = not c["sentences"]
+        if guessed:
+            units = list(unit_urls)     # the judge named no item: any citation may cover it
+        if not units:
+            continue        # from uncited sentences after the last citation
+        urls = list(dict.fromkeys(u for n in units for u in unit_urls[n]))
+        backing_chunks = [cid for cid in dict.fromkeys(c["chunk_ids"]) if chunk_url.get(cid) in urls]
+        # The recheck may find the support in a passage of a cited page that
+        # the first call's material budget left out: that backs the citation.
+        recheck_chunks = [cid for cid in dict.fromkeys(c.get("elsewhere_chunk_ids") or [])
+                          if extra_url.get(cid) in urls] if c.get("elsewhere_verdict") == "supported" else []
+        on_recheck = c["verdict"] != "supported" and bool(recheck_chunks)
+        backing_chunks += [cid for cid in recheck_chunks if cid not in backing_chunks]
+        backing = list(dict.fromkeys((chunk_url.get(cid) or extra_url.get(cid)) for cid in backing_chunks))
+        pa.claim_checks.append({
+            "para_id": pa.para_id, "claim": c["claim"], "units": units, "urls": urls,
+            "verdict": c["verdict"], "backing_urls": backing, "backing_chunks": backing_chunks,
+            "units_guessed": guessed, "supported_on_recheck": on_recheck,
+            "supported": (supported := (c["verdict"] == "supported" or on_recheck) and bool(backing)),
+            # the fact holds, but only material the item does not cite says so
+            "backed_by_uncited": not supported and c.get("elsewhere_verdict") == "supported"})
+    for n, urls in unit_urls.items():
+        mine = [cc for cc in pa.claim_checks if n in cc["units"]]
+        for u in urls:
+            pa.citation_checks.append({
+                "para_id": pa.para_id, "sentence": n, "url": u, "claims": len(mine),
+                "no_claims": not mine,
+                "precise": any(cc["supported"] and u in cc["backing_urls"] for cc in mine)})
+
+
+def recheck_claims(pa: ParagraphAudit) -> list[dict]:
+    """Fact claims that the first call's passages did not support."""
+    if pa.error:
+        return []
+    return [c for c in pa.claims if c.get("type", "fact") == "fact" and c["verdict"] != "supported"]
+
+
+def recheck_todo(pa: ParagraphAudit) -> list[dict]:
+    """The claims to recheck, once `pa.extra` is attached; [] when there is
+    no material to recheck them on."""
+    todo = recheck_claims(pa)
+    pa.confirm = _confirm_sources(pa, todo)
+    return todo if pa.extra or pa.confirm else []
+
+
+def _confirm_sources(pa: ParagraphAudit, todo: list[dict]) -> list[dict]:
+    """The passages the first call read as contradicting a claim, shown again
+    to the recheck: a contradiction stands only when the recheck finds it too."""
+    shown = {p["chunk_id"] for s in pa.extra for p in s["passages"]}
+    chunk_url = {p["chunk_id"]: s["url"] for s in pa.sources for p in s["passages"]}
+    by_url: dict[str, list[str]] = {}
+    for c in todo:
+        if c["verdict"] == "contradicted":
+            for cid in c.get("chunk_ids") or []:
+                if cid not in shown and cid in chunk_url and cid not in by_url.get(chunk_url[cid] or "", []):
+                    by_url.setdefault(chunk_url[cid] or "", []).append(cid)
+    start = max([s["n"] for s in pa.sources + pa.extra] or [0]) + 1
+    return [{"n": n, "url": url or None, "found": True, "cited": True,
+             "passages": [{"id": f"{n}{ascii_lowercase[i]}", "chunk_id": cid} for i, cid in enumerate(cids)]}
+            for n, (url, cids) in enumerate(by_url.items(), start)]
+
+
+def render_recheck(archive: "RunArchive", pa: ParagraphAudit, todo: list[dict]) -> str:
+    pid = {p["chunk_id"]: p["id"] for s in pa.extra for p in s["passages"]}
+    lines = []
+    for i, c in enumerate(todo, 1):
+        ids = [pid[x] for x in c.get("recheck_chunk_ids") or [] if x in pid]
+        lines.append(f"{i}. {c['claim']}" + (f"  (passages picked for it: {', '.join(ids)})" if ids else ""))
+    claims = "\n".join(lines)
+    blocks = [f"Source [{s['n']}] {s['url'] or 'unknown source'} passage {p['id']}:\n"
+              f"{archive.chunks[p['chunk_id']]['content'][:PASSAGE_CHARS]}"
+              for s in pa.extra + pa.confirm for p in s["passages"]]
+    return CLAIM_RECHECK.render(question=archive.query, claims=claims, material="\n\n".join(blocks))
+
+
+def apply_recheck(pa: ParagraphAudit, todo: list[dict]) -> None:
+    """Record the recheck on each claim. The faithfulness verdict becomes
+    supported when the recheck finds plain support; a contradiction of the
+    first call stands only when the recheck, shown the same passages, finds it
+    too (otherwise it is unsupported). Citation checks are rebuilt
+    (backed_by_uncited)."""
+    r = pa.recheck
+    if r is None or not isinstance(r.parsed, dict):
+        pa.recheck_error = (r.error if r else None) or "no usable recheck response"
+        return
+    passage_chunk = {p["id"]: p["chunk_id"] for s in pa.extra + pa.confirm for p in s["passages"]}
+    for got in r.parsed.get("claims") or []:
+        try:
+            c = todo[int(got.get("claim")) - 1]
+        except (TypeError, ValueError, IndexError, AttributeError):
+            continue
+        verdict = str(got.get("verdict", "")).strip().lower()
+        score = VERDICT_SCORES.get(verdict) if verdict in RECHECK_VERDICTS else None
+        c.update(elsewhere_verdict=verdict, elsewhere_score=score,
+                 elsewhere_chunk_ids=[passage_chunk[str(x)] for x in got.get("passages") or []
+                                      if str(x) in passage_chunk],
+                 elsewhere_evidence=got.get("evidence", ""))
+        # Support (or a reasonable step from it) found elsewhere lifts a
+        # verdict. A contradiction found only elsewhere is recorded, not
+        # scored: sources may simply disagree.
+        if verdict in ("supported", "inferred") and (c["faith_score"] is None or score > c["faith_score"]):
+            c["faith_verdict"], c["faith_score"] = verdict, score
+        elif c["verdict"] == "contradicted" and score is not None and verdict != "contradicted":
+            c["faith_verdict"], c["faith_score"] = "unsupported", VERDICT_SCORES["unsupported"]
+            c["contradiction_dropped"] = True
+    pa.claim_checks, pa.citation_checks = [], []
+    claim_level(pa)
+
+
+def _alce(supported: bool, checks: list[dict]) -> None:
+    """ALCE precision per citation, as in its reference implementation.
+
+    Not jointly supported -> no citation of the sentence is precise. One
+    citation -> precise iff supported. Several -> a citation is irrelevant only
+    when it does not support the sentence alone AND the rest still do.
+    A citation counts as effective (supported) when it supports the sentence
+    alone, or is the single citation of a supported sentence.
+    """
+    for c in checks:
+        if not supported:
+            c["precise"] = False
+        elif len(checks) == 1:
+            c["precise"] = True
+        else:
+            c["precise"] = c["alone"] or not c["rest_suffice"]
+        c["effective"] = c["alone"] or (supported and len(checks) == 1)
+
+
+async def _run(archive: "RunArchive", ctx: "ScoringContext") -> CitationAudit:
+    idf = material_idf(archive, ctx)
+    paragraphs = audited_paragraphs(archive)
+    heading = {p["para_id"]: s["heading_path"] for s in archive.report["sections"]
+               for p in s["paragraphs"]}
+    audits = []
+    for p in paragraphs:
+        pa = prepare(archive, p, idf, ctx.option("citation_scope", "preceding"))
+        pa.heading_path = heading.get(p["para_id"], [])
+        audits.append(pa)
+
+    async def ask(pa: ParagraphAudit) -> None:
+        pa.response = await ctx.judge.ask(PARAGRAPH_AUDIT.id, PARAGRAPH_AUDIT.version,
+                                          render(archive, pa))
+        interpret(pa)
+        claims = recheck_claims(pa)
+        if claims:
+            await attach_independent(archive, ctx, pa, claims, idf,
+                                     int(ctx.option("claim_passages", CLAIM_PASSAGES)),
+                                     int(ctx.option("recheck_passages", RECHECK_PASSAGES)))
+        todo = recheck_todo(pa) if claims else []
+        if todo:
+            pa.recheck = await ctx.judge.ask(CLAIM_RECHECK.id, CLAIM_RECHECK.version,
+                                             render_recheck(archive, pa, todo))
+            apply_recheck(pa, todo)
+
+    await ctx.gather(ask(pa) for pa in audits)
+    return CitationAudit(audits)
+
+

@@ -1,0 +1,43 @@
+{
+  "type": "object",
+  "properties": {
+    "domains": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "official",
+              "academic",
+              "news",
+              "specialist",
+              "company",
+              "low_editorial",
+              "off_field",
+              "unreliable",
+              "unknown"
+            ]
+          }
+        },
+        "required": [
+          "domain",
+          "reason",
+          "kind"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "domains"
+  ],
+  "additionalProperties": false
+}

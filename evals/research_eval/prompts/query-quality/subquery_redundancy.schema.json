@@ -1,0 +1,20 @@
+{
+  "type": "object",
+  "properties": {
+    "only_in_a": {
+      "type": "string"
+    },
+    "only_in_b": {
+      "type": "string"
+    },
+    "repeat": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "only_in_a",
+    "only_in_b",
+    "repeat"
+  ],
+  "additionalProperties": false
+}

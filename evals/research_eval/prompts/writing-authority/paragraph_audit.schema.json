@@ -1,0 +1,112 @@
+{
+  "type": "object",
+  "properties": {
+    "kind": {
+      "type": "string",
+      "enum": [
+        "factual",
+        "non_factual"
+      ]
+    },
+    "claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "claim": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "fact",
+              "analysis"
+            ]
+          },
+          "sentences": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "passages": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "evidence": {
+            "type": "string"
+          },
+          "verdict": {
+            "type": "string",
+            "enum": [
+              "supported",
+              "inferred",
+              "unsupported",
+              "contradicted"
+            ]
+          }
+        },
+        "required": [
+          "claim",
+          "type",
+          "sentences",
+          "passages",
+          "evidence",
+          "verdict"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "sentences": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "sentence": {
+            "type": "integer"
+          },
+          "supported": {
+            "type": "boolean"
+          },
+          "citations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "type": "integer"
+                },
+                "alone": {
+                  "type": "boolean"
+                },
+                "rest_suffice": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "source",
+                "alone",
+                "rest_suffice"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "sentence",
+          "supported",
+          "citations"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "kind",
+    "claims",
+    "sentences"
+  ],
+  "additionalProperties": false
+}
