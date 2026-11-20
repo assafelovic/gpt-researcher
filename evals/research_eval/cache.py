@@ -6,7 +6,7 @@ side: the same archive scored twice must give the same numbers. Every LLM and
 embedding result is stored under a key that pins everything that could change
 it, and read back on the next run.
 
-Namespaces (eval-design/infrastructure.md §5):
+Namespaces:
 
   question   per-question artefacts (key points), keyed by
              question_id + prompt version + judge model

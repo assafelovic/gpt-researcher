@@ -1,7 +1,6 @@
 """
-C. Hallucination (eval-design/generation-metrics.md §3.2): judged faithfulness
-of every factual claim, and a rule check that figures and names in a paragraph
-appear in the sources it cites. Listed separately; there is no combined score.
+C. Hallucination: judged faithfulness of every factual claim, and a rule
+check that figures and names in a paragraph appear in the sources it cites. Listed separately; there is no combined score.
 """
 
 from __future__ import annotations

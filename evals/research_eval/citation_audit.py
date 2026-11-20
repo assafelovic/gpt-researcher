@@ -65,7 +65,7 @@ AUDIT_VERSION = "18"    # 7: recall / precision per claim; 8: fact / analysis cl
                         # 17: each claim also searched without the words 3+ claims of the paragraph share
                         # 18: ... and without them but with the claim's names and figures
 
-# Faithfulness points per verdict (eval-design/generation-metrics.md §3.2 B).
+# Faithfulness points per verdict.
 # One "inferred" level since paragraph_audit v6: the judge could not keep the
 # three earlier levels apart (inferred_a/b/c, kept so old answers still score).
 VERDICT_SCORES = {"supported": 1.0, "inferred": 0.5, "unsupported": 0.0, "contradicted": -1.0,

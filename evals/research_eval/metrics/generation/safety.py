@@ -1,7 +1,7 @@
 """
-Other: toxicity and bias (eval-design/generation-metrics.md §3.5), DeepEval
-style: the judge lists the report's opinions and flags each one. Both metrics
-share the same calls (about 15k characters of report per call).
+Other: toxicity and bias, DeepEval style: the judge lists the report's
+opinions and flags each one. Both metrics share the same calls (about 15k
+characters of report per call).
 """
 
 from __future__ import annotations

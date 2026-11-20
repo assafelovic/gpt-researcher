@@ -4,9 +4,8 @@ Evaluation of gpt-researcher's whole pipeline (query decomposition, retrieval,
 writing) with reference-free metrics. Built alongside the older `quality_eval/`,
 which is left untouched until the two have been compared on the same runs.
 
-Design: `eval-design/` (README, infrastructure, retrieval-metrics,
-generation-metrics). This package implements the infrastructure, the retrieval
-metrics and the generation metrics (plus toxicity / bias).
+This package holds the infrastructure (runs, archives, cache, judge), the
+retrieval metrics and the generation metrics (plus toxicity / bias).
 
 ## Principles
 
@@ -357,8 +356,8 @@ citation and faithfulness metrics and by `source_utilization`:
 
 Notes:
 
-- Faithfulness and the rule check are listed separately (design §3.2 called them one
-  composite score; there are no combined scores in this system).
+- Faithfulness and the rule check are listed separately: there are no combined
+  scores in this system.
 - Comprehensiveness uses one judge call, not an embedding pre-pass: on the retrieval
   side embedding matching got 3 of 8 key points wrong.
 - `instruction_following` reads `config.total_words` (recorded by the runner from now

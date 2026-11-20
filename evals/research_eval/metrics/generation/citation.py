@@ -1,6 +1,6 @@
 """
 B. Citations: ALCE citation recall / precision, citation coverage, effective
-citations (eval-design/generation-metrics.md §3.1). The judged ones read the
+citations. The judged ones read the
 shared citation audit (one judge call per paragraph, see citation_audit.py).
 """
 

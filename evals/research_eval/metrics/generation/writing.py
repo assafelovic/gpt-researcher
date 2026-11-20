@@ -1,6 +1,6 @@
 """
 A. Writing quality: comprehensiveness, insight, readability, instruction
-following, topic relevance (eval-design/generation-metrics.md §2).
+following, topic relevance.
 All scores are absolute; nothing is compared with a reference report.
 """
 

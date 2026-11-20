@@ -3,7 +3,7 @@ Capture layer: hooks that turn one research run into spans and chunks.
 ---------------------------------------------------------------------
 `RunCapture` monkeypatches the library for the duration of a `with` block and
 restores every original on exit, including on error. The library itself is
-never edited. Hook points (see eval-design/infrastructure.md §2.1):
+never edited. Hook points:
 
   run   GPTResearcher.conduct_research          span "research" (one per researcher)
   H1    ResearchConductor.plan_research         span "plan": query -> sub_queries

@@ -6,7 +6,7 @@ keeps only the original text) with Python-Markdown, which the repo already
 depends on, plus its tables extension; malformed input is left to the library
 to tolerate.
 
-Output (see eval-design/infrastructure.md §4):
+Output:
 
   title           first level-1 heading
   references      URLs listed under a trailing References/Sources heading; a

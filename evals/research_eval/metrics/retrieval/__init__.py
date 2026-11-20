@@ -1,4 +1,4 @@
-"""Retrieval metrics (eval-design/retrieval-metrics.md): query, source, efficiency."""
+"""Retrieval metrics: query, source, efficiency."""
 
 from .efficiency import SourceUtilization, QueryRelevance, RetrievalOverlap
 from .query import (DecompositionCoverage, DecompositionTreeQuality, PlanAdherence,

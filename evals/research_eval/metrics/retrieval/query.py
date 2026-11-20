@@ -533,10 +533,3 @@ def _child_numbers(xs, n: int) -> list[int]:
         if 1 <= k <= n and k not in out:
             out.append(k)
     return out
-
-
-def _number(x) -> float | None:
-    try:
-        return float(x)
-    except (TypeError, ValueError):
-        return None

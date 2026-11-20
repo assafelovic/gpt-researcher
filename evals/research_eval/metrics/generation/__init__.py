@@ -1,5 +1,5 @@
-"""Generation metrics (eval-design/generation-metrics.md): writing quality,
-citations, hallucination, plus toxicity / bias (§3.5)."""
+"""Generation metrics: writing quality, citations, hallucination, plus
+toxicity / bias."""
 
 from .citation import CitationCoverage, CitationPrecision, CitationRecall, EffectiveCitations
 from .hallucination import ContradictedParagraphs, FactGrounding, Faithfulness
