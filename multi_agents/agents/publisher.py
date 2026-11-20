@@ -5,6 +5,11 @@ from .utils.file_formats import \
 
 from .utils.views import print_agent_output
 
+#: Formats published when the task does not name any. Markdown needs no optional
+#: dependency, so a task that omits ``publish_formats`` -- the LangGraph entry
+#: point in ``multi_agents/agent.py`` never sets it -- still yields the report.
+DEFAULT_PUBLISH_FORMATS = {"markdown": True}
+
 
 class PublisherAgent:
     def __init__(self, output_dir: str, websocket=None, stream_output=None, headers=None):
@@ -79,8 +84,14 @@ class PublisherAgent:
             await write_text_to_md(layout, self.output_dir)
 
     async def run(self, research_state: dict):
-        task = research_state.get("task")
+        task = research_state.get("task") or {}
         publish_formats = task.get("publish_formats")
+        # A missing / null / non-dict ``publish_formats`` used to reach
+        # ``write_report_by_formats()`` unchanged and raise AttributeError
+        # ("'NoneType' object has no attribute 'get'") on the last node of the
+        # graph, discarding a report the whole team had already produced.
+        if not isinstance(publish_formats, dict):
+            publish_formats = dict(DEFAULT_PUBLISH_FORMATS)
         if self.websocket and self.stream_output:
             await self.stream_output("logs", "publishing", f"Publishing final research report based on retrieved data...", self.websocket)
         else:
