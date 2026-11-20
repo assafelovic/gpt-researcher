@@ -73,7 +73,13 @@ async def main(argv: list[str] | None = None) -> int:
     for path in args.archives:
         archive = RunArchive.load(path)
         before = ctx.judge.calls if ctx.judge else 0
+        usage_before = ctx.judge.usage() if ctx.judge else None
         record = await score_archive(archive, metrics, ctx, score_failed=args.score_failed)
+        if usage_before is not None:
+            # This archive's share of the judge use (uncached calls only).
+            after = ctx.judge.usage()
+            record["judge_usage"] = {k: after[k] - usage_before[k] for k in
+                                     ("calls", "cache_hits", "input_tokens", "output_tokens", "refused")}
         if args.dry_run:
             print(f"== {archive.run_id}: {(ctx.judge.calls if ctx.judge else 0) - before} uncached judge calls")
             continue
@@ -96,7 +102,8 @@ async def main(argv: list[str] | None = None) -> int:
                   f"{u['input_tokens']} input / {u['output_tokens']} output tokens (uncached calls)")
             if u["refused"]:
                 print(f"== call budget reached: {u['refused']} judge calls were not made; "
-                      f"their metrics are skipped")
+                      f"their metrics are skipped, or marked PARTIAL when scored on the "
+                      f"items that got an answer")
     cache.close()
     return 0
 

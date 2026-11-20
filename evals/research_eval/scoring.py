@@ -24,9 +24,32 @@ SCORER_BASE_VERSION = "0.2"      # 0.2: failed runs are skipped
 RESULTS_DIR = Path(__file__).parent / "results"
 
 
-def scorer_version(metrics: list[Metric]) -> str:
-    fingerprint = stable_hash(sorted(
-        (m.name, m.version, [(p.id, p.version, p.hash) for p in m.prompts]) for m in metrics))
+def scoring_inputs(ctx: ScoringContext | None) -> dict:
+    """What besides the metrics decides a score: the models, the judge salt
+    (a noise round) and the frozen key points and rubrics (a hash per folder)."""
+    if ctx is None:
+        return {}
+    def folder(d):
+        if d is None or not Path(d).is_dir():
+            return None
+        files = sorted(Path(d).glob("*.json"))
+        return stable_hash([(f.name, f.read_text(encoding="utf-8")) for f in files])[:12]
+    return {"judge_model": ctx.judge.model if ctx.judge else None,
+            "judge_salt": ctx.judge.salt if ctx.judge else None,
+            "embedding_model": ctx.embedder.model if ctx.embedder else None,
+            "key_points": folder(ctx.key_points_dir),
+            "rubrics": folder(ctx.rubrics_dir)}
+
+
+def scorer_version(metrics: list[Metric], ctx: ScoringContext | None = None) -> str:
+    """Changes with any metric or prompt version, and with the scoring inputs
+    (models, salt, frozen data), so results scored differently never share a
+    file name."""
+    parts = [sorted((m.name, m.version, [(p.id, p.version, p.hash) for p in m.prompts]) for m in metrics)]
+    inputs = scoring_inputs(ctx)
+    if inputs:
+        parts.append(sorted(inputs.items()))
+    fingerprint = stable_hash(*parts)
     return f"{SCORER_BASE_VERSION}+{fingerprint[:8]}"
 
 
@@ -53,6 +76,17 @@ def run_failure(archive: RunArchive) -> str | None:
     return None
 
 
+def mark_partial(r: MetricResult) -> None:
+    """Flag a value computed after some of its judge calls failed.
+
+    Metrics that make one call per item (paragraph, sub-query, batch) score
+    the items that got an answer, so a value can rest on part of the report.
+    It is kept, but marked, so it is not read as a full score."""
+    errors = (r.llm or {}).get("errors") or 0
+    if errors and r.value is not None and not r.skipped:
+        r.details["partial"] = f"{errors} of {(r.llm or {}).get('requests', '?')} judge requests failed; scored on the rest"
+
+
 async def score_archive(archive: RunArchive, metrics: list[Metric],
                         ctx: ScoringContext, *, score_failed: bool = False) -> dict:
     results: dict[str, dict] = {}
@@ -68,18 +102,21 @@ async def score_archive(archive: RunArchive, metrics: list[Metric],
             r = MetricResult(m.name, m.category, m.version, None, m.higher_is_better,
                              {"traceback": traceback.format_exc(limit=5)},
                              skipped=f"error: {type(e).__name__}: {e}")
+        mark_partial(r)
         results[m.name] = r.to_dict()
     record = {
         "run_id": archive.run_id,
         "question_id": archive.question_id,
         "mode": archive.meta.get("config", {}).get("mode"),
-        "scorer_version": scorer_version(metrics),
+        "scorer_version": scorer_version(metrics, ctx),
+        "inputs": scoring_inputs(ctx),
         "scored_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "judge_model": ctx.judge.model if ctx.judge else None,
         "embedding_model": ctx.embedder.model if ctx.embedder else None,
         "run_status": "failed" if failure else "ok",
         "failure": failure,
         "metrics": results,
+        "partial_metrics": [n for n, r in results.items() if r["details"].get("partial")],
     }
     audit = ctx.archive_memo(archive).get("citation_audit")
     if audit is not None:
@@ -102,6 +139,7 @@ def summary_rows(record: dict) -> list[tuple[str, str, str]]:
     rows = []
     for name, r in record["metrics"].items():
         value = "—" if r["value"] is None else f"{r['value']:.3f}"
-        note = r["skipped"] or ("lower is better" if not r["higher_is_better"] else "")
+        note = (r["skipped"] or (f"PARTIAL: {r['details']['partial']}" if r["details"].get("partial") else "")
+                or ("lower is better" if not r["higher_is_better"] else ""))
         rows.append((name, value, note))
     return rows

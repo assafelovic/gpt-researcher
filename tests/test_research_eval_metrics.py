@@ -655,6 +655,42 @@ async def test_scorer_version_tracks_metric_changes():
     assert scorer_version(m) != a
 
 
+async def test_scorer_version_tracks_scoring_inputs(tmp_path):
+    async def complete(_):
+        return "{}"
+    kp = tmp_path / "kp"
+    kp.mkdir()
+    (kp / "q001.json").write_text('{"aspects": []}')
+
+    def version(salt="", model="m"):
+        cache = EvalCache(":memory:")
+        c = ScoringContext(cache=cache, judge=Judge(cache, model=model, complete=complete, salt=salt),
+                           key_points_dir=kp)
+        return scorer_version(all_metrics(), c)
+
+    a = version()
+    assert version() == a
+    assert version(salt="noise1") != a
+    assert version(model="other") != a
+    (kp / "q001.json").write_text('{"aspects": ["changed"]}')
+    assert version() != a
+
+
+def test_value_after_failed_judge_calls_is_marked_partial():
+    from evals.research_eval.metrics.base import MetricResult
+    from evals.research_eval.scoring import mark_partial, summary_rows
+    ok = MetricResult("m", "c", "1", 0.8, True, {}, llm={"errors": 0, "requests": 4})
+    part = MetricResult("m", "c", "1", 0.8, True, {}, llm={"errors": 1, "requests": 4})
+    gone = MetricResult("m", "c", "1", None, True, {}, skipped="every judge call failed",
+                        llm={"errors": 4, "requests": 4})
+    for r in (ok, part, gone):
+        mark_partial(r)
+    assert "partial" not in ok.details and "partial" not in gone.details
+    assert part.details["partial"].startswith("1 of 4")
+    rows = summary_rows({"metrics": {"m": part.to_dict()}})
+    assert rows[0][2].startswith("PARTIAL")
+
+
 async def test_metric_crash_is_recorded_not_raised(ctx):
     class Broken(SourceDiversity):
         name = "broken"
