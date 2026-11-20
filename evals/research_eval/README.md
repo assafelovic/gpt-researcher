@@ -43,6 +43,7 @@ dataset/questions_*.jsonl -> runner.py -> capture.py (hooks) -> runs/<dataset>/<
 | `key_points_methods.py` | Compares six ways of writing key points (incl. layered drafts merged by `key_points_synthesize`) by coverage of a shared pool (all lists + two independent answer outlines). Prints and saves JSON, no scores. |
 | `citation_audit.py` | Shared paragraph-level judge audit: claims, ALCE sentence checks, which chunks were used. |
 | `metrics/` | `Metric` interface and registry; `retrieval/` holds the eleven retrieval metrics, `generation/` the fourteen generation ones. |
+| `stats.py` | Means with 95% bootstrap intervals (resampling questions), paired differences between two result folders, signal to noise against a noise round. No model calls. |
 | `scoring.py` | Runs metrics on an archive; results keyed by run_id + scorer version (metric and prompt versions, judge and embedding models, judge salt, frozen key points and rubrics). |
 | `runner.py`, `score.py` | CLIs. |
 
@@ -65,6 +66,10 @@ python -m evals.research_eval.score RUNS --judge-salt noise1        # ask the ju
 python -m evals.research_eval.perturb make RUN.json [RUN.json ...] --out DIR
 python -m evals.research_eval.score DIR/*__*.json --results-dir DIR/results   # not manifest.json
 python -m evals.research_eval.perturb report DIR/manifest.json --results-dir DIR/results
+
+# Means with 95% intervals; paired difference between two scorings; signal to noise
+python -m evals.research_eval.stats RESULTS --compare OTHER_RESULTS
+python -m evals.research_eval.stats RESULTS --noise NOISE_RESULTS
 
 # Integrity audit: is every input counted, and counted once? (integrity.py, no model calls)
 python -m evals.research_eval.integrity RUNS/*.json --results-dir RESULTS --json integrity.json
@@ -225,21 +230,75 @@ alone).
 
 Scores were checked by hand against the reports, spans and chunks, first on q001 and
 then on all five questions in three modes (15 reports). Stability is measured by
-scoring every report twice with a different `--judge-salt`: per metric, the spread
-between reports divided by the spread between the two scorings (signal to noise), and
-the smallest difference in a 15-report mean that exceeds the noise.
+scoring every report twice with a different `--judge-salt` and running `stats.py` on
+the two result folders: per metric, the spread between reports divided by the judge's
+own spread between the two scorings (signal to noise, SNR), and the smallest
+difference in a 15-report mean that exceeds the noise (MDD).
 
-- Rule-based metrics (source_diversity, source_recency, plan_adherence,
-  retrieval_overlap, instruction_following, citation_coverage, fact_grounding) have no
-  judge noise; re-scoring replays the cache and gives identical numbers.
-- Signal to noise is high for decomposition_tree_quality (16), decomposition_coverage
-  (7.9) and source_authority (6.4), and low for material_coverage (1.0) and
-  comprehensiveness (2.5), whose full / partial line moves between scorings.
-- Faithfulness noise comes mostly from how the audit splits a paragraph into claims and
-  which claims it types as facts, not from the verdicts on matching claims.
-- A hand-cleaned copy of the q001 default report (`dataset/clean_bases/`) scores higher
-  on faithfulness and citation recall, but by less than the noise; at paragraph level
-  the judge found 10.5 of the 12 problems fixed by hand.
+Last full scoring (15 reports, main and noise rounds, judge gpt-6-luna):
+
+| Metric | SNR | MDD |
+|---|---|---|
+| source_authority | 10.5 | 0.004 |
+| citation_recall | 6.0 | 0.014 |
+| effective_citations | 5.5 | 0.36 |
+| query_relevance | 5.2 | 0.013 |
+| faithfulness | 4.4 | 0.009 |
+| citation_precision | 4.3 | 0.015 |
+| decomposition_tree_quality | 3.8 | 0.035 |
+| material_coverage | 3.2 | 0.021 |
+| readability | 2.5 | 0.012 |
+| comprehensiveness | 2.4 | 0.030 |
+| decomposition_coverage | 2.4 | 0.040 |
+| insight | 2.4 | 0.011 |
+| subquery_redundancy | 1.4 | 0.062 |
+| topic_relevance | 1.2 | 0.003 |
+
+Rule-based metrics (source_diversity, source_recency, plan_adherence,
+retrieval_overlap, source_utilization, instruction_following, citation_coverage,
+fact_grounding) have no judge noise; re-scoring replays the cache and gives identical
+numbers.
+
+Correctness was spot-checked on 68 verdicts drawn at random (fixed seed) from that
+scoring: 24 faithfulness claims, 10 comprehensiveness aspects, 12 source authority
+domains, 8 query relevance steps, 8 tree quality children, 6 redundancy pairs. Each was
+checked against the passages and the report. 60 agree, 3 are a level too lenient and 5
+a level too strict or borderline; none is a clear error (no stated fact judged
+unsupported, no invented one judged supported). The check was done with another
+provider's model, not by people, and unsupported claims were checked against the
+passages the judge saw.
+
+A hand-cleaned copy of the q001 default report (`dataset/clean_bases/`) scores higher on
+faithfulness and citation recall, but by less than the noise; at paragraph level the
+judge found 10.5 of the 12 problems fixed by hand.
+
+## Reading the metrics
+
+What each value supports, and its known limits. "Means" = comparing averages over the
+question set (two versions of the agent, or two modes); "single reports" = comparing
+one report with another.
+
+| Metric | Use for | Known limits |
+|---|---|---|
+| decomposition_coverage, comprehensiveness | means | full / partial is a judgment call; SNR ~2.4, too noisy for single reports |
+| material_coverage | means | a lower bound: a point covered in other words can be missed |
+| subquery_redundancy | flagging repeated searches | SNR 1.4; the judge's stated difference between two queries is unreliable |
+| decomposition_tree_quality | means, single plans | short default plans (3 sub-queries) swing it by a third per child |
+| query_relevance | means | crowds toward 1.0; a step with any on-topic material scores high |
+| source_authority | means, single reports | judges sites, not pages; does not change with the question |
+| source_diversity | means | rises with report length (longer reports cite more domains) |
+| source_recency | means | reads the page date, which can be wrong (a sidebar date); an outdated page with a new date is not caught |
+| source_utilization | means | counts cited pages; pages used but not cited are not counted |
+| insight, readability | means | 3-4 rubric criteria per question, so one criterion moving 1 point moves the score ~0.03 |
+| topic_relevance, toxicity, bias | alarms only | nearly always 1.0 / 0 on these reports; read the flagged paragraphs, not the value |
+| citation_recall, citation_precision, effective_citations, faithfulness | means, single reports | all four come from one citation audit and move together; read them as one piece of evidence. Faithfulness noise comes mostly from how claims are split and typed as fact or analysis |
+| contradicted_paragraphs | alarms | almost always 0; check each flagged paragraph by hand |
+| instruction_following, citation_coverage, fact_grounding, plan_adherence, retrieval_overlap | means, single reports | rule-based; fact_grounding counts a paraphrased or converted figure as missing |
+
+Comparisons should go through `stats.py --compare`, which gives the paired difference
+with a 95% interval (bootstrap over questions); a difference whose interval includes 0
+is not established. With five questions, intervals are wide: more questions narrow
+them faster than repeated scoring does.
 
 ## Generation metrics
 
@@ -309,15 +368,14 @@ Notes:
 
 ## Not yet done
 
-- material_coverage and comprehensiveness: the full / partial line is not stable
-  enough to compare single reports.
+- comprehensiveness, decomposition_coverage, insight, readability: SNR about 2.4; good
+  enough for means, not for single reports.
+- subquery_redundancy: SNR 1.4.
 - Faithfulness: make the audit's fact / analysis typing of claims more stable.
-- A full scoring of all 15 reports, main and noise rounds, on the current versions.
-- Confidence intervals (bootstrap over reports) for means and for differences between
-  versions or modes.
 - Perturbation tests with graded defects (10 / 30 / 60 %), checks that changes which
   keep quality do not move the scores, and defects taken from outside these metrics.
 - A second judge from another provider on borderline items; a held-out question set
-  that prompts were not tuned on.
+  that prompts were not tuned on; more than five questions.
 - Sources that are out of date are not caught (source_recency reads the page date).
 - `source_utilization` counts cited pages; pages used but not cited are not counted.
+- `--dry-run` does not count claim rechecks; real calls run about 1.3x its count.
