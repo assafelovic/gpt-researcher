@@ -59,17 +59,18 @@ are provided by the plugin maintainer.
 
 ### cloro
 
-[cloro](https://cloro.dev) returns live Google results and AI answers with their
-sources. The package registers three retrievers:
+[cloro](https://cloro.dev) returns live Google and Bing results and AI answers with their
+sources. The package registers four retrievers:
 
 - `cloro`: Google organic results (about 10 per search). GPT Researcher scrapes each page.
+- `cloro_bing`: Bing organic results (one page per search). GPT Researcher scrapes each page.
 - `cloro_aimode`: the Google AI Mode answer under `raw_content`, then the sources it cites.
 - `cloro_bing_aimode`: the Bing AI Mode answer under `raw_content`, then the sources it cites.
 
 ```bash
 pip install gpt-researcher-cloro
 export CLORO_API_KEY="your-cloro-key"
-export RETRIEVER=cloro            # or cloro_aimode, cloro_bing_aimode
+export RETRIEVER=cloro            # or cloro_bing, cloro_aimode, cloro_bing_aimode
 ```
 
 Get an API key at [dashboard.cloro.dev](https://dashboard.cloro.dev/api-keys). `CLORO_COUNTRY`
