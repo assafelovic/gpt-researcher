@@ -53,6 +53,8 @@ def test_rejects_non_http_and_local_paths(url):
         "http://0.0.0.0/",                                      # unspecified
         "http://[::1]/",                                         # IPv6 loopback
         "http://[fd00::1]/",                                     # IPv6 unique-local
+        "http://100.100.100.200/latest/meta-data/",             # Alibaba Cloud metadata (shared space)
+        "http://100.64.0.1/",                                   # carrier-grade NAT 100.64.0.0/10
     ],
 )
 def test_rejects_internal_addresses(url):
