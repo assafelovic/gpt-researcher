@@ -357,6 +357,20 @@ OPENROUTER_LIMIT_RPS=1  # Ratelimit request per second
 EMBEDDING=google_genai:models/gemini-embedding-2 # openrouter doesn't support embedding models, use google instead its free
 GOOGLE_API_KEY=[Your *google gemini* key]
 ```
+
+## LLMTR
+
+[LLMTR](https://llmtr.com/) is an OpenAI-compatible gateway. Model IDs that start with `llmtr/` are hosted in Turkey; other IDs, such as `minimax/minimax-m3.1-flash`, are routed to their vendors. Get an API key at [the LLMTR key page](https://llmtr.com/dashboard/keys).
+
+```env
+LLMTR_API_KEY=[Your llmtr.com key]
+FAST_LLM=llmtr:minimax/minimax-m3.1-flash
+SMART_LLM=llmtr:llmtr/qwen3-8-27b
+STRATEGIC_LLM=llmtr:llmtr/qwen3-8-27b
+```
+
+LLMTR is a chat-completions gateway; set `EMBEDDING` to any supported embedding provider.
+
 ## Forge
 
 [Forge](https://github.com/TensorBlock/forge) is an open-source LLM router that provides unified access to 40+ AI providers through a single API.

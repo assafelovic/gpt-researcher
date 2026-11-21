@@ -21,6 +21,7 @@ The following LLMs are supported by GPTR (though you'll need to install the rele
 - deepseek
 - litellm
 - openrouter
+- llmtr
 - forge
 - avian
 - atlascloud

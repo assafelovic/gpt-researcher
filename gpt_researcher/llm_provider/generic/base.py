@@ -36,6 +36,7 @@ _SUPPORTED_PROVIDERS = {
     "litellm",
     "gigachat",
     "openrouter",
+    "llmtr",
     "vllm_openai",
     "aimlapi",
     "netmind",
@@ -353,6 +354,14 @@ class GenericLLMProvider:
                      request_timeout=180,
                      openai_api_key=os.environ["OPENROUTER_API_KEY"],
                      rate_limiter=rate_limiter,
+                     **kwargs
+                )
+        elif provider == "llmtr":
+            _check_pkg("langchain_openai")
+            from langchain_openai import ChatOpenAI
+
+            llm = ChatOpenAI(openai_api_base='https://llmtr.com/v1',
+                     openai_api_key=os.environ["LLMTR_API_KEY"],
                      **kwargs
                 )
         elif provider == "vllm_openai":
