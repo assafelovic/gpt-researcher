@@ -7,7 +7,7 @@ import requests
 import urllib.parse
 
 
-class SearchApiSearch():
+class SearchApiSearch:
     """
     SearchApi Retriever
     """
@@ -42,12 +42,21 @@ class SearchApiSearch():
 
         """
         """Useful for general internet search queries using SearchApi."""
+        if max_results <= 0:
+            return []
+
         # Restrict to the requested domains, the same way the google and serper
         # retrievers do; without this the filter was accepted and ignored.
         search_query = self.query
-        if self.query_domains and len(self.query_domains) > 0:
-            domain_query = " OR ".join([f"site:{domain}" for domain in self.query_domains])
-            search_query = f"({domain_query}) {self.query}"
+        if self.query_domains:
+            cleaned_domains = [
+                d.strip()
+                for d in self.query_domains
+                if isinstance(d, str) and d.strip()
+            ]
+            if cleaned_domains:
+                domain_query = " OR ".join([f"site:{domain}" for domain in cleaned_domains])
+                search_query = f"({domain_query}) {self.query}"
 
         print("SearchApiSearch: Searching with query {0}...".format(search_query))
 
