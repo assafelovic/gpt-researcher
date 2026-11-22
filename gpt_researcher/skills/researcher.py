@@ -209,7 +209,14 @@ class ResearchConductor:
                 self._get_context_by_web_search(self.researcher.query, document_data, self.researcher.query_domains),
                 self._get_context_by_web_search(self.researcher.query, [], self.researcher.query_domains),
             )
-            research_data = self.researcher.prompt_family.join_local_web_documents(docs_context, web_context)
+            # A pass that finds nothing returns [] rather than a string. Joining
+            # that would put "[]" in the prompt (or raise for the Granite
+            # families), and a context made only of labels would defeat the
+            # empty-context check when the report is written.
+            if docs_context or web_context:
+                research_data = self.researcher.prompt_family.join_local_web_documents(
+                    docs_context or "", web_context or ""
+                )
         elif self.researcher.report_source == ReportSource.Azure.value:
             from ..document.azure_document_loader import AzureDocumentLoader
             azure_loader = AzureDocumentLoader(
