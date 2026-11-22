@@ -36,6 +36,7 @@ def _load_scraper_module():
     url_security = types.ModuleType("gpt_researcher.utils.url_security")
     url_security.UnsafeURLError = type("UnsafeURLError", (ValueError,), {})
     url_security.validate_url = lambda url, **k: url
+    url_security.validate_redirect_hook = lambda response, *a, **k: None
     sys.modules[url_security.__name__] = url_security
 
     scraper_pkg = types.ModuleType("gpt_researcher.scraper")
