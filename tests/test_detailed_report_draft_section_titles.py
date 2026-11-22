@@ -51,7 +51,6 @@ def _bare_detailed_report():
     report.complement_source_urls = False
     report.max_search_results = None
     report.global_urls = set()
-    report.global_context = "offline context"
     report.gpt_researcher = SimpleNamespace(
         agent="Research agent",
         role="Research role",
