@@ -1,0 +1,1 @@
+"use strict";(Array.isArray(globalThis.webpackChunkwebsite)?globalThis.webpackChunkwebsite:globalThis.webpackChunkwebsite=[]).push([[8122],{38122(e,a,s){s.d(a,{createPacketServices:()=>b.$});var b=s(58484);s(80184)}}]);
