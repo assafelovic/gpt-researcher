@@ -21,6 +21,7 @@ Install them in the same Python environment as GPT Researcher.
 | Retriever | Package | Maintainer and support |
 | --- | --- | --- |
 | Autom | [`gpt-researcher-autom`](https://pypi.org/project/gpt-researcher-autom/) | [automdev/gpt-researcher-autom](https://github.com/automdev/gpt-researcher-autom) · [Issues](https://github.com/automdev/gpt-researcher-autom/issues) |
+| cloro | [`gpt-researcher-cloro`](https://pypi.org/project/gpt-researcher-cloro/) | [cloro-dev/gpt-researcher-cloro](https://github.com/cloro-dev/gpt-researcher-cloro) · [Issues](https://github.com/cloro-dev/gpt-researcher-cloro/issues) |
 | Keenable | [`gpt-researcher-keenable`](https://pypi.org/project/gpt-researcher-keenable/) | [PyPI project page](https://pypi.org/project/gpt-researcher-keenable/) |
 | Piloterr | [`gpt-researcher-piloterr`](https://pypi.org/project/gpt-researcher-piloterr/) | [piloterr/gpt-researcher-piloterr](https://github.com/piloterr/gpt-researcher-piloterr) · [Issues](https://github.com/piloterr/gpt-researcher-piloterr/issues) |
 | Sciverse | [`gpt-researcher-sciverse`](https://pypi.org/project/gpt-researcher-sciverse/) | [Sciverse-Agent-Tools](https://github.com/opendatalab/Sciverse-Agent-Tools) · [Issues](https://github.com/opendatalab/Sciverse-Agent-Tools/issues) |
@@ -51,6 +52,28 @@ research run.
 
 See the [plugin documentation](https://github.com/automdev/gpt-researcher-autom#readme)
 for details. API access and integration support are provided by Autom.
+
+### cloro
+
+[cloro](https://cloro.dev) returns live Google and Bing results and AI answers with their
+sources. The package registers four retrievers:
+
+- `cloro`: Google organic results (about 10 per search). GPT Researcher scrapes each page.
+- `cloro_bing`: Bing organic results (one page per search). GPT Researcher scrapes each page.
+- `cloro_aimode`: the Google AI Mode answer under `raw_content`, then the sources it cites.
+- `cloro_bing_aimode`: the Bing AI Mode answer under `raw_content`, then the sources it cites.
+
+```bash
+pip install gpt-researcher-cloro
+export CLORO_API_KEY="your-cloro-key"
+export RETRIEVER=cloro            # or cloro_bing, cloro_aimode, cloro_bing_aimode
+```
+
+Get an API key at [dashboard.cloro.dev](https://dashboard.cloro.dev/api-keys). `CLORO_COUNTRY`
+sets the country (default `US`). Each search is one cloro request and costs credits on the
+user's cloro plan. Requires GPT Researcher 0.16.1+. See the
+[plugin README](https://github.com/cloro-dev/gpt-researcher-cloro#readme) for the result
+shapes and limits. Support is provided by the plugin maintainer.
 
 ### Keenable
 
@@ -126,7 +149,7 @@ Create an API key at [specstream.ai](https://specstream.ai). Optional settings:
 - `SPECSTREAM_BASE_URL`: defaults to `https://api.specstream.ai`.
 - Combine with a built-in retriever, e.g. `RETRIEVER=specstream,duckduckgo`.
 
-See the [plugin documentation](https://pypi.org/project/gpt-researcher-specstream/)
+See the [plugin documentation](https://github.com/specstream/specstream-tools/tree/main/packages/gpt-researcher-specstream#readme)
 for configuration details. API access and integration support are provided by
 the plugin maintainer.
 
