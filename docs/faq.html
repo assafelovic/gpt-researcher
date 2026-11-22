@@ -19,8 +19,8 @@
 <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1A1612">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gelasio:wght@400;500;600&family=Instrument+Sans:wdth,wght@75..100,400..700&family=JetBrains+Mono:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.11/dist/katex.min.css" integrity="sha384-Um5gpz1odJg5Z4HAmzPtgZKdTBHZdw8S29IecapCSB31ligYPhHQZMIlWLYQGVoc" crossorigin="anonymous"><link rel="stylesheet" href="/assets/css/styles.df553ba0.css">
-<script src="/assets/js/runtime~main.b92cd2ab.js" defer="defer"></script>
-<script src="/assets/js/main.697a30f9.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.07c51a70.js" defer="defer"></script>
+<script src="/assets/js/main.ea3639d7.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -37,7 +37,7 @@ You can also check out demos and examples for inspiration <a class="" href="/doc
 <p>GPT Researcher goes well beyond RAG: it combines planner and execution agents, decision models that keep only the most useful context, multi-agent workflows and recursive deep research, and is optimized for quick and efficient research. It is also fully customizable and can be tailored to your specific needs.</p>
 <p>To learn more about GPT Researcher, check out the <a class="" href="/docs/gpt-researcher/getting-started/introduction">documentation page</a>.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="how-much-does-each-research-run-cost">How much does each research run cost?<a href="#how-much-does-each-research-run-cost" class="hash-link" aria-label="Direct link to How much does each research run cost?" title="Direct link to How much does each research run cost?" translate="no">​</a></h3>
-<p>It depends on the models you configure and the report type. In our <a href="https://github.com/assafelovic/gpt-researcher/tree/main/evals/simple_evals/logs" target="_blank" rel="noopener noreferrer" class="">SimpleQA evaluation</a> of 100 queries (February 2025), a research run cost about $0.10 on average. Every run tracks its own LLM spend, so you can check the exact cost with <code>researcher.get_costs()</code> after it finishes. We&#x27;re constantly optimizing LLM calls to reduce costs and improve performance.</p>
+<p>It depends on the models you configure and the report type. With the default models and settings (measured November 2026), a standard research report costs about $0.08 and takes about a minute, and a <a class="" href="/docs/gpt-researcher/gptr/deep_research">deep research</a> run costs about $1.30 and takes 8–9 minutes. Search API usage (such as Tavily) is billed separately. Every run tracks its own LLM spend, so you can check the exact cost with <code>researcher.get_costs()</code> after it finishes. We&#x27;re constantly optimizing LLM calls to reduce costs and improve performance.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="how-do-you-ensure-the-report-is-factual-and-accurate">How do you ensure the report is factual and accurate?<a href="#how-do-you-ensure-the-report-is-factual-and-accurate" class="hash-link" aria-label="Direct link to How do you ensure the report is factual and accurate?" title="Direct link to How do you ensure the report is factual and accurate?" translate="no">​</a></h3>
 <p>we do our best to ensure that the information we provide is factual and accurate. We do this by using multiple sources, and by using proprietary AI to score and rank the most relevant and accurate information. We also use proprietary AI to filter out irrelevant information and sources.</p>
 <p>Lastly, decision models score every scraped passage for how useful it is to the research task and keep only the best ones, leading to more accurate generative AI content and reduced hallucinations.</p>
