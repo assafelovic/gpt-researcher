@@ -12,6 +12,7 @@ on:
       - multi_agents/requirements.txt
       - frontend/nextjs/Dockerfile
       - frontend/nextjs/package.json
+      - frontend/nextjs/package-lock.json
       - .github/workflows/docker-publish.yml
   workflow_dispatch:
 

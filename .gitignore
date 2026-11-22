@@ -15,6 +15,7 @@ venv.bak/
 
 #Ignore generated outputs
 outputs/
+!frontend/nextjs/app/outputs/
 *.lock
 dist/
 gpt_researcher.egg-info/
@@ -38,6 +39,7 @@ docs/build
 .langgraph-data/
 .next/
 package-lock.json
+!frontend/nextjs/package-lock.json
 
 #Vim swp files
 *.swp
