@@ -49,9 +49,6 @@ docs/build
 # Next.js build artifacts
 .next/
 
-# Package lock file
-package-lock.json
-
 # Docker-specific exclusions (if any)
 Dockerfile
 docker-compose.yml
