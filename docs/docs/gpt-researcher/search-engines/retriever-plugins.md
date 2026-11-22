@@ -22,6 +22,7 @@ Install them in the same Python environment as GPT Researcher.
 | --- | --- | --- |
 | Autom | [`gpt-researcher-autom`](https://pypi.org/project/gpt-researcher-autom/) | [automdev/gpt-researcher-autom](https://github.com/automdev/gpt-researcher-autom) · [Issues](https://github.com/automdev/gpt-researcher-autom/issues) |
 | Keenable | [`gpt-researcher-keenable`](https://pypi.org/project/gpt-researcher-keenable/) | [PyPI project page](https://pypi.org/project/gpt-researcher-keenable/) |
+| Piloterr | [`gpt-researcher-piloterr`](https://pypi.org/project/gpt-researcher-piloterr/) | [piloterr/gpt-researcher-piloterr](https://github.com/piloterr/gpt-researcher-piloterr) · [Issues](https://github.com/piloterr/gpt-researcher-piloterr/issues) |
 | Sciverse | [`gpt-researcher-sciverse`](https://pypi.org/project/gpt-researcher-sciverse/) | [Sciverse-Agent-Tools](https://github.com/opendatalab/Sciverse-Agent-Tools) · [Issues](https://github.com/opendatalab/Sciverse-Agent-Tools/issues) |
 
 ### Autom
@@ -53,6 +54,29 @@ for details. API access and integration support are provided by Autom.
 ### Keenable
 
 `pip install gpt-researcher-keenable`, then set `RETRIEVER=keenable`. It works without an API key; `KEENABLE_API_KEY` is optional.
+
+### Piloterr
+
+[Piloterr](https://www.piloterr.com) is a web data API that runs Google searches
+on its own infrastructure and returns the results as JSON.
+
+```bash
+pip install gpt-researcher-piloterr
+export RETRIEVER=piloterr
+export PILOTERR_API_KEY="your-piloterr-api-key"
+```
+
+Get an API key at [app.piloterr.com](https://app.piloterr.com). Combine it with
+a built-in retriever, e.g. `RETRIEVER=piloterr,duckduckgo`.
+
+The retriever returns links with their title and snippet, and GPT Researcher
+scrapes each page (`requires_scraping=True`). Domains in `query_domains` are
+added to the query as `site:` filters. On a missing key or a failed request it
+logs a warning and returns no results, so one failing provider does not stop a
+research run.
+
+See the [plugin documentation](https://github.com/piloterr/gpt-researcher-piloterr#readme)
+for details. API access and integration support are provided by Piloterr.
 
 ### Sciverse
 
