@@ -342,12 +342,14 @@ async def main(args):
     print(f"Report written to '{md_path}'")
 
     # PDF/DOCX share the same stem so the three files stay grouped together.
+    # They get the report without the frontmatter, which is metadata for the
+    # Markdown file: the DOCX converter would render it as a heading.
     shared_stem = md_path.stem
 
     # Generate PDF if not disabled
     if not args.no_pdf:
         try:
-            pdf_path = await write_md_to_pdf(final_markdown, shared_stem)
+            pdf_path = await write_md_to_pdf(report, shared_stem)
             if pdf_path:
                 print(f"PDF written to '{pdf_path}'")
         except Exception as e:
@@ -356,7 +358,7 @@ async def main(args):
     # Generate DOCX if not disabled
     if not args.no_docx:
         try:
-            docx_path = await write_md_to_word(final_markdown, shared_stem)
+            docx_path = await write_md_to_word(report, shared_stem)
             if docx_path:
                 print(f"DOCX written to '{docx_path}'")
         except Exception as e:
