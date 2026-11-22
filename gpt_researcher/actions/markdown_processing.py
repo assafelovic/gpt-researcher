@@ -23,7 +23,11 @@ def extract_headers(markdown_text: str) -> List[Dict]:
     for line in lines:
         if line.startswith("<h") and len(line) > 2 and line[2].isdigit():
             level = int(line[2])
-            header_text = line[line.index(">") + 1 : line.rindex("<")]
+            # extract_sections already returns readable text. The same heading
+            # must not keep inner tags or entities here, or the table of
+            # contents and the header tree show "<strong>Results</strong>".
+            raw_header = line[line.index(">") + 1 : line.rindex("<")]
+            header_text = unescape(re.sub(r"<.*?>", "", raw_header)).strip()
 
             while stack and stack[-1]["level"] >= level:
                 stack.pop()
