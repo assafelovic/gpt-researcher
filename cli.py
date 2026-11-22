@@ -140,9 +140,10 @@ cli.add_argument(
 
 # Characters that are invalid in filenames on Windows and *nix.
 _INVALID_FILENAME_CHARS = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
+_MAX_FILENAME_STEM_LENGTH = 60
 
 
-def _sanitize_filename(name: str, max_len: int = 60) -> str:
+def _sanitize_filename(name: str, max_len: int = _MAX_FILENAME_STEM_LENGTH) -> str:
     """Turn an arbitrary string into a safe filename stem.
 
     - Strips characters that are illegal on Windows/Linux filesystems.
@@ -252,7 +253,11 @@ def _resolve_unique_path(output_dir: Path, stem: str, ext: str = ".md") -> Path:
         return candidate
     i = 2
     while True:
-        candidate = output_dir / f"{stem}_{i}{ext}"
+        suffix = f"_{i}"
+        unique_stem = (
+            stem[:_MAX_FILENAME_STEM_LENGTH - len(suffix)].rstrip("._ ") + suffix
+        )
+        candidate = output_dir / f"{unique_stem}{ext}"
         if not candidate.exists():
             return candidate
         i += 1
