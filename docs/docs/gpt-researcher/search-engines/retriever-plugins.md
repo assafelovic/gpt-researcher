@@ -20,8 +20,35 @@ Install them in the same Python environment as GPT Researcher.
 
 | Retriever | Package | Maintainer and support |
 | --- | --- | --- |
+| Autom | [`gpt-researcher-autom`](https://pypi.org/project/gpt-researcher-autom/) | [automdev/gpt-researcher-autom](https://github.com/automdev/gpt-researcher-autom) · [Issues](https://github.com/automdev/gpt-researcher-autom/issues) |
 | Keenable | [`gpt-researcher-keenable`](https://pypi.org/project/gpt-researcher-keenable/) | [PyPI project page](https://pypi.org/project/gpt-researcher-keenable/) |
 | Sciverse | [`gpt-researcher-sciverse`](https://pypi.org/project/gpt-researcher-sciverse/) | [Sciverse-Agent-Tools](https://github.com/opendatalab/Sciverse-Agent-Tools) · [Issues](https://github.com/opendatalab/Sciverse-Agent-Tools/issues) |
+
+### Autom
+
+[Autom](https://www.autom.dev) is a SERP API: it runs the search on Google,
+Bing, Brave, DuckDuckGo or Yahoo at the time of the call and returns the results
+as JSON.
+
+```bash
+pip install gpt-researcher-autom
+export RETRIEVER=autom
+export AUTOM_API_KEY="your-autom-api-key"
+```
+
+Get an API key at [app.autom.dev](https://app.autom.dev). Optional setting:
+
+- `AUTOM_ENGINE`: `google` (default), `bing`, `brave`, `duckduckgo` or `yahoo`.
+- Combine with a built-in retriever, e.g. `RETRIEVER=autom,duckduckgo`.
+
+The retriever returns links with their title and snippet, and GPT Researcher
+scrapes each page (`requires_scraping=True`). Domains in `query_domains` are
+added to the query as `site:` filters. On a missing key or a failed request it
+logs a warning and returns no results, so one failing provider does not stop a
+research run.
+
+See the [plugin documentation](https://github.com/automdev/gpt-researcher-autom#readme)
+for details. API access and integration support are provided by Autom.
 
 ### Keenable
 
