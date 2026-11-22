@@ -54,6 +54,9 @@ def _is_disallowed_ip(ip) -> bool:
         or ip.is_reserved
         or ip.is_multicast
         or ip.is_unspecified
+        # ``is_private`` misses the shared address space 100.64.0.0/10 (CGNAT,
+        # Tailscale, and Alibaba Cloud's metadata endpoint 100.100.100.200).
+        or not ip.is_global
     )
 
 
