@@ -78,6 +78,8 @@ class CustomRetriever:
         # single malformed edge cannot crash the research pipeline.
         cleaned: List[Dict[str, Any]] = []
         for item in payload:
+            if len(cleaned) >= max_results:
+                break
             if not isinstance(item, dict):
                 continue
             url = item.get("url") or item.get("href") or ""
@@ -89,6 +91,4 @@ class CustomRetriever:
                     "raw_content": item.get("raw_content") or item.get("body") or "",
                 }
             )
-            if len(cleaned) >= max_results:
-                break
         return cleaned

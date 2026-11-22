@@ -1,11 +1,15 @@
-﻿import os
-from unittest.mock import patch
+﻿from unittest.mock import patch
 
-os.environ.setdefault("RETRIEVER_ENDPOINT", "https://example.invalid/search")
+import pytest
 
 from gpt_researcher.retrievers.custom.custom import CustomRetriever
 
 PAYLOAD = [{"url": f"https://example.com/{i}", "raw_content": f"content {i}"} for i in range(10)]
+
+
+@pytest.fixture(autouse=True)
+def _endpoint(monkeypatch):
+    monkeypatch.setenv("RETRIEVER_ENDPOINT", "https://example.invalid/search")
 
 
 class FakeResponse:
@@ -33,6 +37,10 @@ def test_custom_retriever_returns_everything_below_the_limit():
     results = _search(50)
 
     assert len(results) == len(PAYLOAD)
+
+
+def test_custom_retriever_returns_nothing_for_a_zero_limit():
+    assert _search(0) == []
 
 
 def test_custom_retriever_keeps_filtering_malformed_rows():
