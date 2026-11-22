@@ -489,13 +489,13 @@ Install Rapid-MLX and start a server with both models:
 
 ```bash
 pip install rapid-mlx
-rapid-mlx serve qwen3.5-4b-4bit --embedding-model embeddinggemma-2-4bit
+rapid-mlx serve qwen3.5-4b-4bit --embedding-model embeddinggemma-2-4bit --port 8080
 ```
 
 Set the following environment variables in GPT Researcher's `.env` file:
 
 ```env
-OPENAI_BASE_URL=http://127.0.0.1:8000/v1
+OPENAI_BASE_URL=http://127.0.0.1:8080/v1
 OPENAI_API_KEY=local
 FAST_LLM=openai:qwen3.5-4b-4bit
 SMART_LLM=openai:qwen3.5-4b-4bit
@@ -510,7 +510,7 @@ RETRIEVER=duckduckgo
 
 Rapid-MLX does not require an API key; `local` is a placeholder for the OpenAI client. `CONTEXT_FILTER=embeddings` enables local embedding-based context filtering instead of the default automatic filter. Web search and page scraping still require internet access.
 
-The server defaults to port 8000, which GPT Researcher's web app also uses. When running both on the same machine, start GPT Researcher on another port, for example `python -m uvicorn main:app --port 8001`. The Python package workflow can use the same environment variables without starting the web app.
+The example pins port 8080 because GPT Researcher's web app uses 8000. Without `--port`, Rapid-MLX picks the first free port from 8000, so `OPENAI_BASE_URL` could point at the wrong port.
 
 ## Other Embedding Models
 
