@@ -184,6 +184,7 @@ class DetailedReport:
             relevant_written_contents=relevant_contents,
         )
 
+        self.gpt_researcher.add_costs(subtopic_assistant.get_costs())
         self.global_written_sections.extend(self.gpt_researcher.extract_sections(subtopic_report))
         self.global_urls.update(subtopic_assistant.visited_urls)
 
