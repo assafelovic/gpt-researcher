@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 # Load .env first so it can configure logging and the server below.
 load_dotenv()
 
-LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
+LOG_LEVEL = (os.getenv("LOG_LEVEL") or os.getenv("LOGGING_LEVEL") or "INFO").upper()
 if LOG_LEVEL not in ("CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"):
     print(f"Unknown LOG_LEVEL {LOG_LEVEL!r}, using INFO")
     LOG_LEVEL = "INFO"
