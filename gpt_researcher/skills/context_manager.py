@@ -110,7 +110,17 @@ class ContextManager:
         all_queries = [current_subtopic] + draft_section_titles
 
         async def process_query(query: str) -> List[str]:
-            return await self.__get_similar_written_contents_by_query(query, written_contents, **self.researcher.kwargs)
+            try:
+                return await self.__get_similar_written_contents_by_query(query, written_contents, **self.researcher.kwargs)
+            except Exception as e:
+                # One failing query (e.g. a transient embeddings error) must not
+                # abort its siblings or the report write; fall back to the same
+                # lexical ranking used when embeddings are unavailable. :-)
+                logger.warning(
+                    f"Written-content search failed for query '{query}' ({e}); "
+                    f"falling back to lexical ranking"
+                )
+                return rank_written_sections(query, written_contents, max_results=max_results)
 
         results = await asyncio.gather(*[process_query(query) for query in all_queries])
         relevant_contents = list(dict.fromkeys(
