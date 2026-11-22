@@ -28,7 +28,9 @@ class OpenAlexSearch:
         "publication_date:desc",
     ]
 
-    def __init__(self, query: str, sort: str = "relevance_score:desc", query_domains=None):
+    def __init__(
+        self, query: str, sort: str = "relevance_score:desc", query_domains=None
+    ):
         """
         Initialize the OpenAlexSearch class with a query and sort criterion.
 
@@ -36,6 +38,7 @@ class OpenAlexSearch:
         :param sort: Sort criterion. One of VALID_SORT_CRITERIA.
         """
         self.query = query
+        self.query_domains = query_domains or None
         assert sort in self.VALID_SORT_CRITERIA, f"Invalid sort criterion: {sort}"
         self.sort = sort
         self.email: Optional[str] = os.environ.get("OPENALEX_EMAIL")
@@ -48,6 +51,9 @@ class OpenAlexSearch:
         :param max_results: Maximum number of results to retrieve (capped at 25 per request).
         :return: List of dictionaries containing title, href, and body of each work.
         """
+        if max_results <= 0:
+            return []
+
         params = {
             "search": self.query,
             "per_page": min(max_results, 25),
@@ -89,7 +95,7 @@ class OpenAlexSearch:
                     }
                 )
 
-        return search_result
+        return search_result[:max_results]
 
     @staticmethod
     def _pick_href(result: dict) -> Optional[str]:
