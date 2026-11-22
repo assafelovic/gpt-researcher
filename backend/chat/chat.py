@@ -156,6 +156,8 @@ class ChatAgentWithMemory:
             messages=messages,
             tools=[search_tool],
             model=self.config.smart_llm_model,
+            temperature=self.config.temperature,
+            max_tokens=self.config.smart_token_limit,
             llm_provider=self.config.smart_llm_provider,
             llm_kwargs=self.config.llm_kwargs,
         )
