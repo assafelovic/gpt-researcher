@@ -21,7 +21,6 @@ Usage: python deep_agents/benchmark_data/build_corpus.py
 import shutil
 from pathlib import Path
 
-import pymupdf
 from docx import Document
 
 SRC = Path(__file__).parent / "internal_docs_src"
@@ -29,20 +28,45 @@ OUT = Path(__file__).parent / "internal_docs"
 
 
 def write_pdf(text: str, path: Path) -> None:
-    doc = pymupdf.open()
+    # Hand-written A4 PDF in the built-in Helvetica font, so no PDF library is needed. :-)
     lines = text.splitlines()
     per_page = 52
-    for start in range(0, len(lines), per_page):
-        page = doc.new_page()
-        page.insert_text(
-            (54, 60),
-            "\n".join(lines[start : start + per_page]),
-            fontsize=10,
-            fontname="helv",
+    chunks = [lines[start : start + per_page] for start in range(0, len(lines), per_page)] or [[]]
+    objects = [
+        b"<< /Type /Catalog /Pages 2 0 R >>",
+        b"",
+        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+    ]
+    kids = []
+    for chunk in chunks:
+        ops = ["BT", "/F1 10 Tf", "12 TL", "54 782 Td"]
+        for line in chunk:
+            escaped = line.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
+            ops.append(f"({escaped}) Tj T*")
+        ops.append("ET")
+        stream = "\n".join(ops).encode("cp1252", "replace")
+        objects.append(b"<< /Length %d >>\nstream\n%s\nendstream" % (len(stream), stream))
+        objects.append(
+            b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] "
+            b"/Resources << /Font << /F1 3 0 R >> >> /Contents %d 0 R >>" % len(objects)
         )
+        kids.append(len(objects))
+    objects[1] = b"<< /Type /Pages /Kids [%s] /Count %d >>" % (
+        b" ".join(b"%d 0 R" % kid for kid in kids),
+        len(kids),
+    )
+
+    pdf = bytearray(b"%PDF-1.4\n")
+    offsets = []
+    for number, body in enumerate(objects, start=1):
+        offsets.append(len(pdf))
+        pdf += b"%d 0 obj\n%s\nendobj\n" % (number, body)
+    xref = len(pdf)
+    pdf += b"xref\n0 %d\n0000000000 65535 f \n" % (len(objects) + 1)
+    pdf += b"".join(b"%010d 00000 n \n" % offset for offset in offsets)
+    pdf += b"trailer\n<< /Size %d /Root 1 0 R >>\nstartxref\n%d\n%%%%EOF\n" % (len(objects) + 1, xref)
     path.parent.mkdir(parents=True, exist_ok=True)
-    doc.save(str(path))
-    doc.close()
+    path.write_bytes(bytes(pdf))
 
 
 def write_docx(text: str, path: Path) -> None:

@@ -1,9 +1,9 @@
-"""Regression test: PyMuPDFScraper must not leak its downloaded temp file.
+"""Regression test: PDFScraper must not leak its downloaded temp file.
 
 When scraping a remote PDF, the scraper downloads it to a
 ``NamedTemporaryFile(delete=False, suffix=".pdf")`` and then loads it with
-``PyMuPDFLoader``. The old code called ``os.remove(temp_filename)`` only on the
-success path, so a parse failure (malformed/partial PDF -> ``PyMuPDFLoader.load``
+``PDFLoader``. The old code called ``os.remove(temp_filename)`` only on the
+success path, so a parse failure (malformed/partial PDF -> ``PDFLoader.load``
 raises) left the temp file behind on disk every time. The exception is then
 swallowed by the broad ``except``, so the leak was silent.
 """
@@ -13,7 +13,7 @@ import glob
 import tempfile
 from unittest.mock import MagicMock, patch
 
-from gpt_researcher.scraper.pymupdf.pymupdf import PyMuPDFScraper
+from gpt_researcher.scraper.pdf.pdf import PDFScraper
 
 
 class _FakeResponse:
@@ -29,15 +29,15 @@ def _temp_pdfs() -> set:
 
 
 def test_tempfile_removed_when_loader_raises():
-    scraper = PyMuPDFScraper("https://example.com/broken.pdf")
+    scraper = PDFScraper("https://example.com/broken.pdf")
 
     before = _temp_pdfs()
 
     with patch(
-        "gpt_researcher.scraper.pymupdf.pymupdf.requests.get",
+        "gpt_researcher.scraper.pdf.pdf.requests.get",
         return_value=_FakeResponse(),
     ), patch(
-        "gpt_researcher.scraper.pymupdf.pymupdf.PyMuPDFLoader"
+        "gpt_researcher.scraper.pdf.pdf.PDFLoader"
     ) as mock_loader:
         mock_loader.return_value.load.side_effect = RuntimeError("corrupt PDF")
 
@@ -47,4 +47,4 @@ def test_tempfile_removed_when_loader_raises():
     assert (content, images, title) == ("", [], "")
     # ...but no new *.pdf temp file is left behind.
     leaked = _temp_pdfs() - before
-    assert not leaked, f"PyMuPDFScraper leaked temp file(s): {leaked}"
+    assert not leaked, f"PDFScraper leaked temp file(s): {leaked}"

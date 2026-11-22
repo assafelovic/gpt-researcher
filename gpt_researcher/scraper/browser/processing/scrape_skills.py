@@ -1,9 +1,10 @@
-from langchain_community.document_loaders import PyMuPDFLoader
 from langchain_community.retrievers import ArxivRetriever
 
+from gpt_researcher.scraper.pdf.pdf import PDFScraper
 
-def scrape_pdf_with_pymupdf(url) -> str:
-    """Scrape a pdf with pymupdf
+
+def scrape_pdf(url) -> str:
+    """Scrape a pdf
 
     Args:
         url (str): The url of the pdf to scrape
@@ -11,9 +12,8 @@ def scrape_pdf_with_pymupdf(url) -> str:
     Returns:
         str: The text scraped from the pdf
     """
-    loader = PyMuPDFLoader(url)
-    doc = loader.load()
-    return str(doc)
+    content, _, _ = PDFScraper(url).scrape()
+    return content
 
 
 def scrape_pdf_with_arxiv(query) -> str:

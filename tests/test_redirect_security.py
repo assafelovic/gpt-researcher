@@ -40,7 +40,7 @@ def modules():
             "gpt_researcher.document.document": {"detect_utf8": lambda *a: "utf-8"},
             "langchain_community": {},
             "langchain_community.document_loaders": {
-                n: object for n in ("PyMuPDFLoader", "TextLoader", "UnstructuredCSVLoader",
+                n: object for n in ("TextLoader", "UnstructuredCSVLoader",
                     "UnstructuredExcelLoader", "UnstructuredMarkdownLoader",
                     "UnstructuredPowerPointLoader", "UnstructuredWordDocumentLoader")},
         }.items():
@@ -49,7 +49,7 @@ def modules():
             sys.modules[name] = mod
         pkg = sys.modules["gpt_researcher.scraper"]
         for name in ("ArxivScraper", "BeautifulSoupScraper", "BrowserScraper", "FireCrawl",
-                     "NoDriverScraper", "PyMuPDFScraper", "TavilyExtract", "WebBaseLoaderScraper"):
+                     "NoDriverScraper", "PDFScraper", "TavilyExtract", "WebBaseLoaderScraper"):
             setattr(pkg, name, object)
         scraper = load_module("gpt_researcher.scraper.scraper", "scraper/scraper.py")
         document = load_module("gpt_researcher.document.online_document", "document/online_document.py")

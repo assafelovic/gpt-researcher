@@ -2,7 +2,6 @@ import asyncio
 import os
 from typing import List, Union
 from langchain_community.document_loaders import (
-    PyMuPDFLoader,
     TextLoader,
     UnstructuredCSVLoader,
 UnstructuredEPubLoader,
@@ -12,6 +11,8 @@ UnstructuredEPubLoader,
     UnstructuredWordDocumentLoader
 )
 from langchain_community.document_loaders import BSHTMLLoader
+
+from gpt_researcher.document.pdf_loader import PDFLoader
 
 
 def detect_utf8(file_path: str) -> str | None:
@@ -84,7 +85,7 @@ class DocumentLoader:
         try:
             encoding = detect_utf8(file_path) if file_extension in ("txt", "html", "htm") else None
             loader_dict = {
-                "pdf": PyMuPDFLoader(file_path),
+                "pdf": PDFLoader(file_path),
 "epub": UnstructuredEPubLoader(file_path),
                 "txt": TextLoader(file_path, encoding=encoding),
                 "doc": UnstructuredWordDocumentLoader(file_path),
