@@ -269,6 +269,25 @@ async def main(args):
     """
     query_domains = args.query_domains.split(",") if args.query_domains else []
 
+    # Convert the simple keyword to the full Tone enum value
+    tone_map = {
+        "objective": Tone.Objective,
+        "formal": Tone.Formal,
+        "analytical": Tone.Analytical,
+        "persuasive": Tone.Persuasive,
+        "informative": Tone.Informative,
+        "explanatory": Tone.Explanatory,
+        "descriptive": Tone.Descriptive,
+        "critical": Tone.Critical,
+        "comparative": Tone.Comparative,
+        "speculative": Tone.Speculative,
+        "reflective": Tone.Reflective,
+        "narrative": Tone.Narrative,
+        "humorous": Tone.Humorous,
+        "optimistic": Tone.Optimistic,
+        "pessimistic": Tone.Pessimistic
+    }
+
     researcher: GPTResearcher | None = None
 
     if args.report_type == 'detailed_report':
@@ -276,7 +295,8 @@ async def main(args):
             query=args.query,
             query_domains=query_domains,
             report_type="research_report",
-            report_source="web_search",
+            report_source=args.report_source,
+            tone=tone_map[args.tone],
         )
 
         report = await detailed_report.run()
@@ -284,25 +304,6 @@ async def main(args):
         # surface sources_count / total_cost and reuse the fast LLM for the title.
         researcher = getattr(detailed_report, "gpt_researcher", None)
     else:
-        # Convert the simple keyword to the full Tone enum value
-        tone_map = {
-            "objective": Tone.Objective,
-            "formal": Tone.Formal,
-            "analytical": Tone.Analytical,
-            "persuasive": Tone.Persuasive,
-            "informative": Tone.Informative,
-            "explanatory": Tone.Explanatory,
-            "descriptive": Tone.Descriptive,
-            "critical": Tone.Critical,
-            "comparative": Tone.Comparative,
-            "speculative": Tone.Speculative,
-            "reflective": Tone.Reflective,
-            "narrative": Tone.Narrative,
-            "humorous": Tone.Humorous,
-            "optimistic": Tone.Optimistic,
-            "pessimistic": Tone.Pessimistic
-        }
-
         researcher = GPTResearcher(
             query=args.query,
             query_domains=query_domains,
