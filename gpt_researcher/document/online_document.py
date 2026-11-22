@@ -74,7 +74,15 @@ class OnlineDocumentLoader:
                             tmp_file.write(content)
                             tmp_file_path = tmp_file.name
 
-                        return await self._load_document(tmp_file_path, self._get_extension(url).strip('.'))
+                        pages = await self._load_document(tmp_file_path, self._get_extension(url).strip('.'))
+                        for page in pages:
+                            meta = getattr(page, "metadata", None)
+                            if isinstance(meta, dict):
+                                meta["source"] = url
+                        return pages
+        except UnsafeURLError as e:
+            print(f"Skipping document {url}: unsafe redirect: {e}")
+            return []
         except aiohttp.ClientError as e:
             print(f"Failed to process {url}")
             print(e)
