@@ -168,7 +168,7 @@ dependencies = [
 test = [
     # pytest 9.2 adds an unmarshallable NodeId to test reports, which crashes
     # every --forked test (pytest-forked 1.7.5 marshals the report dict).
-    "pytest>=8.0,<9.2",
+    "pytest>=8.0,<9.3",
     "pytest-asyncio>=0.24",
     "pytest-timeout>=2.3",
 ]
