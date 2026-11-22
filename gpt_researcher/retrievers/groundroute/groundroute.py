@@ -39,7 +39,7 @@ class GroundRouteSearch:
         if max_results <= 0:
             return []
 
-        search_query = self.query
+        payload_json = {"query": self.query, "max_results": max_results}
         if self.query_domains and len(self.query_domains) > 0:
             clean_domains = [
                 d.strip()
@@ -47,10 +47,7 @@ class GroundRouteSearch:
                 if isinstance(d, str) and d.strip()
             ]
             if clean_domains:
-                domain_query = " OR ".join(
-                    [f"site:{domain}" for domain in clean_domains]
-                )
-                search_query = f"({domain_query}) {self.query}"
+                payload_json["domains"] = clean_domains
 
         try:
             response = requests.post(
@@ -59,7 +56,7 @@ class GroundRouteSearch:
                     "Authorization": f"Bearer {self.api_key}",
                     "Content-Type": "application/json",
                 },
-                json={"query": search_query, "max_results": max_results},
+                json=payload_json,
                 timeout=20,
             )
             response.raise_for_status()
