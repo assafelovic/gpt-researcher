@@ -136,7 +136,7 @@ function Folio({n, label}) {
 export default function Home() {
   return (
     <Layout
-      title="Documentation"
+      title="The #1 deep research agent"
       description="GPT Researcher is an open-source deep research agent that turns any question into a detailed, cited report from the web or your own documents.">
       <main className={styles.page}>
         <section className={styles.hero}>
