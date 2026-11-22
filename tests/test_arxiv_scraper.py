@@ -15,7 +15,17 @@ def test_paper_id_from_abs_and_pdf_urls():
     assert _paper_id_from_link("2605.19780") == "2605.19780"
 
 
-def test_scrape_uses_client_results_not_search_results():
+@pytest.mark.parametrize(
+    ("link", "paper_id"),
+    [
+        ("https://arxiv.org/pdf/2605.19780v1", "2605.19780v1"),
+        ("https://arxiv.org/abs/hep-th/9901001v2", "hep-th/9901001v2"),
+        ("https://arxiv.org/pdf/math.GT/0309136v1.pdf", "math.GT/0309136v1"),
+        ("https://arxiv.org/abs/math.GT/0309136", "math.GT/0309136"),
+        ("math.GT/0309136v2", "math.GT/0309136v2"),
+    ],
+)
+def test_scrape_uses_client_results_not_search_results(link, paper_id):
     mock_paper = SimpleNamespace(
         title="Example Paper",
         summary="An abstract long enough to matter.",
@@ -27,17 +37,13 @@ def test_scrape_uses_client_results_not_search_results():
 
     with patch("arxiv.Client", return_value=mock_client) as client_ctor:
         with patch("arxiv.Search") as search_ctor:
-            ctx, images, title = ArxivScraper(
-                "https://arxiv.org/pdf/2605.19780v1"
-            ).scrape()
+            ctx, images, title = ArxivScraper(link).scrape()
 
     client_ctor.assert_called_once_with()
     search_ctor.assert_called_once()
     kwargs = search_ctor.call_args.kwargs
-    assert kwargs["id_list"] == ["2605.19780v1"]
+    assert kwargs["id_list"] == [paper_id]
     mock_client.results.assert_called_once()
-    # Never touch removed Search.results
-    assert not hasattr(search_ctor.return_value, "results") or True
     assert title == "Example Paper"
     assert "Ada Lovelace" in ctx
     assert "An abstract long enough to matter." in ctx
