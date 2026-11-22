@@ -19,6 +19,7 @@ class SemanticScholarSearch:
         :param sort: Sort criterion ('relevance', 'citationCount', 'publicationDate')
         """
         self.query = query
+        self.query_domains = query_domains or None
         assert sort in self.VALID_SORT_CRITERIA, "Invalid sort criterion"
         # Preserve the exact (camelCase) criterion. The Semantic Scholar API
         # expects ``citationCount`` / ``publicationDate`` verbatim; lowercasing
@@ -33,9 +34,12 @@ class SemanticScholarSearch:
         :param max_results: Maximum number of results to retrieve
         :return: List of dictionaries containing title, href, and body of each paper
         """
+        if max_results <= 0:
+            return []
+
         params = {
             "query": self.query,
-            "limit": max_results,
+            "limit": min(max_results, 100),
             "fields": "title,abstract,url,venue,year,authors,isOpenAccess,openAccessPdf",
             "sort": self.sort,
         }
@@ -72,4 +76,4 @@ class SemanticScholarSearch:
                 }
             )
 
-        return search_result
+        return search_result[:max_results]
