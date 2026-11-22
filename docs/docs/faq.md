@@ -17,7 +17,7 @@ To learn more about GPT Researcher, check out the [documentation page](/docs/gpt
 
 ### How much does each research run cost?
 
-A research task using GPT Researcher costs around $0.01 per a single run (for GPT-4 usage). We're constantly optimizing LLM calls to reduce costs and improve performance. 
+It depends on the models you configure and the report type. In our [SimpleQA evaluation](https://github.com/assafelovic/gpt-researcher/tree/main/evals/simple_evals/logs) of 100 queries (February 2025), a research run cost about $0.10 on average. Every run tracks its own LLM spend, so you can check the exact cost with `researcher.get_costs()` after it finishes. We're constantly optimizing LLM calls to reduce costs and improve performance.
 
 ### How do you ensure the report is factual and accurate?
 

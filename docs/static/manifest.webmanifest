@@ -1,0 +1,13 @@
+{
+  "name": "GPT Researcher",
+  "short_name": "GPT Researcher",
+  "description": "Open-source deep research agent that turns any question into a detailed, cited report.",
+  "start_url": "/",
+  "display": "browser",
+  "background_color": "#EEE7D8",
+  "theme_color": "#EEE7D8",
+  "icons": [
+    {"src": "/img/icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "/img/icon-512.png", "sizes": "512x512", "type": "image/png"}
+  ]
+}
