@@ -61,7 +61,6 @@ class TavilySearch:
                 return ""
         return api_key
 
-
     def _search(
         self,
         query: str,
@@ -111,6 +110,9 @@ class TavilySearch:
         Returns:
 
         """
+        if max_results <= 0:
+            return []
+
         try:
             # LLM-generated queries often use Google-style site: operators,
             # which Tavily rejects (returning zero results). Translate them
@@ -122,7 +124,19 @@ class TavilySearch:
                 query = _SITE_OPERATOR_PATTERN.sub("", query).strip()
                 # Keep only the domain part (Tavily matches domains, not paths)
                 site_domains = [d.strip(",").split("/")[0] for d in site_domains]
-                include_domains = list(dict.fromkeys(site_domains + (include_domains or [])))
+                include_domains = list(
+                    dict.fromkeys(site_domains + (include_domains or []))
+                )
+
+            if include_domains:
+                clean_domains = [
+                    d.strip()
+                    for d in include_domains
+                    if isinstance(d, str) and d.strip()
+                ]
+                include_domains = list(dict.fromkeys(clean_domains)) or None
+            else:
+                include_domains = None
 
             # Search the query (Tavily rejects queries longer than 400 chars)
             results = self._search(
@@ -153,4 +167,4 @@ class TavilySearch:
         except Exception as e:
             print(f"Error: {e}. Failed fetching sources. Resulting in empty response.")
             search_response = []
-        return search_response
+        return search_response[:max_results]
