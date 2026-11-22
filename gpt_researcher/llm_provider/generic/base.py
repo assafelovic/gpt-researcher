@@ -102,6 +102,12 @@ NO_SUPPORT_TEMPERATURE_MODEL_PREFIXES = (
 )
 
 
+def _message_text(message) -> str:
+    # Gemini, MiniMax and Anthropic thinking models return content blocks, not a string. :-)
+    text = getattr(message, "text", None)
+    return text if isinstance(text, str) else message.content
+
+
 def supports_temperature(model: str) -> bool:
     # Strip "vendor/" (OpenRouter, LiteLLM) and Bedrock's "us.anthropic." / "-v1:0" decoration. :-)
     name = model.rsplit("/", 1)[-1].split("anthropic.", 1)[-1].split("-v1:", 1)[0]
@@ -163,7 +169,6 @@ class GenericLLMProvider:
         self.llm = llm
         self.chat_logger = ChatLogger(chat_log) if chat_log else None
         self.verbose = verbose
-        self._text_only = False
         timeout = os.getenv("LLM_TIMEOUT", "300") if llm_timeout is None else llm_timeout
         timeout_error = (
             "LLM_TIMEOUT / llm_timeout must be a finite, non-negative number "
@@ -427,10 +432,7 @@ class GenericLLMProvider:
             raise ValueError(
                 f"Unsupported {provider}.\n\nSupported model providers are: {supported}"
             )
-        instance = cls(llm, chat_log, verbose=verbose, llm_timeout=llm_timeout)
-        # Adaptive thinking yields Anthropic content blocks; research consumes text.
-        instance._text_only = provider == "minimax_anthropic"
-        return instance
+        return cls(llm, chat_log, verbose=verbose, llm_timeout=llm_timeout)
 
     async def _await_llm_response(self, awaitable, *, streaming: bool = False):
         # Limit each wait for the provider, not time spent forwarding output to
@@ -458,7 +460,7 @@ class GenericLLMProvider:
             output = await self._await_llm_response(self.llm.ainvoke(messages, **kwargs))
             self._capture_response_metadata(output)
 
-            res = output.text if self._text_only else output.content
+            res = _message_text(output)
 
         else:
             res = await self.stream_response(messages, websocket, **kwargs)
@@ -483,7 +485,7 @@ class GenericLLMProvider:
                 except StopAsyncIteration:
                     break
                 self._capture_response_metadata(chunk)
-                content = chunk.text if self._text_only else chunk.content
+                content = _message_text(chunk)
                 if not content:
                     continue
                 response += content
