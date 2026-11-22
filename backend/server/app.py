@@ -348,11 +348,7 @@ async def write_report(research_request: ResearchRequest, research_id: str = Non
         return_researcher=True
     )
 
-    # ``run_agent(return_researcher=True)`` hands back ``(report, researcher)``
-    # for the single-agent report types, but a bare report string for
-    # ``multi_agents`` (that path builds no GPTResearcher). Indexing the string
-    # with ``[0]`` wrote just its first character into the DOCX/PDF and returned
-    # an empty report body.
+    # multi_agents returns a bare report string; the other types return (report, researcher). :-)
     if isinstance(report_information, tuple):
         report, researcher = report_information
     else:

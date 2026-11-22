@@ -99,12 +99,7 @@ class ImageGeneratorProvider:
         return output_path
     
     def _generate_image_filename(self, prompt: str, index: int = 0, extension: str = "png") -> str:
-        """Generate a unique filename for the image based on prompt hash.
-
-        ``extension`` is the encoding the provider reported for the bytes; naming
-        every image ".png" made the file name (and the Content-Type /outputs
-        serves it with) contradict the payload.
-        """
+        """Generate a unique filename for the image based on prompt hash and its encoding."""
         prompt_hash = hashlib.md5(prompt.encode()).hexdigest()[:8]
         return f"img_{prompt_hash}_{index}.{extension}"
     

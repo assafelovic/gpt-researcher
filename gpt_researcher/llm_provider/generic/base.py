@@ -103,12 +103,7 @@ NO_SUPPORT_TEMPERATURE_MODEL_PREFIXES = (
 
 
 def supports_temperature(model: str) -> bool:
-    # Drop the decoration providers put around a model id before matching either
-    # list: the "vendor/" prefix OpenRouter and LiteLLM require
-    # ("openai/gpt-5"), and Bedrock's "us.anthropic." prefix plus "-v1:" suffix
-    # ("us.anthropic.claude-sonnet-4-5-20250929-v1:0"). Matching the exact list
-    # against the raw id missed every decorated spelling, so temperature was sent
-    # to models that reject it with a 400.
+    # Strip "vendor/" (OpenRouter, LiteLLM) and Bedrock's "us.anthropic." / "-v1:0" decoration. :-)
     name = model.rsplit("/", 1)[-1].split("anthropic.", 1)[-1].split("-v1:", 1)[0]
     if model in NO_SUPPORT_TEMPERATURE_MODELS or name in NO_SUPPORT_TEMPERATURE_MODELS:
         return False
