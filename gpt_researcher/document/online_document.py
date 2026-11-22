@@ -4,9 +4,9 @@ import tempfile
 from urllib.parse import urljoin, urlsplit
 
 from gpt_researcher.document.document import detect_utf8
+from gpt_researcher.document.pdf_loader import PDFLoader
 from gpt_researcher.utils.url_security import UnsafeURLError, validate_url
 from langchain_community.document_loaders import (
-    PyMuPDFLoader,
     TextLoader,
     UnstructuredCSVLoader,
     UnstructuredExcelLoader,
@@ -97,7 +97,7 @@ class OnlineDocumentLoader:
         try:
             encoding = detect_utf8(file_path) if file_extension == "txt" else None
             loader_dict = {
-                "pdf": PyMuPDFLoader(file_path),
+                "pdf": PDFLoader(file_path),
                 "txt": TextLoader(file_path, encoding=encoding),
                 "doc": UnstructuredWordDocumentLoader(file_path),
                 "docx": UnstructuredWordDocumentLoader(file_path),

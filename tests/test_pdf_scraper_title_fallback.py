@@ -1,8 +1,8 @@
-"""Unit tests for PyMuPDFScraper title extraction and fallback."""
+"""Unit tests for PDFScraper title extraction and fallback."""
 
 from unittest.mock import MagicMock, patch
 
-from gpt_researcher.scraper.pymupdf.pymupdf import PyMuPDFScraper, _fallback_title
+from gpt_researcher.scraper.pdf.pdf import PDFScraper, _fallback_title
 
 
 class _FakePage:
@@ -31,12 +31,12 @@ def test_fallback_title_root_url_fallback():
     assert _fallback_title(url) == "example.com"
 
 
-def test_pymupdf_scraper_preserves_metadata_title():
-    scraper = PyMuPDFScraper("https://example.com/sample.pdf")
+def test_pdf_scraper_preserves_metadata_title():
+    scraper = PDFScraper("https://example.com/sample.pdf")
     fake_doc = [_FakePage("Page 1 content", {"title": "  Deep Research with Agents  "})]
 
-    with patch("gpt_researcher.scraper.pymupdf.pymupdf.PyMuPDFLoader") as mock_loader, \
-         patch("gpt_researcher.scraper.pymupdf.pymupdf.requests.get") as mock_get:
+    with patch("gpt_researcher.scraper.pdf.pdf.PDFLoader") as mock_loader, \
+         patch("gpt_researcher.scraper.pdf.pdf.requests.get") as mock_get:
         mock_resp = MagicMock()
         mock_resp.iter_content.return_value = [b"%PDF-1.4"]
         mock_get.return_value = mock_resp
@@ -49,12 +49,12 @@ def test_pymupdf_scraper_preserves_metadata_title():
     assert title == "Deep Research with Agents"
 
 
-def test_pymupdf_scraper_falls_back_when_metadata_title_missing():
-    scraper = PyMuPDFScraper("https://example.com/reports/RMI_Document_Repository_Public-Reports_2024.pdf")
+def test_pdf_scraper_falls_back_when_metadata_title_missing():
+    scraper = PDFScraper("https://example.com/reports/RMI_Document_Repository_Public-Reports_2024.pdf")
     fake_doc = [_FakePage("Page 1 content", {})]
 
-    with patch("gpt_researcher.scraper.pymupdf.pymupdf.PyMuPDFLoader") as mock_loader, \
-         patch("gpt_researcher.scraper.pymupdf.pymupdf.requests.get") as mock_get:
+    with patch("gpt_researcher.scraper.pdf.pdf.PDFLoader") as mock_loader, \
+         patch("gpt_researcher.scraper.pdf.pdf.requests.get") as mock_get:
         mock_resp = MagicMock()
         mock_resp.iter_content.return_value = [b"%PDF-1.4"]
         mock_get.return_value = mock_resp
@@ -65,12 +65,12 @@ def test_pymupdf_scraper_falls_back_when_metadata_title_missing():
     assert title == "RMI Document Repository Public Reports 2024"
 
 
-def test_pymupdf_scraper_falls_back_when_metadata_title_is_empty_or_whitespace():
-    scraper = PyMuPDFScraper("https://example.com/reports/RMI_Document_Repository_Public-Reports_2024.pdf")
+def test_pdf_scraper_falls_back_when_metadata_title_is_empty_or_whitespace():
+    scraper = PDFScraper("https://example.com/reports/RMI_Document_Repository_Public-Reports_2024.pdf")
     fake_doc = [_FakePage("Page 1 content", {"title": "   "})]
 
-    with patch("gpt_researcher.scraper.pymupdf.pymupdf.PyMuPDFLoader") as mock_loader, \
-         patch("gpt_researcher.scraper.pymupdf.pymupdf.requests.get") as mock_get:
+    with patch("gpt_researcher.scraper.pdf.pdf.PDFLoader") as mock_loader, \
+         patch("gpt_researcher.scraper.pdf.pdf.requests.get") as mock_get:
         mock_resp = MagicMock()
         mock_resp.iter_content.return_value = [b"%PDF-1.4"]
         mock_get.return_value = mock_resp
@@ -81,11 +81,11 @@ def test_pymupdf_scraper_falls_back_when_metadata_title_is_empty_or_whitespace()
     assert title == "RMI Document Repository Public Reports 2024"
 
 
-def test_pymupdf_scraper_empty_doc_returns_empty_title():
-    scraper = PyMuPDFScraper("https://example.com/empty.pdf")
+def test_pdf_scraper_empty_doc_returns_empty_title():
+    scraper = PDFScraper("https://example.com/empty.pdf")
 
-    with patch("gpt_researcher.scraper.pymupdf.pymupdf.PyMuPDFLoader") as mock_loader, \
-         patch("gpt_researcher.scraper.pymupdf.pymupdf.requests.get") as mock_get:
+    with patch("gpt_researcher.scraper.pdf.pdf.PDFLoader") as mock_loader, \
+         patch("gpt_researcher.scraper.pdf.pdf.requests.get") as mock_get:
         mock_resp = MagicMock()
         mock_resp.iter_content.return_value = [b"%PDF-1.4"]
         mock_get.return_value = mock_resp

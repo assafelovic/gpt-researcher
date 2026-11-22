@@ -1,7 +1,9 @@
-from langchain_community.document_loaders import PyMuPDFLoader, UnstructuredCSVLoader
+from langchain_community.document_loaders import UnstructuredCSVLoader
 
-# # Test PyMuPDFLoader
-pdf_loader = PyMuPDFLoader("my-docs/Elisha - Coding Career.pdf")
+from gpt_researcher.document.pdf_loader import PDFLoader
+
+# # Test PDFLoader
+pdf_loader = PDFLoader("my-docs/Elisha - Coding Career.pdf")
 try:
     pdf_data = pdf_loader.load()
     print("PDF Data:", pdf_data)

@@ -3,7 +3,8 @@ import tempfile
 from urllib.parse import unquote, urlparse
 
 import requests
-from langchain_community.document_loaders import PyMuPDFLoader
+
+from gpt_researcher.document.pdf_loader import PDFLoader
 
 
 def _fallback_title(link: str) -> str:
@@ -19,7 +20,7 @@ def _fallback_title(link: str) -> str:
         return link
 
 
-class PyMuPDFScraper:
+class PDFScraper:
 
     def __init__(self, link, session=None):
         """
@@ -47,7 +48,7 @@ class PyMuPDFScraper:
 
     def scrape(self) -> tuple[str, list[str], str]:
         """
-        The `scrape` function uses PyMuPDFLoader to load a document from the provided link (either URL or local file)
+        The `scrape` function uses PDFLoader to load a document from the provided link (either URL or local file)
         and returns the document as a string.
 
         Returns:
@@ -73,9 +74,9 @@ class PyMuPDFScraper:
                         temp_file.write(chunk)  # Write the downloaded content to the temporary file
 
                 # Always clean up the downloaded temp file, even if loading fails
-                # (PyMuPDFLoader.load() can raise on a malformed/partial PDF).
+                # (PDFLoader.load() can raise on a malformed/partial PDF).
                 try:
-                    loader = PyMuPDFLoader(temp_filename)
+                    loader = PDFLoader(temp_filename)
                     doc = loader.load()
                 finally:
                     try:
@@ -83,7 +84,7 @@ class PyMuPDFScraper:
                     except OSError:
                         pass
             else:
-                loader = PyMuPDFLoader(self.link)
+                loader = PDFLoader(self.link)
                 doc = loader.load()
 
             # Extract the content, image (if any), and title from the document.
