@@ -1,4 +1,4 @@
-# Tavily API Retriever
+# Google Custom Search Retriever
 
 # libraries
 import os
@@ -57,11 +57,18 @@ class GoogleSearch:
         Returns:
             list: List of search results with title, href and body
         """
+        if max_results <= 0:
+            return []
+
         # Build query with domain restrictions if specified
         search_query = self.query
-        if self.query_domains and len(self.query_domains) > 0:
-            domain_query = " OR ".join([f"site:{domain}" for domain in self.query_domains])
-            search_query = f"({domain_query}) {self.query}"
+        if self.query_domains:
+            valid_domains = [
+                d.strip() for d in self.query_domains if isinstance(d, str) and d.strip()
+            ]
+            if valid_domains:
+                domain_query = " OR ".join([f"site:{domain}" for domain in valid_domains])
+                search_query = f"({domain_query}) {self.query}"
 
         print("Searching with query {0}...".format(search_query))
 
