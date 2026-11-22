@@ -35,6 +35,9 @@ from .utils.enum import ReportSource, ReportType, Tone
 from .utils.llm import create_chat_completion
 from .vector_store import VectorStoreWrapper
 
+# Strong references so fire-and-forget log tasks aren't garbage-collected mid-flight.
+_PENDING_LOG_TASKS: set[asyncio.Task] = set()
+
 
 class GPTResearcher:
     """Main GPT Researcher agent class.
@@ -817,8 +820,14 @@ class GPTResearcher:
         step = self._current_step
         self.step_costs[step] = self.step_costs.get(step, 0.0) + cost
         if self.log_handler:
-            self._log_event("research", step="cost_update", details={
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                return
+            task = loop.create_task(self._log_event("research", step="cost_update", details={
                 "cost": cost,
                 "total_cost": self.research_costs,
                 "step_name": step,
-            })
+            }))
+            _PENDING_LOG_TASKS.add(task)
+            task.add_done_callback(_PENDING_LOG_TASKS.discard)
