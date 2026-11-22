@@ -184,10 +184,22 @@ class ChatAgentWithMemory:
             except Exception as exc:  # noqa: BLE001 - retrieval must not break chat
                 logger.warning(f"Report retrieval failed, using the context filter: {exc}")
         try:
+            from gpt_researcher.prompts import PromptFamily
+
+            class ReportPromptFamily(PromptFamily):
+                @staticmethod
+                def pretty_print_docs(docs, top_n=None):
+                    # Format selected passages directly; never parse report prose.
+                    return "\n\n".join(
+                        d.page_content for i, d in enumerate(docs)
+                        if top_n is None or i < top_n
+                    )
+
             context = await select_context(
                 user_message,
                 [{"url": "report", "title": "Research report", "raw_content": self.report}],
                 self.config,
+                prompt_family=ReportPromptFamily,
             )
         except Exception as exc:  # noqa: BLE001 - chat must keep working
             logger.warning(f"Report context selection failed, using full report: {exc}")
