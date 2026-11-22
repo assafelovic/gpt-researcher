@@ -51,13 +51,26 @@ class ExaSearch:
         Returns:
             A list of search results.
         """
+        if max_results <= 0:
+            return []
+
+        if self.query_domains:
+            clean_domains = [
+                d.strip()
+                for d in self.query_domains
+                if isinstance(d, str) and d.strip()
+            ]
+            include_domains = list(dict.fromkeys(clean_domains)) or None
+        else:
+            include_domains = None
+
         try:
             results = self.client.search(
                 self.query,
                 type=search_type,
                 use_autoprompt=use_autoprompt,
                 num_results=max_results,
-                include_domains=self.query_domains,
+                include_domains=include_domains,
                 **filters
             )
         except Exception as e:
@@ -74,7 +87,7 @@ class ExaSearch:
                 continue
             body = getattr(result, "text", None) or getattr(result, "summary", None) or ""
             search_response.append({"href": href, "body": body})
-        return search_response
+        return search_response[:max_results]
 
     def find_similar(self, url, exclude_source_domain=False, **filters):
         """
