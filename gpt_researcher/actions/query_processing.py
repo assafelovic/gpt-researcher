@@ -34,7 +34,7 @@ def _normalize_sub_queries(parsed: Any, fallback_query: str) -> List[str]:
     if not isinstance(parsed, list):
         parsed = []
 
-    queries = [str(item).strip() for item in parsed if str(item).strip()]
+    queries = [item.strip() for item in parsed if isinstance(item, str) and item.strip()]
     if not queries and fallback_query.strip():
         return [fallback_query.strip()]
     return queries
