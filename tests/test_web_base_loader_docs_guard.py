@@ -42,7 +42,7 @@ def _load():
     class WebBaseLoader:
         last = None
 
-        def __init__(self, link):
+        def __init__(self, link, **kwargs):
             self.link = link
             self.requests_kwargs = {}
             WebBaseLoader.last = self
@@ -90,7 +90,7 @@ class WebBaseLoaderDocsGuard(unittest.TestCase):
         lcd = sys.modules["langchain_community.document_loaders"]
 
         class Loader:
-            def __init__(self, link):
+            def __init__(self, link, **kwargs):
                 self.requests_kwargs = {}
 
             def load(self):

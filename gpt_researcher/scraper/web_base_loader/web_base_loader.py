@@ -21,7 +21,7 @@ class WebBaseLoaderScraper:
         """
         try:
             from langchain_community.document_loaders import WebBaseLoader
-            loader = WebBaseLoader(self.link)
+            loader = WebBaseLoader(self.link, session=self.session)
             loader.requests_kwargs = {"verify": False}
             docs = loader.load() or []
             content = ""
