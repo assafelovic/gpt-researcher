@@ -6,7 +6,7 @@ retrieval, compression, and similarity matching for research queries.
 
 import asyncio
 import logging
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Optional
 
 from ..actions.utils import stream_output
 from ..context.compression import VectorstoreCompressor, WrittenContentCompressor
@@ -109,12 +109,13 @@ class ContextManager:
         """
         all_queries = [current_subtopic] + draft_section_titles
 
-        async def process_query(query: str) -> Set[str]:
-            return set(await self.__get_similar_written_contents_by_query(query, written_contents, **self.researcher.kwargs))
+        async def process_query(query: str) -> List[str]:
+            return await self.__get_similar_written_contents_by_query(query, written_contents, **self.researcher.kwargs)
 
         results = await asyncio.gather(*[process_query(query) for query in all_queries])
-        relevant_contents = set().union(*results)
-        relevant_contents = list(relevant_contents)[:max_results]
+        relevant_contents = list(dict.fromkeys(
+            content for result in results for content in result
+        ))[:max_results]
 
         return relevant_contents
 
