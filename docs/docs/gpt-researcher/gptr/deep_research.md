@@ -2,7 +2,7 @@
 
 With the latest "Deep Research" trend in the AI community, we're excited to implement our own Open source deep research capability! Introducing GPT Researcher's Deep Research - an advanced recursive research system that explores topics with unprecedented depth and breadth. 
 
-Each deep research takes around 5 minutes to complete and costs around $0.4 (using `o3-mini` on `"high" `reasoning effort)
+With the default models and settings (breadth 3, depth 2), each deep research takes around 8–9 minutes, reads 100+ sources and costs around $1.30 (measured November 2026).
 
 ## How It Works
 
@@ -114,7 +114,7 @@ The deep research workflow is designed to be resilient:
 
 ## Limitations
 
-- Usage of reasoning LLM models such as `o3-mini`
+- Relies on a reasoning model for planning (`STRATEGIC_LLM`)
 - Deep research may take longer than standard research
 - Higher API usage and costs due to multiple concurrent queries
 - May require more system resources for parallel processing
