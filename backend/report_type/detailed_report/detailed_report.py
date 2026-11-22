@@ -177,7 +177,13 @@ class DetailedReport:
 
         draft_section_titles = await subtopic_assistant.get_draft_section_titles(current_subtopic_task)
 
-        if not isinstance(draft_section_titles, str):
+        # get_draft_section_titles() returns the model's markdown split into
+        # lines, so a list has to be joined back into markdown before header
+        # extraction. str(list) produced "['### A', '### B']", which extract_headers()
+        # reads as one plain paragraph: every draft title was dropped.
+        if isinstance(draft_section_titles, (list, tuple)):
+            draft_section_titles = "\n".join(str(title) for title in draft_section_titles)
+        elif not isinstance(draft_section_titles, str):
             draft_section_titles = str(draft_section_titles)
 
         parse_draft_section_titles = self.gpt_researcher.extract_headers(draft_section_titles)
