@@ -221,8 +221,8 @@ GPT Researcher now includes Deep Research - an advanced recursive research workf
 - 🌳 Tree-like exploration with configurable depth and breadth
 - ⚡️ Concurrent processing for faster results
 - 🤝 Smart context management across research branches
-- ⏱️ Takes ~5 minutes per deep research
-- 💰 Costs ~$0.4 per research (using `o3-mini` on "high" reasoning effort)
+- ⏱️ Takes ~8 minutes per deep research
+- 💰 Costs ~$1.30 per deep research with the default models and settings
 
 [Learn more about Deep Research](https://docs.gptr.dev/docs/gpt-researcher/gptr/deep_research) in our documentation.
 
