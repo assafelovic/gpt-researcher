@@ -1,5 +1,7 @@
 """Headings in the TOC must be the same readable text as section titles."""
 
+from html import escape
+
 import pytest
 
 from gpt_researcher.actions.markdown_processing import (
@@ -26,7 +28,7 @@ def test_header_text_matches_section_title(source, title):
     sections = extract_sections(source)
     assert headers[0]["text"] == title
     assert sections[0]["section_title"] == title
-    assert f"- {title}\n" in table_of_contents(source)
+    assert f"- {escape(title, quote=False)}\n" in table_of_contents(source)
     assert "<" not in table_of_contents(source)
 
 
@@ -42,3 +44,9 @@ def test_nested_formatted_headers_keep_plain_text():
     assert table_of_contents(source) == (
         "## Table of Contents\n\n- Report\n    - Findings\n"
     )
+
+
+def test_toc_escapes_angle_brackets_from_code_spans():
+    source = "## The `<div>` element\n\nBody."
+    assert extract_headers(source)[0]["text"] == "The <div> element"
+    assert "- The &lt;div&gt; element\n" in table_of_contents(source)

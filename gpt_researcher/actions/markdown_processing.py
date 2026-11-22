@@ -1,5 +1,5 @@
 import re
-from html import unescape
+from html import escape, unescape
 import markdown
 from typing import List, Dict
 
@@ -23,9 +23,6 @@ def extract_headers(markdown_text: str) -> List[Dict]:
     for line in lines:
         if line.startswith("<h") and len(line) > 2 and line[2].isdigit():
             level = int(line[2])
-            # extract_sections already returns readable text. The same heading
-            # must not keep inner tags or entities here, or the table of
-            # contents and the header tree show "<strong>Results</strong>".
             raw_header = line[line.index(">") + 1 : line.rindex("<")]
             header_text = unescape(re.sub(r"<.*?>", "", raw_header)).strip()
 
@@ -92,7 +89,7 @@ def table_of_contents(markdown_text: str) -> str:
     def generate_table_of_contents(headers, indent_level=0):
         toc = ""
         for header in headers:
-            toc += " " * (indent_level * 4) + "- " + header["text"] + "\n"
+            toc += " " * (indent_level * 4) + "- " + escape(header["text"], quote=False) + "\n"
             if "children" in header:
                 toc += generate_table_of_contents(header["children"], indent_level + 1)
         return toc
