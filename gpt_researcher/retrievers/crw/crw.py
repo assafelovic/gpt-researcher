@@ -78,6 +78,8 @@ class CRWRetriever:
         """
         Internal search method to send the request to the API.
         """
+        if max_results <= 0:
+            return {"success": True, "data": []}
 
         data = {
             "query": query,
@@ -104,9 +106,25 @@ class CRWRetriever:
         Returns:
 
         """
+        if max_results <= 0:
+            return []
+
+        search_query = self.query
+        if self.query_domains and len(self.query_domains) > 0:
+            clean_domains = [
+                d.strip()
+                for d in self.query_domains
+                if isinstance(d, str) and d.strip()
+            ]
+            if clean_domains:
+                domain_query = " OR ".join(
+                    [f"site:{domain}" for domain in clean_domains]
+                )
+                search_query = f"({domain_query}) {self.query}"
+
         try:
             # Search the query
-            results = self._search(self.query, max_results=max_results)
+            results = self._search(search_query, max_results=max_results)
             sources = results.get("data") or []
             if not isinstance(sources, list) or not sources:
                 raise Exception("No results found with fastCRW API search.")
@@ -119,12 +137,16 @@ class CRWRetriever:
                 href = obj.get("url") or ""
                 if not href:
                     continue
-                search_response.append(
-                    {
-                        "href": href,
-                        "body": obj.get("markdown") or obj.get("description") or "",
-                    }
-                )
+                item = {
+                    "href": href,
+                    "body": obj.get("markdown") or obj.get("description") or "",
+                }
+                title = obj.get("title")
+                if title:
+                    item["title"] = title
+                search_response.append(item)
+                if len(search_response) >= max_results:
+                    break
         except Exception as e:
             print(f"Error: {e}. Failed fetching sources. Resulting in empty response.")
             search_response = []
