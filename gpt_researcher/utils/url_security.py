@@ -30,7 +30,7 @@ from __future__ import annotations
 import ipaddress
 import os
 import socket
-from urllib.parse import urlparse
+from urllib.parse import urljoin, urlparse
 
 ALLOWED_SCHEMES = ("http", "https")
 
@@ -54,6 +54,9 @@ def _is_disallowed_ip(ip) -> bool:
         or ip.is_reserved
         or ip.is_multicast
         or ip.is_unspecified
+        # ``is_private`` misses the shared address space 100.64.0.0/10 (CGNAT,
+        # Tailscale, and Alibaba Cloud's metadata endpoint 100.100.100.200).
+        or not ip.is_global
     )
 
 
@@ -123,3 +126,13 @@ def is_safe_url(url: str, *, allow_private: bool | None = None) -> bool:
         return True
     except UnsafeURLError:
         return False
+
+
+def validate_redirect_hook(response, *args, **kwargs):
+    """Reject unsafe requests redirect targets before the next hop is sent."""
+    if response.is_redirect:
+        try:
+            validate_url(urljoin(response.url, response.headers["Location"]))
+        except UnsafeURLError:
+            response.close()
+            raise

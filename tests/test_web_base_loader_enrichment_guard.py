@@ -40,7 +40,7 @@ def _load(get_relevant_images=lambda soup, link: []):
     lcd = types.ModuleType("langchain_community.document_loaders")
 
     class WebBaseLoader:
-        def __init__(self, link):
+        def __init__(self, link, **kwargs):
             self.link = link
             self.requests_kwargs = {}
 
@@ -95,6 +95,24 @@ class WebBaseLoaderEnrichmentGuard(unittest.TestCase):
         self.assertEqual(content, "real page content")
         self.assertEqual(images, [])
         self.assertEqual(title, "")
+
+    def test_page_fetch_uses_the_scraper_session(self):
+        mod = _load()
+        seen = {}
+
+        class Loader:
+            def __init__(self, link, **kwargs):
+                seen.update(kwargs)
+                self.requests_kwargs = {}
+
+            def load(self):
+                return []
+
+        sys.modules["langchain_community.document_loaders"].WebBaseLoader = Loader
+        session = MagicMock()
+        mod.WebBaseLoaderScraper("https://ex.com", session=session).scrape()
+
+        self.assertIs(seen.get("session"), session)
 
 
 if __name__ == "__main__":

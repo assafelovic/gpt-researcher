@@ -98,10 +98,10 @@ class ImageGeneratorProvider:
         output_path.mkdir(parents=True, exist_ok=True)
         return output_path
     
-    def _generate_image_filename(self, prompt: str, index: int = 0) -> str:
-        """Generate a unique filename for the image based on prompt hash."""
+    def _generate_image_filename(self, prompt: str, index: int = 0, extension: str = "png") -> str:
+        """Generate a unique filename for the image based on prompt hash and its encoding."""
         prompt_hash = hashlib.md5(prompt.encode()).hexdigest()[:8]
-        return f"img_{prompt_hash}_{index}.png"
+        return f"img_{prompt_hash}_{index}.{extension}"
     
     def _crop_to_landscape(self, image_bytes: bytes, target_ratio: float = 16/9) -> bytes:
         """Crop a square image to landscape format (16:9 by default).
@@ -305,7 +305,7 @@ AVOID:
                             
                             # Determine file extension
                             ext = 'png' if 'png' in mime_type else 'jpg'
-                            filename = self._generate_image_filename(original_prompt, i)
+                            filename = self._generate_image_filename(original_prompt, i, ext)
                             filepath = output_path / filename
                             
                             # Write image data (may be base64 encoded)

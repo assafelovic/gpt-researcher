@@ -174,20 +174,20 @@ _BOX_TAGS = frozenset(("button", "select"))
 _HTML_WHITESPACE = re.compile(r"[ \t\n\r\f]+")
 
 
-def _block_lines(soup: BeautifulSoup) -> list[str]:
-    """Return the text of the soup as one line per block element.
+def _block_lines(soup: BeautifulSoup) -> list[tuple[str, bool]]:
+    """Return each block's text and whether it is preformatted.
 
     ``soup.get_text(separator="\\n")`` puts every text node on its own line, so
     a link or an emphasis split the sentence, and even the word, it sat in.
     """
-    lines: list[str] = []
+    lines: list[tuple[str, bool]] = []
     line: list[str] = []
 
     def end_line() -> None:
         text = _HTML_WHITESPACE.sub(" ", "".join(line)).strip(" ")
         line.clear()
         if text.strip():
-            lines.append(text)
+            lines.append((text, False))
 
     # An explicit stack, so deeply nested markup cannot exhaust the recursion limit.
     stack: list[tuple[bs4.PageElement, str]] = [(soup, "visit")]
@@ -204,7 +204,7 @@ def _block_lines(soup: BeautifulSoup) -> list[str]:
                 end_line()
                 text = node.get_text().strip("\n")
                 if text.strip():
-                    lines.append(text)
+                    lines.append((text, True))
             else:
                 if node.name in _BLOCK_TAGS:
                     end_line()
@@ -222,10 +222,23 @@ def _block_lines(soup: BeautifulSoup) -> list[str]:
 
 
 def get_text_from_soup(soup: BeautifulSoup) -> str:
-    """Get the relevant text from the soup with improved filtering"""
+    """Get the relevant text from the soup with improved filtering.
+
+    Normal blocks retain the existing final whitespace normalization.
+    Preformatted blocks bypass it because their whitespace is content.
+    """
     if soup is None:
         return ""
-    text = "\n".join(_block_lines(soup))
-    # Remove excess whitespace
-    text = re.sub(r"\s{2,}", " ", text)
-    return text
+    parts: list[str] = []
+    normal_lines: list[str] = []
+    for text, preformatted in _block_lines(soup):
+        if preformatted:
+            if normal_lines:
+                parts.append(re.sub(r"\s{2,}", " ", "\n".join(normal_lines)))
+                normal_lines.clear()
+            parts.append(text)
+        else:
+            normal_lines.append(text)
+    if normal_lines:
+        parts.append(re.sub(r"\s{2,}", " ", "\n".join(normal_lines)))
+    return "\n".join(parts)

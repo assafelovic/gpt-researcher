@@ -10,8 +10,9 @@ import asyncio
 import logging
 from typing import Any, Dict, List, Tuple, Callable, Optional
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
-from langchain_core.tools import tool
+from langchain_core.tools import create_schema_from_function, tool
 
+from ..llm_provider.generic.base import supports_temperature
 from .costs import calculate_llm_cost
 from .llm import create_chat_completion
 
@@ -85,6 +86,8 @@ async def create_chat_completion_with_tools(
         # Create LLM provider using the config
         provider_kwargs = {
             'model': model,
+            'temperature': temperature if supports_temperature(model or '') else None,
+            'max_tokens': max_tokens,
             **(llm_kwargs or {})
         }
         
@@ -290,7 +293,15 @@ def create_custom_tool(
     Returns:
         LangChain tool function decorated with @tool
     """
-    @tool
+    @tool(
+        name,
+        description=description,
+        args_schema=(
+            parameter_schema
+            if parameter_schema is not None
+            else create_schema_from_function(name, function)
+        ),
+    )
     def custom_tool(*args, **kwargs) -> str:
         try:
             result = function(*args, **kwargs)
@@ -309,10 +320,6 @@ def create_custom_tool(
                 return f"Tool '{name}' could not find required resources. Please verify the input data is correct."
             else:
                 return f"Tool '{name}' encountered an error: {error_msg}. Please check the tool configuration."
-    
-    # Set tool metadata
-    custom_tool.name = name
-    custom_tool.description = description
     
     return custom_tool
 

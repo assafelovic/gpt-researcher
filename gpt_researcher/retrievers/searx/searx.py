@@ -65,11 +65,24 @@ class SearxSearch():
         Returns:
             List of dictionaries containing search results
         """
+        if max_results <= 0:
+            return []
+
         search_url = urljoin(self.base_url, "search")
-        # TODO: Add support for query domains
+        search_query = self.query
+        if self.query_domains and len(self.query_domains) > 0:
+            clean_domains = [
+                d.strip()
+                for d in self.query_domains
+                if isinstance(d, str) and d.strip()
+            ]
+            if clean_domains:
+                domain_query = " OR ".join([f"site:{domain}" for domain in clean_domains])
+                search_query = f"({domain_query}) {self.query}"
+
         params = {
             # The search query.
-            'q': self.query,
+            'q': search_query,
             # Output format of results. Format needs to be activated in searxng config.
             'format': 'json'
         }
@@ -103,10 +116,14 @@ class SearxSearch():
             if not href:
                 continue
             body = result.get('content') or result.get('snippet') or ''
-            search_response.append({
+            item = {
                 "href": href,
                 "body": body[:_MAX_PREFETCHED_LEN],
-            })
+            }
+            title = result.get('title')
+            if title:
+                item["title"] = title
+            search_response.append(item)
             if len(search_response) >= max_results:
                 break
 

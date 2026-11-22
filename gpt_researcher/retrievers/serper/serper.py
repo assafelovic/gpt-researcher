@@ -61,7 +61,29 @@ class SerperSearch():
         Returns:
             list: List of search results with title, href, and body
         """
-        print("Searching with query {0}...".format(self.query))
+        if max_results <= 0:
+            return []
+
+        # Build search parameters
+        query_with_filters = self.query
+
+        # Exclude sites using Google search syntax
+        if self.exclude_sites:
+            for site in self.exclude_sites:
+                query_with_filters += f" -site:{site}"
+
+        # Add domain filtering if specified
+        if self.query_domains and len(self.query_domains) > 0:
+            clean_domains = [
+                d.strip()
+                for d in self.query_domains
+                if isinstance(d, str) and d.strip()
+            ]
+            if clean_domains:
+                domain_query = " OR ".join(f"site:{domain}" for domain in clean_domains)
+                query_with_filters = f"({domain_query}) {query_with_filters}"
+
+        print(f"Searching with query {query_with_filters}...")
         """Useful for general internet search queries using the Serper API."""
 
         # Search the query (see https://serper.dev/playground for the format).
@@ -74,20 +96,6 @@ class SerperSearch():
             'X-API-KEY': self.api_key,
             'Content-Type': 'application/json'
         }
-
-        # Build search parameters
-        query_with_filters = self.query
-
-        # Exclude sites using Google search syntax
-        if self.exclude_sites:
-            for site in self.exclude_sites:
-                query_with_filters += f" -site:{site}"
-
-        # Add domain filtering if specified
-        if self.query_domains:
-            # Add site:domain1 OR site:domain2 OR ... to the search query
-            domain_query = " site:" + " OR site:".join(self.query_domains)
-            query_with_filters += domain_query
 
         search_params = {
             "q": query_with_filters,
@@ -140,4 +148,4 @@ class SerperSearch():
                 }
             )
 
-        return search_results
+        return search_results[:max_results]

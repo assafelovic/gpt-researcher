@@ -1,0 +1,4 @@
+* text=auto eol=lf
+
+frontend/nextjs/public/img/stock2.svg -text
+frontend/vendor/js/showdown.min.js -text

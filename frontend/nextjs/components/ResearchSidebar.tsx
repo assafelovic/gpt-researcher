@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { ResearchHistoryItem } from '../types/data';
 import { formatDistanceToNow } from 'date-fns';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, MotionStyle } from 'framer-motion';
 
 interface ResearchSidebarProps {
   history: ResearchHistoryItem[];
@@ -96,7 +96,7 @@ const ResearchSidebar: React.FC<ResearchSidebarProps> = ({
         style={{
           '--sidebar-width': 'min(300px, 85vw)',
           '--sidebar-min-width': '12px'
-        } as React.CSSProperties}
+        } as MotionStyle}
       >
         {/* Sidebar content */}
         <div 

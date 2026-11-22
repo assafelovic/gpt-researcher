@@ -89,25 +89,46 @@ function CopyInstall() {
   );
 }
 
+const CODE = [
+  [['kw', 'from'], ' gpt_researcher ', ['kw', 'import'], ' ', ['fn', 'GPTResearcher']],
+  [],
+  ['researcher = ', ['fn', 'GPTResearcher'], '('],
+  ['    query=', ['str', '"Are solid-state batteries ready for EVs?"'], ','],
+  ['    report_type=', ['str', '"research_report"'], ','],
+  [')'],
+  [],
+  [['kw', 'await'], ' researcher.', ['fn', 'conduct_research'], '()'],
+  ['report = ', ['kw', 'await'], ' researcher.', ['fn', 'write_report'], '()'],
+];
+
 function CodeCard() {
   return (
     <div className={styles.codeCard} aria-label="Example usage">
       <div className={styles.codeBar}>
-        <span className={styles.dot} /><span className={styles.dot} /><span className={styles.dot} />
-        <span className={styles.fileName}>research.py</span>
+        <span>research.py</span>
+        <span>Python</span>
       </div>
       <pre className={styles.code}><code>
-<span className={styles.kw}>from</span> gpt_researcher <span className={styles.kw}>import</span> GPTResearcher{'\n\n'}
-researcher = GPTResearcher({'\n'}
-{'    '}query=<span className={styles.str}>"Are solid-state batteries ready for EVs?"</span>,{'\n'}
-{'    '}report_type=<span className={styles.str}>"research_report"</span>,{'\n'}
-){'\n\n'}
-<span className={styles.kw}>await</span> researcher.conduct_research(){'\n'}
-report = <span className={styles.kw}>await</span> researcher.write_report()
+        {CODE.map((line, i) => (
+          <span key={i} className={styles.line}>
+            {line.map((t, j) => (typeof t === 'string' ? t : <span key={j} className={styles[t[0]]}>{t[1]}</span>))}
+            {'\n'}
+          </span>
+        ))}
       </code></pre>
       <div className={styles.codeFoot}>
         <span className={styles.ok} /> Report ready · 18 sources · 57 citations
       </div>
+    </div>
+  );
+}
+
+function Folio({n, label}) {
+  return (
+    <div className={styles.folio}>
+      <span className={styles.folioN}>{n}</span>
+      <span className={styles.folioL}>{label}</span>
+      <span className={styles.folioRule} />
     </div>
   );
 }
@@ -140,6 +161,7 @@ export default function Home() {
         </section>
 
         <section className={styles.section}>
+          <Folio n="I" label="Features" />
           <h2 className={styles.h2}>Built for real research</h2>
           <p className={styles.sub}>One agent for quick answers, long reports and everything in between.</p>
           <div className={styles.features}>
@@ -154,6 +176,7 @@ export default function Home() {
         </section>
 
         <section className={styles.section}>
+          <Folio n="II" label="Architecture" />
           <h2 className={styles.h2}>How it works</h2>
           <ol className={styles.steps}>
             {STEPS.map((s, i) => (
@@ -167,6 +190,7 @@ export default function Home() {
         </section>
 
         <section className={styles.section}>
+          <Folio n="III" label="Context filter" />
           <Link to="/docs/gpt-researcher/gptr/context-filter" className={styles.highlight}>
             <div>
               <div className={styles.badge}>New</div>
@@ -189,6 +213,7 @@ export default function Home() {
         </section>
 
         <section className={styles.section}>
+          <Folio n="IV" label="Research" />
           <div className={styles.papersHead}>
             <div>
               <h2 className={styles.h2}>Cited in 150+ research papers</h2>
@@ -200,8 +225,9 @@ export default function Home() {
             {PAPERS.map((p) => (
               <li key={p.href}>
                 <Link className={styles.paper} href={p.href}>
-                  <span className={styles.paperTitle}>{p.title}</span>
                   <span className={styles.paperVenue}>{p.venue}</span>
+                  <span className={styles.paperTitle}>{p.title}</span>
+                  <span className={styles.paperGo}>Read the paper <span aria-hidden="true">↗</span></span>
                 </Link>
               </li>
             ))}

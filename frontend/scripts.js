@@ -880,31 +880,18 @@ const GPTResearcher = (() => {
         // Add to reportContent for history
         reportContent += data.output;
 
-        // Get the current report_type
-        const report_type = document.querySelector('select[name="report_type"]').value;
-
-        // Determine if we're using detailed_report
-        const isDetailedReport = report_type === 'detailed_report';
-
-        if (isDetailedReport) {
-          allReports += data.output; // Accumulate raw markdown
-          // Always render the HTML of *all accumulated markdown* for detailed reports during streaming.
-          // writeReport will replace the container's content.
-          writeReport({ output: allReports, type: 'report' }, converter, false, false);
-        } else {
-          // For all other report types, append HTML of current chunk to the container.
-          writeReport({ output: data.output, type: 'report' }, converter, false, true); // append = true
-        }
+        // Markdown structures can span chunks (tables, links, fenced code).
+        // Render the accumulated source for every report type, replacing the
+        // previous HTML rather than parsing and appending isolated fragments.
+        allReports += data.output;
+        writeReport({ output: allReports, type: 'report' }, converter, false, false);
       } else if (data.type === 'path') {
         updateState('finished')
         downloadLinkData = updateDownloadLink(data)
         isResearchActive = false;
 
-        // Get the current report_type
-        const report_type = document.querySelector('select[name="report_type"]').value;
-
-        // Only for detailed_report, show the complete accumulated report at the end
-        if (report_type === 'detailed_report' && allReports) {
+        // Finalize the complete Markdown for every report type.
+        if (allReports) {
           const finalData = { output: allReports, type: 'report' };
           writeReport(finalData, converter, true, false); // isFinal=true, append=false
         }

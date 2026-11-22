@@ -5,6 +5,22 @@ import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
 
+// Code colours from gptr.dev: red keywords, umber strings, bold ink names.
+const codeTheme = (c) => ({
+  plain: {color: c.ink, backgroundColor: c.bg},
+  styles: [
+    {types: ['comment', 'prolog', 'doctype', 'cdata'], style: {color: c.muted}},
+    {types: ['keyword', 'selector', 'atrule', 'important', 'tag', 'deleted', 'builtin'], style: {color: c.red}},
+    {types: ['string', 'char', 'attr-value', 'regex', 'inserted', 'url'], style: {color: c.str}},
+    {types: ['function', 'class-name'], style: {color: c.ink, fontWeight: '600'}},
+    {types: ['number', 'boolean', 'constant', 'symbol'], style: {color: c.red}},
+    {types: ['punctuation', 'operator'], style: {color: c.muted}},
+    {types: ['attr-name', 'property', 'variable', 'parameter'], style: {color: c.ink2}},
+  ],
+});
+const lightCode = codeTheme({bg: '#F6F1E7', ink: '#1A1612', ink2: '#39332B', muted: '#5F574B', red: '#B8381C', str: '#6B5B45'});
+const darkCode = codeTheme({bg: '#211C17', ink: '#EEE7D8', ink2: '#CFC6B5', muted: '#A39985', red: '#E0775A', str: '#D6BF94'});
+
 export default {
   title: 'GPT Researcher',
   tagline: 'The leading autonomous AI research agent',
@@ -13,7 +29,7 @@ export default {
   onBrokenLinks: 'ignore',
   //deploymentBranch: 'master',
   onBrokenMarkdownLinks: 'warn',
-  favicon: 'img/gptr-logo.png',
+  favicon: 'img/favicon.ico',
   organizationName: 'assafelovic',
   trailingSlash: false,
   projectName: 'gpt-researcher',
@@ -21,27 +37,40 @@ export default {
     mermaid: true,
   },
   themes: ['@docusaurus/theme-mermaid'],
+  headTags: [
+    {tagName: 'link', attributes: {rel: 'preconnect', href: 'https://fonts.googleapis.com'}},
+    {tagName: 'link', attributes: {rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: 'anonymous'}},
+  ],
   themeConfig: {
+    image: 'img/gptr-social-card.png',
+    prism: {
+      theme: lightCode,
+      darkTheme: darkCode,
+    },
+    mermaid: {
+      theme: {light: 'neutral', dark: 'dark'},
+    },
     navbar: {
       title: 'GPT Researcher',
       logo: {
         alt: 'GPT Researcher',
-        src: 'img/gptr-logo.png',
+        src: 'img/gptr-logo-black.png',
+        srcDark: 'img/gptr-logo-white.png',
       },
       items: [
         {
-          type: 'doc',
-          docId: 'welcome',
+          to: '/docs/welcome',
           position: 'left',
           label: 'Docs',
+          activeBaseRegex: '^/docs/(?!faq/?$)',
         },
 
         {to: 'blog', label: 'Blog', position: 'left'},
         {
-          type: 'doc',
-          docId: 'faq',
+          to: '/docs/faq',
           position: 'left',
           label: 'FAQ',
+          activeBaseRegex: '^/docs/faq/?$',
         },
         {
             href: 'mailto:assaf.elovic@gmail.com',
@@ -52,11 +81,12 @@ export default {
           href: 'https://github.com/assafelovic/gpt-researcher',
           label: 'GitHub',
           position: 'right',
+          className: 'navbar-github',
         },
       ],
     },
     footer: {
-      style: 'dark',
+      style: 'light',
       links: [
         {
           title: 'Community',
@@ -113,6 +143,7 @@ export default {
     ],
   ],
   stylesheets: [
+    'https://fonts.googleapis.com/css2?family=Gelasio:wght@400;500;600&family=Instrument+Sans:wdth,wght@75..100,400..700&family=JetBrains+Mono:wght@400;500;600&display=swap',
     {
         href: "https://cdn.jsdelivr.net/npm/katex@0.13.11/dist/katex.min.css",
         integrity: "sha384-Um5gpz1odJg5Z4HAmzPtgZKdTBHZdw8S29IecapCSB31ligYPhHQZMIlWLYQGVoc",

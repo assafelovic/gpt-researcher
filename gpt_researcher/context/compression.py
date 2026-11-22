@@ -68,16 +68,19 @@ class VectorstoreCompressor:
         self.kwargs = kwargs
         self.prompt_family = prompt_family
 
-    async def async_get_context(self, query: str, max_results: int = 5) -> str:
+    async def async_get_context(self, query: str, max_results: int | None = None) -> str:
         """Get relevant context from the vector store.
 
         Args:
             query: The search query.
-            max_results: Maximum number of results to return.
+            max_results: Maximum number of results to return. Defaults to the
+                ``max_results`` this compressor was constructed with.
 
         Returns:
             Formatted string of relevant document content.
         """
+        if max_results is None:
+            max_results = self.max_results
         results = await self.vector_store.asimilarity_search(query=query, k=max_results, filter=self.filter)
         return self.prompt_family.pretty_print_docs(results)
 

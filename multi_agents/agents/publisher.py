@@ -5,6 +5,9 @@ from .utils.file_formats import \
 
 from .utils.views import print_agent_output
 
+# The LangGraph entry point (multi_agents/agent.py) never sets publish_formats. :-)
+DEFAULT_PUBLISH_FORMATS = {"markdown": True}
+
 
 class PublisherAgent:
     def __init__(self, output_dir: str, websocket=None, stream_output=None, headers=None):
@@ -79,8 +82,10 @@ class PublisherAgent:
             await write_text_to_md(layout, self.output_dir)
 
     async def run(self, research_state: dict):
-        task = research_state.get("task")
+        task = research_state.get("task") or {}
         publish_formats = task.get("publish_formats")
+        if not isinstance(publish_formats, dict):
+            publish_formats = dict(DEFAULT_PUBLISH_FORMATS)
         if self.websocket and self.stream_output:
             await self.stream_output("logs", "publishing", f"Publishing final research report based on retrieved data...", self.websocket)
         else:

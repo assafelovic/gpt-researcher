@@ -16,7 +16,7 @@ from colorama import Fore, init
 
 from gpt_researcher.observability import emit_research_event
 from gpt_researcher.utils.workers import WorkerPool
-from gpt_researcher.utils.url_security import UnsafeURLError, validate_url
+from gpt_researcher.utils.url_security import UnsafeURLError, validate_url, validate_redirect_hook
 
 from . import (
     ArxivScraper,
@@ -137,6 +137,7 @@ class Scraper:
 
         self.urls = unique_urls
         self.session = requests.Session()
+        self.session.hooks["response"].append(validate_redirect_hook)
         self.session.headers.update({"User-Agent": user_agent})
         self.scraper = scraper
         if self.scraper == "tavily_extract":

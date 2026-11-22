@@ -34,7 +34,7 @@ class CustomRetriever:
         """
         Performs the search using the custom retriever endpoint.
 
-        :param max_results: Maximum number of results to return (not currently used)
+        :param max_results: Maximum number of results to return
         :return: JSON response in the format:
             [
               {
@@ -78,6 +78,8 @@ class CustomRetriever:
         # single malformed edge cannot crash the research pipeline.
         cleaned: List[Dict[str, Any]] = []
         for item in payload:
+            if len(cleaned) >= max_results:
+                break
             if not isinstance(item, dict):
                 continue
             url = item.get("url") or item.get("href") or ""

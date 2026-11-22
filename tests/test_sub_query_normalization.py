@@ -8,8 +8,43 @@ whole research run. `_normalize_sub_queries` guarantees a flat `list[str]`.
 """
 
 import unittest
+from types import SimpleNamespace
+from unittest.mock import AsyncMock
 
+import pytest
+
+from gpt_researcher.actions import query_processing
 from gpt_researcher.actions.query_processing import _normalize_sub_queries
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("response", "expected"),
+    [
+        ('[null, false, 0, {}, [], "   "]', ["original query"]),
+        ('["  usable query  ", null, false, 0, {}, []]', ["usable query"]),
+        ('{"queries": [null, "  usable query  ", {}]}', ["usable query"]),
+        ('["first", "second"]', ["first", "second"]),
+    ],
+)
+async def test_generated_queries_ignore_non_string_values(monkeypatch, response, expected):
+    monkeypatch.setattr(
+        query_processing, "create_chat_completion", AsyncMock(return_value=response)
+    )
+    config = SimpleNamespace(
+        max_iterations=3,
+        strategic_llm_model="test-model",
+        strategic_llm_provider="test-provider",
+        llm_kwargs={},
+    )
+    prompts = SimpleNamespace(generate_search_queries_prompt=lambda *args, **kwargs: "plan")
+
+    result = await query_processing.generate_sub_queries(
+        "original query", "parent query", "research_report", [], config,
+        prompt_family=prompts,
+    )
+
+    assert result == expected
 
 
 class TestNormalizeSubQueries(unittest.TestCase):

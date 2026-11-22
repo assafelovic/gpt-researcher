@@ -44,9 +44,22 @@ class Duckduckgo:
         Downstream research steps expect ``href`` and would KeyError or skip
         sources if the raw ddgs shape is returned unchanged.
         """
-        # TODO: Add support for query domains
+        if max_results <= 0:
+            return []
+
+        search_query = self.query
+        if self.query_domains and len(self.query_domains) > 0:
+            clean_domains = [
+                d.strip()
+                for d in self.query_domains
+                if isinstance(d, str) and d.strip()
+            ]
+            if clean_domains:
+                domain_query = " OR ".join([f"site:{domain}" for domain in clean_domains])
+                search_query = f"({domain_query}) {self.query}"
+
         try:
-            search_response = self.ddg.text(self.query, region='wt-wt', max_results=max_results)
+            search_response = self.ddg.text(search_query, region='wt-wt', max_results=max_results)
         except Exception as e:
             print(f"Error: {e}. Failed fetching sources. Resulting in empty response.")
             search_response = []

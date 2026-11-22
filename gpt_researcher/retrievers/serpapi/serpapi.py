@@ -39,20 +39,28 @@ class SerpApiSearch():
         Returns:
 
         """
-        print("SerpApiSearch: Searching with query {0}...".format(self.query))
         """Useful for general internet search queries using SerpApi."""
+        if max_results <= 0:
+            return []
+
+        search_query = self.query
+        if self.query_domains and len(self.query_domains) > 0:
+            clean_domains = [
+                d.strip()
+                for d in self.query_domains
+                if isinstance(d, str) and d.strip()
+            ]
+            if clean_domains:
+                domain_query = " OR ".join(
+                    [f"site:{domain}" for domain in clean_domains]
+                )
+                search_query = f"({domain_query}) {self.query}"
+
+        print(f"SerpApiSearch: Searching with query {search_query}...")
 
         url = "https://serpapi.com/search.json"
 
-        search_query = self.query
-        if self.query_domains:
-            # Add site:domain1 OR site:domain2 OR ... to the search query
-            search_query += " site:" + " OR site:".join(self.query_domains)
-
-        params = {
-            "q": search_query,
-            "api_key": self.api_key
-        }
+        params = {"q": search_query, "api_key": self.api_key}
         encoded_url = url + "?" + urllib.parse.urlencode(params)
         search_response = []
         try:

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
-  const backendUrl = process.env.NEXT_PUBLIC_GPTR_API_URL || 'http://localhost:8000';
+  const backendUrl = process.env.GPTR_API_URL || process.env.NEXT_PUBLIC_GPTR_API_URL || 'http://localhost:8000';
   
   try {
     // Parse the request body

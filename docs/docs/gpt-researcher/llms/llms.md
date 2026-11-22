@@ -481,6 +481,37 @@ SMART_LLM=vllm_openai:Qwen/Qwen3-8B-AWQ
 STRATEGIC_LLM=vllm_openai:Qwen/Qwen3-8B-AWQ
 ```
 
+## Rapid-MLX
+
+[Rapid-MLX](https://github.com/raullenchai/Rapid-MLX) is an OpenAI-compatible local server for Apple Silicon (macOS, M-series). GPT Researcher can use its chat and embedding models through the existing `openai` and `custom` providers.
+
+Install Rapid-MLX and start a server with both models:
+
+```bash
+pip install rapid-mlx
+rapid-mlx serve qwen3.5-4b-4bit --embedding-model embeddinggemma-2-4bit --port 8080
+```
+
+Set the following environment variables in GPT Researcher's `.env` file:
+
+```env
+OPENAI_BASE_URL=http://127.0.0.1:8080/v1
+OPENAI_API_KEY=local
+FAST_LLM=openai:qwen3.5-4b-4bit
+SMART_LLM=openai:qwen3.5-4b-4bit
+STRATEGIC_LLM=openai:qwen3.5-4b-4bit
+
+EMBEDDING=custom:embeddinggemma-2-4bit
+CONTEXT_FILTER=embeddings
+
+# Web search without a search API key
+RETRIEVER=duckduckgo
+```
+
+Rapid-MLX does not require an API key; `local` is a placeholder for the OpenAI client. `CONTEXT_FILTER=embeddings` enables local embedding-based context filtering instead of the default automatic filter. Web search and page scraping still require internet access.
+
+The example pins port 8080 because GPT Researcher's web app uses 8000. Without `--port`, Rapid-MLX picks the first free port from 8000, so `OPENAI_BASE_URL` could point at the wrong port.
+
 ## Other Embedding Models
 
 ### Nomic

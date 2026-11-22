@@ -76,7 +76,7 @@ class GPTResearcher:
         verbose: bool = True,
         context=None,
         headers: dict | None = None,
-        max_subtopics: int = 5,
+        max_subtopics: int | None = None,
         log_handler=None,
         prompt_family: str | None = None,
         mcp_configs: list[dict] | None = None,
@@ -111,7 +111,10 @@ class GPTResearcher:
             verbose (bool): Whether to output verbose logs.
             context: Pre-loaded research context.
             headers (dict, optional): Additional headers for requests and configuration.
-            max_subtopics (int): Maximum number of subtopics to generate.
+            max_subtopics (int, optional): Maximum number of subtopics to
+                generate for a detailed report. Applied to this instance's
+                config, which is what the subtopic prompt reads. Defaults to
+                the MAX_SUBTOPICS config value.
             log_handler: Handler for logging events.
             prompt_family: Family of prompts to use.
             mcp_configs (list[dict], optional): List of MCP server configurations.
@@ -147,7 +150,12 @@ class GPTResearcher:
         self.cfg.set_verbose(verbose)
         self.report_source = report_source if report_source else getattr(self.cfg, 'report_source', None)
         self.report_format = report_format
-        self.max_subtopics = max_subtopics
+        # construct_subtopics() renders its prompt from cfg.max_subtopics, so the
+        # per-instance argument has to override the config value here; storing it
+        # on the researcher alone meant the documented option was never applied.
+        if max_subtopics is not None:
+            self.cfg.max_subtopics = max_subtopics
+        self.max_subtopics = getattr(self.cfg, "max_subtopics", max_subtopics)
         self.tone = tone if isinstance(tone, Tone) else Tone.Objective
         self.source_urls = source_urls
         self.document_urls = document_urls

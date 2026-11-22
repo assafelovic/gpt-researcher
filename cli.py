@@ -140,9 +140,10 @@ cli.add_argument(
 
 # Characters that are invalid in filenames on Windows and *nix.
 _INVALID_FILENAME_CHARS = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
+_MAX_FILENAME_STEM_LENGTH = 60
 
 
-def _sanitize_filename(name: str, max_len: int = 60) -> str:
+def _sanitize_filename(name: str, max_len: int = _MAX_FILENAME_STEM_LENGTH) -> str:
     """Turn an arbitrary string into a safe filename stem.
 
     - Strips characters that are illegal on Windows/Linux filesystems.
@@ -252,7 +253,11 @@ def _resolve_unique_path(output_dir: Path, stem: str, ext: str = ".md") -> Path:
         return candidate
     i = 2
     while True:
-        candidate = output_dir / f"{stem}_{i}{ext}"
+        suffix = f"_{i}"
+        unique_stem = (
+            stem[:_MAX_FILENAME_STEM_LENGTH - len(suffix)].rstrip("._ ") + suffix
+        )
+        candidate = output_dir / f"{unique_stem}{ext}"
         if not candidate.exists():
             return candidate
         i += 1
@@ -269,6 +274,25 @@ async def main(args):
     """
     query_domains = args.query_domains.split(",") if args.query_domains else []
 
+    # Convert the simple keyword to the full Tone enum value
+    tone_map = {
+        "objective": Tone.Objective,
+        "formal": Tone.Formal,
+        "analytical": Tone.Analytical,
+        "persuasive": Tone.Persuasive,
+        "informative": Tone.Informative,
+        "explanatory": Tone.Explanatory,
+        "descriptive": Tone.Descriptive,
+        "critical": Tone.Critical,
+        "comparative": Tone.Comparative,
+        "speculative": Tone.Speculative,
+        "reflective": Tone.Reflective,
+        "narrative": Tone.Narrative,
+        "humorous": Tone.Humorous,
+        "optimistic": Tone.Optimistic,
+        "pessimistic": Tone.Pessimistic
+    }
+
     researcher: GPTResearcher | None = None
 
     if args.report_type == 'detailed_report':
@@ -276,7 +300,8 @@ async def main(args):
             query=args.query,
             query_domains=query_domains,
             report_type="research_report",
-            report_source="web_search",
+            report_source=args.report_source,
+            tone=tone_map[args.tone],
         )
 
         report = await detailed_report.run()
@@ -284,25 +309,6 @@ async def main(args):
         # surface sources_count / total_cost and reuse the fast LLM for the title.
         researcher = getattr(detailed_report, "gpt_researcher", None)
     else:
-        # Convert the simple keyword to the full Tone enum value
-        tone_map = {
-            "objective": Tone.Objective,
-            "formal": Tone.Formal,
-            "analytical": Tone.Analytical,
-            "persuasive": Tone.Persuasive,
-            "informative": Tone.Informative,
-            "explanatory": Tone.Explanatory,
-            "descriptive": Tone.Descriptive,
-            "critical": Tone.Critical,
-            "comparative": Tone.Comparative,
-            "speculative": Tone.Speculative,
-            "reflective": Tone.Reflective,
-            "narrative": Tone.Narrative,
-            "humorous": Tone.Humorous,
-            "optimistic": Tone.Optimistic,
-            "pessimistic": Tone.Pessimistic
-        }
-
         researcher = GPTResearcher(
             query=args.query,
             query_domains=query_domains,

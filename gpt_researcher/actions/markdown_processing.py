@@ -1,5 +1,5 @@
 import re
-from html import unescape
+from html import escape, unescape
 import markdown
 from typing import List, Dict
 
@@ -16,14 +16,15 @@ def extract_headers(markdown_text: str) -> List[Dict]:
     if not isinstance(markdown_text, str) or not markdown_text:
         return []
     headers = []
-    parsed_md = markdown.markdown(markdown_text)
+    parsed_md = markdown.markdown(markdown_text, extensions=["fenced_code"])
     lines = parsed_md.split("\n")
 
     stack = []
     for line in lines:
         if line.startswith("<h") and len(line) > 2 and line[2].isdigit():
             level = int(line[2])
-            header_text = line[line.index(">") + 1 : line.rindex("<")]
+            raw_header = line[line.index(">") + 1 : line.rindex("<")]
+            header_text = unescape(re.sub(r"<.*?>", "", raw_header)).strip()
 
             while stack and stack[-1]["level"] >= level:
                 stack.pop()
@@ -55,7 +56,7 @@ def extract_sections(markdown_text: str) -> List[Dict[str, str]]:
     if not isinstance(markdown_text, str) or not markdown_text:
         return []
     sections = []
-    parsed_md = markdown.markdown(markdown_text)
+    parsed_md = markdown.markdown(markdown_text, extensions=["fenced_code"])
     
     pattern = r'<h\d>(.*?)</h\d>(.*?)(?=<h\d>|$)'
     matches = re.findall(pattern, parsed_md, re.DOTALL)
@@ -88,7 +89,7 @@ def table_of_contents(markdown_text: str) -> str:
     def generate_table_of_contents(headers, indent_level=0):
         toc = ""
         for header in headers:
-            toc += " " * (indent_level * 4) + "- " + header["text"] + "\n"
+            toc += " " * (indent_level * 4) + "- " + escape(header["text"], quote=False) + "\n"
             if "children" in header:
                 toc += generate_table_of_contents(header["children"], indent_level + 1)
         return toc
