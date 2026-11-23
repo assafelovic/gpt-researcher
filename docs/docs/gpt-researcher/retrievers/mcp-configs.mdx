@@ -94,7 +94,7 @@ Each MCP configuration dictionary supports these keys:
 | `connection_url` | URL for remote connections | `"wss://api.example.com"` | Yes** |
 | `connection_headers` | HTTP headers for remote connections | `{"Authorization": "Bearer TOKEN"}` | No |
 | `connection_type` | Connection type (auto-detected) | `"websocket"` | No |
-| `connection_token` | Authentication token | `"bearer_token"` | No |
+| `connection_token` | HTTP Bearer token; explicit Authorization headers take precedence | `"bearer_token"` | No |
 
 **Local servers**: Require `name`, `command`, and `args`  
 **Remote servers**: Require `name` and `connection_url`
@@ -299,7 +299,6 @@ researcher = GPTResearcher(
         {
             "name": "arxiv_api",
             "connection_url": "wss://mcp.arxiv.org/ws",  # Auto-detects WebSocket
-            "connection_token": os.getenv("ARXIV_TOKEN"),
         }
     ]
 )
@@ -308,6 +307,11 @@ researcher = GPTResearcher(
 ### Authenticated Streamable HTTP
 
 Use `connection_headers` to send authentication headers to a remote HTTP MCP server. Read credentials from the process environment before creating the configuration; `env` configures local stdio servers, not remote request headers.
+
+For HTTP servers, `connection_token` is shorthand for an `Authorization: Bearer ...`
+header. Other headers are preserved; an explicit Authorization header takes
+precedence regardless of its casing. The adapter does not support
+`connection_token` authentication for WebSocket or stdio connections.
 
 ```python
 import os
