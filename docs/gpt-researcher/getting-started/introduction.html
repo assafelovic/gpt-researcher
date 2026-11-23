@@ -19,8 +19,8 @@
 <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1A1612">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gelasio:wght@400;500;600&family=Instrument+Sans:wdth,wght@75..100,400..700&family=JetBrains+Mono:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.11/dist/katex.min.css" integrity="sha384-Um5gpz1odJg5Z4HAmzPtgZKdTBHZdw8S29IecapCSB31ligYPhHQZMIlWLYQGVoc" crossorigin="anonymous"><link rel="stylesheet" href="/assets/css/styles.df553ba0.css">
-<script src="/assets/js/runtime~main.07c51a70.js" defer="defer"></script>
-<script src="/assets/js/main.ea3639d7.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.2d3d4599.js" defer="defer"></script>
+<script src="/assets/js/main.1e175d00.js" defer="defer"></script>
 </head>
 <body>
 <svg style="display: none;"><defs>
@@ -45,7 +45,7 @@
 </ul>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="architecture">Architecture<a href="#architecture" class="hash-link" aria-label="Direct link to Architecture" title="Direct link to Architecture" translate="no">​</a></h2>
 <p>The main idea is to run &quot;planner&quot; and &quot;execution&quot; agents, whereas the planner generates questions to research, and the execution agents seek the most related information based on each generated research question. Finally, the planner filters and aggregates all related information and creates a research report. <br> <br>
-The agents use a fast model for summarizing, a reasoning model for planning and a smart model for writing (by default <code>gpt-5.4-mini</code>, <code>gpt-5.4</code> and <code>gpt-6-sol</code>). We optimize for costs using each only when necessary. <strong>The average research task takes about a minute to complete, and costs ~$0.08.</strong></p>
+The agents use a reasoning model for planning and a smart model for writing (by default <code>gpt-5.4</code> and <code>gpt-6-sol</code>), plus a fast model (<code>gpt-5.4-mini</code>) for light tasks such as planning images. We optimize for costs using each only when necessary. <strong>The average research task takes about a minute to complete, and costs ~$0.08.</strong> See <a class="" href="/docs/gpt-researcher/gptr/costs">Costs</a> for every report type, where the money goes and how to spend less.</p>
 <div align="center"><img align="center" height="600" src="https://github.com/assafelovic/gpt-researcher/assets/13554167/4ac896fd-63ab-4b77-9688-ff62aafcc527"></div>
 <p>More specifically:</p>
 <ul>
