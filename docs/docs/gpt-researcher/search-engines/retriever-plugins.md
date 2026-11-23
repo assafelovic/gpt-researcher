@@ -26,6 +26,7 @@ Install them in the same Python environment as GPT Researcher.
 | Piloterr | [`gpt-researcher-piloterr`](https://pypi.org/project/gpt-researcher-piloterr/) | [piloterr/gpt-researcher-piloterr](https://github.com/piloterr/gpt-researcher-piloterr) · [Issues](https://github.com/piloterr/gpt-researcher-piloterr/issues) |
 | Sciverse | [`gpt-researcher-sciverse`](https://pypi.org/project/gpt-researcher-sciverse/) | [Sciverse-Agent-Tools](https://github.com/opendatalab/Sciverse-Agent-Tools) · [Issues](https://github.com/opendatalab/Sciverse-Agent-Tools/issues) |
 | SpecStream | [`gpt-researcher-specstream`](https://pypi.org/project/gpt-researcher-specstream/) | [specstream-tools](https://github.com/specstream/specstream-tools) · [Issues](https://github.com/specstream/specstream-tools/issues) |
+| WebRouter | [`gpt-researcher-webrouter`](https://pypi.org/project/gpt-researcher-webrouter/) | [yogev-nimble/gpt-researcher-webrouter](https://github.com/yogev-nimble/gpt-researcher-webrouter) · [Issues](https://github.com/yogev-nimble/gpt-researcher-webrouter/issues) |
 
 ### Autom
 
@@ -152,6 +153,36 @@ Create an API key at [specstream.ai](https://specstream.ai). Optional settings:
 See the [plugin documentation](https://github.com/specstream/specstream-tools/tree/main/packages/gpt-researcher-specstream#readme)
 for configuration details. API access and integration support are provided by
 the plugin maintainer.
+
+### WebRouter
+
+[WebRouter](https://github.com/Nimbleway/webrouter) is an open-source library
+that puts one search interface in front of many web search providers. It routes
+across every provider whose key it finds in the environment, falling back to the
+next one on an error or an empty result.
+
+```bash
+pip install gpt-researcher-webrouter
+export RETRIEVER=webrouter
+```
+
+No key is required: without one, searches go to the free keyless tiers that
+WebRouter supports. Requires GPT Researcher 0.16.1+. Optional settings:
+
+- Provider keys such as `TAVILY_API_KEY`, `EXA_API_KEY` or `BRAVE_API_KEY` add
+  providers to route to; WebRouter's
+  [`.env.example`](https://github.com/Nimbleway/webrouter/blob/main/.env.example)
+  lists every variable.
+- `WEBROUTER_PROVIDER`: pin one provider, e.g. `tavily` (no fallback then).
+- Combine with a built-in retriever, e.g. `RETRIEVER=webrouter,arxiv`.
+
+The retriever returns links with their title and snippet, and GPT Researcher
+scrapes each page (`requires_scraping=True`). Domains in `query_domains` are
+passed to WebRouter as `include_domains`. On a failed search it logs a warning
+and returns no results, so one failing provider does not stop a research run.
+
+See the [plugin documentation](https://github.com/yogev-nimble/gpt-researcher-webrouter#readme)
+for details. Support is provided by the plugin maintainer.
 
 ## Writing a plugin
 
