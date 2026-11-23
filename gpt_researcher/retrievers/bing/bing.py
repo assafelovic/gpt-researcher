@@ -7,7 +7,7 @@ import json
 import logging
 
 
-class BingSearch():
+class BingSearch:
     """
     Bing Search Retriever
     """
@@ -33,7 +33,8 @@ class BingSearch():
             api_key = os.environ["BING_API_KEY"]
         except Exception:
             raise Exception(
-                "Bing API key not found. Please set the BING_API_KEY environment variable.")
+                "Bing API key not found. Please set the BING_API_KEY environment variable."
+            )
         return api_key
 
     def search(self, max_results=7) -> list[dict[str]]:
@@ -42,6 +43,9 @@ class BingSearch():
         Returns:
 
         """
+        if max_results <= 0:
+            return []
+
         print("Searching with query {0}...".format(self.query))
         """Useful for general internet search queries using the Bing API."""
 
@@ -49,13 +53,21 @@ class BingSearch():
         url = "https://api.bing.microsoft.com/v7.0/search"
 
         headers = {
-            'Ocp-Apim-Subscription-Key': self.api_key,
-            'Content-Type': 'application/json'
+            "Ocp-Apim-Subscription-Key": self.api_key,
+            "Content-Type": "application/json",
         }
         search_query = self.query
-        if self.query_domains and len(self.query_domains) > 0:
-            domain_query = " OR ".join([f"site:{domain}" for domain in self.query_domains])
-            search_query = f"({domain_query}) {self.query}"
+        if self.query_domains:
+            clean_domains = [
+                d.strip()
+                for d in self.query_domains
+                if isinstance(d, str) and d.strip()
+            ]
+            if clean_domains:
+                domain_query = " OR ".join(
+                    [f"site:{domain}" for domain in clean_domains]
+                )
+                search_query = f"({domain_query}) {self.query}"
 
         params = {
             "responseFilter": "Webpages",
@@ -64,7 +76,7 @@ class BingSearch():
             "setLang": "en-GB",
             "textDecorations": False,
             "textFormat": "HTML",
-            "safeSearch": "Strict"
+            "safeSearch": "Strict",
         }
 
         try:
@@ -87,7 +99,8 @@ class BingSearch():
             results = web_pages.get("value") or []
         except Exception as e:
             self.logger.error(
-                f"Error parsing Bing search results: {e}. Resulting in empty response.")
+                f"Error parsing Bing search results: {e}. Resulting in empty response."
+            )
             return []
         if not results:
             self.logger.warning(f"No search results found for query: {self.query}")
@@ -108,10 +121,12 @@ class BingSearch():
             # skip youtube results
             if "youtube.com" in url.lower():
                 continue
-            search_response.append({
-                "title": result.get("name") or "",
-                "href": url,
-                "body": result.get("snippet") or "",
-            })
+            search_response.append(
+                {
+                    "title": result.get("name") or "",
+                    "href": url,
+                    "body": result.get("snippet") or "",
+                }
+            )
 
-        return search_response
+        return search_response[:max_results]
