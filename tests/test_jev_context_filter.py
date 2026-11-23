@@ -218,10 +218,11 @@ def test_none_filter_passes_every_page_without_embeddings():
         verbose=False, websocket=None, kwargs={}, prompt_family=PromptFamily, add_costs=lambda c: None,
         cfg=SimpleNamespace(context_filter="none"), memory=SimpleNamespace(get_embeddings=no_embeddings),
     )
-    pages = [_page("a", "alpha " * 3000), _page("b", "beta " * 3000)]
+    long_page = "alpha " * 9000 + "\nFinal evidence from the long page."
+    pages = [_page("a", long_page), _page("b", "beta " * 3000)]
     context = _run(cm.ContextManager(researcher).get_similar_content_by_query("q", pages))
     assert "Source: a" in context and "Source: b" in context
-    assert context.count("alpha") == 3000
+    assert long_page in context
 
 
 def test_embeddings_are_built_only_when_used(monkeypatch):
