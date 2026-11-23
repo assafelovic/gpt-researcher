@@ -2,7 +2,7 @@
 
 With the latest "Deep Research" trend in the AI community, we're excited to implement our own Open source deep research capability! Introducing GPT Researcher's Deep Research - an advanced recursive research system that explores topics with unprecedented depth and breadth. 
 
-With the default models and settings (breadth 3, depth 2), each deep research takes around 8–9 minutes, reads 100+ sources and costs around $1.30 (measured November 2026).
+With the default models and settings (breadth 3, depth 2), each deep research takes around 7–12 minutes, reads 100+ sources and costs around $1.30 (measured November 2026). See [Costs](/docs/gpt-researcher/gptr/costs) for how that compares with other report types and how to lower it.
 
 ## How It Works
 

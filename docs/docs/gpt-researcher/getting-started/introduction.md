@@ -22,7 +22,7 @@ The agent can produce detailed, factual and unbiased research reports, with cust
 
 ## Architecture
 The main idea is to run "planner" and "execution" agents, whereas the planner generates questions to research, and the execution agents seek the most related information based on each generated research question. Finally, the planner filters and aggregates all related information and creates a research report. <br /> <br /> 
-The agents use a fast model for summarizing, a reasoning model for planning and a smart model for writing (by default `gpt-5.4-mini`, `gpt-5.4` and `gpt-6-sol`). We optimize for costs using each only when necessary. **The average research task takes about a minute to complete, and costs ~$0.08.**
+The agents use a reasoning model for planning and a smart model for writing (by default `gpt-5.4` and `gpt-6-sol`), plus a fast model (`gpt-5.4-mini`) for light tasks such as planning images. We optimize for costs using each only when necessary. **The average research task takes about a minute to complete, and costs ~$0.08.** See [Costs](/docs/gpt-researcher/gptr/costs) for every report type, where the money goes and how to spend less.
 
 <div align="center">
 <img align="center" height="600" src="https://github.com/assafelovic/gpt-researcher/assets/13554167/4ac896fd-63ab-4b77-9688-ff62aafcc527" />

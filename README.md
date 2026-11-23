@@ -22,7 +22,7 @@
 
 # 🔎 GPT Researcher
 
-**GPT Researcher the first open deep research agent designed for both web and local research on any given task.** 
+**GPT Researcher is the first open deep research agent designed for both web and local research on any given task.** 
 
 The agent produces detailed, factual, and unbiased research reports with citations. GPT Researcher provides a full suite of customization options to create tailor made and domain specific research agents. GPT Researcher goes well beyond RAG: planner and execution agents break each task into research questions, [decision models](#-smart-context-filtering-with-jev) keep only the context that is actually useful for answering them, [multi-agent](#-multi-agent-assistant) workflows coordinate specialized agents from planning to publication, and [recursive deep research](#-deep-research) explores a topic in both breadth and depth. Research runs in parallel, which keeps it fast, stable and reliable, and reduces misinformation.
 
@@ -86,12 +86,14 @@ Steps:
 - 🔍 JavaScript-enabled web scraping.
 - 📂 Maintains memory and context throughout research.
 - 📄 Export reports to PDF, Word, and other formats.
+- 💰 About $0.08 and a minute per research report with the default models, with every run's cost tracked ([cost breakdown](https://docs.gptr.dev/docs/gpt-researcher/gptr/costs)).
 
 ## 📖 Documentation
 
 See the [Documentation](https://docs.gptr.dev/docs/gpt-researcher/getting-started) for:
 - Installation and setup guides
 - Configuration and customization options
+- [Costs](https://docs.gptr.dev/docs/gpt-researcher/gptr/costs) per report type and how to lower them
 - How-To examples
 - Full API references
 
@@ -221,8 +223,8 @@ GPT Researcher now includes Deep Research - an advanced recursive research workf
 - 🌳 Tree-like exploration with configurable depth and breadth
 - ⚡️ Concurrent processing for faster results
 - 🤝 Smart context management across research branches
-- ⏱️ Takes ~8 minutes per deep research
-- 💰 Costs ~$1.30 per deep research with the default models and settings
+- ⏱️ Takes ~7–12 minutes per deep research
+- 💰 Costs ~$1.30 per deep research with the default models and settings ([cost breakdown](https://docs.gptr.dev/docs/gpt-researcher/gptr/costs))
 
 [Learn more about Deep Research](https://docs.gptr.dev/docs/gpt-researcher/gptr/deep_research) in our documentation.
 
