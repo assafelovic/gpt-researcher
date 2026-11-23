@@ -27,10 +27,12 @@ class WorkerPool:
         self.executor = ThreadPoolExecutor(max_workers=max_workers)
         self.semaphore = asyncio.Semaphore(max_workers)
 
-        # Configure the global rate limiter
-        # All WorkerPools share the same rate limiter instance
-        global_limiter = get_global_rate_limiter()
-        global_limiter.configure(rate_limit_delay)
+        # Configure the global rate limiter.
+        # All WorkerPools share the same rate limiter instance, so a pool that does not
+        # ask for a delay (the default) must not clear a delay another pool already
+        # configured: that would silently drop the global limit for every pool.
+        if rate_limit_delay:
+            get_global_rate_limiter().configure(rate_limit_delay)
 
     @asynccontextmanager
     async def throttle(self):
