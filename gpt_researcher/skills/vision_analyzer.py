@@ -5,17 +5,19 @@ the research context. Scraped pages already yield image URLs, but until now
 only the text of a page reached the report writer, so visual information
 (charts, diagrams, tables embedded as images, figures with captions) was
 silently dropped. The VisionAnalyzer sends the most relevant scraped images
-to a vision-language model (VLM) exposed through an OpenAI-compatible
-chat-completions API and injects a compact caption/OCR block into the
+to a vision-language model and injects a compact caption/OCR block into the
 source content that is later compressed into the report context.
 
 Design notes:
+- VLM calls go through the shared LLM layer (create_chat_completion), so cost
+  tracking (cost_callback), retries, LLM_TIMEOUT and every configured provider
+  apply, exactly like the other LLM calls in the project. Only the image
+  download is handled here.
 - Everything is opt-in through VISION_ENABLED and fails open: a missing
   image, a slow endpoint, or a malformed answer is logged and skipped so the
   standard research flow keeps working.
-- Requests go through a single OpenAI-compatible endpoint (VISION_BASE_URL)
-  so any VLM provider - OpenAI, DashScope/Qwen-VL, DeepSeek-VL behind vLLM,
-  Ollama with an OpenAI shim - works without code changes.
+- The model is selected with VISION_LLM=provider:model (same convention as
+  FAST_LLM / SMART_LLM / STRATEGIC_LLM).
 """
 
 from __future__ import annotations
@@ -23,13 +25,13 @@ from __future__ import annotations
 import asyncio
 import base64
 import logging
-import os
 from typing import Optional
 
 import httpx
 import json_repair
 
 from ..actions.utils import stream_output
+from ..utils.llm import create_chat_completion
 from ..utils.url_security import UnsafeURLError, validate_url
 
 logger = logging.getLogger(__name__)
@@ -58,8 +60,8 @@ class VisionAnalyzer:
     Attributes:
         researcher: The parent GPTResearcher instance.
         enabled: Whether image understanding is switched on via config.
-        model: VLM model name passed to the chat-completions endpoint.
-        base_url: OpenAI-compatible endpoint base URL.
+        provider: LLM provider name from VISION_LLM (e.g. "openai").
+        model: VLM model name from VISION_LLM (e.g. "gpt-5.4-mini").
     """
 
     def __init__(self, researcher):
@@ -80,17 +82,9 @@ class VisionAnalyzer:
         """Read VISION_* settings from the config (env vars already merged)."""
         cfg = self.cfg
         self.enabled = bool(getattr(cfg, "vision_enabled", False))
-        self.model = getattr(cfg, "vision_model", None) or "gpt-4o-mini"
-        self.base_url = (
-            getattr(cfg, "vision_base_url", None)
-            or os.environ.get("VISION_BASE_URL")
-            or "https://api.openai.com/v1"
-        ).rstrip("/")
-        self.api_key = (
-            getattr(cfg, "vision_api_key", None)
-            or os.environ.get("VISION_API_KEY")
-            or os.environ.get("OPENAI_API_KEY")
-        )
+        # VISION_LLM is parsed by Config into provider + model, like FAST_LLM.
+        self.provider = getattr(cfg, "vision_llm_provider", None)
+        self.model = getattr(cfg, "vision_llm_model", None)
         self.max_images = int(getattr(cfg, "vision_max_images", 3) or 3)
         self.max_images_per_source = int(
             getattr(cfg, "vision_max_images_per_source", 2) or 2
@@ -102,15 +96,21 @@ class VisionAnalyzer:
         self.embed_in_context = bool(
             getattr(cfg, "vision_embed_in_context", True)
         )
+        if self.enabled and not (self.provider and self.model):
+            logger.warning(
+                "VISION_ENABLED is set but VISION_LLM is not configured; "
+                "image understanding stays disabled."
+            )
+            self.enabled = False
         # Used in tests / integrations that stub the network layer.
         self.image_downloader = None
         self.vlm_caller = None
 
     def is_enabled(self) -> bool:
-        """Return True when image understanding is switched on.
+        """Return True when image understanding is switched on and configured.
 
         Returns:
-            True if the VISION_ENABLED flag is set.
+            True if VISION_ENABLED is set and VISION_LLM resolves to a model.
         """
         return self.enabled
 
@@ -121,12 +121,13 @@ class VisionAnalyzer:
         short "Visual evidence" block is appended to each source's raw
         content so it flows into the same compression pipeline as the page
         text. A structured image_captions field is also stored on each
-        source for downstream consumers.
+        source for downstream consumers. Images the VLM marks as irrelevant
+        are dropped and never reach the context.
 
         Args:
             scraped_data: List of scraped source dicts (url, title,
                 raw_content, image_urls, ...).
-            query: The research sub-query the images are judged against.
+            query: The research sub-question the images are judged against.
 
         Returns:
             The same list of sources, enriched in place.
@@ -156,7 +157,7 @@ class VisionAnalyzer:
 
         by_source: dict[int, list[dict]] = {}
         for candidate, description in zip(candidates, results):
-            if description:
+            if description and description.get("relevant", True):
                 by_source.setdefault(candidate["source_index"], []).append(description)
 
         for source_index, captions in by_source.items():
@@ -174,8 +175,8 @@ class VisionAnalyzer:
             await stream_output(
                 "logs",
                 "vision_analyzed",
-                f"🖼️ Described {analyzed} scraped image(s) and attached them "
-                "to the research context",
+                f"🖼️ Described {analyzed} relevant scraped image(s) and "
+                "attached them to the research context",
                 self.researcher.websocket,
             )
 
@@ -259,7 +260,7 @@ class VisionAnalyzer:
                 return None
 
     async def _fetch_image(self, url: str) -> tuple[bytes, str]:
-        """Download an image, rejecting unsafe targets and oversized payloads.
+        """Stream an image download, aborting once the size cap is crossed.
 
         Args:
             url: Image URL.
@@ -277,26 +278,36 @@ class VisionAnalyzer:
         async with httpx.AsyncClient(
             follow_redirects=True, timeout=timeout, headers=headers
         ) as client:
-            response = await client.get(url)
-            response.raise_for_status()
+            async with client.stream("GET", url) as response:
+                response.raise_for_status()
 
-            content_length = response.headers.get("content-length")
-            if content_length and int(content_length) > self.max_image_bytes:
-                raise ValueError(
-                    f"image too large ({content_length} bytes > {self.max_image_bytes})"
-                )
+                content_length = response.headers.get("content-length")
+                if content_length and int(content_length) > self.max_image_bytes:
+                    raise ValueError(
+                        f"image too large ({content_length} bytes > "
+                        f"{self.max_image_bytes})"
+                    )
 
-            image_bytes = response.content
-            if len(image_bytes) > self.max_image_bytes:
-                raise ValueError(
-                    f"image too large ({len(image_bytes)} bytes > {self.max_image_bytes})"
-                )
+                payload = bytearray()
+                async for chunk in response.aiter_bytes():
+                    payload.extend(chunk)
+                    if len(payload) > self.max_image_bytes:
+                        raise ValueError(
+                            f"image too large (> {self.max_image_bytes} bytes)"
+                        )
 
-            content_type = response.headers.get("content-type", "")
-            mime_type = content_type.split(";")[0].strip() or _guess_mime(url)
-            if not mime_type.startswith("image/"):
-                raise ValueError(f"not an image (content-type: {content_type!r})")
-            return image_bytes, mime_type
+                if not payload:
+                    raise ValueError("empty image")
+
+                content_type = (
+                    response.headers.get("content-type") or ""
+                ).split(";")[0].strip()
+                mime_type = content_type or _guess_mime(url)
+                if not mime_type.startswith("image/"):
+                    raise ValueError(
+                        f"not an image (content-type: {content_type!r})"
+                    )
+                return bytes(payload), mime_type
 
     async def _describe_image(
         self,
@@ -334,42 +345,30 @@ class VisionAnalyzer:
         user_text = _USER_PROMPT_TEMPLATE.format(
             query=query, title=title or "(unknown page)", url=url
         )
-        payload = {
-            "model": self.model,
-            "temperature": 0,
-            "max_tokens": 400,
-            "messages": [
-                {"role": "system", "content": _SYSTEM_PROMPT},
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": user_text},
-                        {
-                            "type": "image_url",
-                            "image_url": {"url": data_uri},
-                        },
-                    ],
-                },
-            ],
-        }
-        headers = {"Content-Type": "application/json"}
-        if self.api_key:
-            headers["Authorization"] = f"Bearer {self.api_key}"
-
-        timeout = httpx.Timeout(self.timeout)
-        async with httpx.AsyncClient(timeout=timeout) as client:
-            response = await client.post(
-                f"{self.base_url}/chat/completions",
-                json=payload,
-                headers=headers,
-            )
-            response.raise_for_status()
-            body = response.json()
-
-        content = _extract_chat_content(body)
+        messages = [
+            {"role": "system", "content": _SYSTEM_PROMPT},
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": user_text},
+                    {"type": "image_url", "image_url": {"url": data_uri}},
+                ],
+            },
+        ]
+        # Same LLM layer as the rest of the project: retries, LLM_TIMEOUT,
+        # provider selection and cost accounting are shared.
+        content = await create_chat_completion(
+            model=self.model,
+            messages=messages,
+            temperature=0,
+            max_tokens=400,
+            llm_provider=self.provider,
+            llm_kwargs=self.cfg.llm_kwargs,
+            cost_callback=getattr(self.researcher, "add_costs", None),
+        )
         if not content:
             raise ValueError("empty VLM response")
-        return self._parse_description(content, url, title)
+        return self._parse_description(str(content), url, title)
 
     def _parse_description(self, raw_content: str, url: str, title: str) -> dict:
         """Parse the VLM answer into a normalized description dict."""
@@ -425,21 +424,3 @@ def _guess_mime(url: str) -> str:
     if lower.endswith(".webp"):
         return "image/webp"
     return "image/jpeg"
-
-
-def _extract_chat_content(body: dict) -> str:
-    """Pull text out of an OpenAI-style chat-completions response body."""
-    choices = body.get("choices") or []
-    if not choices:
-        raise ValueError("chat-completions response has no choices")
-    message = choices[0].get("message") or {}
-    content = message.get("content")
-    if isinstance(content, str):
-        return content
-    if isinstance(content, list):
-        parts = []
-        for block in content:
-            if isinstance(block, dict) and isinstance(block.get("text"), str):
-                parts.append(block["text"])
-        return "".join(parts)
-    raise ValueError("chat-completions response has no text content")

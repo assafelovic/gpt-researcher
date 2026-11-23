@@ -1,8 +1,10 @@
 """Tests for the VisionAnalyzer skill.
 
-Covers opt-in gating, caption injection into scraped sources, per-source and
-global image caps, URL deduplication, failure isolation between images, the
-SSRF guard, the OpenAI-compatible VLM payload parsing, and config handling.
+Covers opt-in gating, VISION_LLM parsing, caption injection into scraped
+sources, per-source and global image caps, URL deduplication, failure
+isolation between images, the SSRF guard, dropping images the VLM marks
+irrelevant, the streamed download size cap, the shared LLM layer call and the
+config handling.
 """
 
 import types
@@ -10,12 +12,17 @@ import types
 import pytest
 
 from gpt_researcher.config.config import Config
-from gpt_researcher.skills.vision_analyzer import VisionAnalyzer, _extract_chat_content
+from gpt_researcher.skills.vision_analyzer import VisionAnalyzer
 
 
 def _make_researcher(cfg=None):
     cfg = cfg or Config()
-    return types.SimpleNamespace(cfg=cfg, verbose=False, websocket=None)
+    return types.SimpleNamespace(
+        cfg=cfg,
+        verbose=False,
+        websocket=None,
+        add_costs=lambda *args, **kwargs: None,
+    )
 
 
 def _make_analyzer(monkeypatch, **env):
@@ -58,13 +65,26 @@ async def test_disabled_by_default_returns_sources_untouched():
     assert sources[0]["raw_content"] == "Body A"
 
 
-def test_config_lowercases_vision_keys(monkeypatch):
+def test_vision_llm_is_parsed_into_provider_and_model(monkeypatch):
     monkeypatch.setenv("VISION_ENABLED", "true")
+    monkeypatch.setenv("VISION_LLM", "dashscope:qwen-vl-max")
     monkeypatch.setenv("VISION_MAX_IMAGES", "7")
     cfg = Config()
     assert cfg.vision_enabled is True
+    assert cfg.vision_llm == "dashscope:qwen-vl-max"
+    assert cfg.vision_llm_provider == "dashscope"
+    assert cfg.vision_llm_model == "qwen-vl-max"
     assert cfg.vision_max_images == 7
     assert not hasattr(cfg, "VISION_ENABLED")
+
+
+def test_enabled_without_vision_llm_stays_disabled(monkeypatch):
+    monkeypatch.setenv("VISION_ENABLED", "true")
+    cfg = Config()
+    cfg.vision_llm_provider = None
+    cfg.vision_llm_model = None
+    analyzer = VisionAnalyzer(_make_researcher(cfg))
+    assert analyzer.is_enabled() is False
 
 
 @pytest.mark.asyncio
@@ -112,6 +132,44 @@ async def test_appends_caption_block_and_metadata(monkeypatch):
     # Source B only carried the deduplicated fig1 image, so it stays unchanged.
     assert "image_captions" not in result[1]
     assert result[1]["raw_content"] == "Body B"
+
+
+@pytest.mark.asyncio
+async def test_irrelevant_images_are_dropped(monkeypatch):
+    analyzer = _make_analyzer(
+        monkeypatch,
+        VISION_ENABLED="true",
+        VISION_MAX_IMAGES="4",
+        VISION_MAX_IMAGES_PER_SOURCE="2",
+    )
+    monkeypatch.setattr(
+        "gpt_researcher.skills.vision_analyzer.validate_url", lambda url: url
+    )
+
+    async def fake_download(url):
+        return b"img", "image/png"
+
+    async def fake_vlm(**kwargs):
+        relevant = not kwargs["url"].endswith("fig2.jpg")
+        return {
+            "url": kwargs["url"],
+            "title": kwargs["title"],
+            "caption": "figure " + kwargs["url"],
+            "text": "",
+            "relevant": relevant,
+        }
+
+    analyzer.image_downloader = fake_download
+    analyzer.vlm_caller = fake_vlm
+
+    sources = _scraped_data()
+    result = await analyzer.analyze(sources, "q")
+    # fig2 was marked irrelevant and must not reach the context.
+    assert [c["url"] for c in result[0]["image_captions"]] == [
+        "https://cdn.example.com/fig1.png"
+    ]
+    assert "fig2.jpg" not in result[0]["raw_content"]
+    assert result[0]["raw_content"].count("[Visual evidence") == 1
 
 
 @pytest.mark.asyncio
@@ -196,30 +254,138 @@ async def test_unsafe_image_url_is_skipped(monkeypatch):
     assert "image_captions" not in sources[0]
 
 
+@pytest.mark.asyncio
+async def test_vlm_call_goes_through_shared_llm_layer(monkeypatch):
+    analyzer = _make_analyzer(monkeypatch, VISION_ENABLED="true")
+    captured = {}
+
+    async def fake_create_chat_completion(**kwargs):
+        captured.update(kwargs)
+        return '{"caption": "a chart", "text": "12%", "relevant": true}'
+
+    monkeypatch.setattr(
+        "gpt_researcher.skills.vision_analyzer.create_chat_completion",
+        fake_create_chat_completion,
+    )
+    described = await analyzer._describe_image(
+        b"image-bytes", "image/png", "https://cdn.example.com/x.png", "Paper A", "q"
+    )
+    assert described["caption"] == "a chart"
+    assert captured["llm_provider"] == analyzer.provider
+    assert captured["model"] == analyzer.model
+    assert captured["cost_callback"] is not None
+    assert captured["cost_callback"] == analyzer.researcher.add_costs
+    content = captured["messages"][1]["content"]
+    assert any(block.get("type") == "image_url" for block in content)
+
+
+class _FakeResponse:
+    def __init__(self, payload, content_length=None):
+        self.payload = payload
+        self.status_code = 200
+        self.headers = {"content-type": "image/png"}
+        if content_length is not None:
+            self.headers["content-length"] = str(content_length)
+
+    def raise_for_status(self):
+        return None
+
+    async def aiter_bytes(self):
+        yield self.payload
+
+
+class _FakeStream:
+    def __init__(self, payload, content_length):
+        self.payload = payload
+        self.content_length = content_length
+
+    async def __aenter__(self):
+        return _FakeResponse(self.payload, self.content_length)
+
+    async def __aexit__(self, *args):
+        return False
+
+
+class _FakeClient:
+    payload = b"x" * 100
+    content_length = None
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *args):
+        return False
+
+    def stream(self, method, url):
+        return _FakeStream(type(self).payload, type(self).content_length)
+
+
+@pytest.mark.asyncio
+async def test_streaming_download_aborts_over_size_cap(monkeypatch):
+    analyzer = _make_analyzer(
+        monkeypatch,
+        VISION_ENABLED="true",
+        VISION_MAX_IMAGES="4",
+        VISION_MAX_IMAGES_PER_SOURCE="2",
+        VISION_MAX_IMAGE_BYTES="50",
+    )
+    monkeypatch.setattr(
+        "gpt_researcher.skills.vision_analyzer.validate_url", lambda url: url
+    )
+    monkeypatch.setattr(
+        "gpt_researcher.skills.vision_analyzer.httpx.AsyncClient", _FakeClient
+    )
+    vlm_calls = []
+
+    async def fake_vlm(**kwargs):
+        vlm_calls.append(kwargs)
+        return {"url": kwargs["url"], "caption": "c", "text": "", "relevant": True}
+
+    analyzer.vlm_caller = fake_vlm
+
+    sources = _scraped_data()
+    result = await analyzer.analyze(sources, "q")
+    # 100 streamed bytes exceed the 50-byte cap, so nothing is described.
+    assert vlm_calls == []
+    assert "image_captions" not in result[0]
+
+
+@pytest.mark.asyncio
+async def test_streaming_download_accepts_images_under_cap(monkeypatch):
+    analyzer = _make_analyzer(
+        monkeypatch,
+        VISION_ENABLED="true",
+        VISION_MAX_IMAGES="1",
+        VISION_MAX_IMAGES_PER_SOURCE="1",
+        VISION_MAX_IMAGE_BYTES="200",
+    )
+    monkeypatch.setattr(
+        "gpt_researcher.skills.vision_analyzer.validate_url", lambda url: url
+    )
+    monkeypatch.setattr(
+        "gpt_researcher.skills.vision_analyzer.httpx.AsyncClient", _FakeClient
+    )
+
+    async def fake_vlm(**kwargs):
+        return {"url": kwargs["url"], "caption": "c", "text": "", "relevant": True}
+
+    analyzer.vlm_caller = fake_vlm
+
+    sources = _scraped_data()
+    result = await analyzer.analyze(sources, "q")
+    assert result[0]["image_captions"][0]["url"] == "https://cdn.example.com/fig1.png"
+
+
 def test_parse_description_recovers_fenced_json():
     analyzer = VisionAnalyzer(_make_researcher())
     parsed = analyzer._parse_description(
-        'Sure:\n```json\n{"caption": "a chart", "text": "12%", "relevant": true}\n```',
+        "Sure:\n" + "```json" + "\n{\"caption\": \"a chart\", \"text\": \"12%\", \"relevant\": true}\n" + "```",
         "https://cdn.example.com/x.png",
         "Paper A",
     )
     assert parsed["caption"] == "a chart"
     assert parsed["text"] == "12%"
     assert parsed["relevant"] is True
-
-
-def test_extract_chat_content_accepts_string_and_block_list():
-    assert _extract_chat_content({"choices": [{"message": {"content": "hello"}}]}) == "hello"
-    blocks = {
-        "choices": [
-            {
-                "message": {
-                    "content": [
-                        {"type": "text", "text": "a"},
-                        {"type": "text", "text": "b"},
-                    ]
-                }
-            }
-        ]
-    }
-    assert _extract_chat_content(blocks) == "ab"

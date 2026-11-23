@@ -54,9 +54,7 @@ class BaseConfig(TypedDict):
     # Vision / image understanding settings (inject VLM caption/OCR of
     # scraped images into the research context)
     VISION_ENABLED: bool
-    VISION_MODEL: Union[str, None]
-    VISION_BASE_URL: Union[str, None]
-    VISION_API_KEY: Union[str, None]
+    VISION_LLM: str  # provider:model, e.g. "openai:gpt-5.4-mini"
     VISION_MAX_IMAGES: int
     VISION_MAX_IMAGES_PER_SOURCE: int
     VISION_MAX_IMAGE_BYTES: int

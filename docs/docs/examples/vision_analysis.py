@@ -1,11 +1,10 @@
 """Example: image understanding (VLM captions) during research.
 
-Run with an OpenAI-compatible vision endpoint, e.g. DashScope/Qwen-VL:
+Run with any VLM provider supported by the shared LLM layer:
 
     export VISION_ENABLED=true
-    export VISION_MODEL=qwen2.5-vl-3b-instruct
-    export VISION_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
-    export VISION_API_KEY=sk-...
+    export VISION_LLM=openai:gpt-5.4-mini
+    # or: export VISION_LLM=dashscope:qwen-vl-max
     python vision_analysis.py
 
 Any OpenAI-compatible endpoint (OpenAI, DashScope, local vLLM) works.

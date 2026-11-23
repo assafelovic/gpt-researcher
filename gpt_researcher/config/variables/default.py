@@ -61,9 +61,7 @@ DEFAULT_CONFIG: BaseConfig = {
     # OpenAI-compatible chat-completions API, e.g. gpt-4o-mini, Qwen-VL,
     # DeepSeek-VL via a local server, etc.)
     "VISION_ENABLED": False,  # Master switch for VLM understanding of scraped images
-    "VISION_MODEL": "gpt-4o-mini",  # VLM model name understood by the endpoint
-    "VISION_BASE_URL": None,  # e.g. "https://dashscope.aliyuncs.com/compatible-mode/v1"; None -> https://api.openai.com/v1
-    "VISION_API_KEY": None,  # falls back to VISION_API_KEY then OPENAI_API_KEY env vars
+    "VISION_LLM": "openai:gpt-5.4-mini",  # provider:model, same convention as FAST_LLM / SMART_LLM
     "VISION_MAX_IMAGES": 3,  # Maximum number of images analyzed per sub-query
     "VISION_MAX_IMAGES_PER_SOURCE": 2,  # Maximum number of images analyzed per scraped source
     "VISION_MAX_IMAGE_BYTES": 8000000,  # Skip images larger than this (bytes)
