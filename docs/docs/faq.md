@@ -17,7 +17,7 @@ To learn more about GPT Researcher, check out the [documentation page](/docs/gpt
 
 ### How much does each research run cost?
 
-It depends on the models you configure and the report type. With the default models and settings (measured November 2026), a standard research report costs about \$0.08 and takes about a minute, and a [deep research](/docs/gpt-researcher/gptr/deep_research) run costs about \$1.30 and takes 8–9 minutes. Search API usage (such as Tavily) is billed separately. Every run tracks its own LLM spend, so you can check the exact cost with `researcher.get_costs()` after it finishes. We're constantly optimizing LLM calls to reduce costs and improve performance.
+It depends on the models you configure and the report type. With the default models and settings (measured November 2026), a standard research report costs about \$0.08 and takes about a minute, and a [deep research](/docs/gpt-researcher/gptr/deep_research) run costs about \$1.30 and takes 7–12 minutes. Search API usage (such as Tavily) is billed separately. Every run tracks its own LLM spend, so you can check the exact cost with `researcher.get_costs()` after it finishes. See [Costs](/docs/gpt-researcher/gptr/costs) for the full breakdown and ways to lower it.
 
 ### How do you ensure the report is factual and accurate?
 
