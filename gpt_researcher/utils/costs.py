@@ -69,6 +69,27 @@ ANTHROPIC_MODEL_PRICING = (
     (("claude-3-5-haiku",), 0.8, 4.0),
 )
 
+# gpt-researcher provider name -> litellm `custom_llm_provider`, for
+# providers priced from litellm's model price table. Providers not listed
+# here (local runtimes such as ollama, gateways) keep the flat fallback.
+LITELLM_PROVIDER_NAMES = {
+    "openai": "openai",
+    "azure_openai": "azure",
+    "anthropic": "anthropic",
+    "google_genai": "gemini",
+    "google_vertexai": "vertex_ai",
+    "bedrock": "bedrock",
+    "deepseek": "deepseek",
+    "mistralai": "mistral",
+    "groq": "groq",
+    "xai": "xai",
+    "together": "together_ai",
+    "fireworks": "fireworks_ai",
+    "openrouter": "openrouter",
+    "cohere": "cohere_chat",
+    "dashscope": "dashscope",
+}
+
 ANTHROPIC_US_INFERENCE_GEO_MODELS = (
     "claude-opus-4-7",
     "claude-opus-4-6",
@@ -270,6 +291,34 @@ def _get_openai_pricing(model: str | None) -> tuple[float, float] | None:
     return None
 
 
+def _litellm_cost(
+    llm_provider: str | None,
+    model: str | None,
+    input_tokens: int,
+    output_tokens: int,
+    cache_read_tokens: int,
+) -> float | None:
+    """Price a call from litellm's model price table, or None if litellm has
+    no price for this provider and model."""
+    provider = LITELLM_PROVIDER_NAMES.get(llm_provider or "")
+    if provider is None or not model:
+        return None
+    try:
+        import litellm
+
+        prompt_cost, completion_cost = litellm.cost_per_token(
+            model=model,
+            prompt_tokens=input_tokens,
+            completion_tokens=output_tokens,
+            cache_read_input_tokens=cache_read_tokens,
+            custom_llm_provider=provider,
+        )
+    except Exception:  # unmapped model, or litellm unavailable
+        logger.debug("No litellm price for %s/%s", llm_provider, model)
+        return None
+    return float(prompt_cost) + float(completion_cost)
+
+
 def calculate_llm_cost(
     llm_provider: str | None,
     model: str | None,
@@ -300,6 +349,14 @@ def calculate_llm_cost(
         # portions so the cached share is priced at the discount rate
         # instead of the full input rate.
         non_cached_input_tokens = input_tokens - cache_read_tokens
+        # OpenAI models keep the OpenAI table first; other providers are
+        # priced from litellm's table, then the OpenAI table, then the flat rate.
+        if llm_provider not in ("openai", "azure_openai"):
+            litellm_cost = _litellm_cost(
+                llm_provider, model, input_tokens, output_tokens, cache_read_tokens
+            )
+            if litellm_cost is not None:
+                return litellm_cost
         pricing = _get_openai_pricing(model)
         if pricing is not None:
             input_price_per_mtok, output_price_per_mtok = pricing
@@ -311,6 +368,11 @@ def calculate_llm_cost(
             )
             output_cost = output_tokens * output_price_per_mtok
             return (non_cached_cost + cached_cost + output_cost) / 1_000_000
+        litellm_cost = _litellm_cost(
+            llm_provider, model, input_tokens, output_tokens, cache_read_tokens
+        )
+        if litellm_cost is not None:
+            return litellm_cost
         cached_cost = (
             cache_read_tokens * INPUT_COST_PER_TOKEN * OPENAI_CACHED_INPUT_DISCOUNT
         )
