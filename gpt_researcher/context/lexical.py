@@ -16,7 +16,17 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from ..prompts import PromptFamily
 from .retriever import SearchAPIRetriever
 
-_TOKEN = re.compile(r"\w+", re.UNICODE)
+# Chinese, Japanese and Korean: Han (with 々〆〇), Hiragana, Katakana and Hangul.
+# These scripts don't put spaces between words, so a run of them is split into
+# overlapping character bigrams, as Lucene's CJKAnalyzer does.
+_CJK = (
+    "\u1100-\u11ff\u3005-\u3007\u3040-\u30ff\u3130-\u318f\u31f0-\u31ff\u3400-\u4dbf"
+    "\u4e00-\u9fff\uac00-\ud7af\uf900-\ufaff\uff66-\uff9f\U00020000-\U000323af"
+)
+_CJK_RUN = re.compile(f"[{_CJK}]+")
+# A word is a run of CJK characters or a run of other word characters; for
+# text with no CJK characters this is exactly ``\w+``.
+_TOKEN = re.compile(f"[{_CJK}]+|[^\\W{_CJK}]+", re.UNICODE)
 _STOPWORDS = frozenset("""
 a about above after again against all am an and any are as at be because been before being below
 between both but by can could did do does doing down during each few for from further had has have
@@ -41,8 +51,19 @@ def _stem(token: str) -> str:
     return token
 
 
+def _bigrams(run: str) -> list[str]:
+    """Overlapping character bigrams of a CJK run; a single character stays a unigram."""
+    return [run] if len(run) == 1 else [run[i:i + 2] for i in range(len(run) - 1)]
+
+
 def tokenize(text: str) -> list[str]:
-    return [_stem(t) for t in _TOKEN.findall(text.lower()) if len(t) > 1 and t not in _STOPWORDS]
+    tokens = []
+    for t in _TOKEN.findall(text.lower()):
+        if _CJK_RUN.match(t):
+            tokens += _bigrams(t)
+        elif len(t) > 1 and t not in _STOPWORDS:
+            tokens.append(_stem(t))
+    return tokens
 
 
 def bm25_scores(query: str, passages: list[str], k1: float = 1.5, b: float = 0.75) -> list[float]:
