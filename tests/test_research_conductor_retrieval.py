@@ -118,19 +118,25 @@ class ResearchConductorVisitedUrlsTests(unittest.IsolatedAsyncioTestCase):
         researcher = self.make_researcher(FakeDeclaredPrefetchRetriever)
         conductor = ResearchConductor(researcher)
 
-        await conductor._search_relevant_source_urls("sub-query one")
-        _, prefetched = await conductor._search_relevant_source_urls("sub-query two")
+        _, prefetched = await conductor._search_relevant_source_urls("sub-query one")
+        _, repeated = await conductor._search_relevant_source_urls("sub-query two")
 
         self.assertEqual(researcher.visited_urls, {"https://example.com/prefetched"})
         self.assertEqual(len(prefetched), 1)
+        self.assertEqual(repeated, [])
+        self.assertEqual(researcher.research_sources, [{"url": "https://example.com/prefetched"}])
 
     async def test_legacy_heuristic_prefetch_marks_visited(self):
         researcher = self.make_researcher(FakeFullContentRetriever)
         conductor = ResearchConductor(researcher)
 
-        await conductor._search_relevant_source_urls("pubmed article")
+        _, prefetched = await conductor._search_relevant_source_urls("pubmed article")
+        _, repeated = await conductor._search_relevant_source_urls("related article")
 
         self.assertEqual(researcher.visited_urls, {"https://example.com/full"})
+        self.assertEqual(len(prefetched), 1)
+        self.assertEqual(repeated, [])
+        self.assertEqual(researcher.research_sources, [{"url": "https://example.com/full"}])
 
 
 if __name__ == "__main__":

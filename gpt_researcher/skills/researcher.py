@@ -946,52 +946,34 @@ class ResearchConductor:
                         rank=rank,
                     )
 
-                    if requires_scraping is True:
-                        # Declared: anything alongside the URL is a preview,
-                        # however long, so the page is still fetched. This is
-                        # what stops a long snippet from being mistaken for
-                        # article text and the citation being lost.
+                    if (
+                        requires_scraping is True
+                        or not raw_content
+                        or (requires_scraping is not False and len(raw_content) <= 100)
+                    ):
                         new_search_urls.append(url)
-                    elif requires_scraping is False:
-                        # Declared: the retriever fetched the content itself.
-                        if raw_content:
-                            prefetched_content.append({
-                                "url": url,
-                                "raw_content": raw_content,
-                            })
-                            self.researcher.add_research_sources([{"url": url}])
-                            # #2100: prefetched URLs must join visited_urls like scraped
-                            # ones do in _get_new_urls, or repeats re-merge and references vanish.
-                            self.researcher.visited_urls.add(url)
-                            await self._emit_research_event(
-                                "content_prefetched",
-                                query=query,
-                                provider=retriever_class.__name__,
-                                url=url,
-                                rank=rank,
-                                content_length=len(raw_content),
-                            )
-                        else:
-                            new_search_urls.append(url)
-                    elif raw_content and len(raw_content) > 100:
-                        # Undeclared: legacy behaviour, unchanged.
-                        prefetched_content.append({
-                            "url": url,
-                            "raw_content": raw_content,
-                        })
-                        self.researcher.add_research_sources([{"url": url}])
-                        # #2100: same visited_urls bookkeeping as above.
-                        self.researcher.visited_urls.add(url)
+                        continue
+
+                    if url in self.researcher.visited_urls:
                         await self._emit_research_event(
-                            "content_prefetched",
+                            "candidate_deduplicated",
                             query=query,
-                            provider=retriever_class.__name__,
                             url=url,
-                            rank=rank,
-                            content_length=len(raw_content),
+                            reason_code="ALREADY_VISITED",
                         )
-                    else:
-                        new_search_urls.append(url)
+                        continue
+
+                    self.researcher.visited_urls.add(url)
+                    prefetched_content.append({"url": url, "raw_content": raw_content})
+                    self.researcher.add_research_sources([{"url": url}])
+                    await self._emit_research_event(
+                        "content_prefetched",
+                        query=query,
+                        provider=retriever_class.__name__,
+                        url=url,
+                        rank=rank,
+                        content_length=len(raw_content),
+                    )
             except Exception as e:
                 self.logger.error(f"Error searching with {retriever_class.__name__}: {e}")
                 await self._emit_research_event(

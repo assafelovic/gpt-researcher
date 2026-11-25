@@ -66,7 +66,7 @@ class PlanningSourcesTests(unittest.IsolatedAsyncioTestCase):
     async def test_full_content_is_preserved_without_fetching_url(self):
         conductor, _ = self.make_conductor(full_content=True)
         context = await self.run_research(conductor)
-        self.assertIn("Verified award winner: Example.", context)
+        self.assertEqual(context.count("Verified award winner: Example."), 1)
         fetched = [url for call in conductor.researcher.scraper_manager.browse_urls.call_args_list
                    for url in call.args[0]]
         self.assertEqual(fetched, [])
