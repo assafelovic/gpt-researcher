@@ -86,3 +86,29 @@ async def test_construct_subtopics_reasoning_models_keep_effort_and_no_temperatu
     kwargs = mock_get_llm.call_args.kwargs
     assert kwargs["reasoning_effort"] == "high"
     assert kwargs.get("temperature") is None
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("model", "options"),
+    [
+        ("kimi-k2", {"temperature": 1.0, "max_tokens": 731}),
+        ("o3", {"reasoning_effort": "low", "max_tokens": 947}),
+    ],
+)
+async def test_construct_subtopics_preserves_explicit_llm_options(model, options):
+    config = _config(model)
+    config.llm_kwargs = options.copy()
+
+    with patch("gpt_researcher.utils.llm.get_llm", return_value=_provider()) as get_llm:
+        result = await construct_subtopics(
+            task="compare storage engines",
+            data="context",
+            config=config,
+            subtopics=["existing"],
+        )
+
+    assert result.subtopics[0].task == "indexes"
+    forwarded = get_llm.call_args.kwargs
+    assert {key: forwarded[key] for key in options} == options
+    assert config.llm_kwargs == options
