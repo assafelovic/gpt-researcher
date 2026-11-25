@@ -35,6 +35,7 @@ class BaseConfig(TypedDict):
     LLM_KWARGS: dict
     EMBEDDING_KWARGS: dict
     VERBOSE: bool
+    MAX_RESEARCH_COST: Union[float, None]
     DEEP_RESEARCH_CONCURRENCY: int
     DEEP_RESEARCH_DEPTH: int
     DEEP_RESEARCH_BREADTH: int

@@ -269,6 +269,16 @@ class DeepResearchSkill:
         self.research_sources = []  # Track all research sources
         self.context = []  # Track all context
 
+    def _is_budget_exceeded(self) -> bool:
+        """Return True when the parent researcher has reached its cost budget."""
+        checker = getattr(self.researcher, "is_budget_exceeded", None)
+        return bool(checker()) if callable(checker) else False
+
+    def _remaining_budget(self) -> Optional[float]:
+        """Return remaining USD budget to propagate to nested researchers."""
+        getter = getattr(self.researcher, "get_remaining_budget", None)
+        return getter() if callable(getter) else None
+
     async def generate_search_queries(self, query: str, num_queries: int = 3) -> List[Dict[str, str]]:
         """Generate SERP queries for research"""
         messages = [
@@ -423,6 +433,19 @@ Return ONLY a JSON object using this exact schema:
         if on_progress:
             on_progress(progress)
 
+        if self._is_budget_exceeded():
+            logger.warning(
+                "Deep research cost budget reached at depth=%s; stopping descent.",
+                depth,
+            )
+            return {
+                'learnings': all_learnings,
+                'visited_urls': all_visited_urls,
+                'citations': all_citations,
+                'context': all_context,
+                'sources': all_sources,
+            }
+
         # Generate search queries
         print(f"🔎 Generating {breadth} search queries...", flush=True)
         serp_queries = await self.generate_search_queries(query, num_queries=breadth)
@@ -444,6 +467,13 @@ Return ONLY a JSON object using this exact schema:
         async def process_query(serp_query: Dict[str, str]) -> Optional[Dict[str, Any]]:
             async with semaphore:
                 try:
+                    if self._is_budget_exceeded():
+                        logger.warning(
+                            "Cost budget reached; skipping deep-research query '%s'.",
+                            serp_query['query'],
+                        )
+                        return None
+
                     progress.current_query = serp_query['query']
                     if on_progress:
                         on_progress(progress)
@@ -458,9 +488,10 @@ Return ONLY a JSON object using this exact schema:
                         config_path=self.config_path,
                         headers=self.headers,
                         visited_urls=self.visited_urls,
-                        # Propagate MCP configuration to nested researchers
+                        # Propagate MCP configuration and remaining cost budget to nested researchers
                         mcp_configs=self.researcher.mcp_configs,
-                        mcp_strategy=self.researcher.mcp_strategy
+                        mcp_strategy=self.researcher.mcp_strategy,
+                        max_cost=self._remaining_budget(),
                     )
 
                     # Conduct research
@@ -471,11 +502,22 @@ Return ONLY a JSON object using this exact schema:
                     visited = researcher.visited_urls
                     sources = researcher.research_sources
 
-                    # Process results to extract learnings and citations
-                    results = await self.process_research_results(
-                        query=serp_query['query'],
-                        context=context
-                    )
+                    # Process results to extract learnings and citations unless budget is exhausted
+                    if self._is_budget_exceeded():
+                        logger.warning(
+                            "Cost budget reached after researching '%s'; skipping learning extraction.",
+                            serp_query['query'],
+                        )
+                        results = {
+                            'learnings': [],
+                            'followUpQuestions': [],
+                            'citations': {},
+                        }
+                    else:
+                        results = await self.process_research_results(
+                            query=serp_query['query'],
+                            context=context
+                        )
 
                     # Update progress
                     progress.completed_queries += 1
@@ -547,8 +589,8 @@ Return ONLY a JSON object using this exact schema:
             if result['sources']:
                 all_sources.extend(result['sources'])
 
-            # Continue deeper if needed
-            if depth > 1:
+            # Continue deeper if needed and budget allows
+            if depth > 1 and not self._is_budget_exceeded():
                 new_breadth = max(2, breadth // 2)
                 new_depth = depth - 1
                 progress.current_depth += 1

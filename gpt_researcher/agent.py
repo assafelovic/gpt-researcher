@@ -6,6 +6,7 @@ autonomous research and report generation using LLMs and web search.
 
 import asyncio
 import json
+import math
 import os
 from collections.abc import Callable
 from typing import Any, Optional
@@ -145,6 +146,12 @@ class GPTResearcher:
                 - "disabled": Skip MCP entirely, use only web retrievers
             research_observer: Optional callable or object with an ``on_event``
                 method. Observer failures never interrupt research.
+            max_cost (float, optional): Optional maximum USD cost budget for
+                this research run. Overrides ``MAX_RESEARCH_COST`` in config
+                when provided. When reached, remaining sub-queries, recursive
+                deep-research branches, and optional pre-generated images are
+                skipped gracefully so already-gathered context can still be
+                used to write a report. Defaults to ``None`` (unlimited).
         """
         self.kwargs = kwargs
         self.query = query
@@ -181,6 +188,11 @@ class GPTResearcher:
         self.research_costs = 0.0
         self.step_costs: dict[str, float] = {}
         self._current_step: str = "general"
+        # Pop max_cost from kwargs so it is accepted as a keyword option without
+        # shifting existing positional parameters or leaking into LLM kwargs.
+        max_cost = self.kwargs.pop("max_cost", None)
+        self.max_cost: float | None = self._resolve_max_cost(max_cost)
+        self._budget_exceeded_notified: bool = False
         self.log_handler = log_handler
         self.research_observer = research_observer
         self.prompt_family = get_prompt_family(prompt_family or self.cfg.prompt_family, self.cfg)
@@ -418,7 +430,7 @@ class GPTResearcher:
         
         # Pre-generate images if enabled (happens BEFORE report writing for better UX)
         self.available_images = []
-        if self.image_generator and self.image_generator.is_enabled():
+        if self.image_generator and self.image_generator.is_enabled() and not self.is_budget_exceeded():
             await self._log_event("research", step="planning_images")
             # Convert context list to string for analysis
             context_str = "\n\n".join(self.context) if isinstance(self.context, list) else str(self.context)
@@ -779,6 +791,22 @@ class GPTResearcher:
         """
         return self.context
 
+    def _resolve_max_cost(self, max_cost: float | None) -> float | None:
+        """Resolve and validate the optional USD cost budget."""
+        resolved = (
+            max_cost
+            if max_cost is not None
+            else getattr(self.cfg, "max_research_cost", None)
+        )
+        if resolved is None:
+            return None
+        if isinstance(resolved, bool) or not isinstance(resolved, (int, float)):
+            raise ValueError("max_cost must be a finite non-negative number or None")
+        resolved_float = float(resolved)
+        if resolved_float < 0 or math.isnan(resolved_float) or math.isinf(resolved_float):
+            raise ValueError("max_cost must be a finite non-negative number or None")
+        return resolved_float
+
     def get_costs(self) -> float:
         """Get the total accumulated API costs.
 
@@ -786,6 +814,20 @@ class GPTResearcher:
             Total cost in USD.
         """
         return self.research_costs
+
+    def is_budget_exceeded(self) -> bool:
+        """Return True when an active cost budget has been reached or exceeded."""
+        max_cost = getattr(self, "max_cost", None)
+        if max_cost is None:
+            return False
+        return self.research_costs >= max_cost
+
+    def get_remaining_budget(self) -> float | None:
+        """Return remaining USD budget, or None when no budget is configured."""
+        max_cost = getattr(self, "max_cost", None)
+        if max_cost is None:
+            return None
+        return max(0.0, max_cost - self.research_costs)
 
     def get_step_costs(self) -> dict[str, float]:
         """Get a breakdown of API costs per research step.
@@ -802,6 +844,17 @@ class GPTResearcher:
             verbose: Whether to enable verbose output.
         """
         self.verbose = verbose
+
+    def _schedule_background_task(self, coro) -> None:
+        """Schedule a fire-and-forget coroutine if an event loop is running."""
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            coro.close()
+            return
+        task = loop.create_task(coro)
+        _PENDING_LOG_TASKS.add(task)
+        task.add_done_callback(_PENDING_LOG_TASKS.discard)
 
     def add_costs(self, cost: float) -> None:
         """Add to the accumulated API costs.
@@ -820,14 +873,30 @@ class GPTResearcher:
         step = self._current_step
         self.step_costs[step] = self.step_costs.get(step, 0.0) + cost
         if self.log_handler:
-            try:
-                loop = asyncio.get_running_loop()
-            except RuntimeError:
-                return
-            task = loop.create_task(self._log_event("research", step="cost_update", details={
-                "cost": cost,
-                "total_cost": self.research_costs,
-                "step_name": step,
-            }))
-            _PENDING_LOG_TASKS.add(task)
-            task.add_done_callback(_PENDING_LOG_TASKS.discard)
+            self._schedule_background_task(
+                self._log_event("research", step="cost_update", details={
+                    "cost": cost,
+                    "total_cost": self.research_costs,
+                    "step_name": step,
+                })
+            )
+        if self.is_budget_exceeded() and not getattr(self, "_budget_exceeded_notified", False):
+            self._budget_exceeded_notified = True
+            max_cost = getattr(self, "max_cost", None)
+            if self.log_handler:
+                self._schedule_background_task(
+                    self._log_event("research", step="budget_exceeded", details={
+                        "max_cost": max_cost,
+                        "total_cost": self.research_costs,
+                        "step_name": step,
+                    })
+                )
+            if getattr(self, "research_observer", None) is not None:
+                self._schedule_background_task(
+                    self.emit_research_event(
+                        "budget_exceeded",
+                        max_cost=max_cost,
+                        total_cost=self.research_costs,
+                        step_name=step,
+                    )
+                )

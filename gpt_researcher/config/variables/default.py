@@ -36,6 +36,8 @@ DEFAULT_CONFIG: BaseConfig = {
     "LLM_KWARGS": {},
     "EMBEDDING_KWARGS": {},
     "VERBOSE": False,
+    # Optional per-run USD cost cap; None disables budget enforcement.
+    "MAX_RESEARCH_COST": None,
     # Deep research specific settings
     "DEEP_RESEARCH_BREADTH": 3,
     "DEEP_RESEARCH_DEPTH": 2,

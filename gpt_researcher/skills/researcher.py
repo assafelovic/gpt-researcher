@@ -56,6 +56,11 @@ class ResearchConductor:
             **fields,
         )
 
+    def _is_budget_exceeded(self) -> bool:
+        """Return True when the parent researcher has reached its cost budget."""
+        checker = getattr(self.researcher, "is_budget_exceeded", None)
+        return bool(checker()) if callable(checker) else False
+
     async def _get_initial_search_results(self, query, query_domains=None):
         await stream_output(
             "logs",
@@ -178,12 +183,14 @@ class ResearchConductor:
                     f"🧐 I was unable to find relevant context in the provided sources...",
                     self.researcher.websocket,
                 )
-            if self.researcher.complement_source_urls:
+            if self.researcher.complement_source_urls and not self._is_budget_exceeded():
                 self.logger.info("Complementing with web search")
                 additional_research = await self._get_context_by_web_search(self.researcher.query, [], self.researcher.query_domains)
                 research_data = " ".join(
                     part for part in (research_data, additional_research) if part
                 )
+            elif self.researcher.complement_source_urls:
+                self.logger.warning("Cost budget reached; skipping complementary web search")
         elif self.researcher.report_source == ReportSource.Web.value:
             self.logger.info("Using web search with all configured retrievers")
             research_data = await self._get_context_by_web_search(self.researcher.query, [], self.researcher.query_domains)
@@ -241,7 +248,7 @@ class ResearchConductor:
 
         # Rank and curate the sources
         self.researcher.context = research_data
-        if self.researcher.cfg.curate_sources:
+        if self.researcher.cfg.curate_sources and not self._is_budget_exceeded():
             self.logger.info("Curating sources")
             curated = await self.researcher.source_curator.curate_sources(research_data)
             # curate_sources() returns List[dict] with Title/Content/Source keys.
@@ -300,9 +307,15 @@ class ResearchConductor:
             context: List of context
         """
         self.logger.info(f"Starting vectorstore search for query: {query}")
+        if self._is_budget_exceeded():
+            self.logger.warning("Cost budget reached; skipping vectorstore search")
+            return []
         context = []
         # Generate Sub-Queries including original query
         sub_queries = await self.plan_research(query)
+        if self._is_budget_exceeded():
+            self.logger.warning("Cost budget reached after planning; skipping vectorstore sub-queries")
+            return []
         # If this is not part of a sub researcher, add original query to research for better results
         if self.researcher.report_type != "subtopic_report":
             sub_queries.append(query)
@@ -333,6 +346,9 @@ class ResearchConductor:
             context: List of context
         """
         self.logger.info(f"Starting web search for query: {query}")
+        if self._is_budget_exceeded():
+            self.logger.warning("Cost budget reached; skipping web search")
+            return []
         
         if scraped_data is None:
             scraped_data = []
@@ -396,6 +412,9 @@ class ResearchConductor:
         initial_results = await self._get_initial_search_results(query, query_domains)
         sub_queries = await self.plan_research(query, query_domains, search_results=initial_results)
         self.logger.info(f"Generated sub-queries: {sub_queries}")
+        if self._is_budget_exceeded():
+            self.logger.warning("Cost budget reached after planning; stopping further web search")
+            return []
         
         # If this is not part of a sub researcher, add original query to research for better results
         if self.researcher.report_type != "subtopic_report":
@@ -550,6 +569,9 @@ class ResearchConductor:
 
     async def _process_sub_query(self, sub_query: str, scraped_data: list = [], query_domains: list = []):
         """Takes in a sub query and scrapes urls based on it and gathers context."""
+        if self._is_budget_exceeded():
+            self.logger.warning(f"Cost budget reached; skipping sub-query '{sub_query}'")
+            return ""
         if self.json_handler:
             self.json_handler.log_event("sub_query", {
                 "query": sub_query,
@@ -837,6 +859,9 @@ class ResearchConductor:
         Returns:
             str: The context gathered from search
         """
+        if self._is_budget_exceeded():
+            self.logger.warning(f"Cost budget reached; skipping vectorstore sub-query '{sub_query}'")
+            return ""
         if self.researcher.verbose:
             await stream_output(
                 "logs",
