@@ -116,6 +116,34 @@ class PlanningSourcesTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(context, "")
         conductor.researcher.scraper_manager.browse_urls.assert_not_awaited()
 
+    async def test_disabled_mcp_is_skipped_during_planning(self):
+        mcp_queries = []
+
+        class MCPRetriever:
+            def __init__(self, query, query_domains=None, researcher=None):
+                self.query = query
+
+            def search(self, max_results=5):
+                mcp_queries.append(self.query)
+                return []
+
+        for use_web_retriever in (True, False):
+            with self.subTest(use_web_retriever=use_web_retriever):
+                mcp_queries.clear()
+                conductor, web_queries = self.make_conductor(report_type="subtopic_report")
+                web_retrievers = conductor.researcher.retrievers if use_web_retriever else []
+                conductor.researcher.retrievers = [MCPRetriever, *web_retrievers]
+                conductor.researcher.mcp_strategy = "disabled"
+
+                context = await self.run_research(conductor)
+
+                self.assertEqual(mcp_queries, [])
+                if use_web_retriever:
+                    self.assertEqual(web_queries, ["original question", "targeted follow-up"])
+                    self.assertIn("Verified award winner: Example.", context)
+                else:
+                    self.assertEqual(context, [])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -56,7 +56,22 @@ class ResearchConductor:
             **fields,
         )
 
+    def _get_planning_retrievers(self):
+        retrievers = self.researcher.retrievers
+        if self._get_mcp_strategy() == "disabled":
+            return [
+                retriever
+                for retriever in retrievers
+                if "mcpretriever" not in retriever.__name__.lower()
+            ]
+        return retrievers
+
     async def _get_initial_search_results(self, query, query_domains=None):
+        retrievers = self._get_planning_retrievers()
+        if not retrievers:
+            return []
+        retriever = retrievers[0]
+
         await stream_output(
             "logs",
             "planning_research",
@@ -67,7 +82,7 @@ class ResearchConductor:
         try:
             search_results = await get_search_results(
                 query,
-                self.researcher.retrievers[0],
+                retriever,
                 query_domains,
                 researcher=self.researcher,
                 max_results=self.researcher.cfg.max_search_results_per_query,
@@ -76,7 +91,7 @@ class ResearchConductor:
             await self._emit_research_event(
                 "search_failed",
                 query=query,
-                provider=self.researcher.retrievers[0].__name__,
+                provider=retriever.__name__,
                 reason_code=type(exc).__name__,
             )
             raise
@@ -95,7 +110,7 @@ class ResearchConductor:
             self.researcher.websocket,
         )
 
-        retriever_names = [r.__name__ for r in self.researcher.retrievers]
+        retriever_names = [r.__name__ for r in self._get_planning_retrievers()]
         # Remove duplicate logging - this will be logged once in conduct_research instead
 
         outline = await plan_research_outline(
@@ -162,7 +177,7 @@ class ResearchConductor:
                 
         # Check if MCP retrievers are configured
         has_mcp_retriever = any("mcpretriever" in r.__name__.lower() for r in self.researcher.retrievers)
-        if has_mcp_retriever:
+        if has_mcp_retriever and self._get_mcp_strategy() != "disabled":
             self.logger.info("MCP retrievers configured and will be used with standard research flow")
 
         # Conduct research based on the source type
@@ -874,7 +889,8 @@ class ResearchConductor:
 
     async def _get_context_from_initial_results(self, query, query_domains, initial_results):
         """Fetch planning sources through normal retrieval; never treat snippets as pages."""
-        if "mcpretriever" in self.researcher.retrievers[0].__name__.lower():
+        retrievers = self._get_planning_retrievers()
+        if not retrievers or "mcpretriever" in retrievers[0].__name__.lower():
             return ""
         try:
             data = await self._scrape_data_by_urls(
@@ -895,9 +911,11 @@ class ResearchConductor:
 
         # Iterate through the currently set retrievers
         # This allows the method to work when retrievers are temporarily modified
-        # Initial results came from the first retriever only. Reuse its content
+        # Initial results came from the first planning retriever. Reuse its content
         # contract without issuing another search or attributing results to others.
-        retrievers = self.researcher.retrievers if initial_results is None else self.researcher.retrievers[:1]
+        retrievers = self.researcher.retrievers
+        if initial_results is not None:
+            retrievers = self._get_planning_retrievers()[:1]
         for retriever_class in retrievers:
             # Skip MCP retrievers as they don't provide URLs for scraping
             if "mcpretriever" in retriever_class.__name__.lower():
