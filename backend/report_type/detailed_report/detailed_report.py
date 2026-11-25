@@ -108,11 +108,19 @@ class DetailedReport:
 
         return all_subtopics
 
+    def _is_budget_exceeded(self) -> bool:
+        checker = getattr(self.gpt_researcher, "is_budget_exceeded", None)
+        return bool(checker()) if callable(checker) else False
+
+    def _remaining_budget(self) -> Optional[float]:
+        getter = getattr(self.gpt_researcher, "get_remaining_budget", None)
+        return getter() if callable(getter) else None
+
     async def _generate_subtopic_reports(self, subtopics: List[Dict]) -> tuple:
         subtopic_reports = []
         subtopics_report_body = ""
 
-        if self.gpt_researcher.is_budget_exceeded():
+        if self._is_budget_exceeded():
             return subtopic_reports, subtopics_report_body
 
         # Research is independent per subtopic, but each write must see the sections written before it :-)
@@ -154,7 +162,7 @@ class DetailedReport:
             # Propagate MCP configuration and remaining cost budget to follow-up researchers
             mcp_configs=self.gpt_researcher.mcp_configs,
             mcp_strategy=self.gpt_researcher.mcp_strategy,
-            max_cost=self.gpt_researcher.get_remaining_budget(),
+            max_cost=self._remaining_budget(),
         )
 
         # Propagate max_search_results override to subtopic researcher
