@@ -24,6 +24,7 @@
 | SearchAPI | `SearchApiSearch` | `SEARCHAPI_API_KEY` |
 | Exa | `ExaSearch` | `EXA_API_KEY` |
 | GroundRoute | `GroundRouteSearch` | `GROUNDROUTE_API_KEY` |
+| NestDaddy | `NestDaddySearch` | `NESTDADDY_API_KEY` |
 | fastCRW | `CRWRetriever` | `CRW_API_KEY` |
 | BoCha | `BoChaSearch` | `BOCHA_API_KEY` |
 | Xquik | `XquikSearch` | `XQUIK_API_KEY` |
