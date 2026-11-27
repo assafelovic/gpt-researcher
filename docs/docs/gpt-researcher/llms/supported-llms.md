@@ -29,6 +29,8 @@ The following LLMs are supported by GPTR (though you'll need to install the rele
 
 OpenAI-compatible local servers such as [Rapid-MLX](./llms.md#rapid-mlx) use the existing `openai` LLM provider and `custom` embedding provider. See the linked configuration example for local chat and embeddings on Apple Silicon.
 
+OpenAI-compatible cloud gateways such as [Straitly](./llms.md#straitly) work through the existing `openai` LLM provider by setting `OPENAI_BASE_URL` and `OPENAI_API_KEY`.
+
 If you'd like to know the name of the langchain package for each LLM, you can check the [Langchain documentation](https://python.langchain.com/v0.2/docs/integrations/platforms/), or run GPTR as is and inspect the error message.
 
 The GPTR LLM Module is built on top of the [Langchain LLM Module](https://python.langchain.com/v0.2/docs/integrations/llms/).
