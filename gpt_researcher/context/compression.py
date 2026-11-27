@@ -134,7 +134,7 @@ class ContextCompressor:
             A ContextualCompressionRetriever configured with text splitting
             and embedding-based filtering.
         """
-        splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
+        splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100, add_start_index=True)
         relevance_filter = EmbeddingsFilter(embeddings=self.embeddings,
                                             similarity_threshold=self.similarity_threshold)
         pipeline_compressor = DocumentCompressorPipeline(
@@ -188,6 +188,12 @@ class ContextCompressor:
         if cost_callback:
             cost_callback(estimate_embedding_cost(model=OPENAI_EMBEDDING_MODEL, docs=self.documents))
         relevant_docs = await asyncio.to_thread(compressed_docs.invoke, query, **self.kwargs)
+        # What was chosen, for observers (see ``select_context``). EmbeddingsFilter
+        # leaves its similarity in ``state``; the chunk count isn't exposed.
+        self.selected = [
+            (doc, getattr(doc, "state", {}).get("query_similarity_score"))
+            for doc in relevant_docs[:max_results]
+        ]
         return self.prompt_family.pretty_print_docs(relevant_docs, max_results)
 
 

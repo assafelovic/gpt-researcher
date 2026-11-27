@@ -157,7 +157,8 @@ class JevContextCompressor:
 
     def _chunks(self) -> list[Document]:
         pages = SearchAPIRetriever(pages=self.documents).invoke("")
-        splitter = RecursiveCharacterTextSplitter(chunk_size=self.chunk_size, chunk_overlap=self.chunk_size // 10)
+        splitter = RecursiveCharacterTextSplitter(
+            chunk_size=self.chunk_size, chunk_overlap=self.chunk_size // 10, add_start_index=True)
         return [chunk for chunk in splitter.split_documents(pages) if chunk.page_content.strip()]
 
     async def rank(self, query: str) -> list[ScoredChunk]:
@@ -186,5 +187,8 @@ class JevContextCompressor:
         ranked = await self.rank(query)
         if cost_callback:
             cost_callback(self.client.cost)
-        selected = [c.document for c in ranked if c.score >= self.min_score][:max_results]
-        return self.prompt_family.pretty_print_docs(selected, max_results)
+        kept = [c for c in ranked if c.score >= self.min_score][:max_results]
+        # What was chosen and why, for observers (see ``select_context``).
+        self.candidate_chunks = len(ranked)
+        self.selected = [(c.document, c.score) for c in kept]
+        return self.prompt_family.pretty_print_docs([c.document for c in kept], max_results)
