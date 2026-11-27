@@ -25,6 +25,7 @@ import logging
 import hashlib
 
 from .multi_agent_runner import run_multi_agent_task
+from .ws_security import restrict_client_mcp_configs
 
 # Import chat agent
 try:
@@ -147,6 +148,8 @@ async def handle_start_command(websocket, data: str, manager):
         mcp_configs,
         max_search_results,
     ) = extract_command_data(json_data)
+    # No-op unless the operator sets RESTRICT_CLIENT_MCP_STDIO=true.
+    mcp_configs = restrict_client_mcp_configs(mcp_configs)
 
     if not task or not report_type:
         print("Error: Missing task or report_type")

@@ -28,6 +28,7 @@ from server.server_utils import (
     execute_multi_agents, handle_websocket_communication
 )
 from server.agent_discovery import build_agent_discovery_document
+from server.ws_security import is_ws_origin_allowed
 
 from server.websocket_manager import run_agent
 from utils import write_md_to_word, write_md_to_pdf
@@ -414,6 +415,12 @@ async def delete_file(filename: str):
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
+    # CORS does not cover WebSockets, so check the browser-supplied Origin here.
+    origin = websocket.headers.get("origin")
+    if not is_ws_origin_allowed(origin, ALLOWED_ORIGINS):
+        logger.warning("Rejected WebSocket from origin %r; add it to ALLOWED_WS_ORIGINS to allow it", origin)
+        await websocket.close(code=1008)
+        return
     await manager.connect(websocket)
     try:
         await handle_websocket_communication(websocket, manager)
