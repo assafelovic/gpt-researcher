@@ -92,6 +92,9 @@ def validate_url(url: str, *, allow_private: bool | None = None) -> str:
     if not host:
         raise UnsafeURLError("URL must include a valid host.")
 
+    if "\\" in parsed.netloc:
+        raise UnsafeURLError("URL authority must not contain backslashes.")
+
     if allow_private is None:
         allow_private = _private_urls_allowed()
     if allow_private:
