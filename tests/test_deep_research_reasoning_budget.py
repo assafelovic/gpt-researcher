@@ -59,6 +59,37 @@ async def test_process_research_results_uses_configured_strategic_token_limit(
     [
         ("generate_search_queries", ("topic",)),
         ("generate_research_plan", ("topic",)),
+    ],
+)
+async def test_planning_calls_use_configured_strategic_token_limit(
+    monkeypatch, method_name, args
+):
+    # Without this they fell back to create_chat_completion's 4000-token
+    # default, which reasoning can use up before any answer text (#2251).
+    skill = make_skill(strategic_token_limit=8000)
+    captured = {}
+
+    async def fake_create_chat_completion(**kwargs):
+        captured.update(kwargs)
+        return '{"queries": [], "questions": []}'
+
+    monkeypatch.setattr(
+        deep_research_module,
+        "create_chat_completion",
+        fake_create_chat_completion,
+    )
+
+    await getattr(skill, method_name)(*args)
+
+    assert captured["max_tokens"] == 8000
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("method_name", "args"),
+    [
+        ("generate_search_queries", ("topic",)),
+        ("generate_research_plan", ("topic",)),
         ("process_research_results", ("topic", "context")),
     ],
 )

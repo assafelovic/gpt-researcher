@@ -297,6 +297,8 @@ class DeepResearchSkill:
             model=self.researcher.cfg.strategic_llm_model,
             reasoning_effort=self.researcher.cfg.reasoning_effort,
             temperature=0.4,
+            # Needs headroom for reasoning tokens on reasoning models
+            max_tokens=getattr(self.researcher.cfg, "strategic_token_limit", 8000),
             llm_kwargs=self.researcher.cfg.llm_kwargs,
             cost_callback=getattr(self.researcher, "add_costs", None),
         )
@@ -352,6 +354,8 @@ Return ONLY a JSON object using this exact schema:
             model=self.researcher.cfg.strategic_llm_model,
             reasoning_effort=ReasoningEfforts.High.value,
             temperature=0.4,
+            # Needs headroom for reasoning tokens on reasoning models
+            max_tokens=getattr(self.researcher.cfg, "strategic_token_limit", 8000),
             llm_kwargs=self.researcher.cfg.llm_kwargs,
             cost_callback=getattr(self.researcher, "add_costs", None),
         )
