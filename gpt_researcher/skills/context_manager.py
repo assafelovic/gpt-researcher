@@ -12,6 +12,7 @@ from ..actions.utils import stream_output
 from ..context.compression import VectorstoreCompressor, WrittenContentCompressor
 from ..context.lexical import rank_written_sections
 from ..context.select import select_context
+from ..observability import emit_research_event
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +54,9 @@ class ContextManager:
                 self.researcher.websocket,
             )
 
-        return await select_context(
+        observer = getattr(self.researcher, "research_observer", None)
+        selection = {}
+        context = await select_context(
             query,
             pages,
             self.researcher.cfg,
@@ -61,7 +64,11 @@ class ContextManager:
             prompt_family=self.researcher.prompt_family,
             cost_callback=self.researcher.add_costs,
             embeddings=lambda: self.researcher.memory.get_embeddings(),
+            on_selected=selection.update if observer is not None else None,
         )
+        if selection:
+            await emit_research_event(observer, "context_selected", query=query, **selection)
+        return context
 
     async def get_similar_content_by_query_with_vectorstore(self, query: str, filter: dict | None) -> str:
         """Get similar content from vectorstore based on the query.
