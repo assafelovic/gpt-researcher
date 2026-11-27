@@ -89,7 +89,8 @@ class LexicalContextCompressor:
 
     def _chunks(self) -> list[Document]:
         pages = SearchAPIRetriever(pages=self.documents).invoke("")
-        splitter = RecursiveCharacterTextSplitter(chunk_size=self.chunk_size, chunk_overlap=self.chunk_size // 10)
+        splitter = RecursiveCharacterTextSplitter(
+            chunk_size=self.chunk_size, chunk_overlap=self.chunk_size // 10, add_start_index=True)
         return [c for c in splitter.split_documents(pages) if c.page_content.strip()]
 
     def select(self, query: str, max_results: int) -> list[Document]:
@@ -98,9 +99,13 @@ class LexicalContextCompressor:
         best = max(scores, default=0.0)
         if best <= 0:
             # No keyword overlap at all: fall back to the pages' opening chunks.
-            return chunks[:max_results]
-        ranked = sorted(range(len(chunks)), key=lambda i: (-scores[i], i))
-        keep = [i for i in ranked if scores[i] >= self.relative_threshold * best][:max_results]
+            keep = list(range(len(chunks)))[:max_results]
+        else:
+            ranked = sorted(range(len(chunks)), key=lambda i: (-scores[i], i))
+            keep = [i for i in ranked if scores[i] >= self.relative_threshold * best][:max_results]
+        # What was chosen and why, for observers (see ``select_context``).
+        self.candidate_chunks = len(chunks)
+        self.selected = [(chunks[i], scores[i]) for i in keep]
         return [chunks[i] for i in keep]
 
     async def async_get_context(self, query: str, max_results: int = 10, cost_callback=None) -> str:
