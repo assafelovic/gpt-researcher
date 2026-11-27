@@ -24,6 +24,29 @@ from .costs import calculate_llm_cost
 from .validators import Subtopics
 
 
+# Sanity guard against absurd max_tokens values (e.g., env var typos).
+MAX_TOKENS_GUARD = 200_000
+
+
+def _hit_output_limit(response_metadata: dict[str, Any] | None) -> bool:
+    """Whether the provider says the response stopped at the output limit.
+
+    LangChain copies the provider's stop signal into ``response_metadata``:
+    ``finish_reason: "length"`` (OpenAI Chat Completions and compatible APIs),
+    ``stop_reason: "max_tokens"`` (Anthropic), ``finish_reason: "MAX_TOKENS"``
+    (Gemini), ``done_reason: "length"`` (Ollama) and
+    ``incomplete_details.reason: "max_output_tokens"`` (OpenAI Responses API).
+    """
+    if not response_metadata:
+        return False
+    for key in ("finish_reason", "stop_reason", "done_reason"):
+        value = response_metadata.get(key)
+        if isinstance(value, str) and value.lower() in ("length", "max_tokens"):
+            return True
+    details = response_metadata.get("incomplete_details")
+    return isinstance(details, dict) and details.get("reason") == "max_output_tokens"
+
+
 def get_llm(llm_provider: str, **kwargs):
     """Get an LLM provider instance.
 
@@ -72,7 +95,7 @@ async def create_chat_completion(
         raise ValueError("Model cannot be None")
     # Sanity guard against absurd values (e.g., env var typos). The actual
     # per-model output limits are enforced by the upstream provider.
-    if max_tokens is not None and max_tokens > 200_000:
+    if max_tokens is not None and max_tokens > MAX_TOKENS_GUARD:
         raise ValueError(
             f"max_tokens={max_tokens} exceeds the largest output limit of "
             "any currently available model (128k as of late 2025). "
@@ -119,6 +142,7 @@ async def create_chat_completion(
     # create response
     max_attempts = 1 if (stream and websocket is not None) else 10
     last_exception: Exception | None = None
+    raised_limit = False
     for attempt in range(1, max_attempts + 1):
         try:
             response = await provider.get_chat_response(
@@ -147,6 +171,32 @@ async def create_chat_completion(
                 request_options=provider_kwargs,
             )
             cost_callback(llm_costs)
+
+        # An empty answer cut off by the output limit (reasoning used the
+        # whole budget) fails the same way when resent unchanged. Retry once
+        # with double the limit, then report it instead of retrying (#2251).
+        if not response and _hit_output_limit(provider.last_response_metadata):
+            limit = provider_kwargs.get('max_tokens')
+            larger = min(limit * 2, MAX_TOKENS_GUARD) if limit else None
+            if raised_limit or attempt >= max_attempts or not larger or larger <= limit:
+                logging.getLogger(__name__).error(
+                    f"LLM response was cut off by the output limit (max_tokens={limit})"
+                )
+                raise RuntimeError(
+                    f"{llm_provider} {model} used its whole output limit "
+                    f"(max_tokens={limit}) without returning any text, usually on "
+                    "reasoning. Raise the FAST_TOKEN_LIMIT / SMART_TOKEN_LIMIT / "
+                    "STRATEGIC_TOKEN_LIMIT setting for this model, or lower "
+                    "REASONING_EFFORT."
+                )
+            logging.getLogger(__name__).warning(
+                f"LLM response was cut off by the output limit (max_tokens={limit}); "
+                f"retrying once with max_tokens={larger}"
+            )
+            raised_limit = True
+            provider_kwargs['max_tokens'] = larger
+            provider = get_llm(llm_provider, **provider_kwargs)
+            continue
 
         if not response:
             last_exception = RuntimeError("Empty response from LLM provider")
