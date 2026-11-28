@@ -4,7 +4,7 @@ Quality Evaluation Runner
 Runs GPT-Researcher on a set of queries and evaluates each report across
 six quality metrics:
 
-  - Citation Ratio        : used sources cited in the report            ($0)
+  - Citation Faithfulness: listed references actually cited in the body ($0)
   - Source Diversity      : domain variety (ratio + Shannon entropy)     ($0)
   - Source Authority      : heuristic + optional LLM authority score     ($0 / ~$0.01/q)
   - Subtopic Coverage     : LLM-judged coverage of expected subtopics (~$0.02/q)
@@ -29,12 +29,16 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from dotenv import load_dotenv
-from langchain_openai import ChatOpenAI
 
 from gpt_researcher.agent import GPTResearcher
 from gpt_researcher.utils.enum import ReportType, ReportSource, Tone
 
-from evals.quality_eval.metrics import evaluate_report, skipped as _skipped, is_skipped as _is_skipped
+from evals.judge import judge_model_name, make_judge
+from gpt_researcher.config import Config
+from evals.quality_eval.pipeline_probe import PipelineProbe, sources_to_score
+from evals.quality_eval.metrics import (
+    CONTEXT_CHARS, evaluate_report, skipped as _skipped, is_skipped as _is_skipped,
+)
 
 try:
     from evals.hallucination_eval.evaluate import HallucinationEvaluator
@@ -42,7 +46,6 @@ try:
 except ImportError:
     _HALLUCINATION_AVAILABLE = False
 
-GRADER_MODEL_NAME = "gpt-4-turbo"
 LOGS_DIR = Path(__file__).parent / "logs"
 QUERIES_FILE = Path(__file__).parent.parent / "hallucination_eval" / "inputs" / "search_queries.jsonl"
 
@@ -92,9 +95,14 @@ async def evaluate_single_query(
         tone=Tone.Objective,
         verbose=False,
     )
-    context  = await researcher.conduct_research()
-    report   = await researcher.write_report()
-    sources  = researcher.get_source_urls()
+    # Same instrumentation as benchmark.py, so both runners score source
+    # quality on the pages that actually loaded rather than on every URL the
+    # retriever proposed.
+    with PipelineProbe() as probe:
+        context  = await researcher.conduct_research()
+        report   = await researcher.write_report()
+    visited  = researcher.get_source_urls()
+    sources, sources_basis = sources_to_score(probe.trace, visited)
     cost     = researcher.get_costs()
     latency  = round(time.perf_counter() - t_start, 2)
 
@@ -120,7 +128,9 @@ async def evaluate_single_query(
                 h_eval = HallucinationEvaluator()
                 h_raw  = h_eval.evaluate_response(
                     model_output=report,
-                    source_text=source_text[:8000],
+                    # Same evidence window as unsupported_claim: a shorter cut
+                    # flags claims whose support was simply not shown.
+                    source_text=source_text[:CONTEXT_CHARS],
                 )
                 hallucination = {
                     "is_hallucination": h_raw.get("is_hallucination"),
@@ -136,6 +146,9 @@ async def evaluate_single_query(
         "latency_seconds":   latency,
         "cost":              cost,
         "source_count":      len(sources),
+        "visited_count":     len(visited),
+        "sources_basis":     sources_basis,   # "scraped", or "visited" if the probe saw nothing
+        "pipeline_funnel":   probe.trace.funnel(),
         "report_length":     len(report),
         "citation_faithfulness": citation,
         "source_diversity":  diversity,
@@ -190,11 +203,7 @@ async def main(num_examples: int, run_subtopic: bool, run_hallucination: bool, r
 
     run_start     = time.perf_counter()
     run_timestamp = datetime.now(timezone.utc).isoformat()
-    grader_model  = ChatOpenAI(
-        temperature=0,
-        model_name=GRADER_MODEL_NAME,
-        openai_api_key=os.getenv("OPENAI_API_KEY"),
-    )
+    grader_model  = make_judge()
 
     if run_hallucination and not _HALLUCINATION_AVAILABLE:
         print("Warning: judges library not installed — hallucination metric will be skipped.")
@@ -221,8 +230,8 @@ async def main(num_examples: int, run_subtopic: bool, run_hallucination: bool, r
     n = len(successful)
 
     if n == 0:
-        print("No successful results.")
-        return
+        # Exit non-zero: a run that scored nothing is a failed run.
+        raise SystemExit("No successful results.")
 
     # --- Aggregate ---
     def avg(key_path):
@@ -277,8 +286,10 @@ async def main(num_examples: int, run_subtopic: bool, run_hallucination: bool, r
         "run_metadata": {
             "timestamp":            run_timestamp,
             "git_commit":           _get_git_commit(),
-            "grader_model":         GRADER_MODEL_NAME,
-            "researcher_model":     os.getenv("SMART_LLM", "openai:gpt-4.1"),
+            "judge_model":         judge_model_name(),
+            # Resolved the way GPTResearcher resolves it, so an unset SMART_LLM
+            # records the library default rather than a stale guess.
+            "worker_model":     Config().smart_llm,
             "num_examples":         num_examples,
             "subtopic_enabled":       run_subtopic,
             "hallucination_enabled":       run_hallucination,

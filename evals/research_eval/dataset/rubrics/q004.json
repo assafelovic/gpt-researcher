@@ -1,0 +1,41 @@
+{
+ "insight": [
+  {
+   "criterion": "Evidence-weighted leadership",
+   "description": "Distinguishes sustained commercial operations and demonstrated delivery activity from pilots, plans, or announcements when judging which vendors lead.",
+   "weight": 0.35
+  },
+  {
+   "criterion": "Comparative positioning",
+   "description": "Draws meaningful comparisons among vendors’ competitive strengths and limitations rather than presenting them as an undifferentiated list.",
+   "weight": 0.25
+  },
+  {
+   "criterion": "Operating-context effects",
+   "description": "Explains how differences in operating environments, including regulatory conditions, affect vendors’ ability to deploy and compete.",
+   "weight": 0.2
+  },
+  {
+   "criterion": "Calibrated conclusion",
+   "description": "Offers a clear, appropriately qualified judgment about who leads and recognizes where leadership may vary or remain uncertain.",
+   "weight": 0.2
+  }
+ ],
+ "readability": [
+  {
+   "criterion": "Clear organization and flow",
+   "description": "Presents ideas in a coherent structure with transitions that make the reasoning easy to follow.",
+   "weight": 0.35
+  },
+  {
+   "criterion": "Precise comparisons",
+   "description": "Uses clear, parallel phrasing when comparing vendors so readers can readily understand how the stated differences relate.",
+   "weight": 0.35
+  },
+  {
+   "criterion": "Fluent, unambiguous prose",
+   "description": "Uses concise sentences and precise wording, avoiding confusing references, repetition, and unnecessary jargon for a student or junior researcher in the field.",
+   "weight": 0.3
+  }
+ ]
+}

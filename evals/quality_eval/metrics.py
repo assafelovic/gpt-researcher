@@ -236,15 +236,22 @@ async def _llm_score_domains(domains: list[str], grader_model) -> list[dict]:
     prompt = _LLM_AUTHORITY_PROMPT.format(
         domains="\n".join(f"- {d}" for d in domains)
     )
+    """Score domains in one call. Returns [] when the call or its parse fails.
+
+    An empty result sends every domain to the rule fallback in
+    source_authority(), the same scores used when no grader is given, rather
+    than to a flat 0.4 that looked like a verdict on the domains themselves.
+    """
     try:
         resp    = await grader_model.ainvoke(prompt)
         results = _parse_json(resp.content)
         return [
-            {"domain": r["domain"], "score": float(r["score"]), "tier": f"llm:{r.get('reason','')}"}
+            {"domain": str(r["domain"]).lower().removeprefix("www."),
+             "score": float(r["score"]), "tier": f"llm:{r.get('reason','')}"}
             for r in results
         ]
     except Exception:
-        return [{"domain": d, "score": 0.4, "tier": "unknown"} for d in domains]
+        return []
 
 
 async def source_authority(source_urls: list[str], grader_model=None) -> dict:
@@ -272,6 +279,7 @@ async def source_authority(source_urls: list[str], grader_model=None) -> dict:
         else:
             deferred.append(domain)
 
+    unscored = []   # deferred domains the grader was asked about but did not score
     if deferred:
         score_map = {}
         if grader_model:
@@ -281,6 +289,8 @@ async def source_authority(source_urls: list[str], grader_model=None) -> dict:
         for domain in deferred:
             entry = score_map.get(domain)
             if entry is None:
+                if grader_model:
+                    unscored.append(domain)
                 fb_score, fb_tier = _fallback_score(domain)
                 entry = {"domain": domain, "score": fb_score, "tier": fb_tier}
             breakdown.append(dict(entry))
@@ -293,6 +303,9 @@ async def source_authority(source_urls: list[str], grader_model=None) -> dict:
     return {
         "avg_authority_score": round(avg, 3),
         "breakdown": sorted(breakdown, key=lambda x: -x["score"]),
+        # Domains that fell back to the rule table because the grader call
+        # failed or skipped them; non-empty means the LLM tier did not run fully.
+        "llm_unscored_domains": sorted(set(unscored)),
     }
 
 
@@ -323,6 +336,11 @@ You are a research quality evaluator.
 Decide whether the single subtopic below is clearly and substantively addressed
 in the research report (not merely mentioned in passing).
 
+A subtopic counts as covered ONLY if the report's prose explains it. Source
+titles, reference entries, link text and URLs do NOT count as coverage, even
+when they name the subtopic — a citation to a paper about X is not an
+explanation of X.
+
 Subtopic: {subtopic}
 
 Report:
@@ -332,20 +350,75 @@ Return ONLY a JSON object: {{"covered": true}} or {{"covered": false}}.
 """.strip()
 
 
-async def _check_one_subtopic(subtopic: str, report: str, grader_model) -> bool:
-    """Judge a single subtopic's coverage independently (no batch effects)."""
+_GAP_PROMPT = """
+You are analysing why a research report failed to cover an expected subtopic.
+
+Below is a subtopic the report did not cover, and the list of search queries the
+research agent actually issued while gathering its sources.
+
+Decide whether ANY of those queries would plausibly have retrieved material
+about the subtopic.
+
+Subtopic: {subtopic}
+
+Search queries the agent issued:
+{subqueries}
+
+Return ONLY a JSON object:
+{{"covered_by_search": true}}   if some query targets this subtopic
+{{"covered_by_search": false}}  if no query targets it
+""".strip()
+
+
+async def _classify_gap(subtopic: str, subqueries: list[str], grader_model) -> str:
+    """Was a missing subtopic ever searched for?
+
+    "retrieval" — no search query targeted it, so no source could have covered
+                  it and the writer never had the option. The gap belongs to
+                  the planning/retrieval stage.
+    "writing"   — a query did target it, so material was plausibly available
+                  and the report omitted it anyway.
+    """
+    try:
+        resp = await grader_model.ainvoke(_GAP_PROMPT.format(
+            subtopic=subtopic,
+            subqueries="\n".join(f"- {q}" for q in subqueries)))
+        result = _parse_json(resp.content)
+        return "writing" if result.get("covered_by_search") else "retrieval"
+    except Exception:
+        return "unknown"
+
+
+async def _check_one_subtopic(subtopic: str, report: str, grader_model) -> bool | None:
+    """Judge a single subtopic's coverage independently (no batch effects).
+
+    Judges the BODY only. A trailing `## References` list names every source,
+    and those titles routinely contain the subtopic's keywords, so leaving the
+    list in lets a report score coverage it never wrote: an empty report that
+    is nothing but its reference list was scored 43-57% covered. Stripping the
+    section deterministically is more reliable than asking the grader to ignore
+    it (the prompt above says so too, as defence in depth).
+
+    Returns None when the grader call fails or its reply has no boolean
+    `covered`: a failed judgement is not evidence the subtopic is missing.
+    """
+    body, _ = _split_at_references(report)
     try:
         resp   = await grader_model.ainvoke(
-            _COVERAGE_ONE_PROMPT.format(subtopic=subtopic, report=report[:12000]))
+            _COVERAGE_ONE_PROMPT.format(subtopic=subtopic, report=body[:12000]))
         result = _parse_json(resp.content)
-        return bool(result.get("covered", False))
     except Exception:
-        return False
+        return None
+    covered = result.get("covered") if isinstance(result, dict) else None
+    return covered if isinstance(covered, bool) else None
 
 
-async def subtopic_coverage(query: str, report: str, grader_model, subtopics=None) -> dict:
+async def subtopic_coverage(query: str, report: str, grader_model, subtopics=None,
+                            subtopic_cache: dict | None = None,
+                            subqueries: list[str] | None = None) -> dict:
     """
-    LLM-judged coverage of expected subtopics (~2 calls, ~$0.02/query).
+    LLM-judged coverage of expected subtopics (1 generation call + 1 call per
+    subtopic, run concurrently — so ~5-8 calls for a typical query).
 
     Step 1: generate expected subtopics for the query (adaptive count).
     Step 2: check which subtopics the report covers.
@@ -354,35 +427,83 @@ async def subtopic_coverage(query: str, report: str, grader_model, subtopics=Non
     skipped and coverage is judged against these exact subtopics — this fixes the
     subtopic set across calls (e.g. for perturbation testing, so coverage isn't
     confounded by re-generation drift).
+
+    `subtopic_cache`: a caller-owned dict mapping query -> subtopic list. The
+    expected set is generated once per query and reused, which matters whenever
+    the same query is scored more than once: a benchmark comparing configurations
+    over a shared topic set was regenerating the yardstick for every
+    configuration, so part of any difference between them was generation drift
+    rather than report quality. Measured spread from that drift alone was ~0.1
+    on the same three reports. The metric only reads and writes the dict; the
+    caller decides whether to persist it.
+
+    `subqueries`: the search queries the agent actually issued. When supplied,
+    each MISSING subtopic is classified (one extra call each) as:
+        "retrieval" — nothing was searched for it, so no source could cover it
+        "writing"   — it was searched for, and the report omitted it anyway
+    This separates a planning failure from a writing failure, which the bare
+    coverage rate conflates. It does NOT separate out the third case the rate
+    hides: a boilerplate expectation ("define your terms") whose absence is not
+    a defect at all. Such an expectation lands in whichever bucket the searches
+    happen to imply — observed as "retrieval" for a definition subtopic no query
+    asked about — so a low rate still needs a human read before it is called a
+    defect. Reported as `retrieval_gap_rate` over all expected subtopics.
     """
+    if subtopics is None and subtopic_cache is not None:
+        subtopics = subtopic_cache.get(query)
+
+    generated = False
     if subtopics is None:
         try:
             resp1     = await grader_model.ainvoke(_SUBTOPICS_PROMPT.format(query=query))
             subtopics = _parse_json(resp1.content)
-        except Exception:
+            if not isinstance(subtopics, list) or not all(isinstance(t, str) for t in subtopics):
+                raise ValueError(f"expected a JSON list of strings, got {subtopics!r:.200}")
+            generated = True
+        except Exception as e:
             return {
                 "expected_subtopics":     [],
                 "covered":                [],
                 "missing":                [],
                 "subtopic_coverage_rate": None,
-                "error":                  "Failed to parse subtopics from LLM",
+                "error":                  f"Subtopic generation failed: {type(e).__name__}: {e}",
             }
+
+    if generated and subtopic_cache is not None:
+        subtopic_cache[query] = subtopics
 
     # Judge each subtopic INDEPENDENTLY (one call each, concurrent) so a
     # subtopic's verdict isn't swayed by the others in the same batch.
     flags   = await asyncio.gather(
         *(_check_one_subtopic(s, report, grader_model) for s in subtopics)
     )
-    covered = [s for s, ok in zip(subtopics, flags) if ok]
-    missing = [s for s, ok in zip(subtopics, flags) if not ok]
+    covered = [s for s, ok in zip(subtopics, flags) if ok is True]
+    missing = [s for s, ok in zip(subtopics, flags) if ok is False]
+    errored = [s for s, ok in zip(subtopics, flags) if ok is None]
 
-    total = len(subtopics)
-    return {
+    # The rate is over the subtopics the grader actually judged. A failed call
+    # used to count as "not covered", so an outage read as a thin report.
+    total = len(covered) + len(missing)
+    out = {
         "expected_subtopics":     subtopics,
         "covered":                covered,
         "missing":                missing,
+        "judge_errors":           errored,
         "subtopic_coverage_rate": round(len(covered) / total, 3) if total else 0.0,
     }
+    if subtopics and not total:
+        out["subtopic_coverage_rate"] = None
+        out["error"] = f"grader failed on all {len(errored)} subtopics"
+
+    if missing and subqueries:
+        gaps = await asyncio.gather(
+            *(_classify_gap(s, subqueries, grader_model) for s in missing))
+        out["missing_breakdown"] = [{"subtopic": s, "gap": g}
+                                    for s, g in zip(missing, gaps)]
+        n_retrieval = sum(g == "retrieval" for g in gaps)
+        out["retrieval_gap_rate"] = round(n_retrieval / total, 3) if total else 0.0
+
+    return out
 
 
 # ---------------------------------------------------------------------------
@@ -401,11 +522,35 @@ Guidelines for how many claims to extract:
 - Typical research reports: 6-8 claims
 - Long or multi-topic reports: up to 10 claims
 
-Report (first 3000 characters):
+Report:
 {report}
 
 Return ONLY a JSON array of claim strings. No explanation or extra text.
 """.strip()
+
+# How much of the source context each claim is scored against. The context is
+# the evidence; anything cut off cannot support a claim, so a claim whose
+# evidence lives past this point is scored "unsupported" for a reason that has
+# nothing to do with the report.
+#
+# This was 4000, and that single constant was producing the metric's entire
+# signal. Ablation on three reports carrying their full pipeline context
+# (32-44k chars), with the claim set and grader held fixed so only the window
+# varied:
+#
+#     window   4000    8000    12000   24000   full
+#     rate     0.659   0.556   0.452   0.137   0.000
+#
+# Every "unsupported" verdict was evidence the grader had simply not been
+# shown: given the whole context, all 29 claims across the three reports are
+# supported. A truncating default does not make the metric cheaper, it makes it
+# wrong — and wrong in a direction that looks like a finding about the agent.
+#
+# The context handed to this metric is already the pipeline's own compressed,
+# relevance-filtered output, so there is nothing to gain by cutting it further.
+# This cap exists only as a guard against pathological input. To spend less,
+# use a cheaper grader — that costs accuracy; truncating costs validity.
+CONTEXT_CHARS = 50000
 
 _VERIFY_CLAIMS_PROMPT = """
 You are a fact-checking assistant.
@@ -436,7 +581,7 @@ Any claim with a specific number, date, or statistic not in the context → scor
 Claims:
 {claims}
 
-Source context (first 4000 characters):
+Source context:
 {context}
 
 Return ONLY a JSON array, one object per claim:
@@ -448,29 +593,43 @@ Return ONLY a JSON array, one object per claim:
 """.strip()
 
 
-async def _verify_one_claim(claim: str, context_text: str, grader_model) -> dict:
-    """Score a single claim independently against the context (no batch effects)."""
+_CLAIM_CATEGORIES = ("supported", "inferred", "unsupported")
+
+
+async def _verify_one_claim(claim: str, context_text: str, grader_model,
+                            context_chars: int = CONTEXT_CHARS) -> dict:
+    """Score a single claim independently against the context (no batch effects).
+
+    The returned `claim` is always the claim that was asked about, not the
+    grader's restatement of it. A failed call, or a reply without a known
+    category and a numeric score, comes back as category "error" — it is
+    not a judgement that the claim is unsupported.
+    """
     try:
         resp   = await grader_model.ainvoke(
             _VERIFY_CLAIMS_PROMPT.format(
                 claims=json.dumps([claim], ensure_ascii=False),
-                context=context_text[:4000],
+                context=context_text[:context_chars],
             )
         )
         result = _parse_json(resp.content)
         if isinstance(result, list) and result:
-            return result[0]
-        if isinstance(result, dict):
-            return result
-    except Exception:
-        pass
-    return {"claim": claim, "category": "unsupported", "score": 0.0,
-            "reason": "verification failed"}
+            result = result[0]
+        if isinstance(result, dict) and result.get("category") in _CLAIM_CATEGORIES:
+            return {"claim": claim, "category": result["category"],
+                    "score": float(result.get("score")),
+                    "reason": result.get("reason", "")}
+        reason = f"unreadable grader reply: {resp.content!r:.200}"
+    except Exception as e:
+        reason = f"verification failed: {type(e).__name__}: {e}"
+    return {"claim": claim, "category": "error", "score": None, "reason": reason}
 
 
-async def unsupported_claim(report: str, context, grader_model, claims=None) -> dict:
+async def unsupported_claim(report: str, context, grader_model, claims=None,
+                            context_chars: int = CONTEXT_CHARS) -> dict:
     """
-    Claim-level credibility scoring (~2 calls, ~$0.02/query).
+    Claim-level credibility scoring (1 extraction call + 1 call per claim, run
+    concurrently — so ~7-11 calls for a typical report).
 
     Step 1: extract 3-10 specific verifiable claims from the report.
     Step 2: score each claim as supported (1.0), inferred (0.3-0.9), or unsupported (0.0).
@@ -490,6 +649,8 @@ async def unsupported_claim(report: str, context, grader_model, claims=None) -> 
         try:
             resp1  = await grader_model.ainvoke(_EXTRACT_CLAIMS_PROMPT.format(report=report[:12000]))
             claims = _parse_json(resp1.content)
+            if not isinstance(claims, list) or not all(isinstance(c, str) for c in claims):
+                raise ValueError(f"expected a JSON list of strings, got {claims!r:.200}")
         except Exception as e:
             return {
                 "total_claims": 0, "avg_claim_score": None,
@@ -508,9 +669,21 @@ async def unsupported_claim(report: str, context, grader_model, claims=None) -> 
     # Batch scoring let a corrupted/absurd claim shift the model's judgement of
     # unrelated claims in the same batch — so a claim's score depended on its
     # batch-mates. Independent scoring makes each claim's score self-contained.
-    scored_claims = await asyncio.gather(
-        *(_verify_one_claim(c, context_text, grader_model) for c in claims)
+    verdicts = await asyncio.gather(
+        *(_verify_one_claim(c, context_text, grader_model, context_chars)
+          for c in claims)
     )
+    # Rates are over the claims the grader actually judged; failed calls are
+    # reported separately instead of being scored as unsupported.
+    scored_claims = [c for c in verdicts if c["category"] != "error"]
+    errored       = [c for c in verdicts if c["category"] == "error"]
+    if not scored_claims:
+        return {
+            "total_claims": 0, "avg_claim_score": None,
+            "unsupported_claim_rate": None, "inferred_claim_rate": None,
+            "judge_errors": len(errored), "breakdown": list(verdicts),
+            "error": f"grader failed on all {len(errored)} claims",
+        }
 
     supported_l   = [c for c in scored_claims if c.get("category") == "supported"]
     inferred_l    = [c for c in scored_claims if c.get("category") == "inferred"]
@@ -527,15 +700,8 @@ async def unsupported_claim(report: str, context, grader_model, claims=None) -> 
         "avg_claim_score":        avg_score,
         "unsupported_claim_rate": round(len(unsupported_l) / total, 3) if total else 0.0,
         "inferred_claim_rate":    round(len(inferred_l)    / total, 3) if total else 0.0,
-        "breakdown": [
-            {
-                "claim":    c.get("claim"),
-                "category": c.get("category"),
-                "score":    float(c.get("score", 0.0)),
-                "reason":   c.get("reason", ""),
-            }
-            for c in scored_claims
-        ],
+        "judge_errors":           len(errored),
+        "breakdown":              list(verdicts),   # includes errored claims, marked "error"
     }
 
 
@@ -561,6 +727,8 @@ async def evaluate_report(
     *,
     run_subtopic: bool = True,
     run_unsupported: bool = True,
+    subqueries: list[str] | None = None,
+    subtopic_cache: dict | None = None,
 ) -> dict:
     """Backwards-compatible dict view over the standardized `suite.evaluate()`.
 
@@ -568,14 +736,19 @@ async def evaluate_report(
     metrics gated off by the flags — the shape run_eval/benchmark already expect.
     New code should prefer `suite.evaluate()`, which returns typed `MetricResult`
     objects carrying group / score / concept-alignment metadata.
+
+    `subqueries` and `subtopic_cache` are forwarded to subtopic_coverage; see
+    that function for what each buys (gap attribution and a stable expected set).
     """
     # Local import breaks the metrics.py <-> suite.py import cycle.
     from evals.quality_eval.suite import evaluate as _suite_evaluate, default_metrics
     from evals.quality_eval.base import EvalSample
 
-    sample  = EvalSample(query=query, report=report, sources=sources, context=context)
+    sample  = EvalSample(query=query, report=report, sources=sources,
+                         context=context, subqueries=subqueries)
     results = await _suite_evaluate(
-        sample, default_metrics(run_subtopic, run_unsupported), grader_model)
+        sample, default_metrics(run_subtopic, run_unsupported, subtopic_cache),
+        grader_model)
 
     out = {r.name: (skipped(r.reason) if r.skipped else r.breakdown) for r in results}
     out.setdefault("subtopic_coverage", None)     # None when gated off by flag

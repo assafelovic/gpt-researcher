@@ -1,0 +1,110 @@
+# Judge prompts
+
+Every prompt the evaluator sends to the judge model lives here, so they can be
+read and edited in one place. The code only loads them (`__init__.py`).
+
+## Layout: one folder per metric group
+
+```
+prompts/
+├── query-quality/
+│   ├── GROUP.md                  the group's system prompt (or its shared sections)
+│   ├── tree_quality.md           one file per prompt
+│   ├── tree_quality.schema.json  the JSON its answer must be
+│   └── ...
+├── source-quality/
+├── retrieval-quality/
+├── writing-quality/
+├── writing-authority/
+└── versions.json                 each prompt's version and text hash
+```
+
+Each group's `GROUP.md` has a header with `name` and `description`. There
+are two ways a group uses it:
+
+- **whole group text as system prompt** (`system_prompt: true` in the header; so
+  far query-quality and source-quality). The group text is the system prompt: background,
+  definitions, principles, instructions and suggested steps, written for the
+  judge. Every prompt in the folder is sent as that text followed by its own
+  task, its own definitions and its answer format. Maintainers' notes go in
+  `<!-- ... -->` comments, which are never sent. A prompt that must not get
+  the group says `shared: none` (key_points: its answers are frozen in the
+  dataset).
+- **Sections** (the other groups, until they are reviewed). A short
+  introduction for maintainers, then one `## <section>` per shared
+  definition; a prompt pulls one in with `@include <group>#<section>`.
+
+```
+---
+id: tree_quality              # same as the file name, unique across groups
+version: 20                   # bump on every change of the text or the schema
+used_by: decomposition_tree_quality
+---
+
+                              <- the whole query-quality/GROUP.md comes first
+# Task: decomposition tree quality
+The task of this metric, its own definitions and the answer format: the
+rest of the system message, the same on every call. Braces here, like the
+JSON example, are literal.
+
+@user
+
+The data of one call: the user message. {question} is filled in when the
+prompt is sent; placeholders may only appear below @user.
+```
+
+Each call sends the two parts as a system and a user message, with
+`<id>.schema.json` as the answer schema in strict structured-output mode: the
+API only returns JSON of that shape, so a reply can no longer be cut off
+prose or miss a field. Every object in a schema lists all its properties as
+required and allows no others (OpenAI's strict mode); a test checks that, and
+that the JSON example in the prompt fits its schema. Set
+`EVAL_JUDGE_STRUCTURED=0` for a judge model without structured output.
+
+A group gets its shared sections when it is reviewed in stage 2; until then
+its `GROUP.md` names the candidates and its prompts state their definitions
+inline.
+
+## Editing a prompt or a shared section
+
+1. Edit the text or the schema. A whole-group GROUP.md changes every prompt
+   in its folder (except `shared: none`); a shared section changes every prompt
+   that includes it (the table below lists them). A new answer field goes in both
+   the JSON example and the schema.
+2. Bump `version` in every prompt whose text or schema changed. The version
+   is part of every cache key and, with the text hash, of the scorer version
+   recorded with each score, so old verdicts are never mixed with new ones.
+   Bump a metric's own version only when its code changes.
+3. Run `python -m evals.research_eval.prompts --lock` to record the new text
+   hash in `versions.json` (it also rewrites the table below).
+   `tests/test_research_eval_prompts.py` fails when a text changed and its
+   version did not.
+4. Rescore, then rerun the perturbation check and a noise copy for the
+   metrics that changed: that is how a prompt change is tested.
+
+## Prompts
+
+<!-- prompts:start (written by --lock) -->
+| Group | File | Version | Used by | Shared sections | Filled in | Schema |
+|---|---|---|---|---|---|---|
+| [query-quality](query-quality/GROUP.md) | [`decomposition_coverage.md`](query-quality/decomposition_coverage.md) | 11 | decomposition_coverage | query-quality (whole group text) | `question`, `key_points`, `subqueries` | [json](query-quality/decomposition_coverage.schema.json) |
+| [query-quality](query-quality/GROUP.md) | [`key_points.md`](query-quality/key_points.md) | 2 | key point method comparison (key_points_methods.py, "current"); the key points until key_points_layered replaced it | - | `question` | [json](query-quality/key_points.schema.json) |
+| [query-quality](query-quality/GROUP.md) | [`key_points_describe.md`](query-quality/key_points_describe.md) | 1 | key point method comparison (key_points_methods.py) | - | `question`, `key_points` | [json](query-quality/key_points_describe.schema.json) |
+| [query-quality](query-quality/GROUP.md) | [`key_points_layered.md`](query-quality/key_points_layered.md) | 4 | key points for the question (key_points.py), decomposition_coverage, material_coverage, comprehensiveness; key point method comparison (key_points_methods.py) | - | `question` | [json](query-quality/key_points_layered.schema.json) |
+| [query-quality](query-quality/GROUP.md) | [`key_points_merge.md`](query-quality/key_points_merge.md) | 2 | key point method comparison (key_points_methods.py) | - | `question`, `lists` | [json](query-quality/key_points_merge.schema.json) |
+| [query-quality](query-quality/GROUP.md) | [`key_points_outline.md`](query-quality/key_points_outline.md) | 1 | key point method comparison (key_points_methods.py) | - | `question` | [json](query-quality/key_points_outline.schema.json) |
+| [query-quality](query-quality/GROUP.md) | [`key_points_structured.md`](query-quality/key_points_structured.md) | 1 | key point method comparison (key_points_methods.py) | - | `question` | [json](query-quality/key_points_structured.schema.json) |
+| [query-quality](query-quality/GROUP.md) | [`key_points_synthesize.md`](query-quality/key_points_synthesize.md) | 2 | key points for the question when drafts > 1 (key_points.py); key point method comparison (key_points_methods.py, "layered-merged") | - | `question`, `drafts` | [json](query-quality/key_points_synthesize.schema.json) |
+| [query-quality](query-quality/GROUP.md) | [`subquery_redundancy.md`](query-quality/subquery_redundancy.md) | 15 | subquery_redundancy | query-quality (whole group text) | `question`, `query_a`, `query_b` | [json](query-quality/subquery_redundancy.schema.json) |
+| [query-quality](query-quality/GROUP.md) | [`tree_quality.md`](query-quality/tree_quality.md) | 21 | decomposition_tree_quality | query-quality (whole group text) | `question`, `path`, `parent`, `findings`, `children` | [json](query-quality/tree_quality.schema.json) |
+| [source-quality](source-quality/GROUP.md) | [`domain_authority.md`](source-quality/domain_authority.md) | 8 | source_authority | source-quality (whole group text) | `question`, `domains` | [json](source-quality/domain_authority.schema.json) |
+| [retrieval-quality](retrieval-quality/GROUP.md) | [`material_coverage.md`](retrieval-quality/material_coverage.md) | 4 | material_coverage | - | `question`, `points` | [json](retrieval-quality/material_coverage.schema.json) |
+| [retrieval-quality](retrieval-quality/GROUP.md) | [`query_relevance.md`](retrieval-quality/query_relevance.md) | 14 | query_relevance | retrieval-quality (whole group text) | `question`, `query`, `material` | [json](retrieval-quality/query_relevance.schema.json) |
+| [writing-quality](writing-quality/GROUP.md) | [`comprehensiveness.md`](writing-quality/comprehensiveness.md) | 7 | comprehensiveness | writing-quality (whole group text) | `question`, `key_points`, `report` | [json](writing-quality/comprehensiveness.schema.json) |
+| [writing-quality](writing-quality/GROUP.md) | [`quality_rubric.md`](writing-quality/quality_rubric.md) | 6 | insight, readability | writing-quality (whole group text) | `question` | [json](writing-quality/quality_rubric.schema.json) |
+| [writing-quality](writing-quality/GROUP.md) | [`quality_score.md`](writing-quality/quality_score.md) | 7 | insight, readability | writing-quality (whole group text) | `question`, `criteria`, `report` | [json](writing-quality/quality_score.schema.json) |
+| [writing-quality](writing-quality/GROUP.md) | [`topic_relevance.md`](writing-quality/topic_relevance.md) | 8 | topic_relevance | writing-quality (whole group text) | `question`, `paragraphs` | [json](writing-quality/topic_relevance.schema.json) |
+| [writing-quality](writing-quality/GROUP.md) | [`toxicity_bias.md`](writing-quality/toxicity_bias.md) | 5 | toxicity, bias | writing-quality (whole group text) | `text` | [json](writing-quality/toxicity_bias.schema.json) |
+| [writing-authority](writing-authority/GROUP.md) | [`claim_recheck.md`](writing-authority/claim_recheck.md) | 13 | citation audit recheck (citation_audit.py) | writing-authority (whole group text) | `question`, `claims`, `material` | [json](writing-authority/claim_recheck.schema.json) |
+| [writing-authority](writing-authority/GROUP.md) | [`paragraph_audit.md`](writing-authority/paragraph_audit.md) | 12 | citation audit (citation_audit.py), source_utilization, citation_recall, citation_precision, effective_citations, faithfulness | writing-authority (whole group text) | `question`, `sentences`, `material` | [json](writing-authority/paragraph_audit.schema.json) |
+<!-- prompts:end -->

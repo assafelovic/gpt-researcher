@@ -1,0 +1,35 @@
+{
+  "type": "object",
+  "properties": {
+    "points": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "point": {
+            "type": "integer"
+          },
+          "evidence": {
+            "type": "string"
+          },
+          "subqueries": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          }
+        },
+        "required": [
+          "point",
+          "evidence",
+          "subqueries"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "points"
+  ],
+  "additionalProperties": false
+}

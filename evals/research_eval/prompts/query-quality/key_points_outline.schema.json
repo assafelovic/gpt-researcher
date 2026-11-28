@@ -1,0 +1,31 @@
+{
+  "type": "object",
+  "properties": {
+    "sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "heading": {
+            "type": "string"
+          },
+          "points": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "heading",
+          "points"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "sections"
+  ],
+  "additionalProperties": false
+}

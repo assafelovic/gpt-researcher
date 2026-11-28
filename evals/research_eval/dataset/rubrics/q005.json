@@ -1,0 +1,36 @@
+{
+ "insight": [
+  {
+   "criterion": "Synthesis of deal patterns",
+   "description": "Draws meaningful comparisons across transactions to identify broader patterns in the healthtech M&A market rather than treating deals as an isolated list.",
+   "weight": 0.35
+  },
+  {
+   "criterion": "Analysis of strategic drivers",
+   "description": "Explains how buyers’ and sellers’ strategic aims and relevant market conditions help account for the transactions and their differing forms.",
+   "weight": 0.35
+  },
+  {
+   "criterion": "Implications and interpretation",
+   "description": "Assesses plausible consequences and trade-offs of the activity and offers a measured interpretation of what the pattern suggests about the sector’s direction.",
+   "weight": 0.3
+  }
+ ],
+ "readability": [
+  {
+   "criterion": "Coherent organization",
+   "description": "Arranges information in a clear progression, using headings and transitions that help readers follow the discussion without unnecessary repetition or abrupt shifts.",
+   "weight": 0.35
+  },
+  {
+   "criterion": "Clear presentation of deal details",
+   "description": "Presents transaction parties, timing, status, and scale in a consistent, unambiguous way that makes individual deals and comparisons easy to follow.",
+   "weight": 0.35
+  },
+  {
+   "criterion": "Fluent and precise prose",
+   "description": "Uses direct, grammatical wording and clearly distinguishes factual description from interpretation, avoiding vague phrasing and needless complexity.",
+   "weight": 0.3
+  }
+ ]
+}

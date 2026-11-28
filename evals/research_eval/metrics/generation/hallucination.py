@@ -1,0 +1,246 @@
+"""
+C. Hallucination: judged faithfulness of every factual claim, and a rule
+check that figures and names in a paragraph appear in the sources it cites. Listed separately; there is no combined score.
+"""
+
+from __future__ import annotations
+
+import re
+from collections import Counter
+
+from ...archive import RunArchive, normalize_url
+from ...citation_audit import AUDIT_VERSION, VERDICT_SCORES, CitationAudit, audited_paragraphs
+from ..base import Metric, MetricResult, ScoringContext, rounded
+from .citation import _AuditMetric
+
+
+class Faithfulness(_AuditMetric):
+    """Mean verdict score of the report's fact claims, in [0, 1].
+
+    Claims are extracted per paragraph by the judge (not taken as the cited
+    sentences) and typed `fact` or `analysis`. Each is checked against the
+    paragraph's cited passages (for a paragraph without citations, the 4
+    best-matching retrieved passages; a paragraph the judge finds non-factual
+    is skipped). A fact claim they do not support is checked again against up
+    to 6 passages the checker picks itself from the retrieved material not yet
+    shown, and becomes "supported" only when one of them plainly states it, so
+    a claim is not judged only on what the agent chose to cite.
+
+        supported 1 | inferred 0.5 | unsupported 0 | contradicted 0
+
+    A contradicted claim scores 0 here, like an unsupported one, and is
+    counted per paragraph by `contradicted_paragraphs` instead: as -1 inside
+    a mean, its weight depended on how many claims the judge split the
+    paragraph into (v2 and earlier).
+
+    (Before paragraph_audit v6, inferred had three levels: 0.5 / 0.4 / 0.3.)
+
+    Only fact claims make the value. An analysis claim is the writer's own
+    evaluation or conclusion, which a source rarely states outright, so
+    averaging it in would lower the score for every analysis the report adds,
+    against what insight rewards. Analysis is reported beside it
+    (`details.by_type.analysis`, `analysis_contradicted`), and the mean over
+    all claims, the v1 value, is `details.all_claims`.
+
+    Known gap: a claim citing A but backed by B in the same paragraph passes
+    here; citation recall / precision catch it.
+    """
+
+    name, category = "faithfulness", "generation.writing_authority"
+    version = f"3.audit{AUDIT_VERSION}"     # 2: fact claims only; analysis in details; 3: contradicted 0, counted per paragraph elsewhere
+
+    def from_audit(self, audit: CitationAudit, archive: RunArchive) -> MetricResult:
+        claims = [(p, c) for p in audit.judged for c in p.claims]
+        claims = [(p, {**c, "cited_verdict": c["verdict"],
+                       "verdict": c.get("faith_verdict", c["verdict"]),
+                       "score": _no_negative(c.get("faith_score", c["score"]))}) for p, c in claims]
+        scored = [c["score"] for _, c in claims if c["score"] is not None]
+        facts = [c["score"] for _, c in claims
+                 if c.get("type", "fact") == "fact" and c["score"] is not None]
+        if not facts:
+            return self.skip("no fact claims judged")
+        verdicts = Counter(c["verdict"] for _, c in claims)
+        by_type = {}
+        for t in ("fact", "analysis"):
+            ts = [c["score"] for _, c in claims if c.get("type", "fact") == t and c["score"] is not None]
+            by_type[t] = {"claims": len(ts), "score": rounded(sum(ts) / len(ts)) if ts else None}
+        per_para = []
+        for p in audit.judged:
+            s = [_no_negative(c.get("faith_score", c["score"])) for c in p.claims
+                 if c.get("faith_score", c["score"]) is not None]
+            per_para.append({"para_id": p.para_id, "mode": p.mode, "kind": p.kind,
+                             "claims": len(p.claims), "score": rounded(sum(s) / len(s)) if s else None})
+        flagged = [{"para_id": p.para_id, "mode": p.mode, "type": c.get("type", "fact"),
+                    **{k: c[k] for k in ("claim", "verdict", "evidence")}}
+                   for p, c in claims if (c["score"] if c["score"] is not None else 0) <= 0]
+        return self.result(rounded(sum(facts) / len(facts)), fact_claims=len(facts),
+                           claims=len(scored), all_claims=rounded(sum(scored) / len(scored)),
+                           by_type=by_type,
+                           analysis_contradicted=sum(c.get("type") == "analysis"
+                                                     and c["verdict"] == "contradicted"
+                                                     for _, c in claims),
+                           verdicts=dict(verdicts),
+                           rechecked=sum("elsewhere_verdict" in c for _, c in claims),
+                           upgraded_by_recheck=sum(c["verdict"] != c.get("cited_verdict", c["verdict"])
+                                                   for _, c in claims),
+                           unknown_verdicts=len(claims) - len(scored),
+                           uncited_factual_paragraphs=sum(p.mode == "uncited" and p.kind == "factual"
+                                                          for p in audit.judged),
+                           flagged=flagged, per_paragraph=per_para,
+                           verdict_scores=VERDICT_SCORES)
+
+
+def _no_negative(score):
+    """Contradicted (-1) counts as 0 in the mean; contradicted_paragraphs counts it."""
+    return None if score is None else max(score, 0.0)
+
+
+class ContradictedParagraphs(_AuditMetric):
+    """Share of factual paragraphs with at least one fact claim the material
+    contradicts (lower is better).
+
+        value = paragraphs with a contradicted fact claim / factual paragraphs
+
+    The paragraph is the unit, so the count does not depend on how many
+    claims the judge split a paragraph into. Contradicted means the first
+    call's verdict, confirmed by the recheck, which is shown the same
+    contradicting passages: unconfirmed, it is unsupported; plain support
+    found elsewhere lifts it. No extra judge call: it reads the citation
+    audit faithfulness uses. `details.flagged` lists the paragraphs and their
+    contradicted claims, `details.dropped` the contradictions the recheck did
+    not confirm.
+    """
+
+    name, category = "contradicted_paragraphs", "generation.writing_authority"
+    version = f"1.audit{AUDIT_VERSION}"
+    higher_is_better = False
+
+    def from_audit(self, audit: CitationAudit, archive: RunArchive) -> MetricResult:
+        factual = [p for p in audit.judged if p.kind == "factual"]
+        if not factual:
+            return self.skip("no factual paragraph judged")
+        flagged, dropped = [], []
+        for p in factual:
+            dropped += [{"para_id": p.para_id, "claim": c.get("claim")} for c in p.claims
+                        if c.get("contradiction_dropped")]
+            bad = [c for c in p.claims if c.get("type", "fact") == "fact"
+                   and c.get("faith_verdict", c["verdict"]) == "contradicted"]
+            if bad:
+                flagged.append({"para_id": p.para_id, "mode": p.mode,
+                                "claims": [{k: c.get(k) for k in ("claim", "evidence")} for c in bad]})
+        return self.result(rounded(len(flagged) / len(factual)), paragraphs=len(factual),
+                           contradicted=len(flagged), flagged=flagged, dropped=dropped)
+
+
+_NUMBER = re.compile(r"(?<![\w.])\d{1,3}(?:,\d{3})+(?:\.\d+)?|(?<![\w.,])\d+(?:\.\d+)?")
+_THOUSANDS = re.compile(r"(?<=\d),(?=\d{3}\b)")
+_WORD = r"[A-Z][\w&']*(?:-[A-Z][\w&']*)*"
+_ENTITY = re.compile(rf"\b{_WORD}(?:\s+(?:of|for|de|the)\s+{_WORD}|\s+{_WORD})*")
+_SENT_START = re.compile(r"(^|[.!?:;|]\s+|\n\s*)$")
+
+
+def fact_tokens(text: str) -> list[tuple[str, str]]:
+    """(kind, token) pairs: numbers >= 10 or with decimals, and capitalised names.
+    A capitalised first word of a sentence is dropped unless it is an acronym;
+    a hyphenated lower-case tail is not part of a name ("EU-wide" -> "EU")."""
+    out = []
+    norm = _THOUSANDS.sub("", text)
+    for m in _NUMBER.finditer(norm):
+        tok = m.group(0)
+        if "." in tok or int(tok) >= 10:
+            out.append(("number", tok))
+    for m in _ENTITY.finditer(text):
+        tok = m.group(0)
+        if _SENT_START.search(text[:m.start()]):
+            # Sentence-initial capital says nothing; keep the rest ("Most MiCA" -> "MiCA").
+            first, _, rest = tok.partition(" ")
+            if not first.isupper() or len(first) < 2:
+                tok = rest
+        if len(tok) >= 2:
+            out.append(("entity", tok))
+    return list(dict.fromkeys(out))
+
+
+def _name_variants(tok: str) -> list[str]:
+    """A name as written plus the forms a source may use for the same thing:
+    without a leading "the", each word singular or plural ("CASPs" ~ "CASP")."""
+    words = tok.split()
+    if len(words) > 1 and words[0].lower() == "the":
+        words = words[1:]
+    out = [" ".join(words).lower()]
+    last = words[-1]
+    if len(last) > 2 and last.endswith("s"):
+        out.append(" ".join(words[:-1] + [last[:-1]]).lower())
+    elif last[-1:].isalpha():
+        out.append(" ".join(words[:-1] + [last + "s"]).lower())
+    return out
+
+
+def _acronym(tok: str) -> str | None:
+    """"Digital Operational Resilience Act" -> "DORA"; "Transfer of Funds Regulation" -> "TFR"."""
+    caps = [w for w in tok.split() if w[:1].isupper()]
+    return "".join(w[0] for w in caps) if len(caps) >= 3 else None
+
+
+def found_in(kind: str, tok: str, evidence: str, evidence_lower: str) -> bool:
+    if kind == "number":
+        return re.search(rf"(?<![\d.]){re.escape(tok)}(?!\.?\d)", evidence) is not None
+    if any(v in evidence_lower for v in _name_variants(tok)):
+        return True
+    acro = _acronym(tok)
+    return acro is not None and re.search(rf"\b{acro}s?\b", evidence) is not None
+
+
+class FactGrounding(Metric):
+    """Rule check: figures and names in a paragraph appear verbatim in what it cites.
+
+        value = tokens found in the cited chunks / tokens checked
+
+    Only paragraphs that cite at least one retrieved URL; the evidence is every
+    chunk of those URLs. Tokens: numbers (thousands separators ignored; 45 does
+    not match 45.3) and capitalised names (case-insensitive phrase match; singular
+    and plural forms match, a leading "the" is ignored, and a name of three or
+    more capitalised words also matches its acronym, "Digital Operational
+    Resilience Act" ~ "DORA"). `details` reports numbers and names separately.
+    Citation anchor text, i.e. the source's own name, is not checked.
+    Unjudged and uncalibrated: a paraphrased or converted figure counts as missing.
+    """
+
+    name, category = "fact_grounding", "generation.writing_authority"
+    version = "2"
+
+    async def score(self, archive: RunArchive, ctx: ScoringContext) -> MetricResult:
+        paras = [p for p in audited_paragraphs(archive)
+                 if any(normalize_url(c["url"]) in archive.chunks_by_url for c in p["citations"])]
+        if not paras:
+            return self.skip("no paragraph cites a retrieved source")
+        per_para, found, total = [], 0, 0
+        by_kind = {"number": [0, 0], "entity": [0, 0]}      # [found, checked]
+        for p in paras:
+            cids = [cid for c in p["citations"]
+                    for cid in archive.chunks_by_url.get(normalize_url(c["url"]), [])]
+            evidence = _THOUSANDS.sub("", "\n".join(archive.chunks[c]["content"] for c in cids))
+            ev_lower = " ".join(evidence.lower().split())
+            text = p["text"]
+            for c in p["citations"]:
+                if c["anchor"]:
+                    text = text.replace(c["anchor"], " ")
+            text = re.sub(r"https?://\S+", " ", text)
+            toks = fact_tokens(text)
+            missing = []
+            for k, t in toks:
+                ok = found_in(k, t, evidence, ev_lower)
+                by_kind[k][0] += ok
+                by_kind[k][1] += 1
+                if not ok:
+                    missing.append(t)
+            found += len(toks) - len(missing)
+            total += len(toks)
+            if toks:
+                per_para.append({"para_id": p["para_id"], "checked": len(toks), "missing": missing})
+        if not total:
+            return self.skip("no numbers or names to check")
+        return self.result(rounded(found / total), checked=total, found=found,
+                           numbers={"checked": by_kind["number"][1], "found": by_kind["number"][0]},
+                           names={"checked": by_kind["entity"][1], "found": by_kind["entity"][0]},
+                           paragraphs=len(per_para), per_paragraph=per_para)

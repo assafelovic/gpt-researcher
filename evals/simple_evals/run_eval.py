@@ -17,9 +17,8 @@ from dotenv import load_dotenv
 from gpt_researcher.agent import GPTResearcher
 from gpt_researcher.utils.enum import ReportType, ReportSource, Tone
 from evals.simple_evals.simpleqa_eval import SimpleQAEval
-from langchain_openai import ChatOpenAI
+from evals.judge import judge_model_name, make_judge
 
-GRADER_MODEL_NAME = "gpt-4-turbo"
 LOGS_DIR = Path(__file__).parent / "logs"
 
 
@@ -86,6 +85,8 @@ async def evaluate_single_query(query: str, evaluator: SimpleQAEval) -> dict:
     # result gathering and formating
     result = {
         'query': query,
+        'example_index': example.get('index'),
+        'worker_model': researcher.cfg.smart_llm,
         'context_length': len(context),
         'report_length': len(report),
         'latency_seconds': latency_seconds,
@@ -103,7 +104,7 @@ async def evaluate_single_query(query: str, evaluator: SimpleQAEval) -> dict:
 
     return result
 
-async def main(num_examples: int):
+async def main(num_examples: int, seed: int | None = None):
     if num_examples < 1:
         raise ValueError("num_examples must be at least 1")
     # start timming
@@ -114,12 +115,8 @@ async def main(num_examples: int):
 
     try:
         # initiate evaluator
-        grader_model = ChatOpenAI(
-            temperature=0,
-            model_name=GRADER_MODEL_NAME,
-            openai_api_key=os.getenv("OPENAI_API_KEY")
-        )
-        evaluator = SimpleQAEval(grader_model=grader_model, num_examples=num_examples)
+        grader_model = make_judge()
+        evaluator = SimpleQAEval(grader_model=grader_model, num_examples=num_examples, seed=seed)
         
         if not evaluator.examples:
             raise ValueError("No examples loaded in evaluator")
@@ -216,9 +213,13 @@ async def main(num_examples: int):
                 run_metadata = {
                     "timestamp": run_timestamp,
                     "git_commit": get_git_commit(),
-                    "grader_model": GRADER_MODEL_NAME,
-                    "researcher_model": os.getenv("SMART_LLM", "openai:gpt-4.1"),
+                    "judge_model": judge_model_name(),
+                    # Read off the researchers that ran, not an env default,
+                    # so the log names the model that wrote the reports.
+                    "worker_model": ", ".join(sorted({r['worker_model'] for r in results
+                                                          if 'worker_model' in r})),
                     "num_examples": num_examples,
+                    "seed": seed,
                     "total_duration_seconds": round(time.perf_counter() - run_start, 2),
                 }
                 log_record = {
@@ -240,6 +241,8 @@ async def main(num_examples: int):
                 with open(log_filename, "w", encoding="utf-8") as f:
                     f.write(json.dumps(log_record) + "\n")
                 print(f"\nStructured log saved → {log_filename}")
+            else:
+                raise RuntimeError(f"All {len(evaluator.examples)} queries failed; nothing to score")
 
     except Exception as e:
         print(f"Fatal error in main: {str(e)}")
@@ -249,11 +252,15 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run GPT-Researcher evaluation')
     parser.add_argument('--num_examples', type=int, default=1,
                       help='Number of examples to evaluate. Default is 1 example.')
+    parser.add_argument('--seed', type=int, default=None,
+                      help='Seed for sampling questions; the same seed draws the same questions.')
     args = parser.parse_args()
     
     try:
-        asyncio.run(main(args.num_examples))
+        asyncio.run(main(args.num_examples, args.seed))
     except KeyboardInterrupt:
         print("\nEvaluation interrupted by user")
     except Exception as e:
         print(f"Fatal error: {str(e)}")
+        # A failed run must not exit 0, or scripts and CI read it as a pass.
+        sys.exit(1)

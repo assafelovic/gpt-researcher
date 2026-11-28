@@ -1,0 +1,19 @@
+{
+  "type": "object",
+  "properties": {
+    "aspects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "aspect": {"type": "string"},
+          "sub_points": {"type": "array", "items": {"type": "string"}}
+        },
+        "required": ["aspect", "sub_points"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["aspects"],
+  "additionalProperties": false
+}

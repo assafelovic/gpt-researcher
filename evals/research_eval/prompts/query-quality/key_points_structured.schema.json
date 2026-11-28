@@ -1,0 +1,9 @@
+{
+  "type": "object",
+  "properties": {
+    "asked": {"type": "array", "items": {"type": "string"}},
+    "key_points": {"type": "array", "items": {"type": "string"}}
+  },
+  "required": ["asked", "key_points"],
+  "additionalProperties": false
+}

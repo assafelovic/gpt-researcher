@@ -1,0 +1,41 @@
+{
+ "insight": [
+  {
+   "criterion": "Regulatory interaction and convergence",
+   "description": "Explains how the regulatory changes relate to one another and analyzes whether they move crypto activity toward a more consistent EU framework or leave meaningful differences across jurisdictions.",
+   "weight": 0.25
+  },
+  {
+   "criterion": "Effects on industry activity",
+   "description": "Draws causal conclusions about how new obligations and constraints affect relevant crypto businesses, their operations, or the products and services they can offer.",
+   "weight": 0.25
+  },
+  {
+   "criterion": "Policy trade-offs",
+   "description": "Weighs the intended benefits of regulation, such as investor protection or financial integrity, against potential costs to innovation, competition, or market access, grounding its conclusions in the changes discussed.",
+   "weight": 0.25
+  },
+  {
+   "criterion": "Implementation and uncertainty",
+   "description": "Analyzes how timing, transition arrangements, enforcement, or remaining discretion may shape the practical impact of the regulatory changes, rather than treating their effects as immediate and uniform.",
+   "weight": 0.25
+  }
+ ],
+ "readability": [
+  {
+   "criterion": "Clear organization and signposting",
+   "description": "Uses a coherent structure and transitions that help readers follow the relationships among regulatory changes and their implications, without abrupt or confusing shifts.",
+   "weight": 0.4
+  },
+  {
+   "criterion": "Precise, fluent prose",
+   "description": "Explains legal and industry effects in direct, well-formed sentences, using precise wording and avoiding ambiguity, unnecessary repetition, or cumbersome phrasing.",
+   "weight": 0.35
+  },
+  {
+   "criterion": "Readable presentation of complexity",
+   "description": "Presents comparisons, qualifications, and timelines in a consistent, easy-to-scan form when useful, so that distinctions among rules and their effects are not obscured.",
+   "weight": 0.25
+  }
+ ]
+}

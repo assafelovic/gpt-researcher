@@ -1,0 +1,41 @@
+{
+ "insight": [
+  {
+   "criterion": "Service-model comparison",
+   "description": "Explains how AI changes the roles of customer-facing automation and staff-facing tools, including how they complement or shift traditional service channels.",
+   "weight": 0.25
+  },
+  {
+   "criterion": "Benefits and trade-offs",
+   "description": "Weighs service gains such as speed and availability against risks such as errors, weak customer experience, and the need for human escalation.",
+   "weight": 0.3
+  },
+  {
+   "criterion": "Adoption drivers and constraints",
+   "description": "Connects factors such as legacy systems, data, privacy, regulation, and customer trust to banks’ choices about how and where to deploy AI in service.",
+   "weight": 0.25
+  },
+  {
+   "criterion": "Synthesis of adoption patterns",
+   "description": "Draws a reasoned conclusion about the significance or maturity of banks’ AI adoption rather than leaving examples and outcomes as an unconnected list.",
+   "weight": 0.2
+  }
+ ],
+ "readability": [
+  {
+   "criterion": "Clear distinctions",
+   "description": "Labels and describes customer-facing AI, employee-facing assistance, and other service applications precisely enough that their functions are not conflated.",
+   "weight": 0.35
+  },
+  {
+   "criterion": "Coherent progression",
+   "description": "Organizes its discussion so that points connect logically and the reader can follow the relationships among AI applications, service effects, and constraints.",
+   "weight": 0.35
+  },
+  {
+   "criterion": "Fluent, precise presentation",
+   "description": "Uses clear sentences, consistent terminology, and effective paragraphing or formatting to make its explanations easy to follow.",
+   "weight": 0.3
+  }
+ ]
+}

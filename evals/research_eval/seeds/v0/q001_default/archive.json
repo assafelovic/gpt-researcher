@@ -1,0 +1,549 @@
+{
+ "schema_version": "1.0",
+ "meta": {
+  "run_id": "20261029T234054_q001_default_3fc58f",
+  "trace_id": "20261029T234054_q001_default_3fc58f",
+  "question_id": "q001",
+  "query": "What regulatory changes are affecting the crypto industry in Europe?",
+  "dataset_version": "questions_v0",
+  "agent_commit": "d06123bf-dirty",
+  "started_at": "2026-10-29T23:40:54.863822+00:00",
+  "duration_s": 100.82,
+  "cost_usd": 0.1482,
+  "status": "ok",
+  "error": null,
+  "config": {
+   "report_type": "research_report",
+   "total_words": 1200,
+   "mode": "default",
+   "context_filter": "auto",
+   "context_filter_resolved": [
+    "keyword"
+   ],
+   "worker_model": {
+    "smart": "openai:gpt-5.4",
+    "fast": "openai:gpt-5.4",
+    "strategic": "openai:gpt-5.4"
+   },
+   "embedding": "openai:text-embedding-3-small",
+   "retrievers": [
+    "TavilySearch"
+   ],
+   "max_iterations": 3,
+   "max_search_results_per_query": 5,
+   "breadth": null,
+   "depth": null
+  },
+  "health": {
+   "jev_fallback": 0,
+   "embedding_fallback": 0,
+   "subquery_errors": 0,
+   "web_search_errors": 0,
+   "mcp_fallback": 0,
+   "context_parse_warnings": 0
+  }
+ },
+ "spans": [
+  {
+   "span_id": "s1",
+   "parent_id": null,
+   "name": "run",
+   "attributes": {
+    "query": "What regulatory changes are affecting the crypto industry in Europe?",
+    "mode": "default"
+   },
+   "start_time": 1793317255.520328,
+   "end_time": 1793317355.6116679,
+   "status": "ok",
+   "error": null
+  },
+  {
+   "span_id": "s2",
+   "parent_id": "s1",
+   "name": "research",
+   "attributes": {
+    "query": "What regulatory changes are affecting the crypto industry in Europe?",
+    "report_type": "research_report",
+    "parent_query": null
+   },
+   "start_time": 1793317255.732672,
+   "end_time": 1793317276.501445,
+   "status": "ok",
+   "error": null
+  },
+  {
+   "span_id": "s3",
+   "parent_id": "s2",
+   "name": "plan",
+   "attributes": {
+    "query": "What regulatory changes are affecting the crypto industry in Europe?",
+    "sub_queries": [
+     "What new European Union crypto regulations in 2026 are affecting exchanges wallet providers and stablecoin issuers under MiCA",
+     "How have MiCA licensing rules the EU crypto travel rule and anti money laundering requirements changed the crypto industry in Europe",
+     "What national crypto regulatory changes in countries like Belgium Estonia Malta and Germany are affecting crypto companies in Europe"
+    ]
+   },
+   "start_time": 1793317263.196932,
+   "end_time": 1793317267.748996,
+   "status": "ok",
+   "error": null
+  },
+  {
+   "span_id": "s4",
+   "parent_id": "s2",
+   "name": "initial_results",
+   "attributes": {
+    "query": "What regulatory changes are affecting the crypto industry in Europe?",
+    "proposed_urls": [
+     "https://financialcrimeacademy.org/cryptocurrency-in-europe",
+     "https://sumsub.com/blog/crypto-regulations-in-the-european-union-markets-in-crypto-assets-mica",
+     "https://www.innreg.com/blog/eu-crypto-regulation-guide",
+     "https://www.nortonrosefulbright.com/en/knowledge/publications/2cec201e/regulating-crypto-assets-in-europe-practical-guide-to-mica",
+     "https://finance.yahoo.com/markets/crypto/articles/watch-brand-european-crypto-regulations-070110178.html"
+    ],
+    "new_urls": [
+     "https://financialcrimeacademy.org/cryptocurrency-in-europe",
+     "https://sumsub.com/blog/crypto-regulations-in-the-european-union-markets-in-crypto-assets-mica",
+     "https://www.innreg.com/blog/eu-crypto-regulation-guide",
+     "https://www.nortonrosefulbright.com/en/knowledge/publications/2cec201e/regulating-crypto-assets-in-europe-practical-guide-to-mica",
+     "https://finance.yahoo.com/markets/crypto/articles/watch-brand-european-crypto-regulations-070110178.html"
+    ],
+    "context_filter": "keyword",
+    "pages_in": 4,
+    "chunk_ids": [
+     "cfc1cd2280ce5",
+     "c786027bf1387",
+     "cffa16a9fba87",
+     "ca3aef0ce4442",
+     "cc00f718fee5d",
+     "c8d30dac6c947",
+     "c8d1eed23d01c",
+     "c6292c2519594",
+     "c0c2cab8ee918",
+     "c1f77153b439d",
+     "c6ca18d1dc4c0",
+     "c64408981db24",
+     "c59af5413abdf",
+     "cfff780f66831",
+     "c9d92b14c98ff",
+     "cfe4fb8591c55",
+     "c6aab461045ae"
+    ]
+   },
+   "start_time": 1793317267.749011,
+   "end_time": 1793317269.198852,
+   "status": "ok",
+   "error": null
+  },
+  {
+   "span_id": "s5",
+   "parent_id": "s3",
+   "name": "sub_query",
+   "attributes": {
+    "query": "What new European Union crypto regulations in 2026 are affecting exchanges wallet providers and stablecoin issuers under MiCA",
+    "is_core_query": false,
+    "proposed_urls": [
+     "https://sumsub.com/blog/crypto-regulations-in-the-european-union-markets-in-crypto-assets-mica",
+     "https://www.innreg.com/blog/eu-crypto-regulation-guide",
+     "https://hacken.io/discover/mica-regulation",
+     "https://www.cyfrin.io/blog/mica-regulation-explained-a-guide-to-eu-crypto-compliance",
+     "https://stealthex.io/blog/mica-compliant-stablecoins"
+    ],
+    "new_urls": [
+     "https://www.cyfrin.io/blog/mica-regulation-explained-a-guide-to-eu-crypto-compliance",
+     "https://stealthex.io/blog/mica-compliant-stablecoins"
+    ],
+    "context_filter": "keyword",
+    "pages_in": 2,
+    "chunk_ids": [
+     "c93feb7a9bace",
+     "c6d932988ab7c",
+     "c4d09822a1cdb",
+     "c3b87eb71e379",
+     "c63b1c99a3558",
+     "cc1961600b364",
+     "c76884eda64f5",
+     "c9fd141c23bcb",
+     "c7df766bc7567",
+     "c2f0c3e863e93",
+     "ccb37667e9e59",
+     "cca3a328fbbf9",
+     "c73f3e1376ad3",
+     "c4fe04a67719b",
+     "c50a904233ef4",
+     "cec0ff6e63ce9",
+     "ca66c81f0c594"
+    ]
+   },
+   "start_time": 1793317269.198904,
+   "end_time": 1793317276.501193,
+   "status": "ok",
+   "error": null
+  },
+  {
+   "span_id": "s6",
+   "parent_id": "s3",
+   "name": "sub_query",
+   "attributes": {
+    "query": "How have MiCA licensing rules the EU crypto travel rule and anti money laundering requirements changed the crypto industry in Europe",
+    "is_core_query": false,
+    "proposed_urls": [
+     "https://www.innreg.com/blog/eu-crypto-regulation-guide",
+     "https://didit.me/blog/mica-regulation-eu-crypto-compliance-guide",
+     "https://sumsub.com/blog/crypto-regulations-in-the-european-union-markets-in-crypto-assets-mica",
+     "https://hacken.io/discover/mica-regulation",
+     "https://www.unit21.ai/blog/mica-regulation-2026-faqs-what-crypto-compliance-teams-need-to-know"
+    ],
+    "new_urls": [
+     "https://didit.me/blog/mica-regulation-eu-crypto-compliance-guide",
+     "https://hacken.io/discover/mica-regulation",
+     "https://www.unit21.ai/blog/mica-regulation-2026-faqs-what-crypto-compliance-teams-need-to-know"
+    ],
+    "context_filter": "keyword",
+    "pages_in": 3,
+    "chunk_ids": [
+     "c369fedf7de32",
+     "c8e54fbf96eff",
+     "ca7a86499e236",
+     "c73ee4cf49d6a",
+     "cdd307307f773",
+     "c7a7b5792b5ea",
+     "cdbfecb25ced6",
+     "cc6c6dfeec4f9",
+     "c118d2a070885",
+     "c3670abb607f9"
+    ]
+   },
+   "start_time": 1793317269.1989388,
+   "end_time": 1793317274.4155881,
+   "status": "ok",
+   "error": null
+  },
+  {
+   "span_id": "s7",
+   "parent_id": "s3",
+   "name": "sub_query",
+   "attributes": {
+    "query": "What national crypto regulatory changes in countries like Belgium Estonia Malta and Germany are affecting crypto companies in Europe",
+    "is_core_query": false,
+    "proposed_urls": [
+     "https://sumsub.com/blog/crypto-regulations-in-the-european-union-markets-in-crypto-assets-mica",
+     "https://www.innreg.com/blog/eu-crypto-regulation-guide",
+     "https://cointracking.info/learn/dac8-crypto-regulation",
+     "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker",
+     "https://www.nortonrosefulbright.com/en/knowledge/publications/2cec201e/regulating-crypto-assets-in-europe-practical-guide-to-mica"
+    ],
+    "new_urls": [
+     "https://cointracking.info/learn/dac8-crypto-regulation",
+     "https://www.atlanticcouncil.org/programs/geoeconomics-center/cryptoregulationtracker"
+    ],
+    "context_filter": "keyword",
+    "pages_in": 2,
+    "chunk_ids": [
+     "c9e98293cc500"
+    ]
+   },
+   "start_time": 1793317269.1992269,
+   "end_time": 1793317273.19756,
+   "status": "ok",
+   "error": null
+  },
+  {
+   "span_id": "s8",
+   "parent_id": "s3",
+   "name": "sub_query",
+   "attributes": {
+    "query": "What regulatory changes are affecting the crypto industry in Europe?",
+    "is_core_query": true,
+    "proposed_urls": [
+     "https://financialcrimeacademy.org/cryptocurrency-in-europe",
+     "https://sumsub.com/blog/crypto-regulations-in-the-european-union-markets-in-crypto-assets-mica",
+     "https://www.innreg.com/blog/eu-crypto-regulation-guide",
+     "https://www.nortonrosefulbright.com/en/knowledge/publications/2cec201e/regulating-crypto-assets-in-europe-practical-guide-to-mica",
+     "https://finance.yahoo.com/markets/crypto/articles/watch-brand-european-crypto-regulations-070110178.html"
+    ],
+    "new_urls": [],
+    "chunk_ids": []
+   },
+   "start_time": 1793317269.1994429,
+   "end_time": 1793317269.4302452,
+   "status": "ok",
+   "error": null
+  }
+ ],
+ "chunks": {
+  "cfc1cd2280ce5": {
+   "url": "https://www.nortonrosefulbright.com/en/knowledge/publications/2cec201e/regulating-crypto-assets-in-europe-practical-guide-to-mica",
+   "title": "Regulating crypto-assets in Europe: Practical guide to MiCA | Global law firm | Norton Rose Fulbright",
+   "content": "Publication\nFrom efficiency to insight: Building legal services around what clients really need\nFor many clients, conversations about change in legal services still center on doing current work more quickly.\nGlobal | October 29, 2026\nSite search\nSubscribe and stay up to date with the latest legal news, information and events . . .\nRegister now\nTop\n© Norton Rose Fulbright LLP 2026\nVisit our global site, or select a location\nNorth America\nCanada (English)\nCanada (Français)\nUnited States\nLatin America\nEurope\nBelgium\nDeutschland (Deutsch)\nFrance\nGermany (English)\nGreece\nItaly\nLuxembourg\nPoland\nThe Netherlands\nTürkiye\nUnited Kingdom\nMiddle East\nAfrica\nMorocco\nAsia Pacific\nAustralia\nChina\nHong Kong SAR\nIndonesia\nJapan\nSingapore\nThailand\nRegional practices\nIndia\nIsrael\nKorea\nMarshall Islands\nNordic region\nPakistan\nVietnam",
+   "jev_score": null
+  },
+  "c786027bf1387": {
+   "url": "https://www.nortonrosefulbright.com/en/knowledge/publications/2cec201e/regulating-crypto-assets-in-europe-practical-guide-to-mica",
+   "title": "Regulating crypto-assets in Europe: Practical guide to MiCA | Global law firm | Norton Rose Fulbright",
+   "content": "Persons that currently engage in the provision of services in crypto-assets in Europe and plan to continue doing so after 30 December 2024, should start considering the regulatory status of their activities as soon as possible. Where such persons need to seek MiCA authorisation, they should bear in mind that preparation of the relevant documentation, policies and procedures – depending on the organisation’s size, complexity, scale and nature of operations – can be a lengthy process. There are also likely to be structural issues to consider, and prospectively jurisdictional ones, in particular for firms with no existing European presence. Given the relatively tight MiCA implementation timeframes, it may be prudent to try and avoid the application bottleneck that some European NCAs may face closer to the deadline. Persons providing services in crypto-assets in Europe without the required authorisation may be included in the register of non-compliant crypto-asset service providers, which",
+   "jev_score": null
+  },
+  "cffa16a9fba87": {
+   "url": "https://sumsub.com/blog/crypto-regulations-in-the-european-union-markets-in-crypto-assets-mica",
+   "title": "MiCA Regulation and EU Crypto Rules: What Changes in 2026",
+   "content": "What is the MiCA regulation?\nThe Markets in Crypto-Assets Regulation (MiCA) is the European Union’s first comprehensive legal framework for regulating crypto-assets and crypto-asset service providers (CASPs). Formally known as Regulation (EU) 2023/1114, MiCA establishes uniform rules across all EU member states for the issuance, trading, and custody of crypto-assets that were previously governed by fragmented national laws.\nThe MiCA regulation applies to crypto-assets not already covered by existing EU financial regulations, including many utility tokens and stablecoins. By creating a single regulatory regime, the MiCA regulation aims to reduce legal uncertainty, eliminate regulatory arbitrage, and bring European crypto markets closer to traditional financial oversight.\nThe new system promises to make the crypto industry safer for investors and consumers, while providing a unifying standard for companies operating in the EU.",
+   "jev_score": null
+  },
+  "ca3aef0ce4442": {
+   "url": "https://sumsub.com/blog/crypto-regulations-in-the-european-union-markets-in-crypto-assets-mica",
+   "title": "MiCA Regulation and EU Crypto Rules: What Changes in 2026",
+   "content": "MiCA Regulation and EU Crypto Rules: What Changes in 2026\nSkip to content\nExpert-led compliance media\nSubscribe\nAsk AI\nJan 13, 2026\n11 min read\nMiCA Regulation and EU Crypto Rules: What Changes in 2026\nMiCA has reshaped EU crypto regulation. Learn what’s changed, when to be ready, and what EU crypto firms must do to stay compliant.\nLuke Owain Boult\nContent Writer\nAnastasia Sakharova\nHead of Fintech Compliance at Sumsub\nThe EU’s Markets in Crypto Assets (MiCA) regulation is a huge step for crypto regulations in the EU and beyond. On December 30, 2024, MiCA fully came into effect, and the transitional grandfathering period began. This phase, which is soon coming to an end, allows existing crypto-asset service providers (CASPs) that were operating legally before this date to continue their services in the EU without immediate compliance with the new regulations, provided they apply for authorization within the specified deadlines.",
+   "jev_score": null
+  },
+  "cc00f718fee5d": {
+   "url": "https://sumsub.com/blog/crypto-regulations-in-the-european-union-markets-in-crypto-assets-mica",
+   "title": "MiCA Regulation and EU Crypto Rules: What Changes in 2026",
+   "content": "MiCA timeline and implementation across Europe\nMiCA entered into force in 2023 and has followed a phased rollout, reshaping European crypto regulation:\nOn June 30, 2024, rules for ARTs and EMTs became applicable\nOn December 30, 2024, the full MiCA framework for CASPs took effect\nHowever, MiCA also includes a grandfathering transitional period for existing crypto businesses. EU member states may allow CASPs that were legally operating under national law before December 30, 2024, to continue operating until July 1, 2026, or until they receive (or are refused) MiCA Europe authorization, whichever comes first.",
+   "jev_score": null
+  },
+  "c8d30dac6c947": {
+   "url": "https://sumsub.com/blog/crypto-regulations-in-the-european-union-markets-in-crypto-assets-mica",
+   "title": "MiCA Regulation and EU Crypto Rules: What Changes in 2026",
+   "content": "Become a crypto compliance expert!\nJoin Sumsub’s free crypto Travel Rule course. Master compliance with practical insights from industry leaders.\nRegister now\nShare this article\nAdvancedAMLArticleCryptoEUEuropeRegulatory ComplianceTravel RuleVirtual Assets\nRelevant articles\nBeginner\nIntermediate\nAdvanced\nArticle\nSep 24, 2026\n7 min read\nHow Biometric Authentication Works: Benefits and Risks\nLearn how biometric authentication works, its pros and cons, and best practices for using it securely in identity verification and compliance.\nEd Prior\nContent Writer\nArticle\nSep 23, 2026\n4 min read\nAML Odyssey: How Growing Businesses Find Their Way to Ithaca\nEvery business venture is its own Odyssey. Fraudsters lurk in the shadows, regulatory storms are brewing, and mythical creatures stand between our He…\nAlisa Abramova\nManaging Editor\nArticle\nSep 9, 2026\n7 min read\nAI Agents in Compliance: How MCP and Agent Skills Work",
+   "jev_score": null
+  },
+  "c8d1eed23d01c": {
+   "url": "https://www.nortonrosefulbright.com/en/knowledge/publications/2cec201e/regulating-crypto-assets-in-europe-practical-guide-to-mica",
+   "title": "Regulating crypto-assets in Europe: Practical guide to MiCA | Global law firm | Norton Rose Fulbright",
+   "content": "That said, firms should take note that relying on grandfathering provisions do not grant them the status of a MiCA crypto-asset service provider. This has various consequences, including that such grandfathered entities will not be able to benefit from intra-EU passport.\nHow we can help\nOur financial services team has extensive experience in advising European, UK and third-country market participants in crypto-assets, including operators of trading venues, custodians and post-trade service providers, as well as a variety of other companies active in the broader FinTech sector. Unlike most other law firms, we offer a blend of legal, compliance and government relations skills in one cohesive team. This means we can help clients to prepare for legislative change by advising on legal and regulatory requirements, as well as on practical aspects of their implementation from the perspective of operational systems and controls adaptation.\n﻿\nContacts\nJonathan Herbst",
+   "jev_score": null
+  },
+  "c6292c2519594": {
+   "url": "https://www.innreg.com/blog/eu-crypto-regulation-guide",
+   "title": "EU Crypto Regulation Explained: An Essential Guide (2026)",
+   "content": "Monitor third-party service providers, especially cloud and data vendors\nDORA also introduces obligations around incident reporting. Major IT incidents must be reported to regulators promptly, along with the root cause and remediation plans.\nCompliance with DORA requires structured documentation, internal controls, and repeatable testing, as ad hoc processes do not meet the standard.\nAs such, fintech firms should treat DORA as a core component of their compliance function. Some outsource this work to compliance teams with experience in both crypto infrastructure and EU regulatory frameworks.\nSee also:\n•\nWhat Does a Principal Financial Officer (PFO) Do?\n•\nWhat Does an AML Compliance Officer Do?\n•\nWhat Are Private Placements? Definition and Examples\nE-Money and Payment Rules\nMiCA simplifies crypto regulation, but it does not replace e-money or payments law. If a product falls into either category, a firm must assess whether dual licensing or structural changes are required.",
+   "jev_score": null
+  },
+  "c0c2cab8ee918": {
+   "url": "https://www.nortonrosefulbright.com/en/knowledge/publications/2cec201e/regulating-crypto-assets-in-europe-practical-guide-to-mica",
+   "title": "Regulating crypto-assets in Europe: Practical guide to MiCA | Global law firm | Norton Rose Fulbright",
+   "content": "Regulating crypto-assets in Europe: Practical guide to MiCA | Global law firm | Norton Rose Fulbright\nSkip to main content\nExecutive summary\nOn 30 December 2024, Regulation (EU) 2023/1114 on markets in crypto-assets (MiCA) will become fully applicable. MiCA is the first European-level piece of legislation that introduces a comprehensive regulatory framework for crypto-assets, covering issues from issuance of crypto-assets, through provision of services in crypto-assets to preventing market abuse in crypto-asset markets. MiCA’s framework for asset-referenced tokens and e-money tokens has been applicable since 30 June 2024. Important for compliance efforts, the European Commission is still in the process of adopting a large number of pieces of secondary legislation setting out technical and operational details of the relevant provisions.",
+   "jev_score": null
+  },
+  "c1f77153b439d": {
+   "url": "https://sumsub.com/blog/crypto-regulations-in-the-european-union-markets-in-crypto-assets-mica",
+   "title": "MiCA Regulation and EU Crypto Rules: What Changes in 2026",
+   "content": "9 min read\nHow UK Crypto Regulations Work: FCA Rules Explained for 2026 Sep 21, 2026\n11 min read\nUAE Crypto Regulation: Licensing Rules and Compliance in 2026\nYesterday\n13 min read\nWhat Is the CLARITY Act? Full Guide to US Crypto Regulation\nSep 30, 2026\n11 min read\nSingapore's AML and KYC Compliance Guide for 2026\nSubscribe to our Newsletters\nThe go-to space for coverage on all things verification, compliance, and fraud prevention\nSubscribe\nNews\nTimely analysis of major industry events impacting compliance, fraud, and verification\nFind out more\nSubscribe to\nThe Sumsuber\nCompliance tips delivered right to your inbox\nCompany website\nSubscribe\nBy submitting this form, you agree to receive marketing communications at the email address you provided. Your personal data will be processed followingthe Privacy Notice\nWhat should we cover next?\nCompany website\nWhat should we cover? *\nTell us more *\nYour email *\nSend suggestion",
+   "jev_score": null
+  },
+  "c6ca18d1dc4c0": {
+   "url": "https://www.innreg.com/blog/eu-crypto-regulation-guide",
+   "title": "EU Crypto Regulation Explained: An Essential Guide (2026)",
+   "content": "Regulation of DeFi, NFTs, and AI-Driven Platforms: DeFi activity with identifiable developers, user interfaces, or governance mechanisms may eventually fall under bespoke rules or modified MiCA provisions. NFT platforms that fractionalize assets or offer financial returns may also face classification as financial instruments. The growing use of AI in trading, lending, and compliance functions could prompt new supervisory expectations, particularly around transparency and model risk.\nPossible Changes in MiCA Scope: European regulators are actively assessing whether these areas warrant additional oversight. Projects with ambiguous or hybrid models may soon be subject to review.",
+   "jev_score": null
+  },
+  "c64408981db24": {
+   "url": "https://www.nortonrosefulbright.com/en/knowledge/publications/2cec201e/regulating-crypto-assets-in-europe-practical-guide-to-mica",
+   "title": "Regulating crypto-assets in Europe: Practical guide to MiCA | Global law firm | Norton Rose Fulbright",
+   "content": "Who is this relevant to?\nThis note is relevant to providers of services in crypto-assets that are not financial instruments within the meaning of the revised Markets in Financial Instruments Directive (MiFID II) and to persons seeking to issue crypto-assets, including so called “stablecoins”, in Europe. This note is also relevant to persons located or established in the European Economic Area (EEA) or established outside the EEA (including in the United Kingdom) and having clients located in the EEA. It is also relevant to investment firms and credit institutions providing investment services or performing investment activities in crypto-assets that, albeit not subject to MiCA’s authorisation requirements, will have to comply with certain other requirements in MiCA.\nScope, subject matter and definitions",
+   "jev_score": null
+  },
+  "c59af5413abdf": {
+   "url": "https://www.innreg.com/blog/eu-crypto-regulation-guide",
+   "title": "EU Crypto Regulation Explained: An Essential Guide (2026)",
+   "content": "Marketing crypto services in the EU or onboarding EU users without local registration could lead to enforcement.\nSee also:\n•\nSEC Regulation A: Filing Tiers, Limits, and Compliance Steps\n•\nSEC Rule 144A: A Guide to Private Resales of Securities\n•\nBroker-Dealer Examples: How Different Broker-Dealers Operate\nWho’s Exempt (for now)\nAs of 2026, certain actors and activities fall outside MiCA, including:\nCentral banks and public institutions\nNFTs (when truly unique, non-fungible, and not part of a large series)\nCrypto-assets that qualify as financial instruments under MiFID II\nProtocols without a central operator or control structure\nHowever, it is essential to note that exemptions are narrowly defined, and the list may be subject to change over time. Regulators are already exploring future rules for DeFi, NFTs, and algorithmic stablecoins. As such, businesses in these evolving segments should monitor policy shifts and prepare for possible new obligations.",
+   "jev_score": null
+  },
+  "cfff780f66831": {
+   "url": "https://www.nortonrosefulbright.com/en/knowledge/publications/2cec201e/regulating-crypto-assets-in-europe-practical-guide-to-mica",
+   "title": "Regulating crypto-assets in Europe: Practical guide to MiCA | Global law firm | Norton Rose Fulbright",
+   "content": "T: +352 621 747 650\nMichael Born\nCounsel\nEmail\nmichael.born@nortonrosefulbright.com\nFrankfurt\nT: +49 69 505096 421\nIndustry:\nFinancial institutions\nRecent publications\nPublication\nSupreme Court of Canada will hear patent case on whether design activities constitute infringement\nOn October 22, 2026, the Supreme Court of Canada (SCC) agreed to hear an appeal in a patent dispute.\nCanada | October 29, 2026\nIntellectual property\nPublication\nSEC raises the bar: Division of examinations releases fiscal year 2027 priorities\nEach year, the US Securities and Exchange Commission’s Division of Examinations publishes its examination priorities, which identify practices, products and services that pose a risk to investors or US capital markets.\nUnited States | October 29, 2026\nFinancial services and regulation\nPublication\nFrom efficiency to insight: Building legal services around what clients really need",
+   "jev_score": null
+  },
+  "c9d92b14c98ff": {
+   "url": "https://finance.yahoo.com/markets/crypto/articles/watch-brand-european-crypto-regulations-070110178.html",
+   "title": "Watch: The brand new European crypto regulations that global companies could potentially bypass",
+   "content": "On 1 July, the EU's landmark crypto rules took full effect. The execution was a total bust for crypto firms. Fewer than 1 in 5 of Europe's 1,200 registered crypto companies secured a licence. And without it, they simply face shutdown.\nThe aim wasn't to regulate for the sake of regulating. Brussels wanted to stop crypto scams and protect everyday investors.\nBig brands like Coinbase cleared the bar, but giants like Binance got kicked out. While Brussels was working on its domestic market, Washington rewrote the rules.\nLast summer, Donald Trump signed the GENIUS Act to back stablecoins. If you're unsure what they are, I'm here to help: they are digital currencies designed to be safe by pegging their value to the US dollar. Like-for-like, but digital.\nStablecoins are not a small business. Because 95% of these tokens are tied to American currency, Trump is using this technology to expand American financial power. After all, money is power.",
+   "jev_score": null
+  },
+  "cfe4fb8591c55": {
+   "url": "https://sumsub.com/blog/crypto-regulations-in-the-european-union-markets-in-crypto-assets-mica",
+   "title": "MiCA Regulation and EU Crypto Rules: What Changes in 2026",
+   "content": "In practice, MiCA implements these objectives by introducing detailed transparency and disclosure requirements for the issuance, offering, and admission of crypto-assets to trading platforms. It establishes a harmonized framework for the authorization and ongoing supervision of crypto-asset service providers (CASPs), as well as issuers of asset-referenced tokens and e-money tokens.\nMiCA also sets clear standards for the organization, governance, and operational resilience of issuers and service providers, ensuring consistent compliance across the EU. In addition, it defines specific conduct rules and market abuse measures, including prohibitions on insider trading, unlawful disclosure of inside information, and market manipulation, thereby clarifying the responsibilities and liabilities of all regulated participants.\nSuggested read: ECB President Lagarde Warns EU to Address Stablecoin Vulnerabilities\nMiCA timeline and implementation across Europe",
+   "jev_score": null
+  },
+  "c6aab461045ae": {
+   "url": "https://finance.yahoo.com/markets/crypto/articles/watch-brand-european-crypto-regulations-070110178.html",
+   "title": "Watch: The brand new European crypto regulations that global companies could potentially bypass",
+   "content": "But here goes the plot twist. According to Euronews exclusive report, the new EU rules fail to regulate companies outside Europe so foreign companies bypass them. EU diplomats already admit the rules must be changed next year to better address how tokens created outside the EU are regulated.\nIt all might sound a bit complex but it's worth knowing what all this crypto fuss is about. However, if you want to keep your money under the bed, it's fine, I wont judge you.\nWatch the Euronews video in the player above for the full story.\nView Comments\nTerms and Privacy Policy\nYour privacy controls\nWA Consumer Health Privacy Policy\nMore Info\nDock Ask AI\nEdit your Dock\nHang tight, restoring your last session\nADVERTISEMENT\nTerms and Privacy Policy\nYour privacy controls\nWA Consumer Health Privacy Policy\nAd Terms Feedback More Info",
+   "jev_score": null
+  },
+  "c9e98293cc500": {
+   "url": "https://cointracking.info/learn/dac8-crypto-regulation",
+   "title": "DAC8 Crypto Regulation: What EU Traders Need to Know in 2026 | CoinTracking",
+   "content": "The remaining twelve — Belgium, Bulgaria, Cyprus, Czechia, Estonia, Greece, Luxembourg, Malta, the Netherlands, Poland, Portugal, and Spain — missed the deadline. In February 2026 the European Commission issued formal letters giving them two months to complete transposition, per the STEP industry briefing. For traders in these states, the practical effect is limited: your 2026 transaction data is still being collected by CASPs under the directive's direct effect, and the September 30, 2027 first-exchange deadline still applies.\nGermany — Transposed. The BZSt is the competent authority. Germany's one-year holding period exemption (tax-free gains after 12 months) remains in place — but DAC8 reporting applies regardless of whether a gain is taxable. See our Germany crypto tax guide.",
+   "jev_score": null
+  },
+  "c369fedf7de32": {
+   "url": "https://hacken.io/discover/mica-regulation",
+   "title": "MiCA Regulation: What Crypto Projects Must Know in 2026 - Hacken",
+   "content": "By requiring issuers to remain compliant with these standards, MiCA reduces the risks associated with crypto-assets where there is misinformation or a lack of information. Issuer disclosures help minimize fraud risks and establish credibility and trust in the crypto industry.\nRules for Crypto-Asset Service Providers (CASPs)\nCASPs must acquire licenses by meeting operational standards set by MiCA, which allow them to operate within the EU. These standards include meeting cybersecurity measures to protect users and investors, ensuring strong governance structures, and complying with anti-money laundering (AML) and counter-terrorism financing (CTF) obligations.\nCASPs must meet licensing criteria, which include providing proof of financial stability, appointing qualified personnel, and conducting customer due diligence (CDD).",
+   "jev_score": null
+  },
+  "c8e54fbf96eff": {
+   "url": "https://didit.me/blog/mica-regulation-eu-crypto-compliance-guide",
+   "title": "MiCA regulation 2026: the EU crypto compliance guide",
+   "content": "The Anti-Money Laundering Regulation (AMLR) applies from 10 July 2027, and the Anti-Money Laundering Authority (AMLA) announced its final draft due diligence standards on 1 October 2026.[6][8]\nUnder eIDAS 2.0, firms required by law or contract to use strong user authentication for online identification, other than micro and small enterprises, accept the EUDI Wallet at the user's request by a working date of 24 December 2027.[12][13]\nLast reviewed: 7 October 2026 · Not legal advice\nThe MiCA regulation (Markets in Crypto-Assets, Regulation (EU) 2023/1114) is the licence. It does not write the know your customer (KYC) rules: those come from the EU anti-money laundering framework, the Transfer of Funds Regulation and, for digital identity, eIDAS 2.0.[1][4][6][12] Depending on its services, status and transfers, a crypto business serving EU customers may need all four, with dates from December 2024 to 2028.\nPDF guide",
+   "jev_score": null
+  },
+  "ca7a86499e236": {
+   "url": "https://didit.me/blog/mica-regulation-eu-crypto-compliance-guide",
+   "title": "MiCA regulation 2026: the EU crypto compliance guide",
+   "content": "PDF guide\nKeep the clock, the AMLR data points, the cheat sheet and the quarterly plan on your desk. Download the PDF guide\nFrequently asked questions\nWhat is the MiCA regulation?\nMiCA, Regulation (EU) 2023/1114, is the EU rulebook for crypto-asset issuers and crypto-asset service providers. It applies from 30 December 2024, and its stablecoin titles from 30 June 2024.[1] It sets authorisation, governance, conduct and custody rules, while the KYC rules come from the anti-money laundering framework.[1][6]\nCan a crypto firm still serve EU customers without a MiCA licence?",
+   "jev_score": null
+  },
+  "c73ee4cf49d6a": {
+   "url": "https://didit.me/blog/mica-regulation-eu-crypto-compliance-guide",
+   "title": "MiCA regulation 2026: the EU crypto compliance guide",
+   "content": "What MiCA asks of you\nPassporting: once authorised, a CASP may serve clients \"throughout the Union\" without a physical presence in each country.[1] It notifies its home authority and may start in a host country when it receives that authority's communication, or at the latest on the 15th calendar day after submitting its notice (Articles 59(7) and 65(4)).[1]\nAnti-money laundering in the application: the file describes the controls, policies and procedures \"to identify, assess and manage risks, including money laundering and terrorist financing risks\" (Article 62(2)(i)).[1]\nCustody: the client agreement covers communication, \"including the client’s authentication system\", and client holdings are kept separate from the firm's own, including on the ledger (Article 75(1)(d) and 75(7)).[1]",
+   "jev_score": null
+  },
+  "cdd307307f773": {
+   "url": "https://www.unit21.ai/blog/mica-regulation-2026-faqs-what-crypto-compliance-teams-need-to-know",
+   "title": "MiCA Regulation 2026 FAQs: What crypto compliance teams need to know - Blog | Unit21",
+   "content": "‍\nBefore MiCA, crypto regulation in Europe was fragmented. Some countries like France and Germany had their own licensing regimes. Others had minimal oversight. Crypto companies could register in the most lenient jurisdiction and passport services across the bloc. AML obligations varied significantly from one member state to the next, and there was no unified definition of what a \"crypto-asset service provider\" even was.\n‍\nMiCA changes all of that. It establishes a single authorization framework, a consistent set of AML/CFT obligations, and clear enforcement mechanisms with real penalties. For compliance and fraud teams, this means the era of regulatory arbitrage within Europe is over.\n‍\nWhat Is the July 2026 Deadline, and Who Does It Apply To?",
+   "jev_score": null
+  },
+  "c7a7b5792b5ea": {
+   "url": "https://www.unit21.ai/blog/mica-regulation-2026-faqs-what-crypto-compliance-teams-need-to-know",
+   "title": "MiCA Regulation 2026 FAQs: What crypto compliance teams need to know - Blog | Unit21",
+   "content": "‍\nSince December 2024, CASPs have been required to collect full originator and beneficiary data (name, account number, address or national ID, and date of birth) for every transfer and share that data with the receiving CASP. There is no minimum threshold. Every transfer, regardless of amount, triggers the requirement.\n‍\nFor compliance teams, this means your transaction monitoring infrastructure needs to handle Travel Rule data flows. You need systems that can ingest, validate, and store sender/recipient information for every crypto transfer, and flag transfers where the required data is missing or inconsistent.\n‍\nWhat Is the Dual Licensing Complexity Starting March 2026?\nStarting in March 2026, CASPs that offer custody and transfer services for Electronic Money Tokens (EMTs) may need both MiCA authorization and a separate PSD2 payment services license. This effectively creates a dual licensing requirement for certain crypto activities.\n‍",
+   "jev_score": null
+  },
+  "cdbfecb25ced6": {
+   "url": "https://hacken.io/discover/mica-regulation",
+   "title": "MiCA Regulation: What Crypto Projects Must Know in 2026 - Hacken",
+   "content": "Why MiCA Regulation Is a Game-Changer for Crypto\nMiCA is a major step for the crypto industry because it brings greater legal clarity to a market that has long operated across fragmented regulatory environments. By introducing common rules for crypto-asset issuance, stablecoins, and crypto-asset service providers, it creates a more consistent framework for businesses operating across the EU.\nIn 2026, MiCA is no longer just a sign of where regulation is heading. It is already shaping how crypto businesses structure their operations, approach authorization, and assess long-term access to the European market.\nMiCA FAQ\nClarifications on licensing, passporting, and compliance requirements under MiCA.\nCan a crypto business still serve EU clients after 1 July 2026 without a MiCA license?\nNo. ESMA states that after 1 July 2026, any entity providing crypto-asset services to EU clients without a MiCA licence will be in breach of EU law and must cease offering those services.",
+   "jev_score": null
+  },
+  "cc6c6dfeec4f9": {
+   "url": "https://www.unit21.ai/blog/mica-regulation-2026-faqs-what-crypto-compliance-teams-need-to-know",
+   "title": "MiCA Regulation 2026 FAQs: What crypto compliance teams need to know - Blog | Unit21",
+   "content": "‍\nAudit your AML program against MiCA requirements. Do you have continuous transaction monitoring in place? Are your CDD processes documented and risk-based? Can you file SARs/STRs with the relevant FIU? Are you compliant with the Travel Rule for every transfer?\n‍\nAssess your Travel Rule infrastructure. Every crypto transfer needs full sender/recipient data flowing through your systems. If you are relying on manual processes or incomplete data, that gap needs to close before July.\n‍\nEvaluate the dual licensing question. If you handle EMTs or stablecoin-related services, determine whether you need a PSD2 license on top of your MiCA authorization.\n‍\nReview your DORA compliance. ICT risk management, incident reporting, and third-party oversight are regulatory requirements now, not optional improvements.\n‍",
+   "jev_score": null
+  },
+  "c118d2a070885": {
+   "url": "https://didit.me/blog/mica-regulation-eu-crypto-compliance-guide",
+   "title": "MiCA regulation 2026: the EU crypto compliance guide",
+   "content": "Stablecoins have their own regime: an e-money token may be offered to the public in the EU only by an issuer authorised as a credit institution or an e-money institution, after notifying and publishing a white paper, or by others with that issuer's written consent (Article 48(1)).[1] In January 2025 ESMA said trading platforms are expected to stop offering trading in such tokens when the issuer is not authorised in the EU, restricting existing services by the end of January 2025, with a \"sell only\" window until the end of the first quarter of 2025 while custody and transfers could continue.[3]\nWhat your customers notice: more questions, custody terms that explain how they log in, and fewer stablecoins.\nThe crypto Travel Rule: identity travels with every transfer",
+   "jev_score": null
+  },
+  "c3670abb607f9": {
+   "url": "https://didit.me/blog/mica-regulation-eu-crypto-compliance-guide",
+   "title": "MiCA regulation 2026: the EU crypto compliance guide",
+   "content": "Can a crypto firm still serve EU customers without a MiCA licence?\nGenerally not. A MiCA authorisation is required, subject to the Article 60 routes for banks, investment firms, e-money institutions and other listed firms, and the narrow Article 61 exception.[1] The transitional period in Article 143(3) ended on 1 July 2026 at the latest, and earlier in member states that shortened it.[1][2] Article 61 covers only an EU client who approaches a third-country firm at its own exclusive initiative.[1]\nWhat are the MiCA fines for a crypto-asset service provider?\nFor breaches of the CASP rules (Articles 59, 60, 64 and 65 to 83), Article 111(3) requires that supervisors can impose maximum fines on a company of at least EUR 5,000,000 and of at least 5% of total annual turnover.[1] For the asset-referenced token and e-money token rules the turnover floor is 12.5%, and member states may set higher amounts.[1]\nIs there a minimum amount for the crypto Travel Rule in the EU?",
+   "jev_score": null
+  },
+  "c93feb7a9bace": {
+   "url": "https://www.cyfrin.io/blog/mica-regulation-explained-a-guide-to-eu-crypto-compliance",
+   "title": "MiCA Regulation Explained: A Guide To EU Crypto Compliance",
+   "content": "Who does MiCA apply to?\nMiCA applies to two groups operating in the EU market. The first is crypto-asset issuers. This refers to any legal entity creating and offering crypto-assets to the public or seeking admission to trading platforms. The definition includes issuers of utility tokens, asset-referenced tokens (stablecoins), and e-money tokens. Whether you’re launching a new token or managing an existing one, if you’re targeting EU residents, MiCA applies. Secondly, this regulation applies to crypto-asset service providers. The definition of which encompasses all businesses providing crypto-related services, including:\nExchanges and trading platforms\n‍\nCustodians and self-custody wallet providers\n‍\nPortfolio managers and advisors\n‍\nOrder execution services\n‍\nPlacement agents\n‍\nTransfer services providers\n‍",
+   "jev_score": null
+  },
+  "c6d932988ab7c": {
+   "url": "https://stealthex.io/blog/mica-compliant-stablecoins",
+   "title": "MiCA-Compliant Stablecoins in 2026: EU Rules, USDC, EURC and USDT",
+   "content": "Users can also convert stablecoins through non-custodial services such as StealthEX, including through a dedicated USDT to USDC exchange, without maintaining a long-term balance on a centralized trading platform.\nSelf-Custody, DeFi, and MiCA Stablecoin Compliance\nHolding Stablecoins in Personal Wallets\nMiCA mainly regulates issuers, public offers, admission to trading and crypto-asset service providers; it does not turn a personal wallet into a licensed exchange. Holding a stablecoin in self-custody is therefore different from receiving a regulated service involving that token under the scope of the MiCA Regulation.\nWallet owners still carry seed-phrase, private-key, phishing, network and transaction-finality risks. Tax duties and other local rules can apply, and a token held in a wallet may later be restricted by a regulated platform.\nDeFi, DEXs and On-Chain Swaps Under MiCA",
+   "jev_score": null
+  },
+  "c4d09822a1cdb": {
+   "url": "https://stealthex.io/blog/mica-compliant-stablecoins",
+   "title": "MiCA-Compliant Stablecoins in 2026: EU Rules, USDC, EURC and USDT",
+   "content": "MiCA-Compliant Stablecoins in 2026: EU Rules, USDC, EURC and USDT\nSkip to content\nMiCA-Compliant Stablecoins: Complete Guide for EU Users in 2026\nSeptember 17, 2026\n• All • Reading Time: 10 minutes 10 min\nWRITTEN BY\nMaciej Zerelik\nCrypto investor and blockchain researcher\nAuthor profile\nMiCA sets EU-wide rules for stablecoin issuers and crypto-asset service providers, but compliance does not automatically determine availability on every platform. This guide explains MiCA stablecoins, including EMTs and ARTs, and reviews USDC, EURC and USDT. It also covers regulated exchanges, self-custody and on-chain swaps, helping EU users separate legal status from practical access. Read the full guide to understand what MiCA actually changes for stablecoin users in 2026 and what to check before buying, holding, transferring or swapping stablecoins in the EU.\nArticle contents\n1 What Is MiCA and Why Does It Affect Stablecoins?\n1.1 MiCA Stablecoin Regulation Explained\n1.2 MiCA’s Impact on Stablecoins",
+   "jev_score": null
+  },
+  "c3b87eb71e379": {
+   "url": "https://www.cyfrin.io/blog/mica-regulation-explained-a-guide-to-eu-crypto-compliance",
+   "title": "MiCA Regulation Explained: A Guide To EU Crypto Compliance",
+   "content": "The European Commission (EC), the EU’s executive body responsible for proposing and reviewing legislation, is expected to assess developments in DeFi and NFTs and may propose new regulatory measures. However, an open timeline leaves new and exciting projects uncertain about their future from a regulatory perspective. Many in the industry also predict a gradual expansion of MiCA’s scope to areas not originally included or intended, potentially including personal wallets or purely decentralized protocols.\n‍\nStablecoin restrictions: Innovation vs competition",
+   "jev_score": null
+  },
+  "c63b1c99a3558": {
+   "url": "https://stealthex.io/blog/mica-compliant-stablecoins",
+   "title": "MiCA-Compliant Stablecoins in 2026: EU Rules, USDC, EURC and USDT",
+   "content": "Follow us on Medium, X, Telegram, YouTube, and Publish0x to stay updated about the latest news on StealthEX.io and the rest of the crypto world.\nDon’t forget to do your own research before buying any crypto. The views and opinions expressed in this article are solely those of the author.\nTags: crypto regulation Euro European Union MiCA USDT\nShare Post\nRecent Articles on Cryptocurrency\nOctober 29, 2026\nInvestment\nAltcoin Season Index: Current Value, Signals & 2026 Guide\nCheck the Altcoin Season Index today, understand its current value, and learn the signals that show when capital may rotate…\nOctober 29, 2026\nPrice Prediction\nRain (RAIN) Price Prediction 2026, 2027-2030\nExplore Rain price prediction for 2026, 2027, and up to 2050: find detailed analysis and up-to-date charts. Check RAIN price…",
+   "jev_score": null
+  },
+  "cc1961600b364": {
+   "url": "https://stealthex.io/blog/mica-compliant-stablecoins",
+   "title": "MiCA-Compliant Stablecoins in 2026: EU Rules, USDC, EURC and USDT",
+   "content": "Why Some Platforms Restrict or Delist USDT\nPlatforms may restrict a stablecoin because of issuer status, MiCA compliance assessments or internal risk policy. Binance removed trading pairs involving USDT and other non-MiCA-compliant stablecoins for EEA users from 31 March 2025, while continuing deposits, withdrawals and limited conversion functions.\nSimilarly, Coinbase restricts USDT and several other stablecoins for affected European retail customers, while Kraken lists USDT among the stablecoins delisted for EEA clients.\nThese are platform-level restrictions and compliance decisions, not an EU-wide prohibition on private possession of USDT.\nCan Europeans Still Hold and Transfer USDT?\nEuropeans can technically hold USDT in a compatible self-custody wallet and transfer it on supported blockchains, but that does not guarantee access to a regulated exchange, DEX interface or DeFi app.",
+   "jev_score": null
+  },
+  "c76884eda64f5": {
+   "url": "https://stealthex.io/blog/mica-compliant-stablecoins",
+   "title": "MiCA-Compliant Stablecoins in 2026: EU Rules, USDC, EURC and USDT",
+   "content": "MiCA entered into force on 29 June 2023. EMT and ART rules have applied since 30 June 2024; the wider framework, including most rules for crypto-asset service providers, has applied since 30 December 2024. This classification changes issuer duties.\nMiCA’s Impact on Stablecoins\nMiCA focuses on issuer authorization, redemption, reserves or safeguarded funds, disclosures, governance and consumer protection. An issuer’s authorization, a token’s notified white paper and an exchange’s decision to support it are separate questions.\nNon-compliance can affect issuance, public offers, admission to trading or services around a token, but it does not itself create a blanket EU ban on an individual holding that token in a personal wallet. This distinction between regulated crypto-asset services and individual ownership follows from the scope of the EU MiCA framework.\nMiCA Stablecoin Rules, Requirements and Application Dates\nEMTs and ARTs: Key Differences",
+   "jev_score": null
+  },
+  "c9fd141c23bcb": {
+   "url": "https://www.cyfrin.io/blog/mica-regulation-explained-a-guide-to-eu-crypto-compliance",
+   "title": "MiCA Regulation Explained: A Guide To EU Crypto Compliance",
+   "content": "The early compliance advantage\nHow Cyfrin can help\nIntroduction\nThe European Union's (EU) Markets in Crypto-Assets Regulation (MiCA) has fundamentally changed how crypto businesses operate across Europe's 27 member states. Whether you're issuing tokens, running an exchange, providing custody services, or building protocols that users in Europe will interact with, MiCA sets a regulatory baseline that cannot be ignored. With full enforcement underway since December 2024 and over €540 million in penalties already issued, understanding your obligations isn't optional. It's essential for survival. This guide breaks down MiCA's requirements, challenges, and proposed future developments, providing clarity to help crypto-asset service providers (CASPs) strategically navigate Europe's regulatory landscape. From authorization processes to enforcement consequences, this covers everything enterprise teams and protocols need to know.\nClick here for the tl;dr.\n‍",
+   "jev_score": null
+  },
+  "c7df766bc7567": {
+   "url": "https://stealthex.io/blog/mica-compliant-stablecoins",
+   "title": "MiCA-Compliant Stablecoins in 2026: EU Rules, USDC, EURC and USDT",
+   "content": "MiCA Application Dates and Transitional Periods\nMiCA’s transitional regime for crypto-asset service providers allowed eligible firms already operating legally before 30 December 2024 to continue until 1 July 2026 or until their MiCA authorization was granted or refused, whichever happened first. Member States could shorten or avoid that transitional period.\nDate\nWhat happened\nWhy it matters\n29 June 2023\nMiCA entered into force\nThe regulation became part of EU law\n30 June 2024\nEMT and ART provisions began to apply\nStablecoin issuers became subject to dedicated rules\n30 December 2024\nBroader MiCA framework began to apply\nCASP and wider crypto-asset requirements became applicable\n1 July 2026\nMaximum EU MiCA transitional period expired\nEligible CASPs could no longer rely on Article 143 grandfathering beyond this date\nPlatform availability can still differ by jurisdiction, product, provider policy and authorization even after the end of the transitional regime.",
+   "jev_score": null
+  },
+  "c2f0c3e863e93": {
+   "url": "https://stealthex.io/blog/mica-compliant-stablecoins",
+   "title": "MiCA-Compliant Stablecoins in 2026: EU Rules, USDC, EURC and USDT",
+   "content": "Other platforms may use different authorized entities. Availability, deposit methods, trading pairs, fees and supported withdrawal networks can therefore vary between countries and providers.\nSwapping Stablecoins Through Non-Custodial Services\nA non-custodial swap differs from a centralized exchange because it allows users to exchange crypto without keeping a standing balance on the platform. Services such as StealthEX route the swap while the user sends funds from one wallet and receives the exchanged asset directly to a chosen receiving address.",
+   "jev_score": null
+  },
+  "ccb37667e9e59": {
+   "url": "https://www.cyfrin.io/blog/mica-regulation-explained-a-guide-to-eu-crypto-compliance",
+   "title": "MiCA Regulation Explained: A Guide To EU Crypto Compliance",
+   "content": "Dual licensing challenges extend these concerns. From March 2026, Electronic Money Token custody and transfer services may require both MiCA authorization and separate payment services licenses under the Payment Services Directive 2 (PSD2), potentially doubling compliance costs. Providers in the market are concerned that this overlap undermines Euro stablecoin competitiveness and innovation, driving providers elsewhere. Major stablecoins like USDT remain non-compliant, forcing exchanges to delist them and fragment liquidity. While this does achieve the goal of protecting consumers, it also pushes users toward offshore alternatives or restricts access to key global stablecoins.\n‍",
+   "jev_score": null
+  },
+  "cca3a328fbbf9": {
+   "url": "https://stealthex.io/blog/mica-compliant-stablecoins",
+   "title": "MiCA-Compliant Stablecoins in 2026: EU Rules, USDC, EURC and USDT",
+   "content": "Current List of MiCA-Compliant Stablecoins in 2026\nCurrent List of Stablecoins Issued Under MiCA Requirements\nThe ESMA MiCA register covers issuers of e-money tokens and asset-referenced tokens, relevant crypto-asset white papers and authorized crypto-asset service providers. Regulatory and platform status can change, so the examples below should be treated as a current reference rather than a permanently complete list.\nToken\nTicker\nIssuer\nCategory\nRegulatory / white-paper evidence\nAvailability\nUSD Coin\nUSDC\nCircle Internet Financial Europe SAS\nEMT\nFrench EMI; MiCA issuer documentation\nPlatform and country dependent\nEURC\nEURC\nCircle Internet Financial Europe SAS\nEMT\nFrench EMI; MiCA issuer documentation\nPlatform and country dependent\nEUR CoinVertible\nEURCV\nSociété Générale-FORGE\nEMT\nFrench EMI; MiCA white paper\nPlatform and country dependent\nEurite\nEURI\nBanking Circle S.A.\nEMT\nMiCA EMT white paper\nPlatform and country dependent\nEURQ / USDQ\nEURQ / USDQ\nQuantoz Payments B.V.\nEMTs",
+   "jev_score": null
+  },
+  "c73f3e1376ad3": {
+   "url": "https://stealthex.io/blog/mica-compliant-stablecoins",
+   "title": "MiCA-Compliant Stablecoins in 2026: EU Rules, USDC, EURC and USDT",
+   "content": "1.1 MiCA Stablecoin Regulation Explained\n1.2 MiCA’s Impact on Stablecoins\n2 MiCA Stablecoin Rules, Requirements and Application Dates\n2.1 EMTs and ARTs: Key Differences\n2.2 Authorization, Reserves and Redemption Rights\n2.3 MiCA Application Dates and Transitional Periods\n3 Current List of MiCA-Compliant Stablecoins in 2026\n3.1 Current List of Stablecoins Issued Under MiCA Requirements\n3.2 Which Stablecoins Are MiCA Compliant?\n3.3 Stablecoins With Restricted or Unclear EU Availability\n4 USDC and EURC: MiCA Compliance and Availability\n4.1 Is USDC MiCA Compliant?\n4.2 Is EURC MiCA Compliant?\n4.3 USDC vs. EURC for EU Users\n5 USDT in Europe: What MiCA Actually Restricts\n5.1 Is USDT Banned in Europe?\n5.2 Why Some Platforms Restrict or Delist USDT\n5.3 Can Europeans Still Hold and Transfer USDT?\n6 How to Buy and Swap Stablecoins Under MiCA\n6.1 Buying USDC Through Regulated Platforms\n6.2 Swapping Stablecoins Through Non-Custodial Services\n6.3 Converting USDT to USDC or EURC",
+   "jev_score": null
+  },
+  "c4fe04a67719b": {
+   "url": "https://www.cyfrin.io/blog/mica-regulation-explained-a-guide-to-eu-crypto-compliance",
+   "title": "MiCA Regulation Explained: A Guide To EU Crypto Compliance",
+   "content": "Click here for the tl;dr.\n‍\nWhat is MiCA? Understanding the markets in crypto-asset regulation\nMiCA is the European Union’s comprehensive regulatory framework for crypto-assets. Fully applied since December 2024, MiCA defines uniform rules for the regulation and supervision of cryptocurrencies across the EU. It replaced the previous patchwork of national regulations that created uncertainty for businesses and left consumers vulnerable to fraud, loss of funds, and inconsistent protection. Regulation was inevitable following the staggering growth of digital assets in 2021 that saw crypto’s market capitalization grow beyond $3 trillion, and general public awareness of the web3 landscape increase exponentially. Rapid growth in young, developing markets ultimately brings risk. For CASPs and their industry, this came in the form of high-profile collapses, fraud, volatility, and market manipulation, all of which exposed gaps in the existing financial services legislation.",
+   "jev_score": null
+  },
+  "c50a904233ef4": {
+   "url": "https://stealthex.io/blog/mica-compliant-stablecoins",
+   "title": "MiCA-Compliant Stablecoins in 2026: EU Rules, USDC, EURC and USDT",
+   "content": "The process is relatively simple. A user selects an exchange pair, enters a receiving wallet address, sends the required deposit and waits for the transaction to be processed. The exchanged tokens are then sent to the specified wallet. This can be useful for stablecoin conversions when a user does not want to maintain funds on a centralized exchange. For example, StealthEX currently provides a dedicated USDT to USDC exchange, allowing users to check the available pair and estimated conversion before initiating the transaction.\nBefore swapping, check the exact token and network, quoted amount, network and service fees, limits and available liquidity. Non-custodial does not mean universally “no KYC”: screening or verification can still apply under the service’s rules and applicable compliance requirements.",
+   "jev_score": null
+  },
+  "cec0ff6e63ce9": {
+   "url": "https://stealthex.io/blog/mica-compliant-stablecoins",
+   "title": "MiCA-Compliant Stablecoins in 2026: EU Rules, USDC, EURC and USDT",
+   "content": "6.2 Swapping Stablecoins Through Non-Custodial Services\n6.3 Converting USDT to USDC or EURC\n7 Self-Custody, DeFi, and MiCA Stablecoin Compliance\n7.1 Holding Stablecoins in Personal Wallets\n7.2 DeFi, DEXs and On-Chain Swaps Under MiCA\n8 Future Outlook for MiCA-Regulated Stablecoins\n8.1 Growth of Euro-Pegged Stablecoins\n8.2 MiCA Guidance, AML Rules and Digital Euro Implications\nWhat Is MiCA and Why Does It Affect Stablecoins?\nMiCA Stablecoin Regulation Explained\nThe EU’s Markets in Crypto-Assets Regulation (MiCA) sets common rules for crypto-assets not already covered by EU financial law. Stablecoins receive dedicated treatment. They are mainly split into e-money tokens (EMTs), which reference one official currency, and asset-referenced tokens (ARTs), which reference other assets, rights, currencies or combinations.",
+   "jev_score": null
+  },
+  "ca66c81f0c594": {
+   "url": "https://stealthex.io/blog/mica-compliant-stablecoins",
+   "title": "MiCA-Compliant Stablecoins in 2026: EU Rules, USDC, EURC and USDT",
+   "content": "MiCA primarily regulates defined crypto-asset services and their providers, while the treatment of genuinely decentralized arrangements depends on how the service is structured. This distinction forms part of the broader EU regulatory framework established by MiCA.\nConverting USDT to USDC or EURC\nConverting some or all USDT to USDC or EURC may make sense for EU users who want easier access to MiCA-aligned stablecoins, different currency exposure or broader compatibility with regulated services. It is not a legal requirement, and there is no need to convert solely because MiCA applies.\nUSDC may be more practical for users who still want exposure to a US dollar-pegged stablecoin, while EURC can be useful for those who prefer euro-denominated value and want to reduce repeated USD/EUR conversion exposure. Liquidity, supported networks and availability can still differ between wallets, exchanges and swap services.",
+   "jev_score": null
+  }
+ },
+ "report": {
+  "markdown": "# Regulatory Changes Affecting the Crypto Industry in Europe\n\n## Executive Summary\n\nThe European crypto industry is being reshaped by a **stack of overlapping regulatory changes**, led by the EU’s Markets in Crypto-Assets Regulation (**MiCA**), but extending well beyond it into **AML/KYC**, the **Travel Rule**, **operational resilience**, **payments/e-money law**, and **tax reporting**. The single biggest change is that Europe has moved from a fragmented, nationally uneven environment to a **licence-based, pan-EU supervisory regime** that is much closer to traditional financial regulation than the crypto sector previously experienced. In practical terms, this means that access to the European market is increasingly determined by a firm’s ability to obtain authorization, document governance, manage AML risk, handle customer data, and maintain resilient technology infrastructure rather than by speed of market entry alone ([Norton Rose Fulbright, 2026](https://www.nortonrosefulbright.com/en/knowledge/publications/2cec201e/regulating-crypto-assets-in-europe-practical-guide-to-mica); [Sumsub, 2026](https://sumsub.com/blog/crypto-regulations-in-the-european-union-markets-in-crypto-assets-mica)).\n\nMy assessment is that **MiCA is the anchor regulation, but not the whole story**. The most consequential development for crypto businesses is the combination of:  \n1. **MiCA authorization and passporting rules**,  \n2. **the expiry of transitional/grandfathering periods**,  \n3. **stablecoin-specific constraints**,  \n4. **full Travel Rule data-sharing obligations**,  \n5. **DORA-style ICT and third-party risk controls**, and  \n6. **DAC8 tax transparency reporting**.  \n\nTogether, these rules reduce regulatory arbitrage and increase legal certainty, but they also **raise fixed compliance costs** and are likely to favor larger, better-capitalized operators over smaller or offshore firms ([Unit21, 2026](https://www.unit21.ai/blog/mica-regulation-2026-faqs-what-crypto-compliance-teams-need-to-know); [CoinTracking, 2026](https://cointracking.info/learn/dac8-crypto-regulation)).\n\n## The Core Regulatory Shift: MiCA\n\n### Europe’s first comprehensive crypto rulebook\n\nMiCA, formally **Regulation (EU) 2023/1114**, is the EU’s first comprehensive framework for crypto-assets and crypto-asset service providers (**CASPs**). It creates harmonized rules across EU member states for crypto-assets not already covered by existing EU financial services law, replacing the earlier patchwork of national regimes that created uncertainty and encouraged regulatory arbitrage ([Norton Rose Fulbright, 2026](https://www.nortonrosefulbright.com/en/knowledge/publications/2cec201e/regulating-crypto-assets-in-europe-practical-guide-to-mica); [Sumsub, 2026](https://sumsub.com/blog/crypto-regulations-in-the-european-union-markets-in-crypto-assets-mica)).\n\nMiCA covers the full lifecycle of many crypto activities, including **issuance**, **offering to the public**, **admission to trading**, **crypto-asset services**, and **market abuse prevention**. The regulation is therefore not just a licensing regime; it is also a conduct, disclosure, and market integrity framework ([Norton Rose Fulbright, 2026](https://www.nortonrosefulbright.com/en/knowledge/publications/2cec201e/regulating-crypto-assets-in-europe-practical-guide-to-mica); [Sumsub, 2026](https://sumsub.com/blog/crypto-regulations-in-the-european-union-markets-in-crypto-assets-mica)).\n\n### Key implementation milestones\n\nMiCA has rolled out in phases, with different obligations becoming applicable on different dates:\n\n| Date | Regulatory change | Why it matters |\n|---|---|---|\n| 29 June 2023 | MiCA entered into force | Became part of EU law ([StealthEX, 2026](https://stealthex.io/blog/mica-compliant-stablecoins)) |\n| 30 June 2024 | Rules for asset-referenced tokens (ARTs) and e-money tokens (EMTs) became applicable | Stablecoins became subject to dedicated issuer rules ([Norton Rose Fulbright, 2026](https://www.nortonrosefulbright.com/en/knowledge/publications/2cec201e/regulating-crypto-assets-in-europe-practical-guide-to-mica); [Sumsub, 2026](https://sumsub.com/blog/crypto-regulations-in-the-european-union-markets-in-crypto-assets-mica)) |\n| 30 December 2024 | Full MiCA framework for CASPs took effect | Exchanges, custodians, advisers, and other service providers came under EU-wide authorization rules ([Norton Rose Fulbright, 2026](https://www.nortonrosefulbright.com/en/knowledge/publications/2cec201e/regulating-crypto-assets-in-europe-practical-guide-to-mica); [Sumsub, 2026](https://sumsub.com/blog/crypto-regulations-in-the-european-union-markets-in-crypto-assets-mica)) |\n| 1 July 2026 | Maximum transitional period expired | Grandfathered firms could no longer rely on Article 143 beyond this date ([Sumsub, 2026](https://sumsub.com/blog/crypto-regulations-in-the-european-union-markets-in-crypto-assets-mica); [StealthEX, 2026](https://stealthex.io/blog/mica-compliant-stablecoins)) |\n\nThis timeline matters because it marks the transition from **preparation** to **enforcement**. As of late 2026, MiCA is no longer a future compliance project; it is a live operational reality for firms serving EU clients ([Hacken, 2026](https://hacken.io/discover/mica-regulation)).\n\n## Who Is Affected\n\nMiCA is relevant to both **issuers of crypto-assets** and **CASPs** operating in Europe or serving European clients. Norton Rose specifically notes that the framework is relevant not only to persons located or established in the EEA, but also to persons established **outside the EEA**, including in the UK, if they have clients located in the EEA ([Norton Rose Fulbright, 2026](https://www.nortonrosefulbright.com/en/knowledge/publications/2cec201e/regulating-crypto-assets-in-europe-practical-guide-to-mica)).\n\nCASPs include firms such as exchanges, trading platforms, custodians, transfer service providers, order execution businesses, portfolio managers, and advisers focused on crypto-assets ([Cyfrin, 2026](https://www.cyfrin.io/blog/mica-regulation-explained-a-guide-to-eu-crypto-compliance)).\n\nAt the same time, MiCA does **not** apply to every crypto-related activity. Sources indicate that important areas outside the current perimeter include:  \n- crypto-assets that qualify as **financial instruments** under MiFID II,  \n- genuinely unique **NFTs**,  \n- central banks and public institutions, and  \n- protocols without a central operator or control structure, at least for now ([Norton Rose Fulbright, 2026](https://www.nortonrosefulbright.com/en/knowledge/publications/2cec201e/regulating-crypto-assets-in-europe-practical-guide-to-mica); [InnReg, 2026](https://www.innreg.com/blog/eu-crypto-regulation-guide)).\n\n## Authorization, Passporting, and the End of Regulatory Arbitrage\n\n### MiCA authorization is now central\n\nAny person that continues to provide crypto-asset services in Europe after 30 December 2024 must assess whether MiCA authorization is required. Norton Rose warns that preparing the required documentation, policies, and procedures can be a **lengthy process**, especially for firms with complex operations or no existing European presence. It also warns of potential **application bottlenecks** at national competent authorities (**NCAs**) as deadlines approach ([Norton Rose Fulbright, 2026](https://www.nortonrosefulbright.com/en/knowledge/publications/2cec201e/regulating-crypto-assets-in-europe-practical-guide-to-mica)).\n\nThis is a major departure from the previous environment, where firms could often operate under lighter local registrations or exploit divergence among member states. Unit21 characterizes MiCA as ending the era of **intra-European regulatory arbitrage** ([Unit21, 2026](https://www.unit21.ai/blog/mica-regulation-2026-faqs-what-crypto-compliance-teams-need-to-know)).\n\n### Transitional relief is over, and grandfathering had limits\n\nMiCA allowed a transitional period under which some firms that had been operating legally under national law before 30 December 2024 could continue temporarily until **1 July 2026**, or until they received or were refused authorization, whichever came first. However, member states were permitted to shorten or not use that transitional period ([Sumsub, 2026](https://sumsub.com/blog/crypto-regulations-in-the-european-union-markets-in-crypto-assets-mica); [StealthEX, 2026](https://stealthex.io/blog/mica-compliant-stablecoins)).\n\nCrucially, Norton Rose stresses that **grandfathering did not make a firm a MiCA-authorized CASP**. One practical consequence is that grandfathered firms could **not benefit from intra-EU passporting** ([Norton Rose Fulbright, 2026](https://www.nortonrosefulbright.com/en/knowledge/publications/2cec201e/regulating-crypto-assets-in-europe-practical-guide-to-mica)).\n\n### Passporting is a strategic advantage\n\nOnce authorized, a CASP can provide services **throughout the Union** without setting up a physical presence in every member state. Didit notes that a CASP may begin in a host state once the home authority communicates the notification, or at the latest on the **15th calendar day** after the notice is submitted ([Didit, 2026](https://didit.me/blog/mica-regulation-eu-crypto-compliance-guide)).\n\nThe regulatory effect is clear: **authorization has become a distribution right**. In my view, this is one of MiCA’s most commercially significant features because it turns compliance into a market access asset.\n\n## Stablecoins: The Tightest Immediate Change\n\n### EMTs and ARTs are under dedicated regulation\n\nThe most visible early impact of MiCA has been on stablecoins. Since **30 June 2024**, ARTs and EMTs have been subject to a dedicated regime covering authorization, reserves or safeguarded funds, governance, disclosures, and redemption rights ([Norton Rose Fulbright, 2026](https://www.nortonrosefulbright.com/en/knowledge/publications/2cec201e/regulating-crypto-assets-in-europe-practical-guide-to-mica); [StealthEX, 2026](https://stealthex.io/blog/mica-compliant-stablecoins)).\n\nDidit summarizes a particularly important rule: an **e-money token may be offered to the public in the EU only by an issuer authorized as a credit institution or e-money institution**, after notifying and publishing a white paper, or by others with that issuer’s written consent ([Didit, 2026](https://didit.me/blog/mica-regulation-eu-crypto-compliance-guide)).\n\n### Market impact: restrictions and delistings\n\nThese rules have had immediate commercial consequences. Industry reporting indicates that platforms have restricted or delisted non-MiCA-compliant stablecoins for EEA users. StealthEX cites examples involving **Binance**, **Coinbase**, and **Kraken** limiting USDT-related services in parts of Europe, while emphasizing that these are often **platform-level compliance decisions** rather than blanket EU bans on private possession ([StealthEX, 2026](https://stealthex.io/blog/mica-compliant-stablecoins)).\n\nDidit also reports that ESMA stated in January 2025 that trading platforms were expected to stop offering trading in EMTs where the issuer was not authorized in the EU, with a temporary **“sell only”** window until the end of the first quarter of 2025 while custody and transfers could continue ([Didit, 2026](https://didit.me/blog/mica-regulation-eu-crypto-compliance-guide)).\n\nThis distinction matters. MiCA is **not primarily criminalizing private ownership of tokens in self-custody**; it is regulating **issuance, offering, trading admission, and service provision** around those tokens ([StealthEX, 2026](https://stealthex.io/blog/mica-compliant-stablecoins)).\n\n## AML/KYC and the Travel Rule: Compliance Has Become Data-Intensive\n\nMiCA is often treated as the “crypto licence,” but it does **not itself contain the full KYC rulebook**. Didit notes that KYC obligations come from the wider EU AML framework, the **Transfer of Funds Regulation**, and other adjacent laws ([Didit, 2026](https://didit.me/blog/mica-regulation-eu-crypto-compliance-guide)).\n\nA major current change is that, since **December 2024**, CASPs have been required to collect **full originator and beneficiary information for every crypto transfer**, with **no minimum threshold**. Unit21 specifies that this includes name, account number, address or national ID, and date of birth, with the data needing to be shared with the receiving CASP ([Unit21, 2026](https://www.unit21.ai/blog/mica-regulation-2026-faqs-what-crypto-compliance-teams-need-to-know)).\n\nThis is operationally significant because it turns compliance into a **data exchange architecture problem**, not just a policy problem. Firms need systems that can ingest, validate, transmit, and store Travel Rule data for every transfer, and detect missing or inconsistent information ([Unit21, 2026](https://www.unit21.ai/blog/mica-regulation-2026-faqs-what-crypto-compliance-teams-need-to-know)).\n\nMiCA authorization applications also require applicants to describe the controls, policies, and procedures they will use to identify, assess, and manage **money laundering and terrorist financing risks** ([Didit, 2026](https://didit.me/blog/mica-regulation-eu-crypto-compliance-guide)).\n\n## DORA and Operational Resilience: Technology Risk Is Now a Regulatory Issue\n\nEurope’s crypto regulatory changes are not limited to financial conduct. Firms also face increasing operational resilience expectations. InnReg states that the EU’s Digital Operational Resilience Act (**DORA**) requires firms to monitor critical third-party providers, especially **cloud and data vendors**, and to report major ICT incidents promptly, including root causes and remediation plans. It also emphasizes that structured documentation, internal controls, and repeatable testing are necessary to comply ([InnReg, 2026](https://www.innreg.com/blog/eu-crypto-regulation-guide)).\n\nUnit21 similarly advises compliance teams to review DORA compliance because ICT risk management, incident reporting, and third-party oversight are now regulatory requirements, not optional good practice ([Unit21, 2026](https://www.unit21.ai/blog/mica-regulation-2026-faqs-what-crypto-compliance-teams-need-to-know)).\n\nThe practical consequence is that crypto firms can no longer treat infrastructure choices as purely technical or commercial matters. Vendor management and cyber resilience have become **supervisory topics**.\n\n## Overlap With Payments and E-Money Law\n\nMiCA does not replace existing **payments** or **e-money** law. InnReg notes that if a crypto product falls within those categories, firms may need to consider **dual licensing or structural changes** ([InnReg, 2026](https://www.innreg.com/blog/eu-crypto-regulation-guide)).\n\nIndustry sources report that, from **March 2026**, CASPs offering custody and transfer services for EMTs may in some cases need both **MiCA authorization** and a separate **PSD2 payment services licence**, increasing cost and complexity ([Unit21, 2026](https://www.unit21.ai/blog/mica-regulation-2026-faqs-what-crypto-compliance-teams-need-to-know); [Cyfrin, 2026](https://www.cyfrin.io/blog/mica-regulation-explained-a-guide-to-eu-crypto-compliance)).\n\nEven where legal interpretation remains fact-specific, the trend is unmistakable: **stablecoin-related activities are being pulled closer to conventional payment regulation**.\n\n## Tax Transparency: DAC8 Is Expanding the Reporting Burden\n\nA separate but important regulatory change is **DAC8**, the EU framework for tax reporting on crypto-assets. CoinTracking reports that, although some member states missed the transposition deadline, the European Commission sent formal letters in **February 2026** to **12 countries**—Belgium, Bulgaria, Cyprus, Czechia, Estonia, Greece, Luxembourg, Malta, the Netherlands, Poland, Portugal, and Spain—giving them two months to complete transposition ([CoinTracking, 2026](https://cointracking.info/learn/dac8-crypto-regulation)).\n\nFor traders and firms, CoinTracking says the practical effect is that **2026 transaction data is still being collected by CASPs**, and the first exchange deadline is **30 September 2027** ([CoinTracking, 2026](https://cointracking.info/learn/dac8-crypto-regulation)).\n\nThis is another indication that Europe is moving crypto into a standard financial transparency model: not only licensed and supervised, but also systematically reportable to tax authorities.\n\n## Enforcement Risk and Market Consequences\n\nMiCA’s enforcement architecture is meaningful. Didit states that, for breaches of CASP rules, supervisors must be able to impose maximum fines on a company of at least **EUR 5,000,000** and at least **5% of total annual turnover**, while for ART and EMT rules the turnover floor is **12.5%**, with member states free to set higher levels ([Didit, 2026](https://didit.me/blog/mica-regulation-eu-crypto-compliance-guide)).\n\nNorton Rose also notes that providers operating without the required authorization may be placed on a **register of non-compliant CASPs** ([Norton Rose Fulbright, 2026](https://www.nortonrosefulbright.com/en/knowledge/publications/2cec201e/regulating-crypto-assets-in-europe-practical-guide-to-mica)).\n\nMedia coverage suggests the licensing transition has been difficult in practice. Yahoo Finance, citing a Euronews report, said that **fewer than 1 in 5 of Europe’s 1,200 registered crypto companies** had secured a licence when the new rules took full effect, illustrating market strain even if that figure should be treated as journalistic rather than official supervisory data ([Yahoo Finance, 2026](https://finance.yahoo.com/markets/crypto/articles/watch-brand-european-crypto-regulations-070110178.html)).\n\n## Future Regulatory Pressure: DeFi, NFTs, Offshore Firms, and Secondary Rules\n\nEurope’s regulatory framework is still evolving. Norton Rose notes that the European Commission is **still adopting secondary legislation** that sets technical and operational details for MiCA, meaning firms must track not only the core regulation but also implementing measures ([Norton Rose Fulbright, 2026](https://www.nortonrosefulbright.com/en/knowledge/publications/2cec201e/regulating-crypto-assets-in-europe-practical-guide-to-mica)).\n\nSeveral sources also indicate that **DeFi**, **NFTs**, **AI-enabled crypto platforms**, and **algorithmic or hybrid token models** may face future rule changes. InnReg and Cyfrin both suggest European regulators are considering whether ambiguous or hybrid arrangements should face additional oversight ([InnReg, 2026](https://www.innreg.com/blog/eu-crypto-regulation-guide); [Cyfrin, 2026](https://www.cyfrin.io/blog/mica-regulation-explained-a-guide-to-eu-crypto-compliance)).\n\nThere is also pressure around the treatment of **foreign or offshore token issuers**. Yahoo Finance reported that EU diplomats had already acknowledged potential gaps regarding tokens created outside Europe and that amendments may be needed ([Yahoo Finance, 2026](https://finance.yahoo.com/markets/crypto/articles/watch-brand-european-crypto-regulations-070110178.html)).\n\n## Conclusion\n\nThe regulatory changes affecting the crypto industry in Europe are **broad, structural, and cumulative**. MiCA has transformed crypto from a fragmented market governed largely by national registration, informal practice, and legal uncertainty into a more standardized and highly supervised financial services sector. But the deeper change is the **layering effect**: MiCA licensing, stablecoin restrictions, Travel Rule data-sharing, DORA resilience obligations, tax reporting under DAC8, and possible overlap with PSD2 and AML reform.\n\nMy concrete view is that **Europe is not merely regulating crypto more strictly; it is normalizing crypto into the architecture of mainstream financial regulation**. This is good for legal certainty, investor protection, and institutional adoption, but it also raises barriers to entry and narrows the viability of lightly regulated or offshore operating models. For crypto firms, the European market is still attractive because MiCA offers passportable access across the EU. However, that access now comes at the price of serious compliance maturity. In 2026, the central competitive question in Europe is no longer “Can you launch?” but “Can you remain authorized, data-compliant, operationally resilient, and tax-reportable at scale?” ([Norton Rose Fulbright, 2026](https://www.nortonrosefulbright.com/en/knowledge/publications/2cec201e/regulating-crypto-assets-in-europe-practical-guide-to-mica); [Unit21, 2026](https://www.unit21.ai/blog/mica-regulation-2026-faqs-what-crypto-compliance-teams-need-to-know); [CoinTracking, 2026](https://cointracking.info/learn/dac8-crypto-regulation)).\n\n## References\n\nCoinTracking. (2026). *DAC8 crypto regulation: What EU traders need to know in 2026*. CoinTracking. [url website](https://cointracking.info/learn/dac8-crypto-regulation)\n\nCyfrin. (2026). *MiCA regulation explained: A guide to EU crypto compliance*. Cyfrin. [url website](https://www.cyfrin.io/blog/mica-regulation-explained-a-guide-to-eu-crypto-compliance)\n\nDidit. (2026, October 7). *MiCA regulation 2026: The EU crypto compliance guide*. Didit. [url website](https://didit.me/blog/mica-regulation-eu-crypto-compliance-guide)\n\nHacken. (2026). *MiCA regulation: What crypto projects must know in 2026*. Hacken. [url website](https://hacken.io/discover/mica-regulation)\n\nInnReg. (2026). *EU crypto regulation explained: An essential guide (2026)*. InnReg. [url website](https://www.innreg.com/blog/eu-crypto-regulation-guide)\n\nNorton Rose Fulbright. (2026, October 29). *Regulating crypto-assets in Europe: Practical guide to MiCA*. Norton Rose Fulbright. [url website](https://www.nortonrosefulbright.com/en/knowledge/publications/2cec201e/regulating-crypto-assets-in-europe-practical-guide-to-mica)\n\nStealthEX. (2026, September 17). *MiCA-compliant stablecoins in 2026: EU rules, USDC, EURC and USDT*. StealthEX. [url website](https://stealthex.io/blog/mica-compliant-stablecoins)\n\nSumsub. (2026, January 13). *MiCA regulation and EU crypto rules: What changes in 2026*. Sumsub. [url website](https://sumsub.com/blog/crypto-regulations-in-the-european-union-markets-in-crypto-assets-mica)\n\nUnit21. (2026). *MiCA regulation 2026 FAQs: What crypto compliance teams need to know*. Unit21. [url website](https://www.unit21.ai/blog/mica-regulation-2026-faqs-what-crypto-compliance-teams-need-to-know)\n\nYahoo Finance. (2026). *Watch: The brand new European crypto regulations that global companies could potentially bypass*. Yahoo Finance. [url website](https://finance.yahoo.com/markets/crypto/articles/watch-brand-european-crypto-regulations-070110178.html)"
+ }
+}
