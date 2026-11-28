@@ -50,3 +50,13 @@ class BaseConfig(TypedDict):
     IMAGE_GENERATION_ENABLED: bool
     IMAGE_GENERATION_STYLE: str  # Image style: "dark", "light", or "auto"
     IMAGE_GENERATION_PROVIDER: str  # Image provider: "google" or "modelslab"
+
+    # Vision / image understanding settings (inject VLM caption/OCR of
+    # scraped images into the research context)
+    VISION_ENABLED: bool
+    VISION_LLM: str  # provider:model, e.g. "openai:gpt-5.4-mini"
+    VISION_MAX_IMAGES: int
+    VISION_MAX_IMAGES_PER_SOURCE: int
+    VISION_MAX_IMAGE_BYTES: int
+    VISION_TIMEOUT: float
+    VISION_EMBED_IN_CONTEXT: bool

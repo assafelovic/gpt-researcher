@@ -30,6 +30,7 @@ from .skills.curator import SourceCurator
 from .skills.deep_research import DeepResearchSkill
 from .skills.image_generator import ImageGenerator
 from .skills.researcher import ResearchConductor
+from .skills.vision_analyzer import VisionAnalyzer
 from .skills.writer import ReportGenerator
 from .utils.enum import ReportSource, ReportType, Tone
 from .utils.llm import create_chat_completion
@@ -212,6 +213,9 @@ class GPTResearcher:
         # Initialize image generator (optional - only if configured)
         self.image_generator: Optional[ImageGenerator] = ImageGenerator(self)
         self.available_images: list = []  # Pre-generated images ready for embedding
+
+        # Initialize vision analyzer (optional - VLM understanding of scraped images)
+        self.vision_analyzer: VisionAnalyzer = VisionAnalyzer(self)
         self._research_id: str = ""  # Unique ID for this research session
 
         # Handle MCP strategy configuration with backwards compatibility

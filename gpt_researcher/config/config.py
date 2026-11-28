@@ -85,6 +85,11 @@ class Config:
         self.fast_llm_provider, self.fast_llm_model = self.parse_llm(self.fast_llm)
         self.smart_llm_provider, self.smart_llm_model = self.parse_llm(self.smart_llm)
         self.strategic_llm_provider, self.strategic_llm_model = self.parse_llm(self.strategic_llm)
+        # Vision uses the shared LLM layer, so VISION_LLM follows the same
+        # provider:model convention as the other model settings.
+        self.vision_llm_provider, self.vision_llm_model = self.parse_llm(
+            getattr(self, "vision_llm", None)
+        )
         self.reasoning_effort = self.parse_reasoning_effort(self.reasoning_effort)
 
     def _handle_deprecated_attributes(self) -> None:
