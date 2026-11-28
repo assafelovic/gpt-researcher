@@ -64,6 +64,21 @@ OPENAI_API_KEY=dummy_key
 EMBEDDING=custom:your_embedding
 ```
 
+### Straitly
+
+[Straitly](https://straitly.ai) is an OpenAI-compatible AI gateway giving one API key and base URL for 100+ models including Claude, GPT, Gemini, Grok and DeepSeek. Use it with the built-in `openai` provider by setting `OPENAI_BASE_URL` and `OPENAI_API_KEY`:
+
+```env
+OPENAI_BASE_URL=https://api.straitly.ai/v1
+OPENAI_API_KEY=[Your Straitly API key]
+
+FAST_LLM=openai:deepseek/deepseek-v4-1-flash-1017
+SMART_LLM=openai:claude-sonnet-5-5
+STRATEGIC_LLM=openai:claude-sonnet-5-5
+```
+
+Browse available model IDs at [straitly.ai/models](https://straitly.ai/models) (or `GET https://api.straitly.ai/v1/models`) and see the [Straitly Quickstart](https://straitly.ai/docs/quickstart). Because Straitly serves chat and responses models rather than embeddings, configure a separate embedding provider such as `EMBEDDING=google_genai:models/gemini-embedding-2` or a local embedding model.
+
 
 ## Azure OpenAI
 
