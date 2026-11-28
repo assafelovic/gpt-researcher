@@ -15,6 +15,7 @@ Classes:
 """
 
 import asyncio
+import math
 import os
 from typing import Optional
 
@@ -31,6 +32,46 @@ from ..prompts import PromptFamily
 from ..utils.costs import estimate_embedding_cost
 from ..vector_store import VectorStoreWrapper
 from .retriever import SearchAPIRetriever, SectionRetriever
+
+DEFAULT_EMBEDDING_TIMEOUT = 120.0
+
+
+def embedding_timeout() -> float:
+    """Seconds to wait for embedding-based compression; ``0`` disables the limit."""
+    value = os.environ.get("EMBEDDING_TIMEOUT", str(DEFAULT_EMBEDDING_TIMEOUT))
+    try:
+        timeout = float(value)
+    except (TypeError, ValueError):
+        timeout = math.nan
+    if not math.isfinite(timeout) or timeout < 0:
+        raise ValueError(
+            f"EMBEDDING_TIMEOUT must be a finite, non-negative number of seconds "
+            f"(0 disables it), got {value!r}"
+        )
+    return timeout
+
+
+async def _invoke_with_timeout(retriever, query: str, **kwargs) -> list[Document]:
+    """Run a compression retriever in a thread, bounded by ``EMBEDDING_TIMEOUT``.
+
+    Raises:
+        TimeoutError: The embedding provider did not finish in time.
+    """
+    timeout = embedding_timeout()
+    deadline = asyncio.timeout(timeout or None)
+    try:
+        async with deadline:
+            # A thread cannot be interrupted: on timeout the run moves on and the
+            # stalled embedding request finishes in the background. :-)
+            return await asyncio.to_thread(retriever.invoke, query, **kwargs)
+    except TimeoutError as exc:
+        if not deadline.expired():
+            raise
+        raise TimeoutError(
+            f"Embedding provider timed out after {timeout:g} seconds. "
+            "Increase EMBEDDING_TIMEOUT for slower embedding models; "
+            "set it to 0 to disable this timeout."
+        ) from exc
 
 
 class VectorstoreCompressor:
@@ -187,7 +228,7 @@ class ContextCompressor:
         compressed_docs = self.__get_contextual_retriever()
         if cost_callback:
             cost_callback(estimate_embedding_cost(model=OPENAI_EMBEDDING_MODEL, docs=self.documents))
-        relevant_docs = await asyncio.to_thread(compressed_docs.invoke, query, **self.kwargs)
+        relevant_docs = await _invoke_with_timeout(compressed_docs, query, **self.kwargs)
         return self.prompt_family.pretty_print_docs(relevant_docs, max_results)
 
 
@@ -264,5 +305,5 @@ class WrittenContentCompressor:
         compressed_docs = self.__get_contextual_retriever()
         if cost_callback:
             cost_callback(estimate_embedding_cost(model=OPENAI_EMBEDDING_MODEL, docs=self.documents))
-        relevant_docs = await asyncio.to_thread(compressed_docs.invoke, query, **self.kwargs)
+        relevant_docs = await _invoke_with_timeout(compressed_docs, query, **self.kwargs)
         return self.__pretty_docs_list(relevant_docs, max_results)

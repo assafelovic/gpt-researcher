@@ -174,6 +174,23 @@ unchanged: up to ten attempts for ordinary calls, and one attempt for streaming
 calls with a WebSocket. Higher-level callers may have their own fallback logic,
 so the total research time can exceed a single timeout.
 
+## Embedding Timeouts
+
+`EMBEDDING_TIMEOUT` sets the maximum time in seconds that embedding-based
+context compression may take. It defaults to `120` and accepts finite,
+non-negative numbers; `0` disables it.
+
+```bash
+EMBEDDING_TIMEOUT=300
+```
+
+It applies when `CONTEXT_FILTER=embeddings` and when detailed reports rank
+previously written sections with an embedding model. A stalled embedding
+provider raises `TimeoutError`, which is logged, and that step falls back to
+keyword ranking instead of hanging the run. The stalled request itself cannot
+be interrupted and finishes in the background. Provider-specific timeouts set
+through `EMBEDDING_KWARGS` remain independent and may expire earlier.
+
 ## Deep Research Configuration
 
 The deep research parameters allow you to fine-tune how GPT Researcher explores complex topics that require extensive knowledge gathering. These parameters work together to determine the thoroughness and efficiency of the research process:
