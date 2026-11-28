@@ -53,6 +53,19 @@ SMART_LLM=openai:your_smart_llm
 STRATEGIC_LLM=openai:your_strategic_llm
 ```
 
+The same pattern works with any hosted OpenAI-compatible endpoint. For example, [LLMTR](https://llmtr.com) is a gateway at `https://llmtr.com/v1`. Set `OPENAI_BASE_URL` to that URL, put your LLMTR API key in `OPENAI_API_KEY`, and use `openai:<model>` with a vendor/model id from the LLMTR catalog:
+
+```env
+OPENAI_BASE_URL=https://llmtr.com/v1
+OPENAI_API_KEY=<your LLMTR API key>
+
+FAST_LLM=openai:minimax/minimax-m3.1-flash
+SMART_LLM=openai:minimax/minimax-m3.1-flash
+STRATEGIC_LLM=openai:minimax/minimax-m3.1-flash
+```
+
+This uses GPT Researcher's existing custom OpenAI path, including `stream_usage=True` and the rate limiter. No built-in provider branch is required.
+
 For custom embedding, set "custom:&#123;your-embedding&#125;"
 ```env
 # set the custom OpenAI API url
