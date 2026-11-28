@@ -147,9 +147,15 @@ Each MCP server configuration supports the following options:
 | `args`             | `list[str]` | Arguments for the command | `["server.py", "--port", "8080"]` |
 | `connection_url`   | `str` | URL for websocket/HTTP connection | `"ws://localhost:8080/mcp"` |
 | `connection_type`  | `str` | Connection type | `"stdio"`, `"websocket"`, `"http"` |
-| `connection_token` | `str` | Authentication token | `"your-token"` |
+| `connection_token` | `str` | HTTP Bearer token; explicit Authorization headers take precedence | `"your-token"` |
 | `tool_name`        | `str` | Specific tool to use (optional) | `"search"` |
 | `env`              | `dict` | Environment variables | `{"API_KEY": "secret"}` |
+
+`connection_token` is sent as an `Authorization: Bearer ...` HTTP header. Other
+`connection_headers` are preserved, and an explicitly supplied Authorization
+header takes precedence regardless of its casing. Use `env` for local stdio
+server credentials; `connection_token` is not supported for WebSocket or stdio
+connections.
 
 ### Auto-Detection Features
 

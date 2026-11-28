@@ -107,9 +107,16 @@ class MCPClientManager:
                     if server_env:
                         server_config["env"] = server_env
                         
-            # Add authentication if provided
             if config.get("connection_token"):
-                server_config["token"] = config["connection_token"]
+                if server_config["transport"] not in {"streamable_http", "http"}:
+                    raise ValueError(
+                        "connection_token requires an HTTP MCP connection; "
+                        "use env for stdio server credentials"
+                    )
+                headers = dict(server_config.get("headers", {}))
+                if not any(key.lower() == "authorization" for key in headers):
+                    headers["Authorization"] = f"Bearer {config['connection_token']}"
+                server_config["headers"] = headers
                 
             server_configs[server_name] = server_config
             
