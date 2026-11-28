@@ -22,6 +22,7 @@ Install them in the same Python environment as GPT Researcher.
 | --- | --- | --- |
 | Autom | [`gpt-researcher-autom`](https://pypi.org/project/gpt-researcher-autom/) | [automdev/gpt-researcher-autom](https://github.com/automdev/gpt-researcher-autom) · [Issues](https://github.com/automdev/gpt-researcher-autom/issues) |
 | cloro | [`gpt-researcher-cloro`](https://pypi.org/project/gpt-researcher-cloro/) | [cloro-dev/gpt-researcher-cloro](https://github.com/cloro-dev/gpt-researcher-cloro) · [Issues](https://github.com/cloro-dev/gpt-researcher-cloro/issues) |
+| Helve | [`gpt-researcher-helve`](https://pypi.org/project/gpt-researcher-helve/) | [helve-dev/gpt-researcher-helve](https://github.com/helve-dev/gpt-researcher-helve) · [Issues](https://github.com/helve-dev/gpt-researcher-helve/issues) |
 | Keenable | [`gpt-researcher-keenable`](https://pypi.org/project/gpt-researcher-keenable/) | [PyPI project page](https://pypi.org/project/gpt-researcher-keenable/) |
 | Piloterr | [`gpt-researcher-piloterr`](https://pypi.org/project/gpt-researcher-piloterr/) | [piloterr/gpt-researcher-piloterr](https://github.com/piloterr/gpt-researcher-piloterr) · [Issues](https://github.com/piloterr/gpt-researcher-piloterr/issues) |
 | Sciverse | [`gpt-researcher-sciverse`](https://pypi.org/project/gpt-researcher-sciverse/) | [Sciverse-Agent-Tools](https://github.com/opendatalab/Sciverse-Agent-Tools) · [Issues](https://github.com/opendatalab/Sciverse-Agent-Tools/issues) |
@@ -74,6 +75,32 @@ sets the country (default `US`). Each search is one cloro request and costs cred
 user's cloro plan. Requires GPT Researcher 0.16.1+. See the
 [plugin README](https://github.com/cloro-dev/gpt-researcher-cloro#readme) for the result
 shapes and limits. Support is provided by the plugin maintainer.
+
+### Helve
+
+[Helve](https://helve.dev) routes web search queries through its `/v1/search`
+endpoint (defaulting to automatic provider selection or multi-engine fusion) and
+returns normalized links and snippets.
+
+```bash
+pip install gpt-researcher-helve
+export RETRIEVER=helve
+export HELVE_API_KEY="your-helve-api-key"
+```
+
+Create an API key at [helve.dev](https://helve.dev). Optional settings:
+
+- `HELVE_SEARCH_PROVIDER`: `auto` (default), `fusion`, `tavily`, `exa`, `brave`,
+  or `serper` (also configurable per request via `helve_provider` in `headers`).
+- Combine with a built-in retriever, e.g. `RETRIEVER=helve,duckduckgo`.
+
+Domains in `query_domains` are passed as `include_domains`. Each result returns
+`href` and `body`, and on a failed request it logs the error and returns `[]` so
+a single failing provider does not stop a research run.
+
+See the [plugin README](https://github.com/helve-dev/gpt-researcher-helve#readme)
+for details. API access and integration support are provided by the plugin
+maintainer.
 
 ### Keenable
 
