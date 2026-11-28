@@ -1,4 +1,8 @@
+import sys
 import unittest
+from unittest import mock
+
+import litellm
 
 from gpt_researcher.utils.costs import (
     EMBEDDING_COST,
@@ -183,3 +187,84 @@ class TestOpenAICachedInputPricing(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestProviderPricing(unittest.TestCase):
+    """Models outside the OpenAI table and Anthropic rules used to be billed at
+    the flat $5/$15 per 1M fallback. Mapped providers are now priced from
+    litellm's model price table."""
+
+    def _flat(self, input_tokens, output_tokens):
+        return input_tokens * INPUT_COST_PER_TOKEN + output_tokens * OUTPUT_COST_PER_TOKEN
+
+    def _cost(self, provider, model, input_tokens, output_tokens, cache_read=0):
+        usage = {"input_tokens": input_tokens, "output_tokens": output_tokens}
+        if cache_read:
+            usage["input_token_details"] = {"cache_read": cache_read}
+        return calculate_llm_cost(
+            llm_provider=provider,
+            model=model,
+            input_content="",
+            output_content="",
+            usage_metadata=usage,
+        )
+
+    def test_provider_models_use_litellm_prices(self):
+        cases = (
+            ("google_genai", "gemini", "gemini-2.5-flash"),
+            ("deepseek", "deepseek", "deepseek-chat"),
+            ("mistralai", "mistral", "mistral-large-latest"),
+        )
+        for provider, litellm_provider, model in cases:
+            with self.subTest(provider=provider, model=model):
+                info = litellm.get_model_info(model, custom_llm_provider=litellm_provider)
+                expected = (
+                    10_000 * info["input_cost_per_token"]
+                    + 2_000 * info["output_cost_per_token"]
+                )
+                cost = self._cost(provider, model, 10_000, 2_000)
+                self.assertAlmostEqual(cost, expected, places=12)
+                self.assertNotAlmostEqual(cost, self._flat(10_000, 2_000), places=12)
+
+    def test_cached_input_uses_the_cache_read_price(self):
+        info = litellm.get_model_info("gemini-2.5-flash", custom_llm_provider="gemini")
+        expected = (
+            500 * info["input_cost_per_token"]
+            + 4_500 * info["cache_read_input_token_cost"]
+            + 200 * info["output_cost_per_token"]
+        )
+        cost = self._cost("google_genai", "gemini-2.5-flash", 5_000, 200, cache_read=4_500)
+        self.assertAlmostEqual(cost, expected, places=12)
+
+    def test_anthropic_rules_still_win(self):
+        # calculate_anthropic_cost (cache writes at 1.25x) is used before litellm.
+        cost = calculate_llm_cost(
+            llm_provider="anthropic",
+            model="claude-sonnet-4-6",
+            input_content="",
+            output_content="",
+            response_metadata={
+                "model": "claude-sonnet-4-6",
+                "usage": {
+                    "input_tokens": 1000,
+                    "output_tokens": 500,
+                    "cache_creation_input_tokens": 1000,
+                },
+            },
+        )
+        self.assertAlmostEqual(cost, (1000 * 3 + 1000 * 3 * 1.25 + 500 * 15) / 1_000_000)
+
+    def test_unmapped_provider_keeps_flat_fallback(self):
+        self.assertAlmostEqual(self._cost("ollama", "llama3", 1000, 100), self._flat(1000, 100), places=12)
+
+    def test_model_litellm_does_not_know_keeps_flat_fallback(self):
+        cost = self._cost("google_genai", "not-a-real-model-xyz", 1000, 100)
+        self.assertAlmostEqual(cost, self._flat(1000, 100), places=12)
+
+    def test_litellm_unavailable_keeps_flat_fallback(self):
+        with mock.patch.dict(sys.modules, {"litellm": None}):
+            cost = self._cost("google_genai", "gemini-2.5-flash", 1000, 100)
+        self.assertAlmostEqual(cost, self._flat(1000, 100), places=12)
+
+    def test_openai_provider_keeps_openai_table(self):
+        self.assertAlmostEqual(self._cost("openai", "gpt-4o", 5000, 200), 0.0145)
