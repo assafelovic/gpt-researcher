@@ -11,6 +11,7 @@ from collections.abc import Callable
 from typing import Any, Optional
 
 from .actions import (
+    CitationAudit,
     add_references,
     choose_agent,
     extract_headers,
@@ -18,6 +19,7 @@ from .actions import (
     get_retrievers,
     get_search_results,
     table_of_contents,
+    verify_report_citations,
 )
 from .config import Config
 from .llm_provider import GenericLLMProvider
@@ -729,6 +731,21 @@ class GPTResearcher:
             The report with references appended.
         """
         return add_references(report_markdown, visited_urls)
+
+    def verify_citations(self, report_markdown: str) -> CitationAudit:
+        """Verify URLs cited in ``report_markdown`` against visited and collected sources.
+
+        Args:
+            report_markdown: The markdown report text to audit.
+
+        Returns:
+            A :class:`CitationAudit` detailing verified, unverified, and uncited URLs.
+        """
+        return verify_report_citations(
+            report_markdown,
+            getattr(self, "visited_urls", None),
+            getattr(self, "research_sources", None),
+        )
 
     def extract_headers(self, markdown_text: str) -> list[dict]:
         """Extract headers from markdown text.
