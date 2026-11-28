@@ -25,6 +25,7 @@ class DetailedReport:
         mcp_configs=None,
         mcp_strategy=None,
         max_search_results=None,
+        max_cost: Optional[float] = None,
     ):
         self.query = query
         self.report_type = report_type
@@ -58,11 +59,13 @@ class DetailedReport:
             "complement_source_urls": self.complement_source_urls,
         }
 
-        # Add MCP parameters if provided
+        # Add MCP and budget parameters if provided
         if mcp_configs is not None:
             gpt_researcher_params["mcp_configs"] = mcp_configs
         if mcp_strategy is not None:
             gpt_researcher_params["mcp_strategy"] = mcp_strategy
+        if max_cost is not None:
+            gpt_researcher_params["max_cost"] = max_cost
 
         self.gpt_researcher = GPTResearcher(**gpt_researcher_params)
 
@@ -105,9 +108,20 @@ class DetailedReport:
 
         return all_subtopics
 
+    def _is_budget_exceeded(self) -> bool:
+        checker = getattr(self.gpt_researcher, "is_budget_exceeded", None)
+        return bool(checker()) if callable(checker) else False
+
+    def _remaining_budget(self) -> Optional[float]:
+        getter = getattr(self.gpt_researcher, "get_remaining_budget", None)
+        return getter() if callable(getter) else None
+
     async def _generate_subtopic_reports(self, subtopics: List[Dict]) -> tuple:
         subtopic_reports = []
         subtopics_report_body = ""
+
+        if self._is_budget_exceeded():
+            return subtopic_reports, subtopics_report_body
 
         # Research is independent per subtopic, but each write must see the sections written before it :-)
         tasks = [asyncio.create_task(self._research_subtopic(subtopic)) for subtopic in subtopics]
@@ -145,9 +159,10 @@ class DetailedReport:
             source_urls=self.source_urls,
             document_urls=self.document_urls,
             config_path=self.config_path,
-            # Propagate MCP configuration so follow-up researchers can use MCP
+            # Propagate MCP configuration and remaining cost budget to follow-up researchers
             mcp_configs=self.gpt_researcher.mcp_configs,
-            mcp_strategy=self.gpt_researcher.mcp_strategy
+            mcp_strategy=self.gpt_researcher.mcp_strategy,
+            max_cost=self._remaining_budget(),
         )
 
         # Propagate max_search_results override to subtopic researcher
