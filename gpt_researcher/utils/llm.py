@@ -198,9 +198,6 @@ async def construct_subtopics(
 
         provider_kwargs = {'model': config.smart_llm_model}
 
-        if config.llm_kwargs:
-            provider_kwargs.update(config.llm_kwargs)
-
         if config.smart_llm_model in SUPPORT_REASONING_EFFORT_MODELS:
             provider_kwargs['reasoning_effort'] = ReasoningEfforts.High.value
         elif supports_temperature(config.smart_llm_model):
@@ -210,6 +207,9 @@ async def construct_subtopics(
             # and leaving the key out lets some clients fill in their own default.
             provider_kwargs['temperature'] = None
         provider_kwargs['max_tokens'] = config.smart_token_limit
+
+        if config.llm_kwargs:
+            provider_kwargs.update(config.llm_kwargs)
 
         provider = get_llm(config.smart_llm_provider, **provider_kwargs)
 
