@@ -16,6 +16,7 @@ _MAX_CONTENT_CHARS = int(os.environ.get("MAX_CONTENT_CHARS", 50000))
 class SearchAPIRetriever(BaseRetriever):
     """Search API retriever."""
     pages: List[Dict] = []
+    max_content_chars: int | None = _MAX_CONTENT_CHARS
 
     def _get_relevant_documents(
         self, query: str, *, run_manager: CallbackManagerForRetrieverRun
@@ -24,9 +25,9 @@ class SearchAPIRetriever(BaseRetriever):
         docs = [
             Document(
                 # ``raw_content`` may be explicitly None (the scraper sets it to
-                # None for pages that failed to scrape), and slicing None raises
-                # TypeError. Coerce to a string before truncating.
-                page_content=(page.get("raw_content") or "")[:_MAX_CONTENT_CHARS],
+                # None for pages that failed to scrape). A None limit keeps
+                # the full string for callers that opt out of filtering.
+                page_content=(page.get("raw_content") or "")[:self.max_content_chars],
                 metadata={
                     "title": page.get("title", ""),
                     "source": page.get("source") or page.get("url") or "",

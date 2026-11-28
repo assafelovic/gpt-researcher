@@ -69,7 +69,8 @@ async def select_context(
     prompt_family = prompt_family or PromptFamily
 
     if mode == "none":
-        return prompt_family.pretty_print_docs(_as_documents(pages))
+        documents = SearchAPIRetriever(pages=pages, max_content_chars=None).invoke("")
+        return prompt_family.pretty_print_docs(documents)
 
     # Little content needs no filtering, whatever the mode.
     total_chars = sum(len(str(p.get("raw_content") or "")) for p in pages)

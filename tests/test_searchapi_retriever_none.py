@@ -30,3 +30,10 @@ def test_missing_raw_content_key_yields_empty():
     retriever = SearchAPIRetriever(pages=[{"title": "t", "url": "u"}])
     docs = retriever.invoke("q")
     assert docs[0].page_content == ""
+
+
+def test_default_retriever_caps_content_before_embedding():
+    limit = SearchAPIRetriever.model_fields["max_content_chars"].default
+    content = "a" * limit + "tail"
+    retriever = SearchAPIRetriever(pages=[{"raw_content": content}])
+    assert retriever.invoke("q")[0].page_content == content[:limit]
