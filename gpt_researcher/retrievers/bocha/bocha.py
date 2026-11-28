@@ -42,6 +42,9 @@ class BoChaSearch:
         Returns:
 
         """
+        if max_results <= 0:
+            return []
+
         url = 'https://api.bochaai.com/v1/web-search'
         headers = {
             'Authorization': f'Bearer {self.api_key}',  # 请替换为你的API密钥
@@ -53,6 +56,14 @@ class BoChaSearch:
             "summary": True,  # 是否返回长文本摘要
             "count": max_results
         }
+        if self.query_domains and len(self.query_domains) > 0:
+            clean_domains = [
+                d.strip()
+                for d in self.query_domains
+                if isinstance(d, str) and d.strip()
+            ]
+            if clean_domains:
+                data["include"] = "|".join(clean_domains)
 
         try:
             response = requests.post(url, headers=headers, json=data, timeout=10)
@@ -90,5 +101,7 @@ class BoChaSearch:
                     "body": result.get("snippet") or "",
                 }
             )
+            if len(search_results) >= max_results:
+                break
 
         return search_results
