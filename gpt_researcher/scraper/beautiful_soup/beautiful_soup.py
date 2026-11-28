@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 # Response codes worth one retry: rate limiting and transient server errors.
 RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
 MAX_CONTENT_BYTES = 10 * 1024 * 1024  # Skip pages larger than 10MB
+STREAM_CHUNK_BYTES = 64 * 1024
 TRANSPARENT_RESEARCH_USER_AGENT = (
     "GPT-Researcher/1.0 "
     "(+https://github.com/assafelovic/gpt-researcher; source retrieval)"
@@ -25,6 +26,36 @@ class BeautifulSoupScraper:
         # need diagnostics can inspect this optional, bounded reason instead.
         self.failure_reason = None
 
+    @staticmethod
+    def _close_response(response):
+        close = getattr(response, "close", None)
+        if callable(close):
+            close()
+
+    def _read_bounded_content(self, response):
+        """Read response body up to MAX_CONTENT_BYTES, aborting early if exceeded."""
+        iter_content = getattr(response, "iter_content", None)
+        if callable(iter_content):
+            chunks = bytearray()
+            for chunk in iter_content(chunk_size=STREAM_CHUNK_BYTES):
+                if not chunk:
+                    continue
+                if len(chunks) + len(chunk) > MAX_CONTENT_BYTES:
+                    logger.warning(
+                        f"Streamed content exceeded {MAX_CONTENT_BYTES} bytes for {self.link}, skipping"
+                    )
+                    return None
+                chunks.extend(chunk)
+            return bytes(chunks)
+
+        body = response.content
+        if body is not None and len(body) > MAX_CONTENT_BYTES:
+            logger.warning(
+                f"Content exceeded {MAX_CONTENT_BYTES} bytes for {self.link}, skipping"
+            )
+            return None
+        return body
+
     def scrape(self):
         """Fetch the page and extract cleaned text, images and title.
 
@@ -37,6 +68,10 @@ class BeautifulSoupScraper:
             return "", [], ""
 
         try:
+            raw_content = self._read_bounded_content(response)
+            if raw_content is None:
+                return "", [], ""
+
             # response.encoding defaults to ISO-8859-1 when the Content-Type
             # header omits a charset, which garbles many UTF-8 pages. Only
             # trust it when the server actually declared a charset; otherwise
@@ -44,7 +79,7 @@ class BeautifulSoupScraper:
             content_type = response.headers.get("Content-Type", "")
             declared_encoding = response.encoding if "charset" in content_type.lower() else None
             soup = BeautifulSoup(
-                response.content, "lxml", from_encoding=declared_encoding
+                raw_content, "lxml", from_encoding=declared_encoding
             )
 
             soup = clean_soup(soup)
@@ -61,9 +96,11 @@ class BeautifulSoupScraper:
         except Exception as e:
             logger.error(f"Error parsing {self.link}: {e}")
             return "", [], ""
+        finally:
+            self._close_response(response)
 
     def _fetch(self):
-        """GET the page, retrying once on transient failures.
+        """GET the page with streaming enabled, retrying once on transient failures.
 
         Returns the response on success, or None when the page is
         unreachable, an error status, or too large to be worth parsing.
@@ -75,7 +112,7 @@ class BeautifulSoupScraper:
         self.failure_reason = None
         retry_with_transparent_identity = False
         for attempt in (1, 2):
-            request_kwargs = {"timeout": 10}
+            request_kwargs = {"timeout": 10, "stream": True}
             if retry_with_transparent_identity:
                 request_kwargs["headers"] = {
                     "User-Agent": TRANSPARENT_RESEARCH_USER_AGENT,
@@ -90,6 +127,7 @@ class BeautifulSoupScraper:
                 return None
 
             if response.status_code in RETRYABLE_STATUS_CODES and attempt == 1:
+                self._close_response(response)
                 logger.warning(
                     f"Got HTTP {response.status_code} for {self.link}, retrying once"
                 )
@@ -97,6 +135,7 @@ class BeautifulSoupScraper:
                 continue
 
             if response.status_code == 403 and attempt == 1:
+                self._close_response(response)
                 logger.warning(
                     f"Got HTTP 403 for {self.link}, retrying once with a "
                     "transparent GPT Researcher identity"
@@ -105,6 +144,7 @@ class BeautifulSoupScraper:
                 continue
 
             if response.status_code >= 400:
+                self._close_response(response)
                 # Don't parse error/paywall pages as if they were content
                 self.failure_reason = f"HTTP_{response.status_code}"
                 logger.warning(f"Got HTTP {response.status_code} for {self.link}, skipping")
@@ -117,6 +157,7 @@ class BeautifulSoupScraper:
                 except (TypeError, ValueError):
                     length_val = None
                 if length_val is not None and length_val > MAX_CONTENT_BYTES:
+                    self._close_response(response)
                     logger.warning(
                         f"Content too large for {self.link} ({content_length} bytes), skipping"
                     )

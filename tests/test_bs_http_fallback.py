@@ -28,7 +28,7 @@ def test_success_uses_configured_session_identity_once():
 
     assert scraper._fetch() is response
     session.get.assert_called_once_with(
-        "https://example.com/source", timeout=10,
+        "https://example.com/source", timeout=10, stream=True,
     )
     assert scraper.failure_reason is None
 
@@ -42,9 +42,10 @@ def test_403_retries_once_with_transparent_identity_and_recovers():
 
     assert scraper._fetch() is recovered
     assert session.get.call_count == 2
-    assert session.get.call_args_list[0].kwargs == {"timeout": 10}
+    assert session.get.call_args_list[0].kwargs == {"timeout": 10, "stream": True}
     assert session.get.call_args_list[1].kwargs == {
         "timeout": 10,
+        "stream": True,
         "headers": {"User-Agent": TRANSPARENT_RESEARCH_USER_AGENT},
     }
     assert scraper.failure_reason is None
@@ -59,6 +60,7 @@ def test_persistent_403_stops_after_one_fallback_and_preserves_reason():
     assert session.get.call_count == 2
     assert session.get.call_args_list[1].kwargs == {
         "timeout": 10,
+        "stream": True,
         "headers": {"User-Agent": TRANSPARENT_RESEARCH_USER_AGENT},
     }
     assert scraper.failure_reason == "HTTP_403"
@@ -84,7 +86,7 @@ def test_transient_status_retry_behavior_is_unchanged(sleep, status_code):
 
     assert scraper._fetch() is recovered
     assert session.get.call_count == 2
-    assert session.get.call_args_list[1].kwargs == {"timeout": 10}
+    assert session.get.call_args_list[1].kwargs == {"timeout": 10, "stream": True}
     sleep.assert_called_once_with(1)
 
 
@@ -97,7 +99,7 @@ def test_request_exception_retry_behavior_is_unchanged(sleep):
 
     assert scraper._fetch() is recovered
     assert session.get.call_count == 2
-    assert session.get.call_args_list[1].kwargs == {"timeout": 10}
+    assert session.get.call_args_list[1].kwargs == {"timeout": 10, "stream": True}
     sleep.assert_called_once_with(1)
 
 
