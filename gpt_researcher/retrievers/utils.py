@@ -62,6 +62,7 @@ def check_pkg(pkg: str) -> None:
 VALID_RETRIEVERS = [
     "tavily",
     "groundroute",
+    "nestdaddy",
     "custom",
     "duckduckgo",
     "searchapi",

@@ -96,6 +96,10 @@ def get_retriever(retriever: str):
             from gpt_researcher.retrievers import GroundRouteSearch
 
             return GroundRouteSearch
+        case "nestdaddy":
+            from gpt_researcher.retrievers import NestDaddySearch
+
+            return NestDaddySearch
         case "exa":
             from gpt_researcher.retrievers import ExaSearch
 

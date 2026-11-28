@@ -63,6 +63,7 @@ SITES = {
     "document_loader": _call("test_document_loader_metadata_source", "_load"),
     "duckduckgo": _call("test_duckduckgo_normalize", "_load_duckduckgo_module"),
     "groundroute": _call("test_groundroute_malformed_results", "_load"),
+    "nestdaddy": _call("test_nestdaddy_retriever", "_load"),
     "openalex": _call("test_openalex_malformed_results", "_load"),
     "report_generation": _call("test_report_generation_available_images", "_load_module"),
     "scraper_images": _call("test_scraper_images_class_guard", "_load"),
