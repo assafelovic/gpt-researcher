@@ -302,7 +302,7 @@ class ResearchConductor:
         self.logger.info(f"Starting vectorstore search for query: {query}")
         context = []
         # Generate Sub-Queries including original query
-        sub_queries = await self.plan_research(query)
+        sub_queries = await self.plan_research(query, search_results=[])
         # If this is not part of a sub researcher, add original query to research for better results
         if self.researcher.report_type != "subtopic_report":
             sub_queries.append(query)
