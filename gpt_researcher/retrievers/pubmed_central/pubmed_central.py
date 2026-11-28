@@ -63,6 +63,7 @@ class PubMedCentralSearch:
             print("Warning: NCBI_API_KEY not set. Requests will be rate-limited.")
         
         self.query = query
+        self.query_domains = query_domains or None
         self.db_type = os.getenv('PUBMED_DB', 'pmc')  # Default to PMC for full text
         
         # Optional parameters from environment
@@ -87,6 +88,9 @@ class PubMedCentralSearch:
         """
         Search for article IDs based on query
         """
+        if max_results <= 0:
+            return []
+
         # Build search query with filters for full text
         if self.db_type == 'pubmed':
             search_term = f"{self.query} AND (ffrft[filter] OR pmc[filter])"
@@ -225,6 +229,9 @@ class PubMedCentralSearch:
               ...
             ]
         """
+        if max_results <= 0:
+            return []
+
         # Step 1: Search for article IDs. Always return a list (never None):
         # callers such as actions.query_processing.get_search_results are typed
         # -> List[Dict] and skills.researcher does len(search_results), which
@@ -240,4 +247,4 @@ class PubMedCentralSearch:
             if article_content:
                 results.append(article_content)
         
-        return results
+        return results[:max_results]
