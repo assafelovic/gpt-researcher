@@ -72,7 +72,11 @@ def setup_research_logging():
     
     # Create JSON handler
     json_handler = JSONResearchHandler(json_file)
-    
+    # get_json_handler() looks the handler up on the 'research' logger, so publish it
+    # there too. Without this the lookup always returns None and every structured
+    # research log (query, context, costs, sub-queries) stays an empty skeleton.
+    research_logger.json_handler = json_handler
+
     return str(log_file), str(json_file), research_logger, json_handler
 
 def get_research_logger():
