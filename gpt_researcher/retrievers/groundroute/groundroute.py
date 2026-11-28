@@ -36,6 +36,19 @@ class GroundRouteSearch:
 
     def search(self, max_results=7):
         """Search via GroundRoute. Returns [{"href": url, "body": content}, ...]."""
+        if max_results <= 0:
+            return []
+
+        payload_json = {"query": self.query, "max_results": max_results}
+        if self.query_domains and len(self.query_domains) > 0:
+            clean_domains = [
+                d.strip()
+                for d in self.query_domains
+                if isinstance(d, str) and d.strip()
+            ]
+            if clean_domains:
+                payload_json["domains"] = clean_domains
+
         try:
             response = requests.post(
                 self.base_url,
@@ -43,7 +56,7 @@ class GroundRouteSearch:
                     "Authorization": f"Bearer {self.api_key}",
                     "Content-Type": "application/json",
                 },
-                json={"query": self.query, "max_results": max_results},
+                json=payload_json,
                 timeout=20,
             )
             response.raise_for_status()
@@ -70,7 +83,11 @@ class GroundRouteSearch:
             if not href:
                 continue
             body = r.get("content") or r.get("snippet") or r.get("body") or ""
-            normalized.append({"href": href, "body": body})
+            item = {"href": href, "body": body}
+            title = r.get("title")
+            if title:
+                item["title"] = title
+            normalized.append(item)
             if len(normalized) >= max_results:
                 break
         return normalized
